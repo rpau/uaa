@@ -84,7 +84,7 @@ import org.springframework.util.StringUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 import javax.xml.namespace.QName;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;

@@ -75,7 +75,7 @@ import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 import static org.springframework.util.StringUtils.hasText;
 
-@RequestMapping("/identity-providers")
+@RequestMapping({"/identity-providers", "/identity-providers/"})
 @RestController
 public class IdentityProviderEndpoints implements ApplicationEventPublisherAware {
 
@@ -148,7 +148,7 @@ public class IdentityProviderEndpoints implements ApplicationEventPublisherAware
         return persistIdentityProviderChange(body, rawConfig, zoneId, null, CREATED);
     }
 
-    @DeleteMapping(value = "{id}")
+    @DeleteMapping(value = {"{id}", "{id}/"})
     @Transactional
     public ResponseEntity<IdentityProvider> deleteIdentityProvider(@PathVariable String id, @RequestParam(required = false, defaultValue = "false") boolean rawConfig) {
         String identityZoneId = identityZoneManager.getCurrentIdentityZoneId();
@@ -193,7 +193,7 @@ public class IdentityProviderEndpoints implements ApplicationEventPublisherAware
         return new ResponseEntity<>(existing, OK);
     }
 
-    @PutMapping(value = "{id}")
+    @PutMapping(value = {"{id}", "{id}/"})
     public ResponseEntity<IdentityProvider> updateIdentityProvider(@PathVariable String id, @RequestBody IdentityProvider body, @RequestParam(required = false, defaultValue = "false") boolean rawConfig) {
         body.setSerializeConfigRaw(rawConfig);
         String zoneId = identityZoneManager.getCurrentIdentityZoneId();
@@ -263,7 +263,7 @@ public class IdentityProviderEndpoints implements ApplicationEventPublisherAware
         return new ResponseEntity<>(updatedIdp, status);
     }
 
-    @PatchMapping(value = "{id}/status")
+    @PatchMapping(value = {"{id}/status", "{id}/status/"})
     public ResponseEntity<IdentityProviderStatus> updateIdentityProviderStatus(@PathVariable String id, @RequestBody IdentityProviderStatus body) {
         String zoneId = identityZoneManager.getCurrentIdentityZoneId();
         IdentityProvider existing = identityProviderProvisioning.retrieve(id, zoneId);
@@ -311,7 +311,7 @@ public class IdentityProviderEndpoints implements ApplicationEventPublisherAware
         return new ResponseEntity<>(identityProviderList, OK);
     }
 
-    @GetMapping(value = "{id}")
+    @GetMapping(value = {"{id}", "{id}/"})
     public ResponseEntity<IdentityProvider> retrieveIdentityProvider(@PathVariable String id, @RequestParam(required = false, defaultValue = "false") boolean rawConfig) {
         IdentityProvider identityProvider = identityProviderProvisioning.retrieve(id, identityZoneManager.getCurrentIdentityZoneId());
         identityProvider.setSerializeConfigRaw(rawConfig);
@@ -320,7 +320,7 @@ public class IdentityProviderEndpoints implements ApplicationEventPublisherAware
         return new ResponseEntity<>(identityProvider, OK);
     }
 
-    @PostMapping(value = "test")
+    @PostMapping(value = {"test", "test/"})
     public ResponseEntity<String> testIdentityProvider(@RequestBody IdentityProviderValidationRequest body) {
         String exception = "ok";
         HttpStatus status = OK;

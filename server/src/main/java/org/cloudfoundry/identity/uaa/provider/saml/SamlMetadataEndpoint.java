@@ -14,8 +14,8 @@ import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
@@ -40,7 +40,7 @@ public class SamlMetadataEndpoint implements ZoneAware {
                 new SamlMetadataEntityDescriptorCustomizer(identityZoneManager, signatureAlgorithms, signMetaData));
     }
 
-    @GetMapping(value = "/saml/metadata", produces = APPLICATION_XML_CHARSET_UTF_8)
+    @GetMapping(value = {"/saml/metadata", "/saml/metadata/"}, produces = APPLICATION_XML_CHARSET_UTF_8)
     public ResponseEntity<String> metadataEndpoint(HttpServletRequest request) {
         RelyingPartyRegistration relyingPartyRegistration = relyingPartyRegistrationResolver.resolve(request, DEFAULT_REGISTRATION_ID);
         if (relyingPartyRegistration == null) {

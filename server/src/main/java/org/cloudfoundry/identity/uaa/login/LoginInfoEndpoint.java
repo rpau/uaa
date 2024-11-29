@@ -60,10 +60,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.awt.*;
 import java.io.IOException;
 import java.net.URLDecoder;
@@ -750,7 +750,7 @@ public class LoginInfoEndpoint {
         return null;
     }
 
-    @PostMapping(value = "/origin-chooser")
+    @PostMapping(value = {"/origin-chooser", "/origin-chooser/"})
     public String loginUsingOrigin(@RequestParam(required = false, name = LOGIN_HINT_ATTRIBUTE) String loginHint) {
         if (!StringUtils.hasText(loginHint)) {
             return "redirect:/login?discoveryPerformed=true";
@@ -759,7 +759,7 @@ public class LoginInfoEndpoint {
         return "redirect:/login?discoveryPerformed=true&login_hint=" + URLEncoder.encode(uaaLoginHint.toString(), UTF_8);
     }
 
-    @PostMapping(value = "/login/idp_discovery")
+    @PostMapping(value = {"/login/idp_discovery", "/login/idp_discovery/"})
     public String discoverIdentityProvider(@RequestParam String email, @RequestParam(required = false) String skipDiscovery, @RequestParam(required = false, name = LOGIN_HINT_ATTRIBUTE) String loginHint, @RequestParam(required = false, name = USERNAME_PARAMETER) String username, Model model, HttpSession session, HttpServletRequest request) {
         ClientDetails clientDetails = null;
         if (hasSavedOauthAuthorizeRequest(session)) {
@@ -808,7 +808,7 @@ public class LoginInfoEndpoint {
         return "idp_discovery/password";
     }
 
-    @PostMapping(value = "/autologin")
+    @PostMapping(value = {"/autologin", "/autologin/"})
     @ResponseBody
     public AutologinResponse generateAutologinCode(@RequestBody AutologinRequest request,
                                                    @RequestHeader(value = "Authorization", required = false) String auth) {
@@ -850,7 +850,7 @@ public class LoginInfoEndpoint {
         return new AutologinResponse(expiringCode.getCode());
     }
 
-    @GetMapping(value = "/autologin")
+    @GetMapping(value = {"/autologin", "/autologin/"})
     public String performAutologin(HttpSession session) {
         String redirectLocation = "home";
         SavedRequest savedRequest = SessionUtils.getSavedRequestSession(session);
@@ -861,12 +861,12 @@ public class LoginInfoEndpoint {
         return REDIRECT + redirectLocation;
     }
 
-    @GetMapping(value = "/login_implicit")
+    @GetMapping(value = {"/login_implicit", "/login_implicit/"})
     public String captureImplicitValuesUsingJavascript() {
         return "login_implicit";
     }
 
-    @GetMapping(value = "/login/callback/{origin}")
+    @GetMapping(value = {"/login/callback/{origin}", "/login/callback/{origin}/"})
     public String handleExternalOAuthCallback(final HttpSession session, @PathVariable String origin) {
         String redirectLocation = "/home";
         SavedRequest savedRequest = SessionUtils.getSavedRequestSession(session);

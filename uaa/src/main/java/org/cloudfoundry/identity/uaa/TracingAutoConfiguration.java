@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
-import javax.servlet.Filter;
+import jakarta.servlet.Filter;
 
 /**
  * This adds tracing configuration to any web mvc controllers or rest template clients.
