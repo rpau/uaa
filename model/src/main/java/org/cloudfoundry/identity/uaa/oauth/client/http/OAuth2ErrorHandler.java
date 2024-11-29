@@ -5,6 +5,7 @@ import org.cloudfoundry.identity.uaa.oauth.client.resource.OAuth2ProtectedResour
 import org.cloudfoundry.identity.uaa.oauth.common.OAuth2AccessToken;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.http.converter.HttpMessageConversionException;
 import org.springframework.http.converter.HttpMessageConverter;
@@ -66,12 +67,12 @@ public class OAuth2ErrorHandler implements ResponseErrorHandler {
 	}
 
 	public boolean hasError(ClientHttpResponse response) throws IOException {
-		return HttpStatus.Series.CLIENT_ERROR.equals(response.getStatusCode().series())
+		return HttpStatus.Series.CLIENT_ERROR.equals(HttpStatus.valueOf(response.getStatusCode().value()).series())
 				|| this.errorHandler.hasError(response);
 	}
 
 	public void handleError(final ClientHttpResponse response) throws IOException {
-		if (!HttpStatus.Series.CLIENT_ERROR.equals(response.getStatusCode().series())) {
+		if (!HttpStatus.Series.CLIENT_ERROR.equals(HttpStatus.valueOf(response.getStatusCode().value()).series())) {
 			// We should only care about 400 level errors. Ex: A 500 server error shouldn't
 			// be an oauth related error.
 			errorHandler.handleError(response);
@@ -81,30 +82,33 @@ public class OAuth2ErrorHandler implements ResponseErrorHandler {
 			ClientHttpResponse bufferedResponse = new ClientHttpResponse() {
 				private byte[] lazyBody;
 
-				public HttpStatus getStatusCode() throws IOException {
+				@Override
+                public HttpStatusCode getStatusCode() throws IOException {
 					return response.getStatusCode();
 				}
-
-				public synchronized InputStream getBody() throws IOException {
+                @Override
+                public synchronized InputStream getBody() throws IOException {
 					if (lazyBody == null) {
 						InputStream bodyStream = response.getBody();
 						lazyBody = FileCopyUtils.copyToByteArray(bodyStream);
 					}
 					return new ByteArrayInputStream(lazyBody);
 				}
-
-				public HttpHeaders getHeaders() {
+				@Override
+                public HttpHeaders getHeaders() {
 					return response.getHeaders();
 				}
 
+                @Override
 				public String getStatusText() throws IOException {
 					return response.getStatusText();
 				}
-
+                @Override
 				public void close() {
 					response.close();
 				}
 
+                @Override
 				public int getRawStatusCode() throws IOException {
 					return this.getStatusCode().value();
 				}

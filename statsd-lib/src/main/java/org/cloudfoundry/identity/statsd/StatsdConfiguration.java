@@ -43,9 +43,9 @@ public class StatsdConfiguration {
           if (uaaMetricsEmitter.isNotificationEnabled()) {
             return null;
           }
-          return triggerContext.lastCompletionTime() != null
-              ? getFiveSecondsFrom(triggerContext.lastCompletionTime())
-              : getFiveSecondsFrom(new Date());
+          return (triggerContext.lastCompletionTime() != null
+                        ? getFiveSecondsFrom(triggerContext.lastCompletionTime())
+                        : getFiveSecondsFrom(new Date())).toInstant();
         });
   }
 
