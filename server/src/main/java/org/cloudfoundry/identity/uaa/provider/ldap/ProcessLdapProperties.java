@@ -14,7 +14,7 @@
 
 package org.cloudfoundry.identity.uaa.provider.ldap;
 
-import org.apache.hc.core5.ssl.AllowAllHostnameVerifier;
+import org.apache.hc.client5.http.ssl.DefaultHostnameVerifier;
 import org.cloudfoundry.identity.uaa.provider.ldap.extension.DefaultTlsDirContextAuthenticationStrategy;
 import org.cloudfoundry.identity.uaa.provider.ldap.extension.ExternalTlsDirContextAuthenticationStrategy;
 import org.cloudfoundry.identity.uaa.security.LdapSocketFactory;
@@ -105,7 +105,7 @@ public class ProcessLdapProperties {
             default:
                 throw new IllegalArgumentException(tlsConfig);
         }
-        tlsStrategy.setHostnameVerifier(new AllowAllHostnameVerifier());
+        tlsStrategy.setHostnameVerifier(new DefaultHostnameVerifier());
         tlsStrategy.setSslSocketFactory(getSSLSocketFactory());
         return tlsStrategy;
     }

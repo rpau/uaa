@@ -15,7 +15,8 @@ package org.cloudfoundry.identity.uaa.util;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.hc.core5.http.HeaderElement;
-import org.apache.hc.core5.http.HeaderElementIterator;
+import org.apache.hc.core5.http.impl.DefaultConnectionReuseStrategy;
+import org.apache.hc.core5.http.message.BasicHeaderElementIterator;
 import org.apache.hc.core5.http.HttpResponse;
 import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
 import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
@@ -25,15 +26,14 @@ import org.apache.hc.core5.http.config.RegistryBuilder;
 import org.apache.hc.client5.http.ConnectionKeepAliveStrategy;
 import org.apache.hc.client5.http.socket.ConnectionSocketFactory;
 import org.apache.hc.client5.http.socket.PlainConnectionSocketFactory;
-import org.apache.hc.core5.http.impl.io.conn.PoolingHttpClientConnectionManager;
-import org.apache.hc.core5.http.message.BasicHeaderElementIterator;
-import org.apache.hc.core5.http.protocol.HTTP;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
 import org.apache.hc.core5.http.protocol.HttpContext;
 import org.apache.hc.core5.util.TextUtils;
+import org.apache.hc.core5.util.TimeValue;
+import org.apache.http.protocol.HTTP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hc.core5.ssl.SSLContextBuilder;
-import org.apache.hc.core5.http.impl.io.NoConnectionReuseStrategy;
 import org.apache.hc.client5.http.impl.DefaultRedirectStrategy;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
@@ -73,7 +73,6 @@ public abstract class UaaHttpRequestUtils {
     protected static ClientHttpRequestFactory createRequestFactory(HttpClientBuilder builder, int timeoutInMs) {
         HttpComponentsClientHttpRequestFactory httpComponentsClientHttpRequestFactory = new HttpComponentsClientHttpRequestFactory(builder.build());
 
-        httpComponentsClientHttpRequestFactory.setReadTimeout(timeoutInMs);
         httpComponentsClientHttpRequestFactory.setConnectionRequestTimeout(timeoutInMs);
         httpComponentsClientHttpRequestFactory.setConnectTimeout(timeoutInMs);
         return httpComponentsClientHttpRequestFactory;
@@ -103,7 +102,7 @@ public abstract class UaaHttpRequestUtils {
         builder.setConnectionManager(cm);
 
         if (maxKeepAlive <= 0) {
-            builder.setConnectionReuseStrategy(NoConnectionReuseStrategy.INSTANCE);
+            builder.setConnectionReuseStrategy(new DefaultConnectionReuseStrategy());
         } else {
             builder.setKeepAliveStrategy(new UaaConnectionKeepAliveStrategy(maxKeepAlive));
         }
@@ -156,12 +155,12 @@ public abstract class UaaHttpRequestUtils {
             this.connectionKeepAliveMax = connectionKeepAliveMax;
         }
 
-        @Override public long getKeepAliveDuration(HttpResponse httpResponse, HttpContext httpContext) {
-            HeaderElementIterator elementIterator = new BasicHeaderElementIterator(httpResponse.headerIterator(HTTP.CONN_KEEP_ALIVE));
+        @Override public TimeValue getKeepAliveDuration(HttpResponse httpResponse, HttpContext httpContext) {
+            BasicHeaderElementIterator elementIterator = new BasicHeaderElementIterator(httpResponse.headerIterator(HTTP.CONN_KEEP_ALIVE));
             long result = connectionKeepAliveMax;
 
             while (elementIterator.hasNext()) {
-                HeaderElement element = elementIterator.nextElement();
+                HeaderElement element = elementIterator.next();
                 String elementName = element.getName();
                 String elementValue = element.getValue();
                 if (elementValue != null && elementName != null && elementName.equalsIgnoreCase(TIMEOUT)) {
@@ -173,7 +172,7 @@ public abstract class UaaHttpRequestUtils {
                     break;
                 }
             }
-            return result;
+            return TimeValue.ofMilliseconds(result);
         }
     }
 
