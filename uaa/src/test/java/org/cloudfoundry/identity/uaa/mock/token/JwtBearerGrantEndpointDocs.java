@@ -39,7 +39,7 @@ import static org.springframework.restdocs.operation.preprocess.Preprocessors.pr
 import static org.springframework.restdocs.payload.JsonFieldType.NUMBER;
 import static org.springframework.restdocs.payload.JsonFieldType.STRING;
 import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
-import static org.springframework.restdocs.request.RequestDocumentation.requestParameters;
+import static org.springframework.restdocs.request.RequestDocumentation.queryParameters;
 import static org.springframework.restdocs.templates.TemplateFormats.markdown;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -73,7 +73,7 @@ class JwtBearerGrantEndpointDocs extends JwtBearerGrantMockMvcTests {
             fieldWithPath("refresh_token").type(STRING).description("Refresh token issued by this grant")
         );
 
-        Snippet requestParameters = requestParameters(
+        Snippet requestParameters = queryParameters(
             parameterWithName("assertion").type(STRING).required().description("JWT token identifying representing the user to be authenticated"),
             parameterWithName("client_id").type(STRING).required().description("Required, client with "),
             parameterWithName("client_secret").type(STRING).optional(null).description("The [secret passphrase configured](#change-secret) for the OAuth client. Optional if it is passed as part of the Basic Authorization header or if client_assertion is sent as part of private_key_jwt authentication."),

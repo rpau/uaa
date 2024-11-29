@@ -162,9 +162,9 @@ public class UserTokenGrantIT {
 
     try {
       responseEntity = restOperations.exchange(baseUrl + "/oauth/token", HttpMethod.POST, new HttpEntity<>(postBody, headers), Map.class);
-      responseStatus = responseEntity.getStatusCode();
+      responseStatus = HttpStatus.valueOf(responseEntity.getStatusCode().value());
     } catch (HttpClientErrorException clientErrorException) {
-      responseStatus = clientErrorException.getStatusCode();
+      responseStatus = HttpStatus.valueOf(clientErrorException.getStatusCode().value());
     }
     assertEquals(expectedStatus, responseStatus);
 

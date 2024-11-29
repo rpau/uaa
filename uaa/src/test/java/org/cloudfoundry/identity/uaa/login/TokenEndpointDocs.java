@@ -95,7 +95,7 @@ import static org.springframework.restdocs.payload.JsonFieldType.STRING;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
 import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
 import static org.springframework.restdocs.request.RequestDocumentation.pathParameters;
-import static org.springframework.restdocs.request.RequestDocumentation.requestParameters;
+import static org.springframework.restdocs.request.RequestDocumentation.queryParameters;
 import static org.springframework.restdocs.snippet.Attributes.key;
 import static org.springframework.restdocs.templates.TemplateFormats.markdown;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -234,7 +234,7 @@ class TokenEndpointDocs extends AbstractTokenMockMvcTests {
                 .param(PkceValidationService.CODE_VERIFIER, UaaTestAccounts.CODE_VERIFIER)
                 .param(REDIRECT_URI, redirect);
 
-        Snippet requestParameters = requestParameters(
+        Snippet requestParameters = queryParameters(
                 clientIdParameter,
                 parameterWithName(REDIRECT_URI).description("redirection URI to which the authorization server will send the user-agent back once access is granted (or denied)").attributes(SnippetUtils.constraints.value("Required if provided on authorization request"), SnippetUtils.type.value(STRING)),
                 parameterWithName("code").description(codeDescription).attributes(SnippetUtils.constraints.value("Required"), SnippetUtils.type.value(STRING)),
@@ -275,7 +275,7 @@ class TokenEndpointDocs extends AbstractTokenMockMvcTests {
                 .param(GRANT_TYPE, GRANT_TYPE_CLIENT_CREDENTIALS)
                 .param(REQUEST_TOKEN_FORMAT, OPAQUE.getStringValue());
 
-        Snippet requestParameters = requestParameters(
+        Snippet requestParameters = queryParameters(
                 clientIdParameter,
                 grantTypeParameter.description("the type of authentication being used to obtain the token, in this case `client_credentials`"),
                 clientSecretParameter,
@@ -309,7 +309,7 @@ class TokenEndpointDocs extends AbstractTokenMockMvcTests {
                 .param(REQUEST_TOKEN_FORMAT, OPAQUE.getStringValue())
                 .header("Authorization", "Basic " + clientAuthorization);
 
-        Snippet requestParameters = requestParameters(
+        Snippet requestParameters = queryParameters(
                 grantTypeParameter.description("the type of authentication being used to obtain the token, in this case `client_credentials`"),
                 scopeParameter,
                 opaqueFormatParameter
@@ -344,7 +344,7 @@ class TokenEndpointDocs extends AbstractTokenMockMvcTests {
                 .param(REQUEST_TOKEN_FORMAT, OPAQUE.getStringValue())
                 .param("login_hint", "{\"origin\":\"uaa\"}");
 
-        Snippet requestParameters = requestParameters(
+        Snippet requestParameters = queryParameters(
                 clientIdParameter,
                 grantTypeParameter.description("the type of authentication being used to obtain the token, in this case `password`"),
                 clientSecretParameter,
@@ -393,7 +393,7 @@ class TokenEndpointDocs extends AbstractTokenMockMvcTests {
                 authorizationHeader.required().description("A bearer token on behalf of a user with the scope uaa.user present")
         );
 
-        Snippet requestParameters = requestParameters(
+        Snippet requestParameters = queryParameters(
                 clientIdParameter.description("The client ID of the receiving client, this client must have `refresh_token` grant type"),
                 grantTypeParameter.description("The type of token grant requested, in this case `" + GRANT_TYPE_USER_TOKEN + "`"),
                 opaqueFormatParameter.description("This parameter is ignored. The refresh_token will always be opaque"),
@@ -470,7 +470,7 @@ class TokenEndpointDocs extends AbstractTokenMockMvcTests {
                 .param("scope", "openid");
 
         final ParameterDescriptor assertionFormatParameter = parameterWithName("assertion").required().type(STRING).description("An XML based SAML 2.0 bearer assertion, which is Base64URl encoded.");
-        Snippet requestParameters = requestParameters(
+        Snippet requestParameters = queryParameters(
                 clientIdParameter.description("The client ID of the receiving client, this client must have `urn:ietf:params:oauth:grant-type:saml2-bearer` grant type"),
                 clientSecretParameter,
                 clientAssertion,
@@ -609,7 +609,7 @@ class TokenEndpointDocs extends AbstractTokenMockMvcTests {
                 .param("password", user.getPassword())
                 .param(REQUEST_TOKEN_FORMAT, OPAQUE.getStringValue());
 
-        Snippet requestParameters = requestParameters(
+        Snippet requestParameters = queryParameters(
                 grantTypeParameter.description("the type of authentication being used to obtain the token, in this case `password`"),
                 parameterWithName("username").required().type(STRING).description("the username for the user trying to get a token"),
                 parameterWithName("password").required().type(STRING).description("the password for the user trying to get a token"),
@@ -665,7 +665,7 @@ class TokenEndpointDocs extends AbstractTokenMockMvcTests {
                 .param("passcode", passcode)
                 .param(REQUEST_TOKEN_FORMAT, OPAQUE.getStringValue());
 
-        Snippet requestParameters = requestParameters(
+        Snippet requestParameters = queryParameters(
                 grantTypeParameter.description("the type of authentication being used to obtain the token, in this case `password`"),
                 parameterWithName("passcode").required().type(STRING).description("the one-time passcode for the user which can be retrieved by going to `/passcode`"),
                 opaqueFormatParameter
@@ -716,7 +716,7 @@ class TokenEndpointDocs extends AbstractTokenMockMvcTests {
                 .param(REQUEST_TOKEN_FORMAT, OPAQUE.getStringValue())
                 .param("refresh_token", refreshToken.getValue());
 
-        Snippet requestParameters = requestParameters(
+        Snippet requestParameters = queryParameters(
                 grantTypeParameter.description("the type of authentication being used to obtain the token, in this case `refresh_token`"),
                 clientIdParameter,
                 clientSecretParameter.description("Optional and can be omitted if token before was requested using [PKCE](https://tools.ietf.org/html/rfc7636) with `code_challenge_method=S256` without a secret or client_assertion is used for private_key_jwt client authentication."),
@@ -793,7 +793,7 @@ class TokenEndpointDocs extends AbstractTokenMockMvcTests {
                 .param(PkceValidationService.CODE_VERIFIER, UaaTestAccounts.CODE_VERIFIER)
                 .param(REDIRECT_URI, redirect);
 
-        Snippet requestParameters = requestParameters(
+        Snippet requestParameters = queryParameters(
                 clientIdParameter,
                 parameterWithName(REDIRECT_URI).type(STRING).description("redirection URI to which the authorization server will send the user-agent back once access is granted (or denied)").attributes(SnippetUtils.constraints.value("Required if provided on authorization request")),
                 parameterWithName("code").required().type(STRING).description(codeDescription),

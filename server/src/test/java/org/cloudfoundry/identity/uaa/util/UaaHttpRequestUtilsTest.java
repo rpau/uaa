@@ -165,6 +165,13 @@ public class UaaHttpRequestUtilsTest {
         }
 
         @Override
+        public HttpRoute determineRoute(HttpHost target, HttpContext httpContext) throws HttpException {
+            HttpRoute route = delegate.determineRoute(target, httpContext);
+            routes.add(route);
+            return route;
+        }
+
+        @Override
         public HttpRoute determineRoute(HttpHost target, HttpRequest request, HttpContext context) throws HttpException {
             HttpRoute route = delegate.determineRoute(target, request, context);
             routes.add(route);

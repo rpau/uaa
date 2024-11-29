@@ -43,7 +43,7 @@ public class CurrentUserCookieRequestFilter extends OncePerRequestFilter {
             UaaPrincipal principal = (UaaPrincipal) getContext().getAuthentication().getPrincipal();
             try {
                 Cookie currentUserCookie = currentUserCookieFactory.getCookie(principal);
-                String headerValue = rfc6265CookieProcessor.generateHeader(currentUserCookie);
+                String headerValue = rfc6265CookieProcessor.generateHeader(currentUserCookie, request);
                 response.addHeader(SET_COOKIE, headerValue);
             } catch (CurrentUserCookieFactory.CurrentUserCookieEncodingException e) {
                 logger.error(errorMessage(principal), e);

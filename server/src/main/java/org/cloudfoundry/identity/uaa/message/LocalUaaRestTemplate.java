@@ -1,10 +1,11 @@
 package org.cloudfoundry.identity.uaa.message;
 
 import com.google.common.collect.Sets;
-import org.apache.hc.client5.http.ssl.TrustSelfSignedStrategy;
-import org.apache.hc.core5.ssl.SSLContextBuilder;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
+import org.apache.hc.client5.http.ssl.DefaultClientTlsStrategy;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.ssl.SSLContexts;
 import org.cloudfoundry.identity.uaa.constants.OriginKeys;
 import org.cloudfoundry.identity.uaa.oauth.client.OAuth2ClientContext;
 import org.cloudfoundry.identity.uaa.oauth.client.OAuth2RestTemplate;
@@ -96,8 +97,25 @@ public class LocalUaaRestTemplate extends OAuth2RestTemplate {
     }
 
     private void skipSslValidation() throws KeyStoreException, NoSuchAlgorithmException, KeyManagementException {
-        SSLContext sslContext = new SSLContextBuilder().loadTrustMaterial(null, new TrustSelfSignedStrategy()).build();
-        CloseableHttpClient httpClient = HttpClients.custom().setSslcontext(sslContext).build();
+        CloseableHttpClient httpClient = HttpClients.custom()
+                .setConnectionManager(
+                        PoolingHttpClientConnectionManagerBuilder.create()
+                                .setTlsSocketStrategy(
+                                        new DefaultClientTlsStrategy(
+                                                SSLContexts.custom()
+                                                        .loadTrustMaterial(
+                                                                null,
+                                                                // create TrustStrategy, trust any cert
+                                                                (chain, authType) -> true
+                                                        )
+                                                        .build(),
+                                                // create HostnameVerifier, trust any host
+                                                (host, session) -> true
+                                        )
+                                )
+                                .build()
+                )
+                .build();
         ClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory(httpClient);
         this.setRequestFactory(requestFactory);
     }

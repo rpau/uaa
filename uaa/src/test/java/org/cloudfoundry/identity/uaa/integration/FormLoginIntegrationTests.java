@@ -13,6 +13,7 @@
  *******************************************************************************/
 package org.cloudfoundry.identity.uaa.integration;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.Header;
 import org.apache.hc.core5.http.HttpHeaders;
 import org.apache.hc.client5.http.config.RequestConfig;
@@ -88,7 +89,6 @@ public class FormLoginIntegrationTests {
         assertEquals(FOUND.value(), response.getCode());
         location = response.getFirstHeader("Location").getValue();
         response.close();
-        httpget.completed();
         assertTrue(location.contains("/login"));
     }
 
@@ -104,7 +104,6 @@ public class FormLoginIntegrationTests {
         String body = EntityUtils.toString(response.getEntity());
         EntityUtils.consume(response.getEntity());
         response.close();
-        httpget.completed();
 
         assertTrue(body.contains("/login.do"));
         assertTrue(body.contains("username"));
@@ -112,7 +111,7 @@ public class FormLoginIntegrationTests {
 
         String csrf = IntegrationTestUtils.extractCookieCsrf(body);
 
-        HttpUriRequest loginPost = ClassicRequestBuilder.post()
+        ClassicHttpRequest loginPost = ClassicRequestBuilder.post()
             .setUri(serverRunning.getBaseUrl() + "/login.do")
             .addParameter("username",testAccounts.getUserName())
             .addParameter("password",testAccounts.getPassword())
@@ -132,7 +131,7 @@ public class FormLoginIntegrationTests {
                 .filter(cookie -> "JSESSIONID".equals(cookie.getName()))
                 .findAny().orElse(null);
         assertNotNull(jsessionidCookie);
-        HttpUriRequest getRequestAfterLogin = ClassicRequestBuilder.get()
+        ClassicHttpRequest getRequestAfterLogin = ClassicRequestBuilder.get()
                 .setUri(location)
                 .addHeader("Cookie", "JSESSIONID=" + jsessionidCookie.getValue())
                 .build();

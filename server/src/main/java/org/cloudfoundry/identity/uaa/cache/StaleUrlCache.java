@@ -139,7 +139,7 @@ public class StaleUrlCache implements UrlContentCache {
                         metadata = responseEntity.getBody();
                     } else {
                         throw new IllegalArgumentException(
-                                "Unable to fetch content, status:" + responseEntity.getStatusCode().getReasonPhrase());
+                                "Unable to fetch content, status:" + HttpStatus.valueOf(responseEntity.getStatusCode().value()).getReasonPhrase());
                     }
                 } else {
                     metadata = request.template.getForObject(netUri, byte[].class);

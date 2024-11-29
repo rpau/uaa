@@ -110,7 +110,7 @@ public class CookieBasedCsrfTokenRepository implements CsrfTokenRepository {
         } else {
             csrfCookie.setMaxAge(getCookieMaxAge());
         }
-        String headerValue = rfc6265CookieProcessor.generateHeader(csrfCookie);
+        String headerValue = rfc6265CookieProcessor.generateHeader(csrfCookie, request);
         response.addHeader(SET_COOKIE, headerValue);
     }
 

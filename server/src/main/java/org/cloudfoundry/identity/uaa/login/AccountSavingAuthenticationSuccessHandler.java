@@ -85,7 +85,7 @@ public class AccountSavingAuthenticationSuccessHandler implements Authentication
         } catch (CurrentUserCookieFactory.CurrentUserCookieEncodingException e) {
             logger.error(String.format("There was an error while creating the Current-Account cookie for user %s", uaaPrincipal.getId()), e);
         }
-        String headerValue = rfc6265CookieProcessor.generateHeader(currentUserCookie);
+        String headerValue = rfc6265CookieProcessor.generateHeader(currentUserCookie, request);
         response.addHeader(SET_COOKIE, headerValue);
     }
 

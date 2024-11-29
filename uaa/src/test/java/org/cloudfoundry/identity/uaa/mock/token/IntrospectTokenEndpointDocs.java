@@ -19,7 +19,7 @@ import static org.springframework.restdocs.payload.JsonFieldType.STRING;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
 import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
 import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
-import static org.springframework.restdocs.request.RequestDocumentation.requestParameters;
+import static org.springframework.restdocs.request.RequestDocumentation.queryParameters;
 import static org.springframework.restdocs.snippet.Attributes.key;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -47,7 +47,7 @@ class IntrospectTokenEndpointDocs extends EndpointDocs {
                 true
         );
 
-        Snippet requestParameters = requestParameters(
+        Snippet requestParameters = queryParameters(
                 parameterWithName("token").description("The token").attributes(key("constraints").value("Required"), key("type").value(STRING))
         );
 

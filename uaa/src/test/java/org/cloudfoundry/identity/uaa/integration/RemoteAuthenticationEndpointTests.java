@@ -164,7 +164,7 @@ public class RemoteAuthenticationEndpointTests {
             restTemplate.setErrorHandler(new DefaultResponseErrorHandler() {
                 @Override
                 protected boolean hasError(HttpStatusCode statusCode) {
-                    return statusCode.series() == HttpStatus.Series.SERVER_ERROR;
+                    return HttpStatus.valueOf(statusCode.value()).series() == HttpStatus.Series.SERVER_ERROR;
                 }
             });
         }
