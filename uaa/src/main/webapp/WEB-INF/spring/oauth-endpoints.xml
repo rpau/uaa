@@ -69,10 +69,9 @@
     <!-- Owner password flow for external authentication (SAML) -->
     <!-- Pattern: /oauth/token parameters:{grant_type=password,passcode= -->
     <http name="tokenEndpointSecurityForPasscodes" request-matcher-ref="passcodeTokenMatcher" create-session="stateless"
-          use-expressions="false"
           entry-point-ref="basicAuthenticationEntryPoint" xmlns="http://www.springframework.org/schema/security"
           authentication-manager-ref="emptyAuthenticationManager">
-        <intercept-url pattern="/**" access="IS_AUTHENTICATED_FULLY"/>
+        <intercept-url pattern="/**" access="isAuthenticated()"/>
         <anonymous enabled="false"/>
         <custom-filter ref="backwardsCompatibleScopeParameter" position="FIRST"/>
         <custom-filter ref="clientParameterAuthenticationFilter" before="BASIC_AUTH_FILTER"/>
@@ -155,10 +154,10 @@
 
     <!--/oauth/token with any match -->
     <http name="tokenEndpointSecurity" create-session="stateless"
-          authentication-manager-ref="clientAuthenticationManager" use-expressions="false"
+          authentication-manager-ref="clientAuthenticationManager"
           pattern="/oauth/token/**" entry-point-ref="basicAuthenticationEntryPoint"
           xmlns="http://www.springframework.org/schema/security">
-        <intercept-url pattern="/**" access="IS_AUTHENTICATED_FULLY"/>
+        <intercept-url pattern="/**" access="isAuthenticated()"/>
         <anonymous enabled="false"/>
         <custom-filter ref="backwardsCompatibleScopeParameter" position="FIRST"/>
         <custom-filter ref="clientAuthenticationFilter" position="BASIC_AUTH_FILTER"/>
@@ -175,8 +174,8 @@
           create-session="stateless"
           entry-point-ref="oauthAuthenticationEntryPoint"
           authentication-manager-ref="zoneAwareAuthzAuthenticationManager"
-          xmlns="http://www.springframework.org/schema/security" use-expressions="false">
-        <intercept-url pattern="/**" access="IS_AUTHENTICATED_FULLY"/>
+          xmlns="http://www.springframework.org/schema/security">
+        <intercept-url pattern="/**" access="isAuthenticated()"/>
         <custom-filter ref="backwardsCompatibleScopeParameter" position="FIRST"/>
         <custom-filter ref="authzAuthenticationFilter" position="FORM_LOGIN_FILTER"/>
         <anonymous enabled="false"/>
@@ -322,7 +321,6 @@
     <http name="promptStatelessTokenApiSecurity"
           disable-url-rewriting="true"
           entry-point-ref="uaaAuthorizationEndpoint"
-          use-expressions="false"
           request-matcher-ref="promptOauthAuthorizeApiRequestMatcher"
           create-session="never"
           xmlns="http://www.springframework.org/schema/security">
@@ -356,8 +354,8 @@
 
     <http name="externalOAuthCallbackEndpointSecurity" request-matcher-ref="externalOAuthCallbackRequestMatcher"
           entry-point-ref="loginEntryPoint"
-          xmlns="http://www.springframework.org/schema/security" use-expressions="false">
-        <intercept-url pattern="**" access="IS_AUTHENTICATED_FULLY"/>
+          xmlns="http://www.springframework.org/schema/security">
+        <intercept-url pattern="**" access="isAuthenticated()"/>
         <custom-filter ref="externalOAuthCallbackAuthenticationFilter" position="FORM_LOGIN_FILTER"/>
         <anonymous enabled="false"/>
         <csrf disabled="true"/>
@@ -370,8 +368,8 @@
           create-session="stateless"
           entry-point-ref="oauthAuthenticationEntryPoint"
           authentication-manager-ref="zoneAwareAuthzAuthenticationManager"
-          xmlns="http://www.springframework.org/schema/security" use-expressions="false">
-        <intercept-url pattern="/**" access="IS_AUTHENTICATED_FULLY"/>
+          xmlns="http://www.springframework.org/schema/security" >
+        <intercept-url pattern="/**" access="isAuthenticated()"/>
         <custom-filter ref="backwardsCompatibleScopeParameter" position="FIRST"/>
         <custom-filter ref="authzAuthenticationFilter" position="FORM_LOGIN_FILTER"/>
         <anonymous enabled="false"/>

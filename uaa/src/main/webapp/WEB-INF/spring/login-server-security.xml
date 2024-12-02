@@ -13,9 +13,8 @@
 
     <http name="secFilterLoginServerAuthenticate" request-matcher-ref="loginAuthenticateRequestMatcher"
           create-session="never" entry-point-ref="oauthAuthenticationEntryPoint"
-          authentication-manager-ref="loginAuthenticationMgr" xmlns="http://www.springframework.org/schema/security"
-          use-expressions="false">
-        <intercept-url pattern="/**" access="IS_AUTHENTICATED_FULLY"/>
+          authentication-manager-ref="loginAuthenticationMgr" xmlns="http://www.springframework.org/schema/security">
+        <intercept-url pattern="/**" access="isAuthenticated()"/>
         <custom-filter ref="oauthResourceAuthenticationFilter" position="PRE_AUTH_FILTER"/>
         <!-- scope authentication filter configured with a scope authentication manager -->
         <custom-filter ref="oauthLoginScopeAuthenticatingFilter" after="PRE_AUTH_FILTER"/>
@@ -38,9 +37,8 @@
 
     <http name="secFilterLoginServerAuthorize" request-matcher-ref="loginAuthorizeRequestMatcher" create-session="never"
           entry-point-ref="oauthAuthenticationEntryPoint"
-          authentication-manager-ref="loginAuthenticationMgr" xmlns="http://www.springframework.org/schema/security"
-          use-expressions="false">
-        <intercept-url pattern="/**" access="IS_AUTHENTICATED_FULLY"/>
+          authentication-manager-ref="loginAuthenticationMgr" xmlns="http://www.springframework.org/schema/security">
+        <intercept-url pattern="/**" access="isAuthenticated()"/>
         <custom-filter ref="backwardsCompatibleScopeParameter" position="FIRST"/>
         <custom-filter ref="oauthResourceAuthenticationFilter" position="PRE_AUTH_FILTER"/>
         <!-- scope authentication filter configured with a scope authentication manager -->
@@ -63,8 +61,7 @@
 
     <http name="secFilterLoginServerToken" request-matcher-ref="loginTokenRequestMatcher" create-session="never"
           entry-point-ref="oauthAuthenticationEntryPoint"
-          authentication-manager-ref="loginAuthenticationMgr" xmlns="http://www.springframework.org/schema/security"
-          use-expressions="false">
+          authentication-manager-ref="loginAuthenticationMgr" xmlns="http://www.springframework.org/schema/security">
         <!--
           This represents a /oauth/token requests that gets passed through
           from the login server. It assumes that the User has been authenticated
@@ -73,7 +70,7 @@
            - client_id and client_secret are present
            - Bearer token belongs to login server (oauth.login) validated as resource="oauth"
         -->
-        <intercept-url pattern="/**" access="IS_AUTHENTICATED_FULLY"/>
+        <intercept-url pattern="/**" access="isAuthenticated()"/>
         <!-- the oauthResourceAuthenticationFilter validates the Bearer token
              What we need is scope=oauth.login
          -->
@@ -137,9 +134,8 @@
     <!-- Support for older login servers -->
     <http name="secFilterLoginServerAuthorizeOld" request-matcher-ref="loginAuthorizeRequestMatcherOld"
           create-session="always" entry-point-ref="oauthAuthenticationEntryPoint"
-          authentication-manager-ref="loginAuthenticationMgr" xmlns="http://www.springframework.org/schema/security"
-          use-expressions="false">
-        <intercept-url pattern="/**" access="IS_AUTHENTICATED_FULLY"/>
+          authentication-manager-ref="loginAuthenticationMgr" xmlns="http://www.springframework.org/schema/security">
+        <intercept-url pattern="/**" access="isAuthenticated()"/>
         <custom-filter ref="backwardsCompatibleScopeParameter" position="FIRST"/>
         <custom-filter ref="oauthResourceAuthenticationFilter" position="PRE_AUTH_FILTER"/>
         <custom-filter ref="loginAuthenticationFilter" position="FORM_LOGIN_FILTER"/>
@@ -186,7 +182,7 @@
 
     <http name="secFilterLoginServerPasswordEndpoints" create-session="stateless"
           entry-point-ref="oauthAuthenticationEntryPoint" authentication-manager-ref="emptyAuthenticationManager"
-          pattern="/password_*" xmlns="http://www.springframework.org/schema/security" use-expressions="true">
+          pattern="/password_*" xmlns="http://www.springframework.org/schema/security">
         <intercept-url pattern="/**"
                        access="#oauth2.hasScope('oauth.login') or #oauth2.hasScopeInAuthZone('zones.{zone.id}.admin')"/>
         <custom-filter ref="oauthWithoutResourceAuthenticationFilter" position="PRE_AUTH_FILTER"/>
@@ -199,8 +195,9 @@
     <http name="secFilterLoginServerEmailEndpoints" create-session="stateless"
           entry-point-ref="oauthAuthenticationEntryPoint" authentication-manager-ref="emptyAuthenticationManager"
           access-decision-manager-ref="accessDecisionManager" pattern="/email_*"
-          xmlns="http://www.springframework.org/schema/security" use-expressions="false">
-        <intercept-url pattern="/**" access="scope=oauth.login"/>
+          use-authorization-manager="false"
+          xmlns="http://www.springframework.org/schema/security">
+        <intercept-url pattern="/**" access="hasScope(oauth.login)"/>
         <custom-filter ref="oauthResourceAuthenticationFilter" position="PRE_AUTH_FILTER"/>
         <anonymous enabled="false"/>
         <access-denied-handler ref="oauthAccessDeniedHandler"/>

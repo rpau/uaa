@@ -182,10 +182,10 @@
 
     <http name="scimUserPassword" pattern="/User*/*/password" create-session="stateless"
           authentication-manager-ref="emptyAuthenticationManager"
+          use-authorization-manager="false"
           entry-point-ref="oauthAuthenticationEntryPoint" access-decision-manager-ref="accessDecisionManager"
-          use-expressions="false"
           xmlns="http://www.springframework.org/schema/security">
-        <intercept-url pattern="/**" access="IS_AUTHENTICATED_FULLY,scope=password.write"/>
+        <intercept-url pattern="/**" access="isAuthenticated() or #oauth2.hasScope('password.write')"/>
         <custom-filter ref="passwordResourceAuthenticationFilter" position="PRE_AUTH_FILTER"/>
         <access-denied-handler ref="oauthAccessDeniedHandler"/>
         <csrf disabled="true"/>
@@ -232,10 +232,11 @@
 
     <http name="scimUserIds" pattern="/ids/Users*" create-session="stateless"
           authentication-manager-ref="emptyAuthenticationManager"
+          use-authorization-manager="false"
           entry-point-ref="oauthAuthenticationEntryPoint" access-decision-manager-ref="accessDecisionManager"
           use-expressions="false"
           xmlns="http://www.springframework.org/schema/security">
-        <intercept-url pattern="/**" access="scope=scim.userids"/>
+        <intercept-url pattern="/**" access="#oauth2.hasScope('scim.userids')"/>
         <custom-filter ref="idsResourceAuthenticationFilter" position="PRE_AUTH_FILTER"/>
         <access-denied-handler ref="oauthAccessDeniedHandler"/>
         <csrf disabled="true"/>
