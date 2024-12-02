@@ -24,7 +24,13 @@ dependencies {
     implementation(libraries.springSecurityConfig)
     implementation(libraries.springBootStarterMail)
     implementation(libraries.openSamlApi)
-    implementation(libraries.springSecuritySamlServiceProvider)
+    implementation(libraries.openSamlImpl)
+    implementation(libraries.openSamlCoreApi)
+    implementation(libraries.openSamlCoreImpl)
+
+    implementation(libraries.springSecuritySamlServiceProvider) {
+        exclude group: "org.opensaml", module: "opensaml-core"
+    }
     implementation(libraries.jodaTime)
     implementation(libraries.xmlSecurity)
     implementation(libraries.springSessionJdbc)

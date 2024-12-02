@@ -20,7 +20,7 @@ versions.braveVersion = "6.0.3"
 versions.jacksonVersion = "2.18.2"
 versions.jsonPathVersion = "2.9.0"
 versions.awaitilityVersion = "4.2.2"
-versions.opensaml = "4.0.1" // Spring Security 5.8.x allows OpenSAML 3 or 4. OpenSAML 3 has reached its end-of-life. Spring Security 6 drops support for 3, using 4.
+versions.opensaml = "5.1.2" // Spring Security 5.8.x allows OpenSAML 3 or 4. OpenSAML 3 has reached its end-of-life. Spring Security 6 drops support for 3, using 4.
 
 // Versions we're overriding from the Spring Boot Bom (Dependabot does not issue PRs to bump these versions, so we need to manually bump them)
 ext["mariadb.version"] = "2.7.12" // Bumping to v3 breaks some pipeline jobs (and compatibility with Amazon Aurora MySQL), so pinning to v2 for now. v2 (current version) is stable and will be supported until about September 2025 (https://mariadb.com/kb/en/about-mariadb-connector-j/).
@@ -81,9 +81,12 @@ libraries.junitVintageEngine = "org.junit.vintage:junit-vintage-engine"
 libraries.log4jCore = "org.apache.logging.log4j:log4j-core"
 libraries.lombok = "org.projectlombok:lombok"
 libraries.mariaJdbcDriver = "org.mariadb.jdbc:mariadb-java-client"
-libraries.mockito = "org.mockito:mockito-core"
+libraries.mockito = "org.mockito:mockito-inline"
 libraries.mockitoJunit5 = "org.mockito:mockito-junit-jupiter"
 libraries.openSamlApi = "org.opensaml:opensaml-saml-api:${versions.opensaml}"
+libraries.openSamlImpl = "org.opensaml:opensaml-saml-impl:${versions.opensaml}"
+libraries.openSamlCoreApi = "org.opensaml:opensaml-core-api:${versions.opensaml}"
+libraries.openSamlCoreImpl = "org.opensaml:opensaml-core-impl:${versions.opensaml}"
 libraries.passay = "org.passay:passay:1.6.6"
 libraries.postgresql = "org.postgresql:postgresql:42.7.4"
 libraries.selenium = "org.seleniumhq.selenium:selenium-java:${versions.seleniumVersion}"
