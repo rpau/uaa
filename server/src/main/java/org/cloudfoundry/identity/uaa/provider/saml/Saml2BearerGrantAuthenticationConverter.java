@@ -17,7 +17,7 @@
 package org.cloudfoundry.identity.uaa.provider.saml;
 
 import lombok.extern.slf4j.Slf4j;
-import net.shibboleth.utilities.java.support.xml.ParserPool;
+import net.shibboleth.shared.xml.ParserPool;
 import org.cloudfoundry.identity.uaa.authentication.BackwardsCompatibleTokenEndpointAuthenticationFilter;
 import org.cloudfoundry.identity.uaa.authentication.UaaAuthentication;
 import org.cloudfoundry.identity.uaa.authentication.UaaPrincipal;
@@ -183,8 +183,6 @@ public final class Saml2BearerGrantAuthenticationConverter implements Authentica
      * Construct a default strategy for validating each SAML 2.0 Assertion and associated
      * {@link Authentication} token
      *
-     * @param validationContextParameters a consumer for editing the values passed to the
-     *                                    {@link ValidationContext} for each assertion being validated
      * @return the default assertion validator strategy
      * @since 5.8
      */

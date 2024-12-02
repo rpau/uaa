@@ -17,7 +17,7 @@
 package org.cloudfoundry.identity.uaa.provider.saml;
 
 import lombok.Getter;
-import net.shibboleth.utilities.java.support.xml.ParserPool;
+import net.shibboleth.shared.xml.ParserPool;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.opensaml.core.config.ConfigurationService;
@@ -33,6 +33,7 @@ import org.opensaml.core.xml.schema.XSString;
 import org.opensaml.core.xml.schema.XSURI;
 import org.opensaml.saml.common.assertion.ValidationContext;
 import org.opensaml.saml.common.assertion.ValidationResult;
+import org.opensaml.saml.saml2.assertion.AssertionValidator;
 import org.opensaml.saml.saml2.assertion.ConditionValidator;
 import org.opensaml.saml.saml2.assertion.SAML20AssertionValidator;
 import org.opensaml.saml.saml2.assertion.SAML2AssertionValidationParameters;
@@ -552,7 +553,7 @@ public final class OpenSaml4AuthenticationProvider implements AuthenticationProv
             }
             String message = String.format("Invalid assertion [%s] for SAML response [%s]: %s", assertion.getID(),
                     assertion.getParent() != null ? ((Response) assertion.getParent()).getID() : assertion.getID(),
-                    context.getValidationFailureMessage());
+                    String.join(",",context.getValidationFailureMessages()));
             return Saml2ResponseValidatorResult.failure(new Saml2Error(errorCode, message));
         };
     }
@@ -660,8 +661,8 @@ public final class OpenSaml4AuthenticationProvider implements AuthenticationProv
             });
             subjects.add(new BearerSubjectConfirmationValidator() {
                 @Override
-                protected ValidationResult validateAddress(SubjectConfirmation confirmation, Assertion assertion,
-                                                           ValidationContext context, boolean required) {
+                protected ValidationResult doValidate(SubjectConfirmation confirmation, Assertion assertion,
+                                                           ValidationContext context) {
                     // applications should validate their own addresses - gh-7514
                     return ValidationResult.VALID;
                 }
@@ -669,7 +670,7 @@ public final class OpenSaml4AuthenticationProvider implements AuthenticationProv
         }
 
         private static final SAML20AssertionValidator attributeValidator = new SAML20AssertionValidator(conditions,
-                subjects, statements, null, null) {
+                subjects, statements, null, null, null) {
             @Nonnull
             @Override
             protected ValidationResult validateSignature(Assertion token, ValidationContext context) {
@@ -678,8 +679,8 @@ public final class OpenSaml4AuthenticationProvider implements AuthenticationProv
         };
 
         static SAML20AssertionValidator createSignatureValidator(SignatureTrustEngine engine) {
-            return new SAML20AssertionValidator(new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), engine,
-                    validator) {
+            return new SAML20AssertionValidator(new ArrayList<>(), new ArrayList<>(), new ArrayList<>(),
+                    null, engine, validator) {
                 @Nonnull
                 @Override
                 protected ValidationResult validateConditions(Assertion assertion, ValidationContext context) {

@@ -14,23 +14,19 @@
 package org.cloudfoundry.identity.uaa.util;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
+import org.apache.hc.client5.http.ssl.DefaultClientTlsStrategy;
 import org.apache.hc.core5.http.HeaderElement;
 import org.apache.hc.core5.http.impl.DefaultConnectionReuseStrategy;
 import org.apache.hc.core5.http.message.BasicHeaderElementIterator;
 import org.apache.hc.core5.http.HttpResponse;
-import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
-import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
 import org.apache.hc.client5.http.ssl.TrustSelfSignedStrategy;
-import org.apache.hc.core5.http.config.Registry;
-import org.apache.hc.core5.http.config.RegistryBuilder;
 import org.apache.hc.client5.http.ConnectionKeepAliveStrategy;
-import org.apache.hc.client5.http.socket.ConnectionSocketFactory;
-import org.apache.hc.client5.http.socket.PlainConnectionSocketFactory;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
 import org.apache.hc.core5.http.protocol.HttpContext;
+import org.apache.hc.core5.ssl.SSLContexts;
 import org.apache.hc.core5.util.TextUtils;
 import org.apache.hc.core5.util.TimeValue;
-import org.apache.http.protocol.HTTP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hc.core5.ssl.SSLContextBuilder;
@@ -42,7 +38,6 @@ import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 
-import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.URLEncoder;
@@ -84,16 +79,25 @@ public abstract class UaaHttpRequestUtils {
             .setRedirectStrategy(new DefaultRedirectStrategy());
         PoolingHttpClientConnectionManager cm;
         if (skipSslValidation) {
-            SSLContext sslContext = getNonValidatingSslContext();
-            final String[] supportedProtocols = split(System.getProperty("https.protocols"));
-            final String[] supportedCipherSuites = split(System.getProperty("https.cipherSuites"));
-            HostnameVerifier hostnameVerifierCopy = new NoopHostnameVerifier();
-            SSLConnectionSocketFactory sslSocketFactory = new SSLConnectionSocketFactory(sslContext, supportedProtocols, supportedCipherSuites, hostnameVerifierCopy);
-            Registry<ConnectionSocketFactory> socketFactoryRegistry = RegistryBuilder.<ConnectionSocketFactory> create()
-                    .register("https", sslSocketFactory)
-                    .register("http", PlainConnectionSocketFactory.getSocketFactory())
-                    .build();
-            cm = new PoolingHttpClientConnectionManager(socketFactoryRegistry);
+            try {
+                cm = PoolingHttpClientConnectionManagerBuilder.create()
+                        .setTlsSocketStrategy(
+                                new DefaultClientTlsStrategy(
+                                        SSLContexts.custom()
+                                                .loadTrustMaterial(
+                                                        null,
+                                                        // create TrustStrategy, trust any cert
+                                                        (chain, authType) -> true
+                                                )
+                                                .build(),
+                                        // create HostnameVerifier, trust any host
+                                        (host, session) -> true
+                                )
+                        )
+                        .build();
+            } catch (NoSuchAlgorithmException | KeyStoreException | KeyManagementException e) {
+                throw new RuntimeException("Error configuring the http client without SSL validation", e);
+            }
         } else {
             cm = new PoolingHttpClientConnectionManager();
         }
@@ -156,7 +160,7 @@ public abstract class UaaHttpRequestUtils {
         }
 
         @Override public TimeValue getKeepAliveDuration(HttpResponse httpResponse, HttpContext httpContext) {
-            BasicHeaderElementIterator elementIterator = new BasicHeaderElementIterator(httpResponse.headerIterator(HTTP.CONN_KEEP_ALIVE));
+            BasicHeaderElementIterator elementIterator = new BasicHeaderElementIterator(httpResponse.headerIterator("Keep-Alive"));
             long result = connectionKeepAliveMax;
 
             while (elementIterator.hasNext()) {

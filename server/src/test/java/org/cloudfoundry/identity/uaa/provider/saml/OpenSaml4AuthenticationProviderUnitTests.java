@@ -1,7 +1,7 @@
 package org.cloudfoundry.identity.uaa.provider.saml;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import net.shibboleth.utilities.java.support.xml.SerializeSupport;
+import net.shibboleth.shared.xml.SerializeSupport;
 import org.cloudfoundry.identity.uaa.provider.saml.OpenSaml4AuthenticationProvider.ResponseToken;
 import org.junit.jupiter.api.Test;
 import org.opensaml.core.xml.XMLObject;

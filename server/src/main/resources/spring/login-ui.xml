@@ -33,7 +33,7 @@
     </http>
 
     <http name="secFilterCodeLogin" request-matcher-ref="autologinRequestMatcher" entry-point-ref="loginEntryPoint"
-          xmlns="http://www.springframework.org/schema/security" use-expressions="false">
+          xmlns="http://www.springframework.org/schema/security" >
         <intercept-url pattern="/**" method="GET"/>
         <custom-filter ref="autologinAuthenticationFilter" position="FORM_LOGIN_FILTER"/>
         <anonymous enabled="false"/>
@@ -43,9 +43,8 @@
     <!-- Pattern:/autologin -->
     <http name="secFilterAutologin" pattern="/autologin" create-session="stateless"
           entry-point-ref="basicAuthenticationEntryPoint"
-          xmlns="http://www.springframework.org/schema/security" authentication-manager-ref="emptyAuthenticationManager"
-          use-expressions="false">
-        <intercept-url pattern="/**" access="IS_AUTHENTICATED_FULLY" method="POST"/>
+          xmlns="http://www.springframework.org/schema/security" authentication-manager-ref="emptyAuthenticationManager">
+        <intercept-url pattern="/**" access="isAuthenticated()" method="POST"/>
         <anonymous enabled="false"/>
         <custom-filter ref="clientAuthenticationFilter" position="BASIC_AUTH_FILTER"/>
         <csrf disabled="true"/>
@@ -111,7 +110,6 @@
           pattern="/reset_password.do"
           disable-url-rewriting="true"
           entry-point-ref="loginEntryPoint"
-          use-expressions="false"
           xmlns="http://www.springframework.org/schema/security">
         <custom-filter ref="userManagementSecurityFilter" before="ANONYMOUS_FILTER"/>
         <custom-filter ref="resetPasswordAuthenticationFilter" position="LAST"/>
@@ -124,9 +122,8 @@
           pattern="/forgot_password**"
           disable-url-rewriting="true"
           entry-point-ref="loginEntryPoint"
-          use-expressions="false"
           xmlns="http://www.springframework.org/schema/security">
-        <intercept-url pattern="/**" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+        <intercept-url pattern="/**" access="hasRole('ROLE_ANONYMOUS')"/>
         <csrf disabled="true"/>
         <access-denied-handler ref="loginEntryPoint"/>
     </http>
@@ -157,31 +154,31 @@
 
     <http name="deleteSavedAccountSecurity" pattern="/delete_saved_account**" create-session="stateless"
           entry-point-ref="basicAuthenticationEntryPoint"
-          authentication-manager-ref="clientAuthenticationManager" use-expressions="false"
+          authentication-manager-ref="clientAuthenticationManager"
           xmlns="http://www.springframework.org/schema/security">
-        <intercept-url pattern="/**" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+        <intercept-url pattern="/**" access="hasRole('ROLE_ANONYMOUS')"/>
     </http>
 
     <http name="verifyEmailSecurity" pattern="/verify_email" disable-url-rewriting="true"
           xmlns="http://www.springframework.org/schema/security"
-          entry-point-ref="loginEntryPoint" use-expressions="false">
-        <intercept-url pattern="/verify_email" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+          entry-point-ref="loginEntryPoint">
+        <intercept-url pattern="/verify_email" access="hasRole('ROLE_ANONYMOUS')"/>
         <anonymous enabled="true"/>
         <csrf disabled="true"/>
     </http>
 
     <http name="verifyUserSecurity" pattern="/verify_user" disable-url-rewriting="true"
           xmlns="http://www.springframework.org/schema/security"
-          entry-point-ref="loginEntryPoint" use-expressions="false">
-        <intercept-url pattern="/**" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+          entry-point-ref="loginEntryPoint" >
+        <intercept-url pattern="/**" access="hasRole('ROLE_ANONYMOUS')"/>
         <anonymous enabled="true"/>
         <csrf disabled="true"/>
     </http>
 
     <http name="acceptInvitationSecurity" pattern="/invitations/accept" disable-url-rewriting="true"
           xmlns="http://www.springframework.org/schema/security"
-          entry-point-ref="loginEntryPoint" use-expressions="false">
-        <intercept-url pattern="/**" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+          entry-point-ref="loginEntryPoint" >
+        <intercept-url pattern="/**" access="hasRole('ROLE_ANONYMOUS')"/>
         <anonymous enabled="true"/>
         <csrf disabled="true"/>
     </http>
