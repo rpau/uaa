@@ -1,14 +1,22 @@
 package org.cloudfoundry.identity.uaa.provider.saml;
 
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.cloudfoundry.identity.uaa.impl.config.NestedMapPropertySource;
 import org.cloudfoundry.identity.uaa.saml.SamlKey;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.EnvironmentAware;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.PropertySource;
 import org.springframework.lang.Nullable;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Configuration properties for SAML
@@ -17,12 +25,13 @@ import java.util.Map;
 @Slf4j
 @Data
 @ConfigurationProperties(prefix = "login.saml")
-public class SamlConfigProps {
+public class SamlConfigProps implements EnvironmentAware {
 
     /**
      * Map of provider IDs to provider configuration
      */
-    private Map<String, Map<String, Object>> providers;
+    @Setter(AccessLevel.NONE)
+    private Map<String, Map<String, Object>> environmentProviders;
 
     /**
      * Entity ID Alias to login at /saml/SSO/alias/{login.saml.entityIDAlias};
@@ -107,19 +116,19 @@ public class SamlConfigProps {
     /**
      * Deprecated but sill working: login.serviceProviderKey
      */
-    @Value("${login.serviceProviderKey:null}")
+    @Deprecated(since = "77.20.0", forRemoval = true)
     private String legacyServiceProviderKey;
 
     /**
      * Deprecated but sill working: login.serviceProviderKeyPassword
      */
-    @Value("${login.serviceProviderKeyPassword:null}")
+    @Deprecated(since = "77.20.0", forRemoval = true)
     private String legacyServiceProviderKeyPassword;
 
     /**
      * Deprecated but sill working: login.serviceProviderCertificate
      */
-    @Value("${login.serviceProviderCertificate:null}")
+    @Deprecated(since = "77.20.0", forRemoval = true)
     private String legacyServiceProviderCertificate;
 
     /**
@@ -129,5 +138,27 @@ public class SamlConfigProps {
     @Nullable
     public SamlKey getActiveSamlKey() {
         return keys != null ? keys.get(activeKeyId) : null;
+    }
+
+    /**
+     * Remark: The providers map can have dots in key, typically because of domain names, e.g. cloudfoundry.org
+     * With spring-boot Configuration annotations we loose the context, therefore use the map from YamlMapFactoryBean
+     * from the environment.
+     *
+     * @param environment
+     */
+    @Override
+    public void setEnvironment(Environment environment) {
+        var nestedMap = Optional.ofNullable(((ConfigurableEnvironment) environment).getPropertySources().get("servletConfigYaml")).orElse((PropertySource) new NestedMapPropertySource("servletConfigYaml", Map.of()));
+        if (nestedMap.getProperty("login.saml.providers") instanceof LinkedHashMap<?, ?> linkedHashMap) {
+            this.environmentProviders = new LinkedHashMap<>((Map<String, Map<String, Object>>)linkedHashMap);
+        }
+        this.legacyServiceProviderKey = getNestedStringValue(nestedMap, "login.serviceProviderKey");
+        this.legacyServiceProviderKeyPassword = getNestedStringValue(nestedMap, "login.serviceProviderKeyPassword");
+        this.legacyServiceProviderCertificate = getNestedStringValue(nestedMap, "login.serviceProviderCertificate");
+    }
+
+    private static String getNestedStringValue(PropertySource<?> nestedMapPropertySource, String key) {
+        return (nestedMapPropertySource.getProperty(key) instanceof String valueString) ? valueString : null;
     }
 }
