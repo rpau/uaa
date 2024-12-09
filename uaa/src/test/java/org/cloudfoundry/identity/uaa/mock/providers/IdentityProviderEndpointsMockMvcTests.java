@@ -162,25 +162,25 @@ class IdentityProviderEndpointsMockMvcTests {
         identityProviderFields.remove("config");
 
         MvcResult create = mockMvc.perform(post("/identity-providers/")
-                        .header("Authorization", "Bearer " + accessToken)
-                        .contentType(APPLICATION_JSON)
-                        .content(JsonUtils.writeValueAsString(identityProviderFields)))
+                .header("Authorization", "Bearer " + accessToken)
+                .contentType(APPLICATION_JSON)
+                .content(JsonUtils.writeValueAsString(identityProviderFields)))
                 .andExpect(status().isCreated())
                 .andReturn();
 
         identityProvider = JsonUtils.readValue(create.getResponse().getContentAsString(), IdentityProvider.class);
 
         mockMvc.perform(put("/identity-providers/" + identityProvider.getId())
-                        .header("Authorization", "Bearer " + accessToken)
-                        .contentType(APPLICATION_JSON)
-                        .content(JsonUtils.writeValueAsString(identityProviderFields)))
+                .header("Authorization", "Bearer " + accessToken)
+                .contentType(APPLICATION_JSON)
+                .content(JsonUtils.writeValueAsString(identityProviderFields)))
                 .andExpect(status().isOk());
     }
 
     @Test
     void test_Create_and_Delete_SamlProvider() throws Exception {
         String origin = "idp-mock-saml-" + new RandomValueStringGenerator().generate();
-        String metadata = String.format(BootstrapSamlIdentityProviderDataTests.XML_WITHOUT_ID, "http://localhost:9999/metadata/" + origin);
+        String metadata = BootstrapSamlIdentityProviderDataTests.XML_WITHOUT_ID.formatted("http://localhost:9999/metadata/" + origin);
         String accessToken = setUpAccessToken();
         IdentityProvider<SamlIdentityProviderDefinition> provider = new IdentityProvider<>();
         provider.setActive(true);
@@ -300,7 +300,7 @@ class IdentityProviderEndpointsMockMvcTests {
         providerDefinition.setGroupRoleAttribute("description");
 
         try (InMemoryLdapServer ldapServer =
-                     InMemoryLdapServer.startLdap(33389)) {
+                InMemoryLdapServer.startLdap(33389)) {
             providerDefinition.setBaseUrl(ldapServer.getLdapBaseUrl());
             newIdp.setConfig(providerDefinition);
 
@@ -440,7 +440,7 @@ class IdentityProviderEndpointsMockMvcTests {
         identityProvider.setType(OriginKeys.SAML);
 
         SamlIdentityProviderDefinition providerDefinition = new SamlIdentityProviderDefinition()
-                .setMetaDataLocation(String.format(BootstrapSamlIdentityProviderDataTests.XML_WITHOUT_ID, "http://www.okta.com/" + identityProvider.getOriginKey()))
+                .setMetaDataLocation(BootstrapSamlIdentityProviderDataTests.XML_WITHOUT_ID.formatted("http://www.okta.com/" + identityProvider.getOriginKey()))
                 .setIdpEntityAlias(identityProvider.getOriginKey())
                 .setNameID("urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress")
                 .setLinkText("IDPEndpointsMockTests Saml Provider:" + identityProvider.getOriginKey())
@@ -478,7 +478,7 @@ class IdentityProviderEndpointsMockMvcTests {
         identityProvider.setType(OriginKeys.SAML);
 
         SamlIdentityProviderDefinition providerDefinition = new SamlIdentityProviderDefinition()
-                .setMetaDataLocation(String.format(BootstrapSamlIdentityProviderDataTests.XML_WITHOUT_ID, "http://www.okta.com/" + identityProvider.getOriginKey()))
+                .setMetaDataLocation(BootstrapSamlIdentityProviderDataTests.XML_WITHOUT_ID.formatted("http://www.okta.com/" + identityProvider.getOriginKey()))
                 .setIdpEntityAlias(identityProvider.getOriginKey())
                 .setNameID("urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress")
                 .setLinkText("IDPEndpointsMockTests Saml Provider:" + identityProvider.getOriginKey())

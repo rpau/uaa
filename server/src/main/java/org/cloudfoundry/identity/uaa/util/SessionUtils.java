@@ -27,7 +27,8 @@ public final class SessionUtils {
     private static final String EXTERNAL_OAUTH_STATE_ATTRIBUTE_PREFIX = "external-oauth-state-";
     private static final String EXTERNAL_OAUTH_CODE_VERIFIER_ATTRIBUTE_PREFIX = "external-oauth-verifier-";
 
-    private SessionUtils() {}
+    private SessionUtils() {
+    }
 
     public static boolean isPasswordChangeRequired(HttpSession session) {
         Object passwordChangeRequired = session.getAttribute(PASSWORD_CHANGE_REQUIRED);
@@ -37,7 +38,7 @@ public final class SessionUtils {
         }
 
         if (!(passwordChangeRequired instanceof Boolean)) {
-            throw new IllegalArgumentException(String.format("The %s attribute on the session must be a Boolean", PASSWORD_CHANGE_REQUIRED));
+            throw new IllegalArgumentException("The %s attribute on the session must be a Boolean".formatted(PASSWORD_CHANGE_REQUIRED));
         }
 
         return (Boolean) passwordChangeRequired;

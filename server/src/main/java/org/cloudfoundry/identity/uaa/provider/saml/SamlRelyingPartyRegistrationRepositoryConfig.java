@@ -30,10 +30,10 @@ public class SamlRelyingPartyRegistrationRepositoryConfig {
     private final List<SignatureAlgorithm> signatureAlgorithms;
 
     public SamlRelyingPartyRegistrationRepositoryConfig(@Qualifier("samlEntityID") String samlEntityID,
-                                                        SamlConfigProps samlConfigProps,
-                                                        BootstrapSamlIdentityProviderData bootstrapSamlIdentityProviderData,
-                                                        @Value("${login.saml.nameID:urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified}")
-                                                        String samlSpNameID, List<SignatureAlgorithm> signatureAlgorithms
+            SamlConfigProps samlConfigProps,
+            BootstrapSamlIdentityProviderData bootstrapSamlIdentityProviderData,
+            @Value("${login.saml.nameID:urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified}")
+            String samlSpNameID, List<SignatureAlgorithm> signatureAlgorithms
     ) {
         this.samlEntityID = samlEntityID;
         this.samlConfigProps = samlConfigProps;
@@ -107,7 +107,7 @@ public class SamlRelyingPartyRegistrationRepositoryConfig {
     @Autowired
     @Bean
     UaaRelyingPartyRegistrationResolver relyingPartyRegistrationResolver(RelyingPartyRegistrationRepository relyingPartyRegistrationRepository,
-                                                                      @Qualifier("samlEntityID") String samlEntityID) {
+            @Qualifier("samlEntityID") String samlEntityID) {
         return new UaaRelyingPartyRegistrationResolver(relyingPartyRegistrationRepository, samlEntityID);
     }
 }

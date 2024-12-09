@@ -40,7 +40,7 @@ import static org.springframework.util.StringUtils.hasText;
 
 public class OauthIDPWrapperFactoryBean {
     private Map<String, AbstractExternalOAuthIdentityProviderDefinition> oauthIdpDefinitions = new HashMap<>();
-    private List<IdentityProviderWrapper> providers = new LinkedList<>();
+    private final List<IdentityProviderWrapper> providers = new LinkedList<>();
 
     public OauthIDPWrapperFactoryBean(Map<String, Map> definitions) {
         if (definitions != null) {
@@ -80,7 +80,7 @@ public class OauthIDPWrapperFactoryBean {
     }
 
     private AbstractExternalOAuthIdentityProviderDefinition getExternalOIDCIdentityProviderDefinition(String alias,
-                                                                                                      Map<String, Object> idpDefinitionMap, IdentityProvider provider) throws MalformedURLException {
+            Map<String, Object> idpDefinitionMap, IdentityProvider provider) throws MalformedURLException {
         AbstractExternalOAuthIdentityProviderDefinition rawDef;
         OIDCIdentityProviderDefinition oidcIdentityProviderDefinition = new OIDCIdentityProviderDefinition();
         setCommonProperties(idpDefinitionMap, oidcIdentityProviderDefinition);
@@ -149,8 +149,8 @@ public class OauthIDPWrapperFactoryBean {
         String discoveryUrl = (String) idpDefinitionMap.get("discoveryUrl");
         try {
             OIDCIdentityProviderDefinition oidcIdentityProviderDefinition = null;
-            if (idpDefinition instanceof OIDCIdentityProviderDefinition) {
-                oidcIdentityProviderDefinition = (OIDCIdentityProviderDefinition) idpDefinition;
+            if (idpDefinition instanceof OIDCIdentityProviderDefinition definition) {
+                oidcIdentityProviderDefinition = definition;
                 oidcIdentityProviderDefinition.setAdditionalAuthzParameters(parseAdditionalParameters(idpDefinitionMap));
 
                 if (hasText(discoveryUrl)) {

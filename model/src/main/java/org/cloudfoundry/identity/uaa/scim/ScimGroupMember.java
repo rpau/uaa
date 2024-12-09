@@ -87,7 +87,7 @@ public class ScimGroupMember<TEntity extends ScimCore> {
 
     @Override
     public String toString() {
-        return String.format("(memberId: %s, type: %s, origin:%s)", getMemberId(), getType(), getOrigin());
+        return "(memberId: %s, type: %s, origin:%s)".formatted(getMemberId(), getType(), getOrigin());
     }
 
     public String getOrigin() {
@@ -96,7 +96,7 @@ public class ScimGroupMember<TEntity extends ScimCore> {
 
     public void setOrigin(String origin) {
         //don't allow null values
-        if (origin==null) {
+        if (origin == null) {
             throw new NullPointerException();
         }
         this.origin = origin;
@@ -104,11 +104,17 @@ public class ScimGroupMember<TEntity extends ScimCore> {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         ScimGroupMember member = (ScimGroupMember) o;
-        if (getMemberId() != null ? !getMemberId().equals(member.getMemberId()) : member.getMemberId() != null) return false;
+        if (getMemberId() != null ? !getMemberId().equals(member.getMemberId()) : member.getMemberId() != null) {
+            return false;
+        }
         return getType() == member.getType();
     }
 
@@ -121,11 +127,13 @@ public class ScimGroupMember<TEntity extends ScimCore> {
     }
 
 
-
     private static Type getEntityType(ScimCore entity) {
         Type type = null;
-        if(entity instanceof ScimGroup) { type = Type.GROUP; }
-        else if(entity instanceof ScimUser) { type = Type.USER; }
+        if (entity instanceof ScimGroup) {
+            type = Type.GROUP;
+        } else if (entity instanceof ScimUser) {
+            type = Type.USER;
+        }
         return type;
     }
 }

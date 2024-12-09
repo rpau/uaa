@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
+import java.io.Serial;
 import java.util.Date;
 import java.util.Map;
 
@@ -134,6 +135,7 @@ public class JsonUtils {
     }
 
     public static class JsonUtilException extends RuntimeException {
+        @Serial
         private static final long serialVersionUID = -4804245225960963421L;
 
         public JsonUtilException(Throwable cause) {
@@ -143,13 +145,15 @@ public class JsonUtils {
 
     public static String serializeExcludingProperties(Object object, String... propertiesToExclude) {
         String serialized = JsonUtils.writeValueAsString(object);
-        Map<String, Object> properties = JsonUtils.readValue(serialized, new TypeReference<>() {});
+        Map<String, Object> properties = JsonUtils.readValue(serialized, new TypeReference<>() {
+        });
         for (String property : propertiesToExclude) {
             if (property.contains(".")) {
                 String[] split = property.split("\\.", 2);
                 if (properties != null && properties.containsKey(split[0])) {
                     Object inner = properties.get(split[0]);
-                    properties.put(split[0], JsonUtils.readValue(serializeExcludingProperties(inner, split[1]), new TypeReference<Map<String, Object>>() {}));
+                    properties.put(split[0], JsonUtils.readValue(serializeExcludingProperties(inner, split[1]), new TypeReference<Map<String, Object>>() {
+                    }));
                 }
             } else {
                 if (properties != null) {
@@ -190,7 +194,7 @@ public class JsonUtils {
     }
 
     public static boolean hasLength(CharSequence str) {
-        return !(str == null || str.length() == 0);
+        return !(str == null || str.isEmpty());
     }
 
     public static boolean hasText(CharSequence str) {

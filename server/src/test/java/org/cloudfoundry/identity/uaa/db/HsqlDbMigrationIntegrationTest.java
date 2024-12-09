@@ -4,7 +4,6 @@ import org.junit.Test;
 
 import java.util.List;
 
-import static java.lang.String.format;
 import static junit.framework.TestCase.fail;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -14,9 +13,9 @@ import static org.hamcrest.Matchers.hasSize;
 
 public class HsqlDbMigrationIntegrationTest extends DbMigrationIntegrationTestParent {
 
-    private String checkPrimaryKeyExists = "SELECT COUNT(*) FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = ? AND TABLE_NAME = UPPER(?) AND CONSTRAINT_NAME LIKE 'SYS_PK_%'";
-    private String getAllTableNames = "SELECT distinct TABLE_NAME from information_schema.KEY_COLUMN_USAGE where TABLE_SCHEMA = ? and TABLE_NAME != 'schema_version'";
-    private String insertNewOauthCodeRecord = "insert into oauth_code(code) values('code');";
+    private final String checkPrimaryKeyExists = "SELECT COUNT(*) FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = ? AND TABLE_NAME = UPPER(?) AND CONSTRAINT_NAME LIKE 'SYS_PK_%'";
+    private final String getAllTableNames = "SELECT distinct TABLE_NAME from information_schema.KEY_COLUMN_USAGE where TABLE_SCHEMA = ? and TABLE_NAME != 'schema_version'";
+    private final String insertNewOauthCodeRecord = "insert into oauth_code(code) values('code');";
 
     @Override
     protected String onlyRunTestsForActiveSpringProfileName() {
@@ -64,7 +63,7 @@ public class HsqlDbMigrationIntegrationTest extends DbMigrationIntegrationTestPa
         assertThat(tableNames, hasSize(greaterThan(0)));
         for (String tableName : tableNames) {
             int count = jdbcTemplate.queryForObject(checkPrimaryKeyExists, Integer.class, jdbcTemplate.getDataSource().getConnection().getCatalog(), tableName);
-            assertThat(format("%s is missing primary key", tableName), count, greaterThanOrEqualTo(1));
+            assertThat("%s is missing primary key".formatted(tableName), count, greaterThanOrEqualTo(1));
         }
     }
 }

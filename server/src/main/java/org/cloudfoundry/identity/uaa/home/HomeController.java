@@ -170,12 +170,12 @@ public class HomeController {
 
     @RequestMapping("/oauth_error")
     public String error_oauth(Model model, HttpServletRequest request) {
-        String OAUTH_ERROR = "oauth_error";
-        String exception = (String) request.getSession().getAttribute(OAUTH_ERROR);
+        String oauthError = "oauth_error";
+        String exception = (String) request.getSession().getAttribute(oauthError);
 
         if (hasText(exception)) {
-            model.addAttribute(OAUTH_ERROR, exception);
-            request.getSession().removeAttribute(OAUTH_ERROR);
+            model.addAttribute(oauthError, exception);
+            request.getSession().removeAttribute(oauthError);
         }
         return EXTERNAL_AUTH_ERROR;
     }
@@ -183,8 +183,8 @@ public class HomeController {
     @RequestMapping("/rejected")
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public String handleRequestRejected(Model model,
-                                        @RequestAttribute(RequestDispatcher.ERROR_EXCEPTION) RequestRejectedException ex,
-                                        @RequestAttribute(RequestDispatcher.ERROR_REQUEST_URI) String uri) {
+            @RequestAttribute(RequestDispatcher.ERROR_EXCEPTION) RequestRejectedException ex,
+            @RequestAttribute(RequestDispatcher.ERROR_REQUEST_URI) String uri) {
 
         logger.error("Request with encoded URI [{}] rejected. {}", URLEncoder.encode(uri, StandardCharsets.UTF_8), ex.getMessage());
         model.addAttribute("oauth_error", "The request was rejected because it contained a potentially malicious character.");

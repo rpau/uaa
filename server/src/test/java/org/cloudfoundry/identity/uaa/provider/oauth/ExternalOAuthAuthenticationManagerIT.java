@@ -1272,8 +1272,7 @@ class ExternalOAuthAuthenticationManagerIT {
     private void addTheUserOnAuth() {
         doAnswer(invocation -> {
             Object e = invocation.getArguments()[0];
-            if (e instanceof NewUserAuthenticatedEvent) {
-                NewUserAuthenticatedEvent event = (NewUserAuthenticatedEvent) e;
+            if (e instanceof NewUserAuthenticatedEvent event) {
                 UaaUser user = event.getUser();
                 userDatabase.addUser(user);
             }
@@ -1309,7 +1308,7 @@ class ExternalOAuthAuthenticationManagerIT {
                 .andExpect(content().string(containsString("grant_type=authorization_code")))
                 .andExpect(content().string(containsString("code=the_code")))
                 .andExpect(content().string(containsString("redirect_uri=http%3A%2F%2Flocalhost%2Fcallback%2Fthe_origin")))
-                .andExpect(content().string(containsString(("response_type=id_token"))))
+                .andExpect(content().string(containsString("response_type=id_token")))
                 .andRespond(withStatus(OK).contentType(APPLICATION_JSON).body(response));
     }
 

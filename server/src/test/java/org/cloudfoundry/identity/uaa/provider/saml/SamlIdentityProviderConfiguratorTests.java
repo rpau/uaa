@@ -76,7 +76,7 @@ public class SamlIdentityProviderConfiguratorTests {
     IdentityProvider<SamlIdentityProviderDefinition> idp2;
 
     public static final String singleAddAlias = "sample-alias";
-    private SamlIdentityProviderDefinition singleAdd = null;
+    private SamlIdentityProviderDefinition singleAdd;
     private SlowHttpServer slowHttpServer;
     private SamlIdentityProviderConfigurator configurator;
     private SamlConfiguration samlConfiguration;
@@ -92,7 +92,7 @@ public class SamlIdentityProviderConfiguratorTests {
 
         slowHttpServer = new SlowHttpServer();
         singleAdd = new SamlIdentityProviderDefinition()
-                .setMetaDataLocation(String.format(BootstrapSamlIdentityProviderDataTests.XML_WITHOUT_ID, new RandomValueStringGenerator().generate()))
+                .setMetaDataLocation(BootstrapSamlIdentityProviderDataTests.XML_WITHOUT_ID.formatted(new RandomValueStringGenerator().generate()))
                 .setIdpEntityAlias(singleAddAlias)
                 .setNameID("sample-nameID")
                 .setAssertionConsumerIndex(1)

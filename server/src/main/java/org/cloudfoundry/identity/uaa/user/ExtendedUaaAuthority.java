@@ -46,20 +46,18 @@ public class ExtendedUaaAuthority implements GrantedAuthority {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj == null)
+        if (obj == null) {
             return false;
-        if (obj == this)
+        }
+        if (obj == this) {
             return true;
-        if (!(obj instanceof ExtendedUaaAuthority))
+        }
+        if (!(obj instanceof ExtendedUaaAuthority)) {
             return false;
+        }
 
         ExtendedUaaAuthority e = (ExtendedUaaAuthority) obj;
-        if (Objects.equals(e.getAuthority(), authority) && e.additionalInfo.equals(additionalInfo)) {
-            return true;
-        }
-        else {
-            return false;
-        }
+        return Objects.equals(e.getAuthority(), authority) && e.additionalInfo.equals(additionalInfo);
     }
 
     @Override

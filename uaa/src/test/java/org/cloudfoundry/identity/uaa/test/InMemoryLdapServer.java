@@ -24,7 +24,7 @@ import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class InMemoryLdapServer implements Closeable {
+public final class InMemoryLdapServer implements Closeable {
     private static final String JAVAX_NET_SSL_TRUST_STORE = "javax.net.ssl.trustStore";
 
     private static final String[] DEFAULT_ROOTS = {
@@ -55,7 +55,7 @@ public class InMemoryLdapServer implements Closeable {
     public static InMemoryLdapServer startLdapWithTls(int port, int tlsPort, File keyStore) {
         InMemoryLdapServer server = new InMemoryLdapServer(port);
         if (keyStore != null) {
-          server.configureStartTLS(tlsPort, keyStore, new File(TRUST_STORE_URL.getFile()));
+            server.configureStartTLS(tlsPort, keyStore, new File(TRUST_STORE_URL.getFile()));
         }
         server.start();
         server.applyChangesFromLDIF(LDAP_INIT_LIDF_URL);

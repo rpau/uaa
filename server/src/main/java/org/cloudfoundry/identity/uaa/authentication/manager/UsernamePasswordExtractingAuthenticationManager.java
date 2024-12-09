@@ -53,11 +53,11 @@ public class UsernamePasswordExtractingAuthenticationManager implements Authenti
             return authentication;
         }
         UsernamePasswordAuthenticationToken output = null;
-        if (authentication instanceof UsernamePasswordAuthenticationToken) {
-            output = (UsernamePasswordAuthenticationToken) authentication;
+        if (authentication instanceof UsernamePasswordAuthenticationToken token) {
+            output = token;
         } else {
             output = new UsernamePasswordAuthenticationToken(authentication, authentication.getCredentials(),
-                            authentication.getAuthorities());
+                    authentication.getAuthorities());
             output.setAuthenticated(authentication.isAuthenticated());
             output.setDetails(authentication.getDetails());
         }

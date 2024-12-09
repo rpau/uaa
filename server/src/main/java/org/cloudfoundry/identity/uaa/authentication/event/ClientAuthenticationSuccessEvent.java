@@ -17,9 +17,9 @@ import org.cloudfoundry.identity.uaa.audit.AuditEvent;
 import org.cloudfoundry.identity.uaa.audit.AuditEventType;
 import org.springframework.security.core.Authentication;
 
-public class ClientAuthenticationSuccessEvent extends AbstractUaaAuthenticationEvent{
+public class ClientAuthenticationSuccessEvent extends AbstractUaaAuthenticationEvent {
 
-    private String clientId;
+    private final String clientId;
 
     public ClientAuthenticationSuccessEvent(Authentication authentication, String zoneId) {
         super(authentication, zoneId);

@@ -163,7 +163,7 @@ public class IdentityZoneConfigurationTests {
     @Test
     public void testDeserialize_Without_SamlConfig() {
         String s = JsonUtils.writeValueAsString(definition);
-        s = s.replace(",\"samlConfig\":{\"requestSigned\":false,\"wantAssertionSigned\":true}","");
+        s = s.replace(",\"samlConfig\":{\"requestSigned\":false,\"wantAssertionSigned\":true}", "");
         definition = JsonUtils.readValue(s, IdentityZoneConfiguration.class);
         assertThat(definition.getSamlConfig().isRequestSigned()).isTrue();
         assertThat(definition.getSamlConfig().isWantAssertionSigned()).isTrue();
@@ -185,14 +185,14 @@ public class IdentityZoneConfigurationTests {
     public void testDeserialize_With_SamlConfig() {
         assertThat(definition.getSamlConfig().isDisableInResponseToCheck()).isFalse();
         String s = JsonUtils.writeValueAsString(definition);
-        s = s.replace("\"wantAssertionSigned\":true","\"wantAssertionSigned\":false");
-        s = s.replace("\"disableInResponseToCheck\":false","\"disableInResponseToCheck\":true");
+        s = s.replace("\"wantAssertionSigned\":true", "\"wantAssertionSigned\":false");
+        s = s.replace("\"disableInResponseToCheck\":false", "\"disableInResponseToCheck\":true");
         definition = JsonUtils.readValue(s, IdentityZoneConfiguration.class);
         assertThat(definition.getSamlConfig().isRequestSigned()).isTrue();
         assertThat(definition.getSamlConfig().isWantAssertionSigned()).isFalse();
         assertThat(definition.getSamlConfig().isDisableInResponseToCheck()).isTrue();
-        s = s.replace("\"disableInResponseToCheck\":true,","");
-        s = s.replace(",\"disableInResponseToCheck\":true","");
+        s = s.replace("\"disableInResponseToCheck\":true,", "");
+        s = s.replace(",\"disableInResponseToCheck\":true", "");
         definition = JsonUtils.readValue(s, IdentityZoneConfiguration.class);
         assertThat(definition.getSamlConfig().isDisableInResponseToCheck()).isFalse();
     }
@@ -202,27 +202,27 @@ public class IdentityZoneConfigurationTests {
         assertThat(definition.getCorsPolicy().getDefaultConfiguration().getAllowedHeaders()).isEqualTo(Arrays.asList(new String[]{ACCEPT, AUTHORIZATION, CONTENT_TYPE}));
         assertThat(definition.getCorsPolicy().getDefaultConfiguration().getAllowedMethods()).isEqualTo(Collections.singletonList(GET.toString()));
         assertThat(definition.getCorsPolicy().getDefaultConfiguration().getAllowedUris()).isEqualTo(Collections.singletonList(".*"));
-        assertThat(definition.getCorsPolicy().getDefaultConfiguration().getAllowedUriPatterns()).isEqualTo(Collections.EMPTY_LIST);
+        assertThat(definition.getCorsPolicy().getDefaultConfiguration().getAllowedUriPatterns()).isEqualTo(Collections.emptyList());
         assertThat(definition.getCorsPolicy().getDefaultConfiguration().getAllowedOrigins()).isEqualTo(Collections.singletonList(".*"));
-        assertThat(definition.getCorsPolicy().getDefaultConfiguration().getAllowedOriginPatterns()).isEqualTo(Collections.EMPTY_LIST);
+        assertThat(definition.getCorsPolicy().getDefaultConfiguration().getAllowedOriginPatterns()).isEqualTo(Collections.emptyList());
         assertThat(definition.getCorsPolicy().getDefaultConfiguration().getMaxAge()).isEqualTo(1728000);
     }
 
     @Test
     public void testDeserialize_DefaultCorsConfiguration() {
         String s = JsonUtils.writeValueAsString(definition);
-        s = s.replace("\"allowedHeaders\":"+String.format("[\"%s\",\"%s\",\"%s\"]", ACCEPT, AUTHORIZATION, CONTENT_TYPE), "\"allowedHeaders\":[\"" + ACCEPT +"\"]" );
-        s = s.replace("\"allowedMethods\":"+String.format("[\"%s\"]", GET.toString()), "\"allowedMethods\":" +String.format("[\"%s\",\"%s\"]",GET.toString(), POST.toString()));
-        s = s.replace("\"allowedOrigins\":[\".*\"]", "\"allowedOrigins\":[\"^localhost$\",\"^.*\\\\.localhost$\"]" );
+        s = s.replace("\"allowedHeaders\":" + "[\"%s\",\"%s\",\"%s\"]".formatted(ACCEPT, AUTHORIZATION, CONTENT_TYPE), "\"allowedHeaders\":[\"" + ACCEPT + "\"]");
+        s = s.replace("\"allowedMethods\":" + "[\"%s\"]".formatted(GET.toString()), "\"allowedMethods\":" + "[\"%s\",\"%s\"]".formatted(GET.toString(), POST.toString()));
+        s = s.replace("\"allowedOrigins\":[\".*\"]", "\"allowedOrigins\":[\"^localhost$\",\"^.*\\\\.localhost$\"]");
         s = s.replace("\"allowedUris\":[\".*\"]", "\"allowedUris\":[\"^/uaa/userinfo$\",\"^/uaa/logout\\\\.do$\"]");
         definition = JsonUtils.readValue(s, IdentityZoneConfiguration.class);
 
         assertThat(definition.getCorsPolicy().getDefaultConfiguration().getAllowedHeaders()).isEqualTo(Arrays.asList(new String[]{ACCEPT}));
         assertThat(definition.getCorsPolicy().getDefaultConfiguration().getAllowedMethods()).isEqualTo(Arrays.asList(new String[]{GET.toString(), POST.toString()}));
         assertThat(definition.getCorsPolicy().getDefaultConfiguration().getAllowedUris()).isEqualTo(Arrays.asList(new String[]{"^/uaa/userinfo$", "^/uaa/logout\\.do$"}));
-        assertThat(definition.getCorsPolicy().getDefaultConfiguration().getAllowedUriPatterns()).isEqualTo(Collections.EMPTY_LIST);
+        assertThat(definition.getCorsPolicy().getDefaultConfiguration().getAllowedUriPatterns()).isEqualTo(Collections.emptyList());
         assertThat(definition.getCorsPolicy().getDefaultConfiguration().getAllowedOrigins()).isEqualTo(Arrays.asList(new String[]{"^localhost$", "^.*\\.localhost$"}));
-        assertThat(definition.getCorsPolicy().getDefaultConfiguration().getAllowedOriginPatterns()).isEqualTo(Collections.EMPTY_LIST);
+        assertThat(definition.getCorsPolicy().getDefaultConfiguration().getAllowedOriginPatterns()).isEqualTo(Collections.emptyList());
         assertThat(definition.getCorsPolicy().getDefaultConfiguration().getMaxAge()).isEqualTo(1728000);
     }
 

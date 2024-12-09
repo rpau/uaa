@@ -37,7 +37,7 @@ class LdapSkipCertificateMockMvcTests {
     private static final int LDAP_VALID_LDAPS_PORT = 33637;
     private static final int LDAP_EXPIRED_LDAPS_PORT = LDAP_VALID_LDAPS_PORT + 1;
 
-    private static File LDAP_ROOT_DIRECTORY_EXPIRED;
+    private static File ldapRootDirectoryExpired;
     private static InMemoryLdapServer expiredLdapCertServer;
     private MockMvcUtils.IdentityZoneCreationResult trustedCertZone;
     private MockMvcUtils.IdentityZoneCreationResult trustedButExpiredCertZone;
@@ -49,10 +49,10 @@ class LdapSkipCertificateMockMvcTests {
     @BeforeAll
     static void startLdapsServers() {
         ClassLoader classLoader = LdapSkipCertificateMockMvcTests.class.getClassLoader();
-        
+
         File expiredKeystore = new File(classLoader.getResource("certs/expired-self-signed-ldap-cert.jks").getFile());
         RandomValueStringGenerator generator = new RandomValueStringGenerator();
-        LDAP_ROOT_DIRECTORY_EXPIRED = new File(System.getProperty("java.io.tmpdir"), generator.generate());
+        ldapRootDirectoryExpired = new File(System.getProperty("java.io.tmpdir"), generator.generate());
 
         expiredLdapCertServer = InMemoryLdapServer.startLdapWithTls(LDAP_EXPIRED_LDAP_PORT, LDAP_EXPIRED_LDAPS_PORT, expiredKeystore);
     }
@@ -60,7 +60,7 @@ class LdapSkipCertificateMockMvcTests {
     @AfterAll
     static void stopLdapsServers() {
         expiredLdapCertServer.stop();
-        FileSystemUtils.deleteRecursively(LDAP_ROOT_DIRECTORY_EXPIRED);
+        FileSystemUtils.deleteRecursively(ldapRootDirectoryExpired);
     }
 
     @BeforeEach
@@ -104,24 +104,24 @@ class LdapSkipCertificateMockMvcTests {
     @Test
     void testIgnoreServerCertificate() throws Exception {
         mockMvc.perform(post("/login.do").accept(TEXT_HTML_VALUE)
-            .with(cookieCsrf())
-            .with(new SetServerNameRequestPostProcessor(trustedCertZone.getIdentityZone().getSubdomain() + ".localhost"))
-            .param("username", "marissa2")
-            .param("password", LDAP))
-            .andExpect(status().isFound())
-            .andExpect(redirectedUrl("/"))
-            .andExpect(authenticated());
+                .with(cookieCsrf())
+                .with(new SetServerNameRequestPostProcessor(trustedCertZone.getIdentityZone().getSubdomain() + ".localhost"))
+                .param("username", "marissa2")
+                .param("password", LDAP))
+                .andExpect(status().isFound())
+                .andExpect(redirectedUrl("/"))
+                .andExpect(authenticated());
     }
 
     @Test
     void testIgnoreExpiredServerCertificate() throws Exception {
         mockMvc.perform(post("/login.do").accept(TEXT_HTML_VALUE)
-            .with(cookieCsrf())
-            .with(new SetServerNameRequestPostProcessor(trustedButExpiredCertZone.getIdentityZone().getSubdomain() + ".localhost"))
-            .param("username", "marissa2")
-            .param("password", LDAP))
-            .andExpect(status().isFound())
-            .andExpect(redirectedUrl("/"))
-            .andExpect(authenticated());
+                .with(cookieCsrf())
+                .with(new SetServerNameRequestPostProcessor(trustedButExpiredCertZone.getIdentityZone().getSubdomain() + ".localhost"))
+                .param("username", "marissa2")
+                .param("password", LDAP))
+                .andExpect(status().isFound())
+                .andExpect(redirectedUrl("/"))
+                .andExpect(authenticated());
     }
 }

@@ -212,7 +212,7 @@ public final class OpenSaml4AuthenticationProvider implements AuthenticationProv
             Saml2ResponseValidatorResult result = Saml2ResponseValidatorResult.success();
             String statusCode = getStatusCode(response);
             if (!StatusCode.SUCCESS.equals(statusCode)) {
-                String message = String.format("Invalid status [%s] for SAML response [%s]", statusCode,
+                String message = "Invalid status [%s] for SAML response [%s]".formatted(statusCode,
                         response.getID());
                 result = result.concat(new Saml2Error(Saml2ErrorCodes.INVALID_RESPONSE, message));
             }
@@ -232,7 +232,7 @@ public final class OpenSaml4AuthenticationProvider implements AuthenticationProv
                     .getAssertingPartyDetails()
                     .getEntityId();
             if (!StringUtils.hasText(issuer) || !issuer.equals(assertingPartyEntityId)) {
-                String message = String.format("Invalid issuer [%s] for SAML response [%s]", issuer, response.getID());
+                String message = "Invalid issuer [%s] for SAML response [%s]".formatted(issuer, response.getID());
                 result = result.concat(new Saml2Error(Saml2ErrorCodes.INVALID_ISSUER, message));
             }
             if (response.getAssertions().isEmpty()) {
@@ -244,7 +244,7 @@ public final class OpenSaml4AuthenticationProvider implements AuthenticationProv
     }
 
     private static Saml2ResponseValidatorResult validateInResponseTo(AbstractSaml2AuthenticationRequest storedRequest,
-                                                                     String inResponseTo) {
+            String inResponseTo) {
         if (!StringUtils.hasText(inResponseTo)) {
             return Saml2ResponseValidatorResult.success();
         }
@@ -518,7 +518,7 @@ public final class OpenSaml4AuthenticationProvider implements AuthenticationProv
         }
         if (xmlObject instanceof XSBoolean xsBoolean) {
             XSBooleanValue xsBooleanValue = xsBoolean.getValue();
-            return (xsBooleanValue != null) ? xsBooleanValue.getValue() : null;
+            return xsBooleanValue != null ? xsBooleanValue.getValue() : null;
         }
         if (xmlObject instanceof XSDateTime xsDateTime) {
             return xsDateTime.getValue();
@@ -527,13 +527,13 @@ public final class OpenSaml4AuthenticationProvider implements AuthenticationProv
     }
 
     public static Saml2AuthenticationException createAuthenticationException(String code, String message,
-                                                                              Exception cause) {
+            Exception cause) {
         return new Saml2AuthenticationException(new Saml2Error(code, message), cause);
     }
 
     private static Converter<AssertionToken, Saml2ResponseValidatorResult> createAssertionValidator(String errorCode,
-                                                                                                    Converter<AssertionToken, SAML20AssertionValidator> validatorConverter,
-                                                                                                    Converter<AssertionToken, ValidationContext> contextConverter) {
+            Converter<AssertionToken, SAML20AssertionValidator> validatorConverter,
+            Converter<AssertionToken, ValidationContext> contextConverter) {
 
         return assertionToken -> {
             Assertion assertion = assertionToken.assertion;
@@ -545,12 +545,12 @@ public final class OpenSaml4AuthenticationProvider implements AuthenticationProv
                     return Saml2ResponseValidatorResult.success();
                 }
             } catch (Exception ex) {
-                String message = String.format("Invalid assertion [%s] for SAML response [%s]: %s", assertion.getID(),
+                String message = "Invalid assertion [%s] for SAML response [%s]: %s".formatted(assertion.getID(),
                         assertion.getParent() != null ? ((Response) assertion.getParent()).getID() : assertion.getID(),
                         ex.getMessage());
                 return Saml2ResponseValidatorResult.failure(new Saml2Error(errorCode, message));
             }
-            String message = String.format("Invalid assertion [%s] for SAML response [%s]: %s", assertion.getID(),
+            String message = "Invalid assertion [%s] for SAML response [%s]: %s".formatted(assertion.getID(),
                     assertion.getParent() != null ? ((Response) assertion.getParent()).getID() : assertion.getID(),
                     context.getValidationFailureMessage());
             return Saml2ResponseValidatorResult.failure(new Saml2Error(errorCode, message));
@@ -558,8 +558,8 @@ public final class OpenSaml4AuthenticationProvider implements AuthenticationProv
     }
 
     private static ValidationContext createValidationContext(AssertionToken assertionToken,
-                                                             Consumer<Map<String, Object>> paramsConsumer,
-                                                             boolean saml2Bearer) {
+            Consumer<Map<String, Object>> paramsConsumer,
+            boolean saml2Bearer) {
         Saml2AuthenticationToken token = assertionToken.token;
         RelyingPartyRegistration relyingPartyRegistration = token.getRelyingPartyRegistration();
         String audience = relyingPartyRegistration.getEntityId();
@@ -661,7 +661,7 @@ public final class OpenSaml4AuthenticationProvider implements AuthenticationProv
             subjects.add(new BearerSubjectConfirmationValidator() {
                 @Override
                 protected ValidationResult validateAddress(SubjectConfirmation confirmation, Assertion assertion,
-                                                           ValidationContext context, boolean required) {
+                        ValidationContext context, boolean required) {
                     // applications should validate their own addresses - gh-7514
                     return ValidationResult.VALID;
                 }
@@ -745,6 +745,8 @@ public final class OpenSaml4AuthenticationProvider implements AuthenticationProv
             this.assertion = assertion;
         }
 
-        public Assertion getAssertion() { return this.assertion; }
+        public Assertion getAssertion() {
+            return this.assertion;
+        }
     }
 }

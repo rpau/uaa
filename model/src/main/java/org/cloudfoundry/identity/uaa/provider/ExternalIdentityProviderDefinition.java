@@ -47,7 +47,7 @@ public class ExternalIdentityProviderDefinition extends AbstractIdentityProvider
     }
 
     public void setExternalGroupsWhitelist(List<String> externalGroupsWhitelist) {
-        this.externalGroupsWhitelist = new LinkedList<>(externalGroupsWhitelist!=null ? externalGroupsWhitelist : emptyList());
+        this.externalGroupsWhitelist = new LinkedList<>(externalGroupsWhitelist != null ? externalGroupsWhitelist : emptyList());
     }
 
     @JsonIgnore
@@ -56,7 +56,7 @@ public class ExternalIdentityProviderDefinition extends AbstractIdentityProvider
     }
 
     public void setAttributeMappings(Map<String, Object> attributeMappings) {
-        this.attributeMappings = new HashMap<>(attributeMappings!=null?attributeMappings: emptyMap());
+        this.attributeMappings = new HashMap<>(attributeMappings != null ? attributeMappings : emptyMap());
     }
 
     public Map<String, Object> getAttributeMappings() {
@@ -84,16 +84,27 @@ public class ExternalIdentityProviderDefinition extends AbstractIdentityProvider
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        if (!super.equals(o)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
 
         ExternalIdentityProviderDefinition that = (ExternalIdentityProviderDefinition) o;
 
-        if (addShadowUserOnLogin != that.addShadowUserOnLogin) return false;
-        if(this.isStoreCustomAttributes() != that.isStoreCustomAttributes()) return false;
-        if (getExternalGroupsWhitelist() != null ? !getExternalGroupsWhitelist().equals(that.getExternalGroupsWhitelist()) : that.getExternalGroupsWhitelist() != null)
+        if (addShadowUserOnLogin != that.addShadowUserOnLogin) {
             return false;
+        }
+        if (this.isStoreCustomAttributes() != that.isStoreCustomAttributes()) {
+            return false;
+        }
+        if (getExternalGroupsWhitelist() != null ? !getExternalGroupsWhitelist().equals(that.getExternalGroupsWhitelist()) : that.getExternalGroupsWhitelist() != null) {
+            return false;
+        }
         return Objects.equals(attributeMappings, that.attributeMappings);
     }
 

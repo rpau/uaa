@@ -48,7 +48,7 @@ public final class UaaRelyingPartyRegistrationResolver implements Converter<Http
     private final RequestMatcher registrationRequestMatcher = new AntPathRequestMatcher("/**/{registrationId}");
 
     public UaaRelyingPartyRegistrationResolver(RelyingPartyRegistrationRepository relyingPartyRegistrationRepository,
-                                               String samlEntityID) {
+            String samlEntityID) {
         Assert.notNull(relyingPartyRegistrationRepository, "relyingPartyRegistrationRepository cannot be null");
         this.relyingPartyRegistrationRepository = relyingPartyRegistrationRepository;
         this.samlEntityID = samlEntityID;
@@ -100,9 +100,9 @@ public final class UaaRelyingPartyRegistrationResolver implements Converter<Http
                 log.trace("Attempting to resolve from SAMLResponse parameter");
             }
             String assertionXml = null;
-            if (request.getMethod().equalsIgnoreCase("POST")) {
+            if ("POST".equalsIgnoreCase(request.getMethod())) {
                 assertionXml = new String(Saml2Utils.samlDecode(samlResponseParameter), StandardCharsets.UTF_8);
-            } else if (request.getMethod().equalsIgnoreCase("GET")) {
+            } else if ("GET".equalsIgnoreCase(request.getMethod())) {
                 assertionXml = Saml2Utils.samlDecodeAndInflate(samlResponseParameter);
             }
             if (assertionXml != null) {

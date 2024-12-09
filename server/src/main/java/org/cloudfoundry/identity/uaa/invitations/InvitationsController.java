@@ -137,7 +137,7 @@ public class InvitationsController {
             if (isUaaUserAndVerified || isExternalUserAndAcceptedInvite) {
                 AcceptedInvitation accepted = invitationsService.acceptInvitation(code, "");
                 String redirect = "redirect:" + accepted.getRedirectUri();
-                log.debug(String.format("Redirecting accepted invitation for email:%s, id:%s to URL:%s", codeData.get(EMAIL), codeData.get("user_id"), redirect));
+                log.debug("Redirecting accepted invitation for email:%s, id:%s to URL:%s".formatted(codeData.get(EMAIL), codeData.get("user_id"), redirect));
                 return redirect;
             } else if (SAML.equals(provider.getType())) {
                 setRequestAttributes(request, code, user);
@@ -145,7 +145,7 @@ public class InvitationsController {
                 SamlIdentityProviderDefinition definition = ObjectUtils.castInstance(provider.getConfig(), SamlIdentityProviderDefinition.class);
 
                 String redirect = "redirect:/" + SamlRedirectUtils.getIdpRedirectUrl(definition);
-                log.debug(String.format("Redirecting invitation for email:%s, id:%s single SAML IDP URL:%s", codeData.get(EMAIL), codeData.get("user_id"), redirect));
+                log.debug("Redirecting invitation for email:%s, id:%s single SAML IDP URL:%s".formatted(codeData.get(EMAIL), codeData.get("user_id"), redirect));
                 return redirect;
             } else if (OIDC10.equals(provider.getType()) || OAUTH20.equals(provider.getType())) {
                 setRequestAttributes(request, code, user);
@@ -153,7 +153,7 @@ public class InvitationsController {
                 AbstractExternalOAuthIdentityProviderDefinition definition = ObjectUtils.castInstance(provider.getConfig(), AbstractExternalOAuthIdentityProviderDefinition.class);
 
                 String redirect = "redirect:" + externalOAuthProviderConfigurator.getIdpAuthenticationUrl(definition, provider.getOriginKey(), request);
-                log.debug(String.format("Redirecting invitation for email:%s, id:%s OIDC IDP URL:%s", codeData.get(EMAIL), codeData.get("user_id"), redirect));
+                log.debug("Redirecting invitation for email:%s, id:%s OIDC IDP URL:%s".formatted(codeData.get(EMAIL), codeData.get("user_id"), redirect));
                 return redirect;
             } else {
                 UaaPrincipal uaaPrincipal = new UaaPrincipal(codeData.get("user_id"), codeData.get(EMAIL), codeData.get(EMAIL), origin, null, identityZoneManager.getCurrentIdentityZoneId());
@@ -163,12 +163,12 @@ public class InvitationsController {
                 model.addAttribute("provider", provider.getType());
                 model.addAttribute("code", code);
                 model.addAttribute(EMAIL, codeData.get(EMAIL));
-                log.debug(String.format("Sending user to accept invitation page email:%s, id:%s", codeData.get(EMAIL), codeData.get("user_id")));
+                log.debug("Sending user to accept invitation page email:%s, id:%s".formatted(codeData.get(EMAIL), codeData.get("user_id")));
             }
             updateModelWithConsentAttributes(model);
             return "invitations/accept_invite";
         } catch (EmptyResultDataAccessException noProviderFound) {
-            log.debug(String.format("No available invitation providers for email:%s, id:%s", codeData.get(EMAIL), codeData.get("user_id")));
+            log.debug("No available invitation providers for email:%s, id:%s".formatted(codeData.get(EMAIL), codeData.get("user_id")));
             return handleUnprocessableEntity(model, response, "error_message_code", "no_suitable_idp", "invitations/accept_invite");
         }
     }
@@ -239,11 +239,11 @@ public class InvitationsController {
 
     @RequestMapping(value = "/accept.do", method = POST)
     public String acceptInvitation(@RequestParam("password") String password,
-                                   @RequestParam("password_confirmation") String passwordConfirmation,
-                                   @RequestParam("code") String code,
-                                   @RequestParam(value = "does_user_consent", required = false) boolean doesUserConsent,
-                                   Model model,
-                                   HttpServletResponse response) {
+            @RequestParam("password_confirmation") String passwordConfirmation,
+            @RequestParam("code") String code,
+            @RequestParam(value = "does_user_consent", required = false) boolean doesUserConsent,
+            Model model,
+            HttpServletResponse response) {
 
         PasswordConfirmationValidation validation = new PasswordConfirmationValidation(password, passwordConfirmation);
 
@@ -301,17 +301,17 @@ public class InvitationsController {
             model.addAttribute("code", newCode);
             return "redirect:accept";
         } catch (EmptyResultDataAccessException noProviderFound) {
-            log.debug(String.format("No available invitation providers for email:%s, id:%s", codeData.get(EMAIL), codeData.get("user_id")));
+            log.debug("No available invitation providers for email:%s, id:%s".formatted(codeData.get(EMAIL), codeData.get("user_id")));
             return handleUnprocessableEntity(model, response, "error_message_code", "no_suitable_idp", "invitations/accept_invite");
         }
     }
 
     @RequestMapping(value = "/accept_enterprise.do", method = POST)
     public String acceptLdapInvitation(@RequestParam("enterprise_username") String username,
-                                       @RequestParam("enterprise_password") String password,
-                                       @RequestParam("enterprise_email") String email,
-                                       @RequestParam("code") String code,
-                                       Model model, HttpServletResponse response) {
+            @RequestParam("enterprise_password") String password,
+            @RequestParam("enterprise_email") String email,
+            @RequestParam("code") String code,
+            Model model, HttpServletResponse response) {
 
         ExpiringCode expiringCode = expiringCodeStore.retrieveCode(code, identityZoneManager.getCurrentIdentityZoneId());
         if (expiringCode == null) {

@@ -17,6 +17,7 @@ import org.cloudfoundry.identity.uaa.web.UaaSavedRequestAwareAuthenticationSucce
 import org.cloudfoundry.identity.uaa.zone.IdentityZone;
 import org.cloudfoundry.identity.uaa.zone.beans.IdentityZoneManager;
 import org.opensaml.saml.saml2.core.Assertion;
+import org.opensaml.saml.saml2.core.AuthnStatement;
 import org.opensaml.saml.saml2.core.Response;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
@@ -63,10 +64,10 @@ public class SamlUaaResponseAuthenticationConverter
     private final SamlUaaAuthenticationAuthoritiesConverter authoritiesConverter;
 
     public SamlUaaResponseAuthenticationConverter(IdentityZoneManager identityZoneManager,
-                                                  final JdbcIdentityProviderProvisioning identityProviderProvisioning,
-                                                  SamlUaaAuthenticationUserManager userManager,
-                                                  SamlUaaAuthenticationAttributesConverter attributesConverter,
-                                                  SamlUaaAuthenticationAuthoritiesConverter authoritiesConverter) {
+            final JdbcIdentityProviderProvisioning identityProviderProvisioning,
+            SamlUaaAuthenticationUserManager userManager,
+            SamlUaaAuthenticationAttributesConverter attributesConverter,
+            SamlUaaAuthenticationAuthoritiesConverter authoritiesConverter) {
         this.identityZoneManager = identityZoneManager;
         this.identityProviderProvisioning = identityProviderProvisioning;
         this.userManager = userManager;
@@ -115,7 +116,7 @@ public class SamlUaaResponseAuthenticationConverter
         UaaUser user = userManager.createIfMissing(initialPrincipal, addNew, getMappedAuthorities(
                 idp, samlAuthorities), userAttributes);
 
-        List<String> sessionIndexes = assertions.stream().flatMap(assertion -> assertion.getAuthnStatements().stream().filter(Objects::nonNull).map(s -> s.getSessionIndex()).filter(Objects::nonNull)).toList();
+        List<String> sessionIndexes = assertions.stream().flatMap(assertion -> assertion.getAuthnStatements().stream().filter(Objects::nonNull).map(AuthnStatement::getSessionIndex).filter(Objects::nonNull)).toList();
         UaaAuthentication authentication = new UaaAuthentication(
                 new UaaSamlPrincipal(user, sessionIndexes),
                 authenticationToken.getCredentials(),
@@ -145,7 +146,7 @@ public class SamlUaaResponseAuthenticationConverter
     }
 
     private static void setAuthContextClassRef(MultiValueMap<String, String> userAttributes,
-                                               UaaAuthentication authentication, SamlIdentityProviderDefinition samlConfig) {
+            UaaAuthentication authentication, SamlIdentityProviderDefinition samlConfig) {
 
         List<String> acrValues = userAttributes.get(AUTHENTICATION_CONTEXT_CLASS_REFERENCE);
         if (acrValues != null) {
