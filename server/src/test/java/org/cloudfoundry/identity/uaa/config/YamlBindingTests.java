@@ -43,90 +43,86 @@ import java.util.Locale;
 import java.util.Map;
 
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * @author Dave Syer
  */
-public class YamlBindingTests {
+class YamlBindingTests {
 
     @Test
-    public void testBindString() {
+    void bindString() {
         VanillaTarget target = new VanillaTarget();
         bind(target, "foo: bar");
-        assertEquals("bar", target.getFoo());
+        assertThat(target.getFoo()).isEqualTo("bar");
     }
 
     @Test
-    public void testBindNumber() {
+    void bindNumber() {
         VanillaTarget target = new VanillaTarget();
         bind(target, "foo: bar\nvalue: 123");
-        assertEquals(123, target.getValue());
+        assertThat(target.getValue()).isEqualTo(123);
     }
 
     @Test
-    public void testSimpleValidation() {
+    void simpleValidation() {
         ValidatedTarget target = new ValidatedTarget();
         BindingResult result = bind(target, "");
-        assertEquals(1, result.getErrorCount());
+        assertThat(result.getErrorCount()).isEqualTo(1);
     }
 
     @Test
-    public void testRequiredFieldsValidation() {
+    void requiredFieldsValidation() {
         TargetWithValidatedMap target = new TargetWithValidatedMap();
         BindingResult result = bind(target, "info:\n  foo: bar");
-        assertEquals(2, result.getErrorCount());
+        assertThat(result.getErrorCount()).isEqualTo(2);
         for (FieldError error : result.getFieldErrors()) {
             System.err.println(new StaticMessageSource().getMessage(error, Locale.getDefault()));
         }
     }
 
     @Test
-    public void testBindNested() {
+    void bindNested() {
         TargetWithNestedObject target = new TargetWithNestedObject();
         bind(target, "nested:\n  foo: bar\n  value: 123");
-        assertEquals(123, target.getNested().getValue());
+        assertThat(target.getNested().getValue()).isEqualTo(123);
     }
 
     @Test
-    public void testBindNestedMap() {
+    void bindNestedMap() {
         TargetWithNestedMap target = new TargetWithNestedMap();
         bind(target, "nested:\n  foo: bar\n  value: 123");
-        assertEquals(123, target.getNested().get("value"));
+        assertThat(target.getNested()).containsEntry("value", 123);
     }
 
     @Test
-    public void testBindNestedMapBracketReferenced() {
+    void bindNestedMapBracketReferenced() {
         TargetWithNestedMap target = new TargetWithNestedMap();
         bind(target, "nested[foo]: bar\nnested[value]: 123");
-        assertEquals(123, target.getNested().get("value"));
+        assertThat(target.getNested()).containsEntry("value", 123);
     }
 
     @SuppressWarnings("unchecked")
     @Test
-    public void testBindDoubleNestedMap() {
+    void bindDoubleNestedMap() {
         TargetWithNestedMap target = new TargetWithNestedMap();
         bind(target, "nested:\n  foo: bar\n  oof:\n    spam: bucket\n    value: 123");
-        assertEquals(123, ((Map<String, Object>) target.getNested().get("oof")).get("value"));
+        assertThat(((Map<String, Object>) target.getNested().get("oof"))).containsEntry("value", 123);
     }
 
     @Test
-    public void testBindErrorTypeMismatch() {
+    void bindErrorTypeMismatch() {
         VanillaTarget target = new VanillaTarget();
         BindingResult result = bind(target, "foo: bar\nvalue: foo");
-        assertEquals(1, result.getErrorCount());
+        assertThat(result.getErrorCount()).isOne();
     }
 
     @Test
-    public void testBindErrorNotWritable() {
-        Throwable exception = assertThrows(Exception.class, () -> {
-            VanillaTarget target = new VanillaTarget();
-            BindingResult result = bind(target, "spam: bar\nvalue: 123");
-            assertEquals(1, result.getErrorCount());
-        });
-        assertTrue(exception.getMessage().contains("not writable"));
+    void bindErrorNotWritable() {
+        VanillaTarget target = new VanillaTarget();
+        assertThatThrownBy(() -> bind(target, "foo: bar\nreadonly: bar"))
+                .isInstanceOf(Exception.class);
     }
 
     private BindingResult bind(Object target, String values) {

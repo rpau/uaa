@@ -14,7 +14,7 @@ import org.hamcrest.TypeSafeMatcher;
 import java.util.Collections;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public abstract class AbstractOAuth2AccessTokenMatchers<T> extends TypeSafeMatcher<T> {
 
@@ -53,7 +53,7 @@ public abstract class AbstractOAuth2AccessTokenMatchers<T> extends TypeSafeMatch
         }
 
         Jwt tokenJwt = JwtHelper.decode(getToken(tokenValue));
-        assertNotNull(tokenJwt);
+        assertThat(tokenJwt).isNotNull();
         Map<String, Object> claims;
         try {
             claims = JsonUtils.readValue(tokenJwt.getClaims(), new TypeReference<>() {

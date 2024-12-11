@@ -17,34 +17,34 @@ package org.cloudfoundry.identity.uaa.client;
 import org.cloudfoundry.identity.uaa.client.SocialClientUserDetails.Source;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Dave Syer
  */
-public class SourceTests {
+class SourceTests {
 
     @Test
-    public void testClassifyWellKnownValues() {
-        assertEquals(Source.CLOUD_FOUNDRY, Source.classify("http://foo.cloudfoundry.com/userinfo"));
-        assertEquals(Source.GITHUB, Source.classify("http://foo.github.com/userinfo"));
-        assertEquals(Source.TWITTER, Source.classify("http://foo.twitter.com/userinfo"));
-        assertEquals(Source.LINKEDIN, Source.classify("http://foo.linkedin.com/userinfo"));
-        assertEquals(Source.GOOGLE, Source.classify("http://foo.google.com/userinfo"));
-        assertEquals(Source.GOOGLE, Source.classify("http://foo.googleapis.com/userinfo"));
+    void classifyWellKnownValues() {
+        assertThat(Source.classify("http://foo.cloudfoundry.com/userinfo")).isEqualTo(Source.CLOUD_FOUNDRY);
+        assertThat(Source.classify("http://foo.github.com/userinfo")).isEqualTo(Source.GITHUB);
+        assertThat(Source.classify("http://foo.twitter.com/userinfo")).isEqualTo(Source.TWITTER);
+        assertThat(Source.classify("http://foo.linkedin.com/userinfo")).isEqualTo(Source.LINKEDIN);
+        assertThat(Source.classify("http://foo.google.com/userinfo")).isEqualTo(Source.GOOGLE);
+        assertThat(Source.classify("http://foo.googleapis.com/userinfo")).isEqualTo(Source.GOOGLE);
     }
 
     @Test
-    public void testClassifyTypical() {
-        assertEquals("foo", Source.classify("http://www.foo.com/userinfo"));
-        assertEquals("foo", Source.classify("http://www.foo.net/userinfo"));
-        assertEquals("foo", Source.classify("http://foo.com/userinfo"));
-        assertEquals("foo", Source.classify("http://www.foo.net"));
+    void classifyTypical() {
+        assertThat(Source.classify("http://www.foo.com/userinfo")).isEqualTo("foo");
+        assertThat(Source.classify("http://www.foo.net/userinfo")).isEqualTo("foo");
+        assertThat(Source.classify("http://foo.com/userinfo")).isEqualTo("foo");
+        assertThat(Source.classify("http://www.foo.net")).isEqualTo("foo");
     }
 
     @Test
-    public void testClassifyTwoPartTopLevel() {
-        assertEquals("foo", Source.classify("http://www.foo.co.uk/userinfo"));
+    void classifyTwoPartTopLevel() {
+        assertThat(Source.classify("http://www.foo.co.uk/userinfo")).isEqualTo("foo");
     }
 
 }

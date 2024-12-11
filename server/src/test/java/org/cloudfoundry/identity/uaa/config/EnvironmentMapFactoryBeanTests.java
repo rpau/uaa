@@ -9,7 +9,7 @@ import org.springframework.core.env.StandardEnvironment;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class EnvironmentMapFactoryBeanTests {
 
@@ -27,7 +27,7 @@ class EnvironmentMapFactoryBeanTests {
 
         factory.setDefaultProperties(inputProperties);
         Map<String, ?> properties = factory.getObject();
-        assertEquals("foo", properties.get("foo"));
+        assertThat(properties.get("foo")).isEqualTo("foo");
     }
 
     @Test
@@ -37,7 +37,7 @@ class EnvironmentMapFactoryBeanTests {
 
         factory.setDefaultProperties(inputProperties);
         Map<String, ?> properties = factory.getObject();
-        assertEquals("${bar}", properties.get("foo"));
+        assertThat(properties.get("foo")).isEqualTo("${bar}");
     }
 
     @Test
@@ -53,8 +53,8 @@ class EnvironmentMapFactoryBeanTests {
         factory.setEnvironment(environment);
         factory.setDefaultProperties(inputProperties);
         Map<String, ?> properties = factory.getObject();
-        assertEquals("baz", properties.get("foo"));
-        assertEquals("${spam}", properties.get("bar"));
+        assertThat(properties.get("foo")).isEqualTo("baz");
+        assertThat(properties.get("bar")).isEqualTo("${spam}");
     }
 
     @Test
@@ -70,7 +70,7 @@ class EnvironmentMapFactoryBeanTests {
         environment.getPropertySources().addLast(new NestedMapPropertySource("override", overrideProperties));
         factory.setEnvironment(environment);
         Map<String, ?> properties = factory.getObject();
-        assertEquals("bar", properties.get("foo"));
+        assertThat(properties.get("foo")).isEqualTo("bar");
     }
 
 }

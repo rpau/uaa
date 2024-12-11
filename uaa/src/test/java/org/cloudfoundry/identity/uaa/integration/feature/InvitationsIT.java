@@ -127,7 +127,7 @@ public class InvitationsIT {
     }
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         scimToken = testClient.getOAuthAccessToken("admin", "adminsecret", "client_credentials", "scim.read,scim.write,clients.admin");
         loginToken = testClient.getOAuthAccessToken("login", "loginsecret", "client_credentials", "oauth.login");
         screenshotExtension.setWebDriver(webDriver);
@@ -155,7 +155,7 @@ public class InvitationsIT {
 
     @BeforeEach
     @AfterEach
-    public void logout_and_clear_cookies() {
+    void logout_and_clear_cookies() {
         try {
             webDriver.get(baseUrl + "/logout.do");
         } catch (org.openqa.selenium.TimeoutException x) {
@@ -187,7 +187,7 @@ public class InvitationsIT {
     }
 
     @Test
-    void testInviteUserWithClientRedirect() {
+    void inviteUserWithClientRedirect() {
         String userEmail = "user-" + new RandomValueStringGenerator().generate() + "@example.com";
         //user doesn't exist
         performInviteUser(userEmail, false);
@@ -272,7 +272,7 @@ public class InvitationsIT {
     }
 
     @Test
-    void testInsecurePasswordDisplaysErrorMessage() {
+    void insecurePasswordDisplaysErrorMessage() {
         String code = createInvitation();
         webDriver.get(baseUrl + "/invitations/accept?code=" + code);
         assertThat(webDriver.findElement(By.tagName("h1")).getText()).isEqualTo("Create your account");

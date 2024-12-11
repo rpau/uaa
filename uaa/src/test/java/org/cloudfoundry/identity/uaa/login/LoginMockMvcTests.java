@@ -268,9 +268,9 @@ public class LoginMockMvcTests {
         MockHttpSession session = configure_UAA_for_idp_discovery(webApplicationContext, identityProviderProvisioning, generator, originKey, zone, allowedProviders);
 
         mockMvc.perform(get("/login")
-                .session(session)
-                .header("Accept", TEXT_HTML)
-                .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost")))
+                        .session(session)
+                        .header("Accept", TEXT_HTML)
+                        .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost")))
                 .andExpect(status().isOk())
                 .andExpect(view().name("idp_discovery/email"))
                 .andExpect(xpath("//input[@name='email']").exists());
@@ -315,9 +315,9 @@ public class LoginMockMvcTests {
                 new ArrayList<>(asList(originKey, SAML)));
 
         mockMvc.perform(get("/login")
-                .session(session)
-                .header("Accept", TEXT_HTML)
-                .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost")))
+                        .session(session)
+                        .header("Accept", TEXT_HTML)
+                        .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost")))
                 .andExpect(status().is3xxRedirection());
     }
 
@@ -325,25 +325,25 @@ public class LoginMockMvcTests {
     void access_login_page_while_logged_in() throws Exception {
         SecurityContext securityContext = MockMvcUtils.getMarissaSecurityContext(webApplicationContext, IdentityZoneHolder.getCurrentZoneId());
         mockMvc.perform(
-                get("/login")
-                        .header("Accept", MediaType.TEXT_HTML_VALUE)
-                        .with(securityContext(securityContext))
-        )
-        .andExpect(status().isFound())
+                        get("/login")
+                                .header("Accept", MediaType.TEXT_HTML_VALUE)
+                                .with(securityContext(securityContext))
+                )
+                .andExpect(status().isFound())
                 .andExpect(redirectedUrl("/home"));
     }
 
     @Test
     void invalid_accept_media_type() throws Exception {
         mockMvc.perform(
-                get("/login")
-                        .header("Accept", MediaType.TEXT_XML_VALUE)
-        )
-        .andExpect(status().isNotAcceptable());
+                        get("/login")
+                                .header("Accept", MediaType.TEXT_XML_VALUE)
+                )
+                .andExpect(status().isNotAcceptable());
     }
 
     @Test
-    void testLogin() throws Exception {
+    void login() throws Exception {
         mockMvc.perform(get("/login"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("login"))
@@ -367,10 +367,10 @@ public class LoginMockMvcTests {
         IdentityZone zone = createZoneLinksZone();
 
         mockMvc.perform(
-                get("/login")
-                        .header("Host", zone.getSubdomain() + ".localhost")
-        )
-        .andExpect(status().isOk())
+                        get("/login")
+                                .header("Host", zone.getSubdomain() + ".localhost")
+                )
+                .andExpect(status().isOk())
                 .andExpect(view().name("login"))
                 .andExpect(model().attribute("links", hasEntry("forgotPasswordLink", "/forgot_password")))
                 .andExpect(model().attribute("links", hasEntry("createAccountLink", "/create_account")))
@@ -383,10 +383,10 @@ public class LoginMockMvcTests {
         ));
 
         mockMvc.perform(
-                get("/login")
-                        .header("Host", zone.getSubdomain() + ".localhost")
-        )
-        .andExpect(status().isOk())
+                        get("/login")
+                                .header("Host", zone.getSubdomain() + ".localhost")
+                )
+                .andExpect(status().isOk())
                 .andExpect(view().name("login"))
                 .andExpect(model().attribute("links", hasEntry("forgotPasswordLink", "/passwd?id=" + zone.getId())))
                 .andExpect(model().attribute("links", hasEntry("createAccountLink", "/signup?subdomain=" + zone.getSubdomain())))
@@ -400,10 +400,10 @@ public class LoginMockMvcTests {
         );
         zone = MockMvcUtils.updateIdentityZone(zone, webApplicationContext);
         mockMvc.perform(
-                get("/login")
-                        .header("Host", zone.getSubdomain() + ".localhost")
-        )
-        .andExpect(status().isOk())
+                        get("/login")
+                                .header("Host", zone.getSubdomain() + ".localhost")
+                )
+                .andExpect(status().isOk())
                 .andExpect(view().name("login"))
                 .andExpect(model().attribute("links", hasEntry("forgotPasswordLink", "/local_passwd?id=" + zone.getId())))
                 .andExpect(model().attribute("links", hasEntry("createAccountLink", "/local_signup?subdomain=" + zone.getSubdomain())))
@@ -422,36 +422,36 @@ public class LoginMockMvcTests {
         ScimUser marissa = createUser(scimUserProvisioning, generator, zone.getId());
 
         mockMvc.perform(
-                get("/")
-                        .with(securityContext(getUaaSecurityContext(marissa.getUserName(), webApplicationContext, zone.getId())))
-                        .header("Host", zone.getSubdomain() + ".localhost")
-        )
-        .andDo(print())
+                        get("/")
+                                .with(securityContext(getUaaSecurityContext(marissa.getUserName(), webApplicationContext, zone.getId())))
+                                .header("Host", zone.getSubdomain() + ".localhost")
+                )
+                .andDo(print())
                 .andExpect(status().isOk());
 
         globalLinks.setHomeRedirect("http://{zone.subdomain}.redirect.to/z/{zone.id}");
 
         mockMvc.perform(
-                get("/")
-                        .with(securityContext(getUaaSecurityContext(marissa.getUserName(), webApplicationContext, zone.getId())))
-                        .header("Host", zone.getSubdomain() + ".localhost")
-        )
-        .andExpect(status().is3xxRedirection())
+                        get("/")
+                                .with(securityContext(getUaaSecurityContext(marissa.getUserName(), webApplicationContext, zone.getId())))
+                                .header("Host", zone.getSubdomain() + ".localhost")
+                )
+                .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("http://" + zone.getSubdomain() + ".redirect.to/z/" + zone.getId()));
 
         zone.getConfig().getLinks().setHomeRedirect("http://configured.{zone.subdomain}.redirect.to/z/{zone.id}");
         zone = MockMvcUtils.updateIdentityZone(zone, webApplicationContext);
         mockMvc.perform(
-                get("/")
-                        .with(securityContext(getUaaSecurityContext(marissa.getUserName(), webApplicationContext, zone.getId())))
-                        .header("Host", zone.getSubdomain() + ".localhost")
-        )
-        .andExpect(status().is3xxRedirection())
+                        get("/")
+                                .with(securityContext(getUaaSecurityContext(marissa.getUserName(), webApplicationContext, zone.getId())))
+                                .header("Host", zone.getSubdomain() + ".localhost")
+                )
+                .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("http://configured." + zone.getSubdomain() + ".redirect.to/z/" + zone.getId()));
     }
 
     @Test
-    void testLogin_Csrf_MaxAge() throws Exception {
+    void loginCsrfMaxAge() throws Exception {
         mockMvc
                 .perform(
                         get("/login"))
@@ -460,7 +460,7 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testLogin_Csrf_Reset_On_Refresh() throws Exception {
+    void loginCsrfResetOnRefresh() throws Exception {
         MvcResult mvcResult = mockMvc
                 .perform(
                         get("/login"))
@@ -478,7 +478,7 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testLoginPageReloadOnCsrfExpiry(
+    void loginPageReloadOnCsrfExpiry(
             @Autowired CookieBasedCsrfTokenRepository cookieBasedCsrfTokenRepository
     ) throws Exception {
         cookieBasedCsrfTokenRepository.setCookieMaxAge(3);
@@ -491,7 +491,7 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void test_cookie_csrf(
+    void cookie_csrf(
             @Autowired JdbcScimUserProvisioning jdbcScimUserProvisioning
     ) throws Exception {
         MockHttpSession session = new MockHttpSession();
@@ -511,11 +511,11 @@ public class LoginMockMvcTests {
         Cookie cookie = new Cookie(CookieBasedCsrfTokenRepository.DEFAULT_CSRF_COOKIE_NAME, csrfValue);
 
         mockMvc.perform(
-                invalidPost
-                        .cookie(cookie)
-                        .param(CookieBasedCsrfTokenRepository.DEFAULT_CSRF_COOKIE_NAME, "other-value")
-        )
-        .andDo(print())
+                        invalidPost
+                                .cookie(cookie)
+                                .param(CookieBasedCsrfTokenRepository.DEFAULT_CSRF_COOKIE_NAME, "other-value")
+                )
+                .andDo(print())
                 .andExpect(status().isFound())
                 .andExpect(redirectedUrl("http://localhost/login?error=invalid_login_request"));
 
@@ -533,7 +533,7 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void test_case_insensitive_login(
+    void case_insensitive_login(
             @Autowired ScimUserProvisioning scimUserProvisioning
     ) throws Exception {
         String username = "mixed-CASE-USER-" + generator.generate() + "@testdomain.com";
@@ -561,7 +561,7 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void test_previous_login_time_upon_authentication(
+    void previous_login_time_upon_authentication(
             @Autowired ScimUserProvisioning scimUserProvisioning
     ) throws Exception {
         ScimUser user = createUser(scimUserProvisioning, generator, IdentityZone.getUaaZoneId());
@@ -593,31 +593,31 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testLogin_Post_When_DisableInternalUserManagement_Is_True(
+    void loginPostWhenDisableInternalUserManagementIsTrue(
             @Autowired ScimUserProvisioning scimUserProvisioning
     ) throws Exception {
         ScimUser user = createUser(scimUserProvisioning, generator, IdentityZone.getUaaZoneId());
         MockMvcUtils.setDisableInternalAuth(webApplicationContext, IdentityZone.getUaaZoneId(), true);
         try {
             mockMvc.perform(post("/login.do")
-                    .with(cookieCsrf())
-                    .param("username", user.getUserName())
-                    .param("password", user.getPassword()))
+                            .with(cookieCsrf())
+                            .param("username", user.getUserName())
+                            .param("password", user.getPassword()))
                     .andExpect(redirectedUrl("/login?error=login_failure"));
         } finally {
             MockMvcUtils.setDisableInternalAuth(webApplicationContext, IdentityZone.getUaaZoneId(), false);
         }
         mockMvc.perform(post("/uaa/login.do")
-                .with(cookieCsrf())
-                .contextPath("/uaa")
-                .param("username", user.getUserName())
-                .param("password", user.getPassword()))
+                        .with(cookieCsrf())
+                        .contextPath("/uaa")
+                        .param("username", user.getUserName())
+                        .param("password", user.getPassword()))
                 .andDo(print())
                 .andExpect(redirectedUrl("/uaa/"));
     }
 
     @Test
-    void testLogin_When_DisableInternalUserManagement_Is_True() throws Exception {
+    void loginWhenDisableInternalUserManagementIsTrue() throws Exception {
         MockMvcUtils.setDisableInternalUserManagement(webApplicationContext, true);
         mockMvc.perform(get("/login"))
                 .andExpect(status().isOk())
@@ -628,7 +628,7 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testCustomLogo() throws Exception {
+    void customLogo() throws Exception {
         setZoneFavIconAndProductLogo(webApplicationContext, identityZoneConfiguration, null, "/bASe/64+");
 
         mockMvc.perform(get("/login"))
@@ -636,7 +636,7 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testCustomFavIcon() throws Exception {
+    void customFavIcon() throws Exception {
         setZoneFavIconAndProductLogo(webApplicationContext, identityZoneConfiguration, "/sM4lL==", null);
 
         mockMvc.perform(get("/login"))
@@ -644,7 +644,7 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testProductLogoOver100kChars() throws Exception {
+    void productLogoOver100kChars() throws Exception {
         String bigLogo = new String(new char[150000]).replace('\0', 'x');
         setZoneFavIconAndProductLogo(webApplicationContext, identityZoneConfiguration, null, bigLogo);
 
@@ -653,7 +653,7 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testCustomFavIcon_With_LineBreaks() throws Exception {
+    void customFavIconWithLineBreaks() throws Exception {
         setZoneFavIconAndProductLogo(webApplicationContext, identityZoneConfiguration, "/sM4\n\nlL==", "/sM4\n\nlL==");
 
         mockMvc.perform(get("/login"))
@@ -662,14 +662,14 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testDefaultFooter() throws Exception {
+    void defaultFooter() throws Exception {
         mockMvc.perform(get("/login"))
                 .andExpect(content().string(containsString(CF_COPYRIGHT_TEXT)))
                 .andExpect(content().string(not(containsString(CF_LAST_LOGIN))));
     }
 
     @Test
-    void testCustomizedFooter() throws Exception {
+    void customizedFooter() throws Exception {
         String customFooterText = "This text should be in the footer.";
         BrandingInformation branding = new BrandingInformation();
         branding.setFooterLegalText(customFooterText);
@@ -682,7 +682,7 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testCustomCompanyName() throws Exception {
+    void customCompanyName() throws Exception {
         String companyName = "Big Company";
         BrandingInformation branding = new BrandingInformation();
         branding.setCompanyName(companyName);
@@ -695,7 +695,7 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testCustomCompanyNameInZone(
+    void customCompanyNameInZone(
             @Autowired IdentityZoneProvisioning identityZoneProvisioning
     ) throws Exception {
         String companyName = "Big Company";
@@ -720,7 +720,7 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testFooterLinks() throws Exception {
+    void footerLinks() throws Exception {
         Map<String, String> footerLinks = new HashMap<>();
         footerLinks.put("Terms of Use", "/terms.html");
         footerLinks.put("Privacy", "/privacy");
@@ -734,7 +734,7 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testForgotPasswordPageDoesNotHaveCsrf() throws Exception {
+    void forgotPasswordPageDoesNotHaveCsrf() throws Exception {
         mockMvc.perform(get("/forgot_password"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("forgot_password"))
@@ -743,57 +743,57 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testForgotPasswordSubmitDoesNotValidateCsrf() throws Exception {
+    void forgotPasswordSubmitDoesNotValidateCsrf() throws Exception {
         assumeFalse(isLimitedMode(limitedModeUaaFilter), "Test only runs in non limited mode.");
         mockMvc.perform(
-                post("/forgot_password.do")
-                        .param("username", "marissa")
-                        .with(cookieCsrf().useInvalidToken()))
+                        post("/forgot_password.do")
+                                .param("username", "marissa")
+                                .with(cookieCsrf().useInvalidToken()))
                 .andExpect(status().isFound())
                 .andExpect(redirectedUrl("email_sent?code=reset_password"));
     }
 
     @Test
-    void testChangePasswordPageDoesHaveCsrf() throws Exception {
+    void changePasswordPageDoesHaveCsrf() throws Exception {
         mockMvc.perform(
-                get("/change_password")
-                        .with(securityContext(MockMvcUtils.getMarissaSecurityContext(webApplicationContext, IdentityZoneHolder.getCurrentZoneId())))
-        )
-        .andExpect(status().isOk())
+                        get("/change_password")
+                                .with(securityContext(MockMvcUtils.getMarissaSecurityContext(webApplicationContext, IdentityZoneHolder.getCurrentZoneId())))
+                )
+                .andExpect(status().isOk())
                 .andExpect(view().name("change_password"))
                 .andExpect(content().string(containsString("action=\"/change_password.do\"")))
                 .andExpect(content().string(containsString("name=\"X-Uaa-Csrf\"")));
     }
 
     @Test
-    void testChangePasswordSubmitDoesValidateCsrf(
+    void changePasswordSubmitDoesValidateCsrf(
             @Autowired ScimUserProvisioning scimUserProvisioning
     ) throws Exception {
         assumeFalse(isLimitedMode(limitedModeUaaFilter), "Test only runs in non limited mode.");
         ScimUser user = createUser(scimUserProvisioning, generator, IdentityZone.getUaaZoneId());
         mockMvc.perform(
-                post("/change_password.do")
-                        .with(securityContext(MockMvcUtils.getUaaSecurityContext(user.getUserName(), webApplicationContext, IdentityZoneHolder.getCurrentZoneId())))
-                        .param("current_password", user.getPassword())
-                        .param("new_password", "newSecr3t")
-                        .param("confirm_password", "newSecr3t")
-                        .with(cookieCsrf().useInvalidToken()))
+                        post("/change_password.do")
+                                .with(securityContext(MockMvcUtils.getUaaSecurityContext(user.getUserName(), webApplicationContext, IdentityZoneHolder.getCurrentZoneId())))
+                                .param("current_password", user.getPassword())
+                                .param("new_password", "newSecr3t")
+                                .param("confirm_password", "newSecr3t")
+                                .with(cookieCsrf().useInvalidToken()))
                 .andExpect(status().isForbidden())
                 .andExpect(forwardedUrl("/invalid_request"));
 
         mockMvc.perform(
-                post("/change_password.do")
-                        .with(securityContext(MockMvcUtils.getUaaSecurityContext(user.getUserName(), webApplicationContext, IdentityZoneHolder.getCurrentZoneId())))
-                        .param("current_password", user.getPassword())
-                        .param("new_password", "newSecr3t")
-                        .param("confirm_password", "newSecr3t")
-                        .with(cookieCsrf()))
+                        post("/change_password.do")
+                                .with(securityContext(MockMvcUtils.getUaaSecurityContext(user.getUserName(), webApplicationContext, IdentityZoneHolder.getCurrentZoneId())))
+                                .param("current_password", user.getPassword())
+                                .param("new_password", "newSecr3t")
+                                .param("confirm_password", "newSecr3t")
+                                .with(cookieCsrf()))
                 .andExpect(status().isFound())
                 .andExpect(redirectedUrl("profile"));
     }
 
     @Test
-    void testLogOut() throws Exception {
+    void logOut() throws Exception {
         mockMvc.perform(get("/uaa/logout.do").contextPath("/uaa"))
                 .andExpect(status().isFound())
                 .andExpect(redirectedUrl("/uaa/login"))
@@ -801,7 +801,7 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testLogOutIgnoreRedirectParameter() throws Exception {
+    void logOutIgnoreRedirectParameter() throws Exception {
         mockMvc.perform(get("/uaa/logout.do").param("redirect", "https://www.google.com").contextPath("/uaa"))
                 .andExpect(status().isFound())
                 .andExpect(redirectedUrl("/uaa/login"))
@@ -809,7 +809,7 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testLogOutEnableRedirectParameter() throws Exception {
+    void logOutEnableRedirectParameter() throws Exception {
         Links.Logout original = MockMvcUtils.getLogout(webApplicationContext, IdentityZone.getUaaZoneId());
         Links.Logout logout = MockMvcUtils.getLogout(webApplicationContext, IdentityZone.getUaaZoneId());
         logout.setDisableRedirectParameter(false);
@@ -826,7 +826,7 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testLogOutAllowInternalRedirect() throws Exception {
+    void logOutAllowInternalRedirect() throws Exception {
         Links.Logout original = MockMvcUtils.getLogout(webApplicationContext, IdentityZone.getUaaZoneId());
         Links.Logout logout = MockMvcUtils.getLogout(webApplicationContext, IdentityZone.getUaaZoneId());
         MockMvcUtils.setLogout(webApplicationContext, IdentityZone.getUaaZoneId(), logout);
@@ -841,7 +841,7 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testLogOutWhitelistedRedirectParameter() throws Exception {
+    void logOutWhitelistedRedirectParameter() throws Exception {
         Links.Logout original = MockMvcUtils.getLogout(webApplicationContext, IdentityZone.getUaaZoneId());
         Links.Logout logout = MockMvcUtils.getLogout(webApplicationContext, IdentityZone.getUaaZoneId());
         logout.setDisableRedirectParameter(false);
@@ -858,7 +858,7 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testLogOutNotWhitelistedRedirectParameter() throws Exception {
+    void logOutNotWhitelistedRedirectParameter() throws Exception {
         Links.Logout original = MockMvcUtils.getLogout(webApplicationContext, IdentityZone.getUaaZoneId());
         Links.Logout logout = MockMvcUtils.getLogout(webApplicationContext, IdentityZone.getUaaZoneId());
         logout.setDisableRedirectParameter(false);
@@ -875,7 +875,7 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testLogOutNullWhitelistedRedirectParameter() throws Exception {
+    void logOutNullWhitelistedRedirectParameter() throws Exception {
         Links.Logout original = MockMvcUtils.getLogout(webApplicationContext, IdentityZone.getUaaZoneId());
         Links.Logout logout = MockMvcUtils.getLogout(webApplicationContext, IdentityZone.getUaaZoneId());
         logout.setDisableRedirectParameter(false);
@@ -892,7 +892,7 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testLogOutEmptyWhitelistedRedirectParameter() throws Exception {
+    void logOutEmptyWhitelistedRedirectParameter() throws Exception {
         Links.Logout original = MockMvcUtils.getLogout(webApplicationContext, IdentityZone.getUaaZoneId());
         Links.Logout logout = MockMvcUtils.getLogout(webApplicationContext, IdentityZone.getUaaZoneId());
         logout.setDisableRedirectParameter(false);
@@ -909,7 +909,7 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testLogoutRedirectIsEnabledInZone(
+    void logoutRedirectIsEnabledInZone(
             @Autowired IdentityZoneProvisioning identityZoneProvisioning
     ) {
         String zoneId = generator.generate();
@@ -920,7 +920,7 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testLogOutChangeUrlValue() throws Exception {
+    void logOutChangeUrlValue() throws Exception {
         Links.Logout original = MockMvcUtils.getLogout(webApplicationContext, IdentityZone.getUaaZoneId());
         assertThat(original.isDisableRedirectParameter()).isFalse();
         Links.Logout logout = MockMvcUtils.getLogout(webApplicationContext, IdentityZone.getUaaZoneId());
@@ -937,7 +937,7 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testLogOutWithClientRedirect() throws Exception {
+    void logOutWithClientRedirect() throws Exception {
         Links.Logout original = MockMvcUtils.getLogout(webApplicationContext, IdentityZone.getUaaZoneId());
         Links.Logout logout = MockMvcUtils.getLogout(webApplicationContext, IdentityZone.getUaaZoneId());
         logout.setDisableRedirectParameter(false);
@@ -949,32 +949,32 @@ public class LoginMockMvcTests {
             client.setClientSecret(clientId);
             MockMvcUtils.createClient(webApplicationContext, client, getUaa());
             mockMvc.perform(
-                    get("/uaa/logout.do")
-                            .param(CLIENT_ID, clientId)
-                            .param("redirect", "http://testing.com")
-                            .contextPath("/uaa")
-            )
-            .andExpect(status().isFound())
+                            get("/uaa/logout.do")
+                                    .param(CLIENT_ID, clientId)
+                                    .param("redirect", "http://testing.com")
+                                    .contextPath("/uaa")
+                    )
+                    .andExpect(status().isFound())
                     .andExpect(redirectedUrl("http://testing.com"))
                     .andExpect(emptyCurrentUserCookie());
 
             mockMvc.perform(
-                    get("/uaa/logout.do")
-                            .param(CLIENT_ID, clientId)
-                            .param("redirect", "http://www.wildcard.testing")
-                            .contextPath("/uaa")
-            )
-            .andExpect(status().isFound())
+                            get("/uaa/logout.do")
+                                    .param(CLIENT_ID, clientId)
+                                    .param("redirect", "http://www.wildcard.testing")
+                                    .contextPath("/uaa")
+                    )
+                    .andExpect(status().isFound())
                     .andExpect(redirectedUrl("http://www.wildcard.testing"))
                     .andExpect(emptyCurrentUserCookie());
 
             mockMvc.perform(
-                    get("/uaa/logout.do")
-                            .param(CLIENT_ID, "non-existent-client")
-                            .param("redirect", "http://www.wildcard.testing")
-                            .contextPath("/uaa")
-            )
-            .andExpect(status().isFound())
+                            get("/uaa/logout.do")
+                                    .param(CLIENT_ID, "non-existent-client")
+                                    .param("redirect", "http://www.wildcard.testing")
+                                    .contextPath("/uaa")
+                    )
+                    .andExpect(status().isFound())
                     .andExpect(redirectedUrl("/uaa/login"))
                     .andExpect(emptyCurrentUserCookie());
         } finally {
@@ -983,7 +983,7 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testLogOut_Config_For_Zone(
+    void logOutConfigForZone(
             @Autowired IdentityZoneProvisioning identityZoneProvisioning
     ) throws Exception {
         String zoneId = new RandomValueStringGenerator().generate();
@@ -1004,18 +1004,18 @@ public class LoginMockMvcTests {
 
         //other zone
         mockMvc.perform(get("/uaa/logout.do")
-                .contextPath("/uaa")
-                .header("Host", zoneId + ".localhost"))
+                        .contextPath("/uaa")
+                        .header("Host", zoneId + ".localhost"))
                 .andExpect(status().isFound())
                 .andExpect(redirectedUrl("http://test.redirect.com"))
                 .andExpect(emptyCurrentUserCookie());
 
         mockMvc.perform(get("/uaa/logout.do")
-                .contextPath("/uaa")
-                .header("Host", zoneId + ".localhost")
-                .param("redirect", "http://google.com")
-        )
-        .andExpect(status().isFound())
+                        .contextPath("/uaa")
+                        .header("Host", zoneId + ".localhost")
+                        .param("redirect", "http://google.com")
+                )
+                .andExpect(status().isFound())
                 .andExpect(redirectedUrl("http://test.redirect.com"))
                 .andExpect(emptyCurrentUserCookie());
 
@@ -1023,11 +1023,11 @@ public class LoginMockMvcTests {
         zone = identityZoneProvisioning.update(zone);
 
         mockMvc.perform(get("/uaa/logout.do")
-                .contextPath("/uaa")
-                .header("Host", zoneId + ".localhost")
-                .param("redirect", "http://google.com")
-        )
-        .andExpect(status().isFound())
+                        .contextPath("/uaa")
+                        .header("Host", zoneId + ".localhost")
+                        .param("redirect", "http://google.com")
+                )
+                .andExpect(status().isFound())
                 .andExpect(redirectedUrl("http://test.redirect.com"))
                 .andExpect(emptyCurrentUserCookie());
 
@@ -1036,11 +1036,11 @@ public class LoginMockMvcTests {
         zone = identityZoneProvisioning.update(zone);
 
         mockMvc.perform(get("/uaa/logout.do")
-                .contextPath("/uaa")
-                .header("Host", zoneId + ".localhost")
-                .param("redirect", "http://google.com")
-        )
-        .andExpect(status().isFound())
+                        .contextPath("/uaa")
+                        .header("Host", zoneId + ".localhost")
+                        .param("redirect", "http://google.com")
+                )
+                .andExpect(status().isFound())
                 .andExpect(redirectedUrl("http://google.com"))
                 .andExpect(emptyCurrentUserCookie());
 
@@ -1048,26 +1048,26 @@ public class LoginMockMvcTests {
         identityZoneProvisioning.update(zone);
 
         mockMvc.perform(get("/uaa/logout.do")
-                .contextPath("/uaa")
-                .header("Host", zoneId + ".localhost")
-                .param("redirect", "http://google.com")
-        )
-        .andExpect(status().isFound())
+                        .contextPath("/uaa")
+                        .header("Host", zoneId + ".localhost")
+                        .param("redirect", "http://google.com")
+                )
+                .andExpect(status().isFound())
                 .andExpect(redirectedUrl("http://test.redirect.com"))
                 .andExpect(emptyCurrentUserCookie());
 
         mockMvc.perform(get("/uaa/logout.do")
-                .contextPath("/uaa")
-                .header("Host", zoneId + ".localhost")
-                .param("redirect", "http://yahoo.com")
-        )
-        .andExpect(status().isFound())
+                        .contextPath("/uaa")
+                        .header("Host", zoneId + ".localhost")
+                        .param("redirect", "http://yahoo.com")
+                )
+                .andExpect(status().isFound())
                 .andExpect(redirectedUrl("http://yahoo.com"))
                 .andExpect(emptyCurrentUserCookie());
     }
 
     @Test
-    void testDefaultBranding() throws Exception {
+    void defaultBranding() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("/login"))
                 .andExpect(xpath("//head/link[@rel='shortcut icon']/@href").string("/resources/oss/images/square-logo.png"))
                 .andExpect(xpath("//head/link[@href='/resources/oss/stylesheets/application.css']").exists())
@@ -1079,7 +1079,7 @@ public class LoginMockMvcTests {
     @TestPropertySource(properties = {"assetBaseUrl=//cdn.example.com/pivotal"})
     class Branding {
         @Test
-        void testExternalizedBranding(@Autowired MockMvc mockMvc) throws Exception {
+        void externalizedBranding(@Autowired MockMvc mockMvc) throws Exception {
             mockMvc.perform(MockMvcRequestBuilders.get("/login"))
                     .andExpect(xpath("//head/link[@rel='shortcut icon']/@href").string("//cdn.example.com/pivotal/images/square-logo.png"))
                     .andExpect(xpath("//head/link[@href='//cdn.example.com/pivotal/stylesheets/application.css']").exists())
@@ -1088,7 +1088,7 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testAccessConfirmationPage(
+    void accessConfirmationPage(
             @Autowired JdbcScimUserProvisioning jdbcScimUserProvisioning
     ) throws Exception {
         ScimUser marissa = jdbcScimUserProvisioning.query("username eq \"marissa\" and origin eq \"uaa\"", IdentityZoneHolder.get().getId()).get(0);
@@ -1113,7 +1113,7 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testSignupsAndResetPasswordEnabled() throws Exception {
+    void signupsAndResetPasswordEnabled() throws Exception {
         MockMvcUtils.setSelfServiceLinksEnabled(webApplicationContext, IdentityZone.getUaaZoneId(), true);
 
         mockMvc.perform(MockMvcRequestBuilders.get("/login"))
@@ -1122,7 +1122,7 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testSignupsAndResetPasswordDisabledWithNoLinksConfigured() throws Exception {
+    void signupsAndResetPasswordDisabledWithNoLinksConfigured() throws Exception {
         MockMvcUtils.setSelfServiceLinksEnabled(webApplicationContext, IdentityZone.getUaaZoneId(), false);
 
         mockMvc.perform(MockMvcRequestBuilders.get("/login"))
@@ -1131,7 +1131,7 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testSignupsAndResetPasswordDisabledWithSomeLinksConfigured() throws Exception {
+    void signupsAndResetPasswordDisabledWithSomeLinksConfigured() throws Exception {
         identityZoneConfiguration.getLinks().getSelfService().setSignup("http://example.com/signup");
         identityZoneConfiguration.getLinks().getSelfService().setPasswd("http://example.com/reset_passwd");
         identityZoneConfiguration.getLinks().getSelfService().setSelfServiceLinksEnabled(false);
@@ -1142,7 +1142,7 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testSignupsAndResetPasswordEnabledWithCustomLinks() throws Exception {
+    void signupsAndResetPasswordEnabledWithCustomLinks() throws Exception {
         identityZoneConfiguration.getLinks().getSelfService().setSignup("http://example.com/signup");
         identityZoneConfiguration.getLinks().getSelfService().setPasswd("http://example.com/reset_passwd");
         identityZoneConfiguration.getLinks().getSelfService().setSelfServiceLinksEnabled(true);
@@ -1153,7 +1153,7 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testLoginWithExplicitPrompts() throws Exception {
+    void loginWithExplicitPrompts() throws Exception {
         List<Prompt> original = MockMvcUtils.getPrompts(webApplicationContext, IdentityZone.getUaaZoneId());
         try {
             Prompt first = new Prompt("how", "text", "How did I get here?");
@@ -1172,7 +1172,7 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testLoginWithExplicitJsonPrompts() throws Exception {
+    void loginWithExplicitJsonPrompts() throws Exception {
         List<Prompt> original = MockMvcUtils.getPrompts(webApplicationContext, IdentityZone.getUaaZoneId());
         try {
             Prompt first = new Prompt("how", "text", "How did I get here?");
@@ -1180,7 +1180,7 @@ public class LoginMockMvcTests {
             MockMvcUtils.setPrompts(webApplicationContext, IdentityZone.getUaaZoneId(), asList(first, second));
 
             mockMvc.perform(get("/login")
-                    .accept(APPLICATION_JSON))
+                            .accept(APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andExpect(view().name("login"))
                     .andExpect(model().attribute("prompts", hasKey("how")))
@@ -1192,9 +1192,9 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testLoginWithRemoteUaaPrompts() throws Exception {
+    void loginWithRemoteUaaPrompts() throws Exception {
         mockMvc.perform(get("/login")
-                .accept(TEXT_HTML))
+                        .accept(TEXT_HTML))
                 .andExpect(status().isOk())
                 .andExpect(view().name("login"))
                 .andExpect(model().attribute("prompts", hasKey("username")))
@@ -1203,9 +1203,9 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testLoginWithRemoteUaaJsonPrompts() throws Exception {
+    void loginWithRemoteUaaJsonPrompts() throws Exception {
         mockMvc.perform(get("/login")
-                .accept(APPLICATION_JSON))
+                        .accept(APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(view().name("login"))
                 .andExpect(model().attribute("prompts", hasKey("username")))
@@ -1213,9 +1213,9 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testInfoWithRemoteUaaJsonPrompts() throws Exception {
+    void infoWithRemoteUaaJsonPrompts() throws Exception {
         mockMvc.perform(get("/info")
-                .accept(APPLICATION_JSON))
+                        .accept(APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(view().name("login"))
                 .andExpect(model().attribute("prompts", hasKey("username")))
@@ -1223,7 +1223,7 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testDefaultAndCustomSignupLink() throws Exception {
+    void defaultAndCustomSignupLink() throws Exception {
         mockMvc.perform(get("/login").accept(TEXT_HTML))
                 .andExpect(status().isOk())
                 .andExpect(model().attribute("links", hasEntry("createAccountLink", "/create_account")));
@@ -1235,7 +1235,7 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testLocalSignupDisabled() throws Exception {
+    void localSignupDisabled() throws Exception {
         MockMvcUtils.setSelfServiceLinksEnabled(webApplicationContext, IdentityZone.getUaaZoneId(), false);
         mockMvc.perform(get("/login").accept(TEXT_HTML))
                 .andExpect(status().isOk())
@@ -1243,7 +1243,7 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testCustomSignupLinkWithLocalSignupDisabled() throws Exception {
+    void customSignupLinkWithLocalSignupDisabled() throws Exception {
         MockMvcUtils.setSelfServiceLinksEnabled(webApplicationContext, IdentityZone.getUaaZoneId(), false);
         mockMvc.perform(get("/login").accept(TEXT_HTML))
                 .andExpect(status().isOk())
@@ -1251,7 +1251,7 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testSamlLoginLinksShowActiveProviders(
+    void samlLoginLinksShowActiveProviders(
             @Autowired JdbcIdentityProviderProvisioning jdbcIdentityProviderProvisioning
     ) throws Exception {
         String activeAlias = "login-saml-" + generator.generate();
@@ -1299,7 +1299,7 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testSamlRedirectWhenTheOnlyProvider(
+    void samlRedirectWhenTheOnlyProvider(
             @Autowired JdbcIdentityProviderProvisioning jdbcIdentityProviderProvisioning
     ) throws Exception {
         String alias = "login-saml-" + generator.generate();
@@ -1332,16 +1332,16 @@ public class LoginMockMvcTests {
         SessionUtils.setSavedRequestSession(session, savedRequest);
 
         mockMvc.perform(get("/login")
-                .accept(TEXT_HTML)
-                .session(session)
-                .with(new SetServerNameRequestPostProcessor(identityZone.getSubdomain() + ".localhost")))
+                        .accept(TEXT_HTML)
+                        .session(session)
+                        .with(new SetServerNameRequestPostProcessor(identityZone.getSubdomain() + ".localhost")))
                 .andExpect(status().isFound())
                 .andExpect(redirectedUrl("/saml2/authenticate/%s".formatted(alias)));
 
         mockMvc.perform(get("/login")
-                .accept(APPLICATION_JSON)
-                .session(session)
-                .with(new SetServerNameRequestPostProcessor(identityZone.getSubdomain() + ".localhost")))
+                        .accept(APPLICATION_JSON)
+                        .session(session)
+                        .with(new SetServerNameRequestPostProcessor(identityZone.getSubdomain() + ".localhost")))
                 .andExpect(status().isOk());
 
         IdentityProvider uaaProvider = jdbcIdentityProviderProvisioning.retrieveByOriginIgnoreActiveFlag(UAA, identityZone.getId());
@@ -1350,9 +1350,9 @@ public class LoginMockMvcTests {
             uaaProvider.setActive(false);
             jdbcIdentityProviderProvisioning.update(uaaProvider, uaaProvider.getIdentityZoneId());
             mockMvc.perform(get("/login")
-                    .accept(APPLICATION_JSON)
-                    .session(session)
-                    .with(new SetServerNameRequestPostProcessor(identityZone.getSubdomain() + ".localhost")))
+                            .accept(APPLICATION_JSON)
+                            .session(session)
+                            .with(new SetServerNameRequestPostProcessor(identityZone.getSubdomain() + ".localhost")))
                     .andExpect(status().isOk());
         } finally {
             IdentityZoneHolder.set(identityZone);
@@ -1394,7 +1394,7 @@ public class LoginMockMvcTests {
         jdbcIdentityProviderProvisioning.update(uaaIdentityProvider, uaaIdentityProvider.getIdentityZoneId());
 
         mockMvc.perform(get("/login").accept(TEXT_HTML).with(new SetServerNameRequestPostProcessor(identityZone.getSubdomain() + ".localhost"))
-                .with(new SetServerNameRequestPostProcessor(identityZone.getSubdomain() + ".localhost")))
+                        .with(new SetServerNameRequestPostProcessor(identityZone.getSubdomain() + ".localhost")))
                 .andExpect(status().isFound())
                 .andExpect(redirectedUrl("/saml2/authenticate/%s".formatted(alias)));
         IdentityZoneHolder.clear();
@@ -1419,8 +1419,8 @@ public class LoginMockMvcTests {
         jdbcIdentityProviderProvisioning.update(uaaIdentityProvider, uaaIdentityProvider.getIdentityZoneId());
 
         MvcResult mvcResult = mockMvc.perform(get("/login").accept(TEXT_HTML)
-                .servletPath("/login")
-                .with(new SetServerNameRequestPostProcessor(identityZone.getSubdomain() + ".localhost")))
+                        .servletPath("/login")
+                        .with(new SetServerNameRequestPostProcessor(identityZone.getSubdomain() + ".localhost")))
                 .andExpect(status().isFound())
                 .andReturn();
         String location = mvcResult.getResponse().getHeader("Location");
@@ -1464,8 +1464,8 @@ public class LoginMockMvcTests {
         jdbcIdentityProviderProvisioning.update(uaaIdentityProvider, uaaIdentityProvider.getIdentityZoneId());
 
         MvcResult mvcResult = mockMvc.perform(get("/login").accept(TEXT_HTML)
-                .servletPath("/login")
-                .with(new SetServerNameRequestPostProcessor(identityZone.getSubdomain() + ".localhost")))
+                        .servletPath("/login")
+                        .with(new SetServerNameRequestPostProcessor(identityZone.getSubdomain() + ".localhost")))
                 .andExpect(status().isFound())
                 .andReturn();
         String location = mvcResult.getResponse().getHeader("Location");
@@ -1501,8 +1501,8 @@ public class LoginMockMvcTests {
         jdbcIdentityProviderProvisioning.update(uaaIdentityProvider, uaaIdentityProvider.getIdentityZoneId());
 
         MvcResult mvcResult = mockMvc.perform(get("/login").accept(TEXT_HTML)
-                .servletPath("/login")
-                .with(new SetServerNameRequestPostProcessor(identityZone.getSubdomain() + ".localhost")))
+                        .servletPath("/login")
+                        .with(new SetServerNameRequestPostProcessor(identityZone.getSubdomain() + ".localhost")))
                 .andExpect(status().isFound())
                 .andReturn();
         String location = mvcResult.getResponse().getHeader("Location");
@@ -1521,7 +1521,7 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testLoginHintRedirect(
+    void loginHintRedirect(
             @Autowired JdbcIdentityProviderProvisioning jdbcIdentityProviderProvisioning
     ) throws Exception {
         final String zoneAdminClientId = "admin";
@@ -1558,12 +1558,12 @@ public class LoginMockMvcTests {
 
 
         MvcResult mvcResult = mockMvc.perform(get("/login")
-                .accept(TEXT_HTML)
-                .session(session)
-                .servletPath("/login")
-                .with(new SetServerNameRequestPostProcessor(identityZone.getSubdomain() + ".localhost"))
-        )
-        .andExpect(status().isFound())
+                        .accept(TEXT_HTML)
+                        .session(session)
+                        .servletPath("/login")
+                        .with(new SetServerNameRequestPostProcessor(identityZone.getSubdomain() + ".localhost"))
+                )
+                .andExpect(status().isFound())
                 .andReturn();
         String location = mvcResult.getResponse().getHeader("Location");
         Map<String, String> queryParams =
@@ -1627,14 +1627,14 @@ public class LoginMockMvcTests {
         jdbcIdentityProviderProvisioning.update(uaaIdentityProvider, uaaIdentityProvider.getIdentityZoneId());
 
         mockMvc.perform(get("/login").accept(TEXT_HTML).with(new SetServerNameRequestPostProcessor(identityZone.getSubdomain() + ".localhost"))
-                .with(new SetServerNameRequestPostProcessor(identityZone.getSubdomain() + ".localhost")))
+                        .with(new SetServerNameRequestPostProcessor(identityZone.getSubdomain() + ".localhost")))
                 .andExpect(status().isOk())
                 .andExpect(view().name("login"));
         IdentityZoneHolder.clear();
     }
 
     @Test
-    void testNoCreateAccountLinksWhenUAAisNotAllowedProvider(
+    void noCreateAccountLinksWhenUAAisNotAllowedProvider(
             @Autowired JdbcIdentityProviderProvisioning jdbcIdentityProviderProvisioning
     ) throws Exception {
         String alias2 = "login-saml-" + generator.generate();
@@ -1723,15 +1723,15 @@ public class LoginMockMvcTests {
         SessionUtils.setSavedRequestSession(session, savedRequest);
 
         mockMvc.perform(get("/login").accept(TEXT_HTML).with(new SetServerNameRequestPostProcessor(identityZone.getSubdomain() + ".localhost"))
-                .session(session)
-                .with(new SetServerNameRequestPostProcessor(identityZone.getSubdomain() + ".localhost")))
+                        .session(session)
+                        .with(new SetServerNameRequestPostProcessor(identityZone.getSubdomain() + ".localhost")))
                 .andExpect(status().isOk())
                 .andExpect(xpath("//a[text()='Create account']").doesNotExist())
                 .andExpect(xpath("//a[text()='Reset password']").doesNotExist());
     }
 
     @Test
-    void testDeactivatedProviderIsRemovedFromSamlLoginLinks(
+    void deactivatedProviderIsRemovedFromSamlLoginLinks(
             @Autowired JdbcIdentityProviderProvisioning jdbcIdentityProviderProvisioning
     ) throws Exception {
         assumeFalse(isLimitedMode(limitedModeUaaFilter), "Test only runs in non limited mode.");
@@ -1771,14 +1771,14 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testChangeEmailWithoutAuthenticationReturnsRedirect() throws Exception {
+    void changeEmailWithoutAuthenticationReturnsRedirect() throws Exception {
         mockMvc.perform(get("/change_email").accept(TEXT_HTML))
                 .andExpect(status().isFound())
                 .andExpect(redirectedUrl("http://localhost/login"));
     }
 
     @Test
-    void testChangeEmailPageHasCsrf() throws Exception {
+    void changeEmailPageHasCsrf() throws Exception {
         SecurityContext marissaContext = getMarissaSecurityContext(webApplicationContext, IdentityZoneHolder.getCurrentZoneId());
 
         MockHttpServletRequestBuilder get = get("/change_email")
@@ -1790,7 +1790,7 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testChangeEmailSubmitWithMissingCsrf() throws Exception {
+    void changeEmailSubmitWithMissingCsrf() throws Exception {
         assumeFalse(isLimitedMode(limitedModeUaaFilter), "Test only runs in non limited mode.");
         SecurityContext marissaContext = getMarissaSecurityContext(webApplicationContext, IdentityZoneHolder.getCurrentZoneId());
 
@@ -1815,7 +1815,7 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testChangeEmailSubmitWithInvalidCsrf() throws Exception {
+    void changeEmailSubmitWithInvalidCsrf() throws Exception {
         assumeFalse(isLimitedMode(limitedModeUaaFilter), "Test only runs in non limited mode.");
         SecurityContext marissaContext = getMarissaSecurityContext(webApplicationContext, IdentityZoneHolder.getCurrentZoneId());
 
@@ -1840,7 +1840,7 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testChangeEmailSubmitWithSpringSecurityForcedCsrf() throws Exception {
+    void changeEmailSubmitWithSpringSecurityForcedCsrf() throws Exception {
         assumeFalse(isLimitedMode(limitedModeUaaFilter), "Test only runs in non limited mode.");
         SecurityContext marissaContext = getMarissaSecurityContext(webApplicationContext, IdentityZoneHolder.getCurrentZoneId());
         //example shows to to test a request that is secured by csrf and you wish to bypass it
@@ -1859,7 +1859,7 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testChangeEmailSubmitWithCorrectCsrf() throws Exception {
+    void changeEmailSubmitWithCorrectCsrf() throws Exception {
         assumeFalse(isLimitedMode(limitedModeUaaFilter), "Test only runs in non limited mode.");
         SecurityContext marissaContext = getMarissaSecurityContext(webApplicationContext, IdentityZoneHolder.getCurrentZoneId());
 
@@ -1888,7 +1888,7 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testChangeEmailDoNotLoggedIn() throws Exception {
+    void changeEmailDoNotLoggedIn() throws Exception {
         assumeFalse(isLimitedMode(limitedModeUaaFilter), "Test only runs in non limited mode.");
         SecurityContext marissaContext = getMarissaSecurityContext(webApplicationContext, IdentityZoneHolder.getCurrentZoneId());
 
@@ -1916,7 +1916,7 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testChangeEmailNoCsrfReturns403AndInvalidRequest() throws Exception {
+    void changeEmailNoCsrfReturns403AndInvalidRequest() throws Exception {
         assumeFalse(isLimitedMode(limitedModeUaaFilter), "Test only runs in non limited mode.");
         SecurityContext marissaContext = getMarissaSecurityContext(webApplicationContext, IdentityZoneHolder.getCurrentZoneId());
 
@@ -1941,7 +1941,7 @@ public class LoginMockMvcTests {
     }
 
     @Test
-    void testCsrfForInvitationAcceptPost(@Autowired ExpiringCodeStore expiringCodeStore) throws Exception {
+    void csrfForInvitationAcceptPost(@Autowired ExpiringCodeStore expiringCodeStore) throws Exception {
         assumeFalse(isLimitedMode(limitedModeUaaFilter), "Test only runs in non limited mode.");
         SecurityContext marissaContext = getMarissaSecurityContext(webApplicationContext, IdentityZoneHolder.getCurrentZoneId());
         AnonymousAuthenticationToken inviteToken = new AnonymousAuthenticationToken("invited-test", marissaContext.getAuthentication().getPrincipal(), singletonList(UaaAuthority.UAA_INVITED));
@@ -2014,7 +2014,7 @@ public class LoginMockMvcTests {
      * @throws Exception
      */
     @Test
-    void testLogOutCorsPreflight(@Autowired CorsFilter corsFilter) throws Exception {
+    void logOutCorsPreflight(@Autowired CorsFilter corsFilter) throws Exception {
         corsFilter.setCorsXhrAllowedOrigins(asList("^localhost$", "^*\\.localhost$"));
         corsFilter.setCorsXhrAllowedUris(singletonList("^/logout\\.do$"));
         corsFilter.initialize();
@@ -2032,7 +2032,7 @@ public class LoginMockMvcTests {
      * @throws Exception
      */
     @Test
-    void testLogOutCorsPreflightForIdentityZone(@Autowired CorsFilter corsFilter) throws Exception {
+    void logOutCorsPreflightForIdentityZone(@Autowired CorsFilter corsFilter) throws Exception {
         corsFilter.setCorsXhrAllowedOrigins(asList("^localhost$", "^*\\.localhost$"));
         corsFilter.setCorsXhrAllowedUris(singletonList("^/logout.do$"));
         corsFilter.initialize();
@@ -2050,7 +2050,7 @@ public class LoginMockMvcTests {
      * @throws Exception on test failure
      */
     @Test
-    void testLogOutCorsPreflightWithStandardHeader(@Autowired CorsFilter corsFilter) throws Exception {
+    void logOutCorsPreflightWithStandardHeader(@Autowired CorsFilter corsFilter) throws Exception {
         corsFilter.setCorsXhrAllowedOrigins(singletonList("^localhost$"));
         corsFilter.setCorsXhrAllowedUris(singletonList("^/logout\\.do$"));
         corsFilter.initialize();
@@ -2069,7 +2069,7 @@ public class LoginMockMvcTests {
      * @throws Exception on test failure
      */
     @Test
-    void testLogOutCorsPreflightWithUnallowedEndpoint(@Autowired CorsFilter corsFilter) throws Exception {
+    void logOutCorsPreflightWithUnallowedEndpoint(@Autowired CorsFilter corsFilter) throws Exception {
         corsFilter.setCorsXhrAllowedOrigins(singletonList("^localhost$"));
         corsFilter.setCorsXhrAllowedUris(singletonList("^/logout\\.do$"));
         corsFilter.initialize();
@@ -2088,7 +2088,7 @@ public class LoginMockMvcTests {
      * @throws Exception on test failure
      */
     @Test
-    void testLogOutCorsPreflightWithUnallowedMethod(@Autowired CorsFilter corsFilter) throws Exception {
+    void logOutCorsPreflightWithUnallowedMethod(@Autowired CorsFilter corsFilter) throws Exception {
         corsFilter.setCorsXhrAllowedOrigins(singletonList("^localhost$"));
         corsFilter.setCorsXhrAllowedUris(singletonList("^/logout\\.do$"));
         corsFilter.initialize();
@@ -2107,7 +2107,7 @@ public class LoginMockMvcTests {
      * @throws Exception on test failure
      */
     @Test
-    void testLogOutCorsPreflightWithUnallowedOrigin(@Autowired CorsFilter corsFilter) throws Exception {
+    void logOutCorsPreflightWithUnallowedOrigin(@Autowired CorsFilter corsFilter) throws Exception {
         corsFilter.setCorsXhrAllowedOrigins(singletonList("^localhost$"));
         corsFilter.setCorsXhrAllowedUris(singletonList("^/logout\\.do$"));
         corsFilter.initialize();
@@ -2125,7 +2125,7 @@ public class LoginMockMvcTests {
      * Positive test case that exercises the CORS logic for dealing with the "X-Requested-With" header.
      */
     @Test
-    void testXhrCorsPreflight_ForNonDefaultZone_WhenZoneSpecificCorsPolicyIsNull(@Autowired CorsFilter corsFilter) throws Exception {
+    void xhrCorsPreflightForNonDefaultZoneWhenZoneSpecificCorsPolicyIsNull(@Autowired CorsFilter corsFilter) throws Exception {
         // setting the default zone CORS policy
         corsFilter.setCorsXhrAllowedOrigins(asList("^localhost$", "^*\\.localhost$"));
         corsFilter.setCorsXhrAllowedUris(singletonList("^/logout.do$"));
@@ -2141,8 +2141,8 @@ public class LoginMockMvcTests {
         httpHeaders.add("Access-Control-Request-Method", "GET");
         httpHeaders.add("Origin", "testzone1.localhost");
         mockMvc.perform(options("/logout.do")
-                .with(new SetServerNameRequestPostProcessor(identityZone.getSubdomain() + ".localhost"))
-                .headers(httpHeaders))
+                        .with(new SetServerNameRequestPostProcessor(identityZone.getSubdomain() + ".localhost"))
+                        .headers(httpHeaders))
                 .andExpect(status().isOk());
     }
 
@@ -2152,7 +2152,7 @@ public class LoginMockMvcTests {
      * The access control request method is POST, which is allowed by the zone specific CORS policy in this test case setup
      */
     @Test
-    void testXhrCorsPreflight_ForNonDefaultZone_WhenZoneSpecificCorsPolicyExists(@Autowired CorsFilter corsFilter) throws Exception {
+    void xhrCorsPreflightForNonDefaultZoneWhenZoneSpecificCorsPolicyExists(@Autowired CorsFilter corsFilter) throws Exception {
         // setting the default zone CORS policy to not allow POST
         corsFilter.setCorsXhrAllowedMethods(List.of(GET.toString(), OPTIONS.toString()));
         corsFilter.initialize();
@@ -2168,8 +2168,8 @@ public class LoginMockMvcTests {
         httpHeaders.add("Access-Control-Request-Method", "POST");
         httpHeaders.add("Origin", "testzone1.localhost");
         mockMvc.perform(options("/logout.do")
-                .with(new SetServerNameRequestPostProcessor(identityZone.getSubdomain() + ".localhost"))
-                .headers(httpHeaders))
+                        .with(new SetServerNameRequestPostProcessor(identityZone.getSubdomain() + ".localhost"))
+                        .headers(httpHeaders))
                 .andExpect(status().isOk());
     }
 
@@ -2180,10 +2180,10 @@ public class LoginMockMvcTests {
         ScimUser userToLockout = createUser(scimUserProvisioning, generator, IdentityZone.getUaaZoneId());
         attemptUnsuccessfulLogin(mockMvc, 5, userToLockout.getUserName(), "");
         mockMvc.perform(post("/uaa/login.do")
-                .contextPath("/uaa")
-                .with(cookieCsrf())
-                .param("username", userToLockout.getUserName())
-                .param("password", userToLockout.getPassword()))
+                        .contextPath("/uaa")
+                        .with(cookieCsrf())
+                        .param("username", userToLockout.getUserName())
+                        .param("password", userToLockout.getPassword()))
                 .andExpect(redirectedUrl("/uaa/login?error=account_locked"))
                 .andExpect(emptyCurrentUserCookie());
     }
@@ -2203,11 +2203,11 @@ public class LoginMockMvcTests {
         attemptUnsuccessfulLogin(mockMvc, 2, userToLockout.getUserName(), subdomain);
 
         mockMvc.perform(post("/uaa/login.do")
-                .contextPath("/uaa")
-                .with(new SetServerNameRequestPostProcessor(subdomain + ".localhost"))
-                .with(cookieCsrf())
-                .param("username", userToLockout.getUserName())
-                .param("password", userToLockout.getPassword()))
+                        .contextPath("/uaa")
+                        .with(new SetServerNameRequestPostProcessor(subdomain + ".localhost"))
+                        .with(cookieCsrf())
+                        .param("username", userToLockout.getUserName())
+                        .param("password", userToLockout.getPassword()))
                 .andExpect(redirectedUrl("/uaa/login?error=account_locked"))
                 .andExpect(emptyCurrentUserCookie());
     }
@@ -2225,15 +2225,15 @@ public class LoginMockMvcTests {
         request.setUsername("marissa");
         request.setPassword("koala");
         mockMvc.perform(post("/autologin")
-                .header("Authorization", "Basic " + new String(ENCODER.encode("admin:adminsecret".getBytes())))
-                .contentType(APPLICATION_JSON)
-                .content(JsonUtils.writeValueAsString(request)))
+                        .header("Authorization", "Basic " + new String(ENCODER.encode("admin:adminsecret".getBytes())))
+                        .contentType(APPLICATION_JSON)
+                        .content(JsonUtils.writeValueAsString(request)))
                 .andExpect(status().isOk());
 
         mockMvc.perform(get("/autologin")
-                .session(session)
-                .param("code", "test" + generator.counter.get())
-                .param("client_id", "admin"))
+                        .session(session)
+                        .param("code", "test" + generator.counter.get())
+                        .param("client_id", "admin"))
                 .andExpect(redirectedUrl("http://test/redirect/oauth/authorize"));
     }
 
@@ -2248,14 +2248,14 @@ public class LoginMockMvcTests {
         request.setUsername("marissa");
         request.setPassword("koala");
         mockMvc.perform(post("/autologin")
-                .header("Authorization", "Basic " + new String(ENCODER.encode("admin:adminsecret".getBytes())))
-                .contentType(APPLICATION_JSON)
-                .content(JsonUtils.writeValueAsString(request)))
+                        .header("Authorization", "Basic " + new String(ENCODER.encode("admin:adminsecret".getBytes())))
+                        .contentType(APPLICATION_JSON)
+                        .content(JsonUtils.writeValueAsString(request)))
                 .andExpect(status().isOk());
 
         mockMvc.perform(get("/autologin")
-                .param("code", "test" + generator.counter.get())
-                .param("client_id", "admin"))
+                        .param("code", "test" + generator.counter.get())
+                        .param("client_id", "admin"))
                 .andExpect(redirectedUrl("home"));
     }
 
@@ -2267,8 +2267,8 @@ public class LoginMockMvcTests {
         config.setIdpDiscoveryEnabled(true);
         IdentityZone zone = setupZone(webApplicationContext, mockMvc, identityZoneProvisioning, generator, config);
         mockMvc.perform(get("/login")
-                .header("Accept", TEXT_HTML)
-                .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost")))
+                        .header("Accept", TEXT_HTML)
+                        .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost")))
                 .andExpect(status().isOk())
                 .andExpect(view().name("idp_discovery/email"))
                 .andExpect(content().string(containsString("Sign in")))
@@ -2286,8 +2286,8 @@ public class LoginMockMvcTests {
         IdentityZone zone = setupZone(webApplicationContext, mockMvc, identityZoneProvisioning, generator, config);
 
         mockMvc.perform(get("/login?discoveryPerformed=true")
-                .header("Accept", TEXT_HTML)
-                .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost")))
+                        .header("Accept", TEXT_HTML)
+                        .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost")))
                 .andExpect(status().isOk())
                 .andExpect(view().name("idp_discovery/password"));
     }
@@ -2312,9 +2312,9 @@ public class LoginMockMvcTests {
         SessionUtils.setSavedRequestSession(session, savedRequest);
 
         mockMvc.perform(get("/login")
-                .session(session)
-                .header("Accept", TEXT_HTML)
-                .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost")))
+                        .session(session)
+                        .header("Accept", TEXT_HTML)
+                        .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost")))
                 .andExpect(status().isOk())
                 .andExpect(view().name("idp_discovery/email"))
                 .andExpect(content().string(containsString("Sign in to continue to " + clientName)))
@@ -2345,9 +2345,9 @@ public class LoginMockMvcTests {
         savedAccount.setUserId("1234-5678");
         savedAccount.setUsername("test@example.org");
         mockMvc.perform(get("/login")
-                .session(session)
-                .header("Accept", TEXT_HTML)
-                .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost")))
+                        .session(session)
+                        .header("Accept", TEXT_HTML)
+                        .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost")))
                 .andExpect(status().isOk())
                 .andExpect(view().name("idp_discovery/email"));
     }
@@ -2375,10 +2375,10 @@ public class LoginMockMvcTests {
         savedAccount.setUserId("1234-5678");
         savedAccount.setUsername("test@example.org");
         mockMvc.perform(get("/login")
-                .session(session)
-                .cookie(new Cookie("Saved-Account-12345678", URLEncoder.encode(JsonUtils.writeValueAsString(savedAccount), StandardCharsets.UTF_8)))
-                .header("Accept", TEXT_HTML)
-                .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost")))
+                        .session(session)
+                        .cookie(new Cookie("Saved-Account-12345678", URLEncoder.encode(JsonUtils.writeValueAsString(savedAccount), StandardCharsets.UTF_8)))
+                        .header("Accept", TEXT_HTML)
+                        .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost")))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(view().name("idp_discovery/account_chooser"));
@@ -2396,9 +2396,9 @@ public class LoginMockMvcTests {
         MockHttpSession session = new MockHttpSession();
 
         mockMvc.perform(get("/login")
-                .session(session)
-                .header("Accept", TEXT_HTML)
-                .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost")))
+                        .session(session)
+                        .header("Accept", TEXT_HTML)
+                        .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost")))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(view().name("idp_discovery/origin"));
@@ -2418,11 +2418,11 @@ public class LoginMockMvcTests {
         String loginHint = "%7B%22origin%22%3A%22" + originKey + "%22%7D";
 
         MvcResult mvcResult = mockMvc.perform(post("/origin-chooser")
-                .with(cookieCsrf())
-                .header("Accept", TEXT_HTML)
-                .servletPath("/origin-chooser")
-                .param("login_hint", originKey)
-                .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost")))
+                        .with(cookieCsrf())
+                        .header("Accept", TEXT_HTML)
+                        .servletPath("/origin-chooser")
+                        .param("login_hint", originKey)
+                        .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost")))
                 .andExpect(status().isFound())
                 .andReturn();
         String location = mvcResult.getResponse().getHeader("Location");
@@ -2447,10 +2447,10 @@ public class LoginMockMvcTests {
         createOIDCProvider(jdbcIdentityProviderProvisioning, generator, zone, "id_token code");
 
         MvcResult mvcResult = mockMvc.perform(post("/origin-chooser")
-                .with(cookieCsrf())
-                .header("Accept", TEXT_HTML)
-                .servletPath("/origin-chooser")
-                .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost")))
+                        .with(cookieCsrf())
+                        .header("Accept", TEXT_HTML)
+                        .servletPath("/origin-chooser")
+                        .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost")))
                 .andExpect(status().isFound())
                 .andReturn();
         String location = mvcResult.getResponse().getHeader("Location");
@@ -2475,7 +2475,7 @@ public class LoginMockMvcTests {
         MockMvcUtils.setSelfServiceLinksEnabled(webApplicationContext, IdentityZone.getUaaZoneId(), false);
 
         mockMvc.perform(MockMvcRequestBuilders.get("/login")
-                .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost")))
+                        .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost")))
                 .andExpect(xpath("//div[@class='action']//a").doesNotExist());
     }
 
@@ -2491,11 +2491,11 @@ public class LoginMockMvcTests {
         MockHttpSession session = setUpClientAndProviderForIdpDiscovery(webApplicationContext, jdbcIdentityProviderProvisioning, generator, originKey, zone);
 
         mockMvc.perform(post("/login/idp_discovery")
-                .with(cookieCsrf())
-                .header("Accept", TEXT_HTML)
-                .session(session)
-                .param("email", "marissa@test.org")
-                .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost")))
+                        .with(cookieCsrf())
+                        .header("Accept", TEXT_HTML)
+                        .session(session)
+                        .param("email", "marissa@test.org")
+                        .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost")))
                 .andExpect(status().isFound())
                 .andExpect(redirectedUrl("/saml2/authenticate/%s".formatted(originKey)));
     }
@@ -2511,11 +2511,11 @@ public class LoginMockMvcTests {
         String originKey = createOIDCProvider(jdbcIdentityProviderProvisioning, generator, zone, "id_token code");
 
         MvcResult mvcResult = mockMvc.perform(post("/login/idp_discovery")
-                .with(cookieCsrf())
-                .header("Accept", TEXT_HTML)
-                .servletPath("/login/idp_discovery")
-                .param("email", "marissa@test.org")
-                .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost")))
+                        .with(cookieCsrf())
+                        .header("Accept", TEXT_HTML)
+                        .servletPath("/login/idp_discovery")
+                        .param("email", "marissa@test.org")
+                        .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost")))
                 .andExpect(status().isFound())
                 .andReturn();
         String location = mvcResult.getResponse().getHeader("Location");
@@ -2541,9 +2541,9 @@ public class LoginMockMvcTests {
         createOIDCProvider(jdbcIdentityProviderProvisioning, generator, zone, "code id_token");
 
         mockMvc.perform(get("/login")
-                .header("Accept", TEXT_HTML)
-                .servletPath("/login")
-                .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost")))
+                        .header("Accept", TEXT_HTML)
+                        .servletPath("/login")
+                        .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost")))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("http://myauthurl.com?client_id=id&amp;response_type=code&")))
                 .andExpect(content().string(containsString("http://myauthurl.com?client_id=id&amp;response_type=code+id_token&")));
@@ -2567,11 +2567,11 @@ public class LoginMockMvcTests {
         MockHttpSession session = setUpClientAndProviderForIdpDiscovery(webApplicationContext, jdbcIdentityProviderProvisioning, generator, originKey, zone);
 
         mockMvc.perform(post("/login/idp_discovery")
-                .with(cookieCsrf())
-                .header("Accept", TEXT_HTML)
-                .session(session)
-                .param("email", "marissa@other.domain")
-                .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost")))
+                        .with(cookieCsrf())
+                        .header("Accept", TEXT_HTML)
+                        .session(session)
+                        .param("email", "marissa@other.domain")
+                        .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost")))
                 .andExpect(status().isFound())
                 .andExpect(redirectedUrl("/login?discoveryPerformed=true&email=marissa%40other.domain"));
     }
@@ -2594,11 +2594,11 @@ public class LoginMockMvcTests {
         MockHttpSession session = setUpClientAndProviderForIdpDiscovery(webApplicationContext, jdbcIdentityProviderProvisioning, generator, originKey, zone);
 
         mockMvc.perform(post("/login/idp_discovery")
-                .with(cookieCsrf())
-                .header("Accept", TEXT_HTML)
-                .session(session)
-                .param("email", "marissa@test.org")
-                .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost")))
+                        .with(cookieCsrf())
+                        .header("Accept", TEXT_HTML)
+                        .session(session)
+                        .param("email", "marissa@test.org")
+                        .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost")))
                 .andExpect(status().isFound())
                 .andExpect(redirectedUrl("/login?discoveryPerformed=true&email=marissa%40test.org"));
     }
@@ -2616,19 +2616,19 @@ public class LoginMockMvcTests {
         MockHttpSession session = setUpClientAndProviderForIdpDiscovery(webApplicationContext, jdbcIdentityProviderProvisioning, generator, originKey, zone);
 
         mockMvc.perform(post("/login/idp_discovery")
-                .with(cookieCsrf())
-                .header("Accept", TEXT_HTML)
-                .session(session)
-                .param("email", "marissa@other.domain")
-                .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost")))
+                        .with(cookieCsrf())
+                        .header("Accept", TEXT_HTML)
+                        .session(session)
+                        .param("email", "marissa@other.domain")
+                        .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost")))
                 .andExpect(status().isFound())
                 .andExpect(redirectedUrl("/login?discoveryPerformed=true&email=marissa%40other.domain"));
 
         mockMvc.perform(get("/login?discoveryPerformed=true&email=marissa%40other.domain")
-                .with(cookieCsrf())
-                .header("Accept", TEXT_HTML)
-                .session(session)
-                .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost")))
+                        .with(cookieCsrf())
+                        .header("Accept", TEXT_HTML)
+                        .session(session)
+                        .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost")))
                 .andExpect(model().attributeExists("zone_name"))
                 .andExpect(view().name("login"));
     }
@@ -2652,11 +2652,11 @@ public class LoginMockMvcTests {
         MockHttpSession session = setUpClientAndProviderForIdpDiscovery(webApplicationContext, jdbcIdentityProviderProvisioning, generator, originKey, zone);
 
         mockMvc.perform(post("/login/idp_discovery")
-                .with(cookieCsrf())
-                .header("Accept", TEXT_HTML)
-                .session(session)
-                .param("email", "marissa@testLdap.org")
-                .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost")))
+                        .with(cookieCsrf())
+                        .header("Accept", TEXT_HTML)
+                        .session(session)
+                        .param("email", "marissa@testLdap.org")
+                        .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost")))
                 .andExpect(status().isFound())
                 .andExpect(redirectedUrl("/login?discoveryPerformed=true&email=marissa%40testLdap.org"));
     }
@@ -2669,17 +2669,17 @@ public class LoginMockMvcTests {
         config.setIdpDiscoveryEnabled(true);
         IdentityZone zone = setupZone(webApplicationContext, mockMvc, identityZoneProvisioning, generator, config);
         mockMvc.perform(post("/login/idp_discovery")
-                .header("Accept", TEXT_HTML)
-                .with(cookieCsrf())
-                .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost"))
-                .param("email", "marissa@koala.com"))
+                        .header("Accept", TEXT_HTML)
+                        .with(cookieCsrf())
+                        .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost"))
+                        .param("email", "marissa@koala.com"))
                 .andExpect(status().isFound())
                 .andExpect(redirectedUrl("/login?discoveryPerformed=true&email=marissa%40koala.com"));
 
         mockMvc.perform(get("/login?discoveryPerformed=true&email=marissa@koala.com")
-                .with(cookieCsrf())
-                .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost"))
-                .header("Accept", TEXT_HTML))
+                        .with(cookieCsrf())
+                        .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost"))
+                        .header("Accept", TEXT_HTML))
                 .andExpect(view().name("idp_discovery/password"))
                 .andExpect(xpath("//input[@name='password']").exists())
                 .andExpect(xpath("//input[@name='username']/@value").string("marissa@koala.com"))
@@ -2692,15 +2692,15 @@ public class LoginMockMvcTests {
         MockMvcUtils.setSelfServiceLinksEnabled(webApplicationContext, IdentityZone.getUaaZoneId(), false);
 
         mockMvc.perform(post("/login/idp_discovery")
-                .with(cookieCsrf())
-                .header("Accept", TEXT_HTML)
-                .param("email", "marissa@koala.org"))
+                        .with(cookieCsrf())
+                        .header("Accept", TEXT_HTML)
+                        .param("email", "marissa@koala.org"))
                 .andExpect(status().isFound())
                 .andExpect(redirectedUrl("/login?discoveryPerformed=true&email=marissa%40koala.org"));
 
         mockMvc.perform(get("/login?discoveryPerformed=true&email=marissa%40koala.org")
-                .with(cookieCsrf())
-                .header("Accept", TEXT_HTML))
+                        .with(cookieCsrf())
+                        .header("Accept", TEXT_HTML))
                 .andExpect(status().isOk())
                 .andExpect(xpath("//div[@class='action pull-right']//a").doesNotExist());
     }
@@ -2713,15 +2713,15 @@ public class LoginMockMvcTests {
         config.setIdpDiscoveryEnabled(true);
         IdentityZone zone = setupZone(webApplicationContext, mockMvc, identityZoneProvisioning, generator, config);
         mockMvc.perform(post("/login/idp_discovery")
-                .with(cookieCsrf())
-                .param("email", "test@email.com")
-                .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost")))
+                        .with(cookieCsrf())
+                        .param("email", "test@email.com")
+                        .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost")))
                 .andExpect(status().isFound())
                 .andExpect(redirectedUrl("/login?discoveryPerformed=true&email=test%40email.com"));
 
         mockMvc.perform(get("/login?discoveryPerformed=true&email=test@email.com")
-                .with(cookieCsrf())
-                .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost")))
+                        .with(cookieCsrf())
+                        .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost")))
                 .andExpect(xpath("//input[@name='username']/@value").string("test@email.com"));
     }
 
@@ -2840,28 +2840,28 @@ public class LoginMockMvcTests {
         @Test
         void hasValidError() throws Exception {
             mockMvc.perform(
-                    get("/login?error=login_failure"))
+                            get("/login?error=login_failure"))
                     .andExpect(content().string(containsString("Provided credentials are invalid. Please try again.")));
         }
 
         @Test
         void hasInvalidError() throws Exception {
             mockMvc.perform(
-                    get("/login?error=foobar&error=login_failure"))
+                            get("/login?error=foobar&error=login_failure"))
                     .andExpect(content().string(containsString("Error!")));
         }
 
         @Test
         void hasValidSuccess() throws Exception {
             mockMvc.perform(
-                    get("/login?success=verify_success"))
+                            get("/login?success=verify_success"))
                     .andExpect(content().string(containsString("Verification successful. Login to access your account.")));
         }
 
         @Test
         void hasInvalidSuccess() throws Exception {
             mockMvc.perform(
-                    get("/login?success=foobar&success=verify_success"))
+                            get("/login?success=foobar&success=verify_success"))
                     .andExpect(content().string(containsString("Success!")));
         }
     }

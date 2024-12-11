@@ -26,13 +26,10 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.statsd.integration.IntegrationTestUtils.TEST_PASSWORD;
 import static org.cloudfoundry.identity.statsd.integration.IntegrationTestUtils.TEST_USERNAME;
 import static org.cloudfoundry.identity.statsd.integration.IntegrationTestUtils.UAA_BASE_URL;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class UaaMetricsEmitterIT {
     private static final long WAIT_FOR_MESSAGE = TimeUnit.MILLISECONDS.toNanos(5500);
@@ -114,13 +111,13 @@ class UaaMetricsEmitterIT {
         String data1 = firstBatch.get(statsDKey);
         String data2 = secondBatch.get(statsDKey);
 
-        assertNotNull(data1, "Expected to find message for:'" + statsDKey + "' in the first batch.");
+        assertThat(data1).as("Expected to find message for:'" + statsDKey + "' in the first batch.").isNotNull();
         long first = IntegrationTestUtils.getStatsDValueFromMessage(data1);
-        assertThat(statsDKey + " first value must have a positive value.", first, greaterThanOrEqualTo(0L));
+        assertThat(first).as(statsDKey + " first value must have a positive value.").isGreaterThanOrEqualTo(0L);
 
-        assertNotNull(data2, "Expected to find message for:'" + statsDKey + "' in the second batch.");
+        assertThat(data2).as("Expected to find message for:'" + statsDKey + "' in the second batch.").isNotNull();
         long second = IntegrationTestUtils.getStatsDValueFromMessage(data2);
-        assertThat(statsDKey + " second value must have a positive value.", second, greaterThanOrEqualTo(0L));
+        assertThat(second).as(statsDKey + " second value must have a positive value.").isGreaterThanOrEqualTo(0L);
     }
 
     private static Map<String, String> getMessages(List<String> fragments) throws IOException {
@@ -169,7 +166,7 @@ class UaaMetricsEmitterIT {
                 HttpMethod.POST,
                 new HttpEntity<>(body, headers),
                 String.class);
-        assertEquals(HttpStatus.FOUND, loginResponse.getStatusCode());
+        assertThat(loginResponse.getStatusCode()).isEqualTo(HttpStatus.FOUND);
     }
 
     private static void performSimpleGet() {

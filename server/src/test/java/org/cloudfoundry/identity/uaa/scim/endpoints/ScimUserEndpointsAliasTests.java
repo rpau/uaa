@@ -43,8 +43,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.cloudfoundry.identity.uaa.constants.OriginKeys.UAA;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -182,11 +182,10 @@ class ScimUserEndpointsAliasTests {
 
             final MockHttpServletRequest req = new MockHttpServletRequest();
             final MockHttpServletResponse res = new MockHttpServletResponse();
-            final ScimException exception = assertThrows(ScimException.class, () ->
-                    scimUserEndpoints.createUser(user, req, res)
-            );
-            assertThat(exception.getMessage()).isEqualTo("Alias ID and/or alias ZID are invalid.");
-            assertThat(exception.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThatThrownBy(() -> scimUserEndpoints.createUser(user, req, res))
+                    .isInstanceOf(ScimException.class)
+                    .hasMessage("Alias ID and/or alias ZID are invalid.")
+                    .satisfies(e -> assertThat(((ScimException) e).getStatus()).isEqualTo(HttpStatus.BAD_REQUEST));
         }
 
         @Test
@@ -198,10 +197,10 @@ class ScimUserEndpointsAliasTests {
 
             final MockHttpServletRequest req = new MockHttpServletRequest();
             final MockHttpServletResponse res = new MockHttpServletResponse();
-            final IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
-                    scimUserEndpoints.createUser(user, req, res)
-            );
-            assertThat(exception.getMessage()).isEqualTo("The persisted user is not present after handling the alias.");
+            assertThatThrownBy(() ->
+                    scimUserEndpoints.createUser(user, req, res))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessage("The persisted user is not present after handling the alias.");
         }
 
         @Test
@@ -228,11 +227,10 @@ class ScimUserEndpointsAliasTests {
 
             final MockHttpServletRequest req = new MockHttpServletRequest();
             final MockHttpServletResponse res = new MockHttpServletResponse();
-            final ScimException exception = assertThrows(ScimException.class, () ->
-                    scimUserEndpoints.createUser(user, req, res)
-            );
-            assertThat(exception.getMessage()).isEqualTo(errorMessage);
-            assertThat(exception.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThatThrownBy(() -> scimUserEndpoints.createUser(user, req, res))
+                    .isInstanceOf(ScimException.class)
+                    .hasMessage(errorMessage)
+                    .satisfies(e -> assertThat(((ScimException) e).getStatus()).isEqualTo(HttpStatus.BAD_REQUEST));
         }
     }
 
@@ -259,18 +257,17 @@ class ScimUserEndpointsAliasTests {
             when(scimUserAliasHandler.aliasPropertiesAreValid(originalUser, existingOriginalUser))
                     .thenReturn(false);
 
-            final ScimException exception = assertThrows(ScimException.class, () ->
+            assertThatThrownBy(() ->
                     scimUserEndpoints.updateUser(
                             originalUser,
                             originalUser.getId(),
                             "*",
                             new MockHttpServletRequest(),
                             new MockHttpServletResponse(),
-                            null
-                    )
-            );
-            assertThat(exception.getMessage()).isEqualTo("The fields 'aliasId' and/or 'aliasZid' are invalid.");
-            assertThat(exception.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+                            null))
+                    .isInstanceOf(ScimException.class)
+                    .hasMessage("The fields 'aliasId' and/or 'aliasZid' are invalid.")
+                    .satisfies(e -> assertThat(((ScimException) e).getStatus()).isEqualTo(HttpStatus.BAD_REQUEST));
         }
 
         @Test
@@ -281,7 +278,7 @@ class ScimUserEndpointsAliasTests {
                 throw new OptimisticLockingFailureException("The alias is locked.");
             });
 
-            final ScimResourceConflictException exception = assertThrows(ScimResourceConflictException.class, () ->
+            assertThatThrownBy(() ->
                     scimUserEndpoints.updateUser(
                             originalUser,
                             originalUser.getId(),
@@ -289,10 +286,10 @@ class ScimUserEndpointsAliasTests {
                             new MockHttpServletRequest(),
                             new MockHttpServletResponse(),
                             null
-                    )
-            );
-            assertThat(exception.getMessage()).isEqualTo("The alias is locked.");
-            assertThat(exception.getStatus()).isEqualTo(HttpStatus.CONFLICT);
+                    ))
+                    .isInstanceOf(ScimResourceConflictException.class)
+                    .hasMessage("The alias is locked.")
+                    .satisfies(e -> assertThat(((ScimResourceConflictException) e).getStatus()).isEqualTo(HttpStatus.CONFLICT));
         }
 
         @Test
@@ -341,7 +338,7 @@ class ScimUserEndpointsAliasTests {
             when(scimUserAliasHandler.ensureConsistencyOfAliasEntity(originalUser, existingOriginalUser))
                     .thenThrow(new EntityAliasFailedException(errorMessage, 400, null));
 
-            final ScimException exception = assertThrows(ScimException.class, () ->
+            assertThatThrownBy(() ->
                     scimUserEndpoints.updateUser(
                             originalUser,
                             originalUser.getId(),
@@ -349,10 +346,10 @@ class ScimUserEndpointsAliasTests {
                             new MockHttpServletRequest(),
                             new MockHttpServletResponse(),
                             null
-                    )
-            );
-            assertThat(exception.getMessage()).isEqualTo(errorMessage);
-            assertThat(exception.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+                    ))
+                    .isInstanceOf(ScimException.class)
+                    .hasMessage(errorMessage)
+                    .satisfies(e -> assertThat(((ScimException) e).getStatus()).isEqualTo(HttpStatus.BAD_REQUEST));
         }
     }
 
@@ -509,12 +506,10 @@ class ScimUserEndpointsAliasTests {
 
                 final MockHttpServletRequest req = new MockHttpServletRequest();
                 final MockHttpServletResponse res = new MockHttpServletResponse();
-                final UaaException exception = assertThrows(UaaException.class, () ->
-                        scimUserEndpoints.deleteUser(originalUser.getId(), null, req, res)
-                );
-                assertThat(exception.getMessage())
-                        .isEqualTo("Could not delete user with alias since alias entities are disabled.");
-                assertThat(exception.getHttpStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+                assertThatThrownBy(() -> scimUserEndpoints.deleteUser(originalUser.getId(), null, req, res))
+                        .isInstanceOf(UaaException.class)
+                        .hasMessage("Could not delete user with alias since alias entities are disabled.")
+                        .satisfies(e -> assertThat(((UaaException) e).getHttpStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value()));
             }
 
             @Test

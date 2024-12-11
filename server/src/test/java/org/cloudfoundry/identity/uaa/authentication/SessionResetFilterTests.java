@@ -49,7 +49,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-public class SessionResetFilterTests {
+class SessionResetFilterTests {
 
     SessionResetFilter filter;
     HttpServletResponse response;
@@ -63,7 +63,7 @@ public class SessionResetFilterTests {
     UaaUser userWithNoPasswordModification;
 
     @BeforeEach
-    public void setUpFilter() {
+    void setUpFilter() {
 
         yesterday = new Date(System.currentTimeMillis() - (1000 * 60 * 60 * 24));
 
@@ -125,20 +125,20 @@ public class SessionResetFilterTests {
     }
 
     @AfterEach
-    public void clearThingsUp() {
+    void clearThingsUp() {
         SecurityContextHolder.clearContext();
         IdentityZoneHolder.clear();
     }
 
 
     @Test
-    public void testNoAuthenticationPresent() throws Exception {
+    void noAuthenticationPresent() throws Exception {
         filter.doFilterInternal(request, response, chain);
         verify(chain, times(1)).doFilter(request, response);
     }
 
     @Test
-    public void testNoUAAAuthenticationPresent() throws Exception {
+    void noUAAAuthenticationPresent() throws Exception {
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken("test", "test");
         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
         filter.doFilterInternal(request, response, chain);
@@ -148,7 +148,7 @@ public class SessionResetFilterTests {
     }
 
     @Test
-    public void passwordNotModifiedDoesNotCheckAuthTime() throws Exception {
+    void passwordNotModifiedDoesNotCheckAuthTime() throws Exception {
         UaaPrincipal principal = new UaaPrincipal(userWithNoPasswordModification);
         Authentication authentication = new UaaAuthentication(principal, null, Collections.emptyList(), null, true, System.currentTimeMillis());
         SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -157,7 +157,7 @@ public class SessionResetFilterTests {
     }
 
     @Test
-    public void testUserModifiedAfterAuthentication() throws Exception {
+    void userModifiedAfterAuthentication() throws Exception {
         setFieldValue("authenticatedTime", (yesterday.getTime() - (1000 * 60 * 60 * 24)), authentication);
         SecurityContextHolder.getContext().setAuthentication(authentication);
         filter.doFilterInternal(request, response, chain);
@@ -173,7 +173,7 @@ public class SessionResetFilterTests {
     }
 
     @Test
-    public void testUserNotModified() throws Exception {
+    void userNotModified() throws Exception {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         filter.doFilterInternal(request, response, chain);
         verify(chain, times(1)).doFilter(request, response);
@@ -181,7 +181,7 @@ public class SessionResetFilterTests {
     }
 
     @Test
-    public void testUserNotOriginatedInUaa() throws Exception {
+    void userNotOriginatedInUaa() throws Exception {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         setFieldValue("origin", OriginKeys.LDAP, authentication.getPrincipal());
         filter.doFilterInternal(request, response, chain);
@@ -191,7 +191,7 @@ public class SessionResetFilterTests {
     }
 
     @Test
-    public void testUserNotFound() throws Exception {
+    void userNotFound() throws Exception {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         setFieldValue("id", "invalid-user-id", authentication.getPrincipal());
         filter.doFilterInternal(request, response, chain);

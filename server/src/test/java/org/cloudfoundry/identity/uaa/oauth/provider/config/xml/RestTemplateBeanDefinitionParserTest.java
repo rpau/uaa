@@ -12,7 +12,7 @@ import org.springframework.beans.factory.xml.XmlReaderContext;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -23,7 +23,7 @@ import static org.mockito.Mockito.when;
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-public class RestTemplateBeanDefinitionParserTest {
+class RestTemplateBeanDefinitionParserTest {
 
     private RestTemplateBeanDefinitionParser parser;
     private Element element;
@@ -32,7 +32,7 @@ public class RestTemplateBeanDefinitionParserTest {
     private XmlReaderContext xmlReaderContext;
 
     @BeforeEach
-    public void setUp() throws Exception {
+    void setUp() throws Exception {
         element = mock(Element.class);
         parserContext = mock(ParserContext.class);
         xmlReaderContext = mock(XmlReaderContext.class);
@@ -44,12 +44,12 @@ public class RestTemplateBeanDefinitionParserTest {
     }
 
     @Test
-    public void getBeanClass() {
-        assertEquals(OAuth2RestTemplate.class, parser.getBeanClass(element));
+    void getBeanClass() {
+        assertThat(parser.getBeanClass(element)).isEqualTo(OAuth2RestTemplate.class);
     }
 
     @Test
-    public void doParse() {
+    void doParse() {
         when(element.getAttribute("access-token-provider")).thenReturn("ref");
         when(element.getAttribute("resource")).thenReturn("classpath:oauth-rest-template.xml");
         when(parserContext.getDelegate()).thenReturn(new BeanDefinitionParserDelegate(xmlReaderContext));

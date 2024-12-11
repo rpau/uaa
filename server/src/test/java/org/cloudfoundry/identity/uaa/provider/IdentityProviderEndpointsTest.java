@@ -1,7 +1,6 @@
 package org.cloudfoundry.identity.uaa.provider;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.assertj.core.api.Assertions;
 import org.cloudfoundry.identity.uaa.alias.EntityAliasFailedException;
 import org.cloudfoundry.identity.uaa.audit.event.EntityDeletedEvent;
 import org.cloudfoundry.identity.uaa.constants.ClientAuthentication;
@@ -49,10 +48,6 @@ import static org.cloudfoundry.identity.uaa.constants.OriginKeys.SAML;
 import static org.cloudfoundry.identity.uaa.constants.OriginKeys.UAA;
 import static org.cloudfoundry.identity.uaa.constants.OriginKeys.UNKNOWN;
 import static org.cloudfoundry.identity.uaa.provider.ExternalIdentityProviderDefinition.USER_NAME_ATTRIBUTE_NAME;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -186,12 +181,12 @@ class IdentityProviderEndpointsTest {
         provider.setType(type);
         when(mockIdentityProviderProvisioning.retrieve(anyString(), anyString())).thenReturn(provider);
         ResponseEntity<IdentityProvider> oauth = identityProviderEndpoints.retrieveIdentityProvider(id, true);
-        assertNotNull(oauth);
-        assertEquals(200, oauth.getStatusCode().value());
-        assertNotNull(oauth.getBody());
-        assertNotNull(oauth.getBody().getConfig());
-        assertInstanceOf(AbstractExternalOAuthIdentityProviderDefinition.class, oauth.getBody().getConfig());
-        assertNull(((AbstractExternalOAuthIdentityProviderDefinition) oauth.getBody().getConfig()).getRelyingPartySecret());
+        assertThat(oauth).isNotNull();
+        assertThat(oauth.getStatusCode().value()).isEqualTo(200);
+        assertThat(oauth.getBody()).isNotNull();
+        assertThat(oauth.getBody().getConfig()).isNotNull();
+        assertThat(oauth.getBody().getConfig()).isInstanceOf(AbstractExternalOAuthIdentityProviderDefinition.class);
+        assertThat(((AbstractExternalOAuthIdentityProviderDefinition) oauth.getBody().getConfig()).getRelyingPartySecret()).isNull();
         return oauth.getBody();
     }
 
@@ -203,12 +198,12 @@ class IdentityProviderEndpointsTest {
     IdentityProvider<LdapIdentityProviderDefinition> retrieve_ldap_provider_by_id(String id) {
         when(mockIdentityProviderProvisioning.retrieve(anyString(), anyString())).thenReturn(getLdapDefinition());
         ResponseEntity<IdentityProvider> ldap = identityProviderEndpoints.retrieveIdentityProvider(id, true);
-        assertNotNull(ldap);
-        assertEquals(200, ldap.getStatusCode().value());
-        assertNotNull(ldap.getBody());
-        assertNotNull(ldap.getBody().getConfig());
-        assertInstanceOf(LdapIdentityProviderDefinition.class, ldap.getBody().getConfig());
-        assertNull(((LdapIdentityProviderDefinition) ldap.getBody().getConfig()).getBindPassword());
+        assertThat(ldap).isNotNull();
+        assertThat(ldap.getStatusCode().value()).isEqualTo(200);
+        assertThat(ldap.getBody()).isNotNull();
+        assertThat(ldap.getBody().getConfig()).isNotNull();
+        assertThat(ldap.getBody().getConfig()).isInstanceOf(LdapIdentityProviderDefinition.class);
+        assertThat(((LdapIdentityProviderDefinition) ldap.getBody().getConfig()).getBindPassword()).isNull();
         return ldap.getBody();
     }
 
@@ -304,20 +299,20 @@ class IdentityProviderEndpointsTest {
         when(mockIdentityProviderProvisioning.retrieveAll(anyBoolean(), anyString()))
                 .thenReturn(Arrays.asList(getLdapDefinition(), getExternalOAuthProvider()));
         ResponseEntity<List<IdentityProvider>> ldapList = identityProviderEndpoints.retrieveIdentityProviders("false", true, "");
-        assertNotNull(ldapList);
-        assertNotNull(ldapList.getBody());
-        assertEquals(2, ldapList.getBody().size());
+        assertThat(ldapList).isNotNull();
+        assertThat(ldapList.getBody()).isNotNull();
+        assertThat(ldapList.getBody().size()).isEqualTo(2);
         IdentityProvider<LdapIdentityProviderDefinition> ldap = ldapList.getBody().get(0);
-        assertNotNull(ldap);
-        assertNotNull(ldap.getConfig());
-        assertInstanceOf(LdapIdentityProviderDefinition.class, ldap.getConfig());
-        assertNull(ldap.getConfig().getBindPassword());
+        assertThat(ldap).isNotNull();
+        assertThat(ldap.getConfig()).isNotNull();
+        assertThat(ldap.getConfig()).isInstanceOf(LdapIdentityProviderDefinition.class);
+        assertThat(ldap.getConfig().getBindPassword()).isNull();
 
         IdentityProvider<AbstractExternalOAuthIdentityProviderDefinition> oauth = ldapList.getBody().get(1);
-        assertNotNull(oauth);
-        assertNotNull(oauth.getConfig());
-        assertInstanceOf(AbstractExternalOAuthIdentityProviderDefinition.class, oauth.getConfig());
-        assertNull(oauth.getConfig().getRelyingPartySecret());
+        assertThat(oauth).isNotNull();
+        assertThat(oauth.getConfig()).isNotNull();
+        assertThat(oauth.getConfig()).isInstanceOf(AbstractExternalOAuthIdentityProviderDefinition.class);
+        assertThat(oauth.getConfig().getRelyingPartySecret()).isNull();
     }
 
     @Test
@@ -325,15 +320,15 @@ class IdentityProviderEndpointsTest {
         when(mockIdentityProviderProvisioning.retrieveByOrigin(anyString(), anyString()))
                 .thenReturn(getExternalOAuthProvider());
         ResponseEntity<List<IdentityProvider>> puppyList = identityProviderEndpoints.retrieveIdentityProviders("false", true, "puppy");
-        assertNotNull(puppyList);
-        assertNotNull(puppyList.getBody());
-        assertEquals(1, puppyList.getBody().size());
+        assertThat(puppyList).isNotNull();
+        assertThat(puppyList.getBody()).isNotNull();
+        assertThat(puppyList.getBody().size()).isEqualTo(1);
         IdentityProvider<OIDCIdentityProviderDefinition> oidc = puppyList.getBody().get(0);
-        assertNotNull(oidc);
-        assertNotNull(oidc.getConfig());
-        assertInstanceOf(AbstractExternalOAuthIdentityProviderDefinition.class, oidc.getConfig());
-        assertNull(oidc.getConfig().getRelyingPartySecret());
-        assertEquals(ClientAuthentication.CLIENT_SECRET_BASIC, oidc.getConfig().getAuthMethod());
+        assertThat(oidc).isNotNull();
+        assertThat(oidc.getConfig()).isNotNull();
+        assertThat(oidc.getConfig()).isInstanceOf(AbstractExternalOAuthIdentityProviderDefinition.class);
+        assertThat(oidc.getConfig().getRelyingPartySecret()).isNull();
+        assertThat(oidc.getConfig().getAuthMethod()).isEqualTo(ClientAuthentication.CLIENT_SECRET_BASIC);
     }
 
     @Test
@@ -350,15 +345,15 @@ class IdentityProviderEndpointsTest {
         verify(spy, times(1)).setBindPassword(getLdapDefinition().getConfig().getBindPassword());
         ArgumentCaptor<IdentityProvider> captor = ArgumentCaptor.forClass(IdentityProvider.class);
         verify(mockIdentityProviderProvisioning, times(1)).update(captor.capture(), eq(zoneId));
-        assertNotNull(captor.getValue());
-        assertEquals(1, captor.getAllValues().size());
-        assertEquals(getLdapDefinition().getConfig().getBindPassword(), ((LdapIdentityProviderDefinition) captor.getValue().getConfig()).getBindPassword());
-        assertNotNull(response);
-        assertEquals(200, response.getStatusCode().value());
-        assertNotNull(response.getBody());
-        assertNotNull(response.getBody().getConfig());
-        assertInstanceOf(LdapIdentityProviderDefinition.class, response.getBody().getConfig());
-        assertNull(((LdapIdentityProviderDefinition) response.getBody().getConfig()).getBindPassword());
+        assertThat(captor.getValue()).isNotNull();
+        assertThat(captor.getAllValues().size()).isEqualTo(1);
+        assertThat(((LdapIdentityProviderDefinition) captor.getValue().getConfig()).getBindPassword()).isEqualTo(getLdapDefinition().getConfig().getBindPassword());
+        assertThat(response).isNotNull();
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getConfig()).isNotNull();
+        assertThat(response.getBody().getConfig()).isInstanceOf(LdapIdentityProviderDefinition.class);
+        assertThat(((LdapIdentityProviderDefinition) response.getBody().getConfig()).getBindPassword()).isNull();
     }
 
     @Test
@@ -375,16 +370,16 @@ class IdentityProviderEndpointsTest {
         verify(spy, times(1)).setBindPassword("newpassword");
         ArgumentCaptor<IdentityProvider> captor = ArgumentCaptor.forClass(IdentityProvider.class);
         verify(mockIdentityProviderProvisioning, times(1)).update(captor.capture(), eq(zoneId));
-        assertNotNull(captor.getValue());
-        assertEquals(1, captor.getAllValues().size());
-        assertEquals("newpassword", ((LdapIdentityProviderDefinition) captor.getValue().getConfig()).getBindPassword());
+        assertThat(captor.getValue()).isNotNull();
+        assertThat(captor.getAllValues().size()).isEqualTo(1);
+        assertThat(((LdapIdentityProviderDefinition) captor.getValue().getConfig()).getBindPassword()).isEqualTo("newpassword");
 
-        assertNotNull(response);
-        assertEquals(200, response.getStatusCode().value());
-        assertNotNull(response.getBody());
-        assertNotNull(response.getBody().getConfig());
-        assertInstanceOf(LdapIdentityProviderDefinition.class, response.getBody().getConfig());
-        assertNull(((LdapIdentityProviderDefinition) response.getBody().getConfig()).getBindPassword());
+        assertThat(response).isNotNull();
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getConfig()).isNotNull();
+        assertThat(response.getBody().getConfig()).isInstanceOf(LdapIdentityProviderDefinition.class);
+        assertThat(((LdapIdentityProviderDefinition) response.getBody().getConfig()).getBindPassword()).isNull();
     }
 
     @Test
@@ -400,8 +395,8 @@ class IdentityProviderEndpointsTest {
         doThrow(new IllegalArgumentException("error")).when(mockIdentityProviderConfigValidationDelegator).validate(any());
         when(mockIdentityProviderProvisioning.retrieve(any(), eq(zoneId))).thenReturn(provider);
         ResponseEntity<IdentityProvider> response = identityProviderEndpoints.updateIdentityProvider(provider.getId(), provider, true);
-        assertNotNull(response);
-        assertEquals(UNPROCESSABLE_ENTITY, response.getStatusCode());
+        assertThat(response).isNotNull();
+        assertThat(response.getStatusCode()).isEqualTo(UNPROCESSABLE_ENTITY);
         verify(mockPlatformTransactionManager, never()).getTransaction(any());
         verify(mockIdpAliasHandler, never()).ensureConsistencyOfAliasEntity(any(), any());
     }
@@ -418,8 +413,8 @@ class IdentityProviderEndpointsTest {
         provider.setConfig(samlConfig);
         when(mockIdentityProviderProvisioning.retrieve(any(), eq(zoneId))).thenReturn(provider);
         ResponseEntity<IdentityProvider> response = identityProviderEndpoints.updateIdentityProvider(provider.getId(), provider, true);
-        assertNotNull(response);
-        assertEquals(UNPROCESSABLE_ENTITY, response.getStatusCode());
+        assertThat(response).isNotNull();
+        assertThat(response.getStatusCode()).isEqualTo(UNPROCESSABLE_ENTITY);
         verify(mockPlatformTransactionManager).getTransaction(any());
         verify(mockIdpAliasHandler, times(1)).ensureConsistencyOfAliasEntity(any(), any());
     }
@@ -436,8 +431,8 @@ class IdentityProviderEndpointsTest {
         provider.setConfig(samlConfig);
         doThrow(new IllegalArgumentException("error")).when(mockIdentityProviderConfigValidationDelegator).validate(any());
         ResponseEntity<IdentityProvider> response = identityProviderEndpoints.createIdentityProvider(provider, true);
-        assertNotNull(response);
-        assertEquals(UNPROCESSABLE_ENTITY, response.getStatusCode());
+        assertThat(response).isNotNull();
+        assertThat(response.getStatusCode()).isEqualTo(UNPROCESSABLE_ENTITY);
         verify(mockIdpAliasHandler, never()).aliasPropertiesAreValid(provider, null);
     }
 
@@ -452,8 +447,8 @@ class IdentityProviderEndpointsTest {
         SamlIdentityProviderDefinition samlConfig = new SamlIdentityProviderDefinition();
         provider.setConfig(samlConfig);
         ResponseEntity<IdentityProvider> response = identityProviderEndpoints.createIdentityProvider(provider, true);
-        assertNotNull(response);
-        assertEquals(UNPROCESSABLE_ENTITY, response.getStatusCode());
+        assertThat(response).isNotNull();
+        assertThat(response.getStatusCode()).isEqualTo(UNPROCESSABLE_ENTITY);
         verify(mockPlatformTransactionManager).getTransaction(any());
         verify(mockIdpAliasHandler, times(1)).ensureConsistencyOfAliasEntity(any(), any());
     }
@@ -462,15 +457,15 @@ class IdentityProviderEndpointsTest {
     void create_ldap_provider_removes_password() {
         String zoneId = IdentityZone.getUaaZoneId();
         IdentityProvider<LdapIdentityProviderDefinition> ldapDefinition = getLdapDefinition();
-        assertNotNull(ldapDefinition.getConfig().getBindPassword());
+        assertThat(ldapDefinition.getConfig().getBindPassword()).isNotNull();
         when(mockIdentityProviderProvisioning.create(any(), eq(zoneId))).thenReturn(ldapDefinition);
         ResponseEntity<IdentityProvider> response = identityProviderEndpoints.createIdentityProvider(ldapDefinition, true);
         IdentityProvider created = response.getBody();
-        assertNotNull(created);
-        assertEquals(LDAP, created.getType());
-        assertNotNull(created.getConfig());
-        assertInstanceOf(LdapIdentityProviderDefinition.class, created.getConfig());
-        assertNull(((LdapIdentityProviderDefinition) created.getConfig()).getBindPassword());
+        assertThat(created).isNotNull();
+        assertThat(created.getType()).isEqualTo(LDAP);
+        assertThat(created.getConfig()).isNotNull();
+        assertThat(created.getConfig()).isInstanceOf(LdapIdentityProviderDefinition.class);
+        assertThat(((LdapIdentityProviderDefinition) created.getConfig()).getBindPassword()).isNull();
     }
 
     @Nested
@@ -528,8 +523,8 @@ class IdentityProviderEndpointsTest {
                         true
                 );
 
-                Assertions.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-                Assertions.assertThat(response.getBody()).isEqualTo(originalIdpWithAliasId);
+                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+                assertThat(response.getBody()).isEqualTo(originalIdpWithAliasId);
             }
 
             @Test
@@ -550,7 +545,7 @@ class IdentityProviderEndpointsTest {
                         true
                 );
 
-                Assertions.assertThat(response.getStatusCode()).isEqualTo(UNPROCESSABLE_ENTITY);
+                assertThat(response.getStatusCode()).isEqualTo(UNPROCESSABLE_ENTITY);
             }
 
             @ParameterizedTest
@@ -585,7 +580,7 @@ class IdentityProviderEndpointsTest {
                         true
                 );
 
-                Assertions.assertThat(response.getStatusCode()).isEqualTo(expectedStatusCode);
+                assertThat(response.getStatusCode()).isEqualTo(expectedStatusCode);
             }
 
             private static Stream<Arguments> shouldRespondWithErrorCode_WhenExceptionIsThrownDuringAliasCreation() {
@@ -637,8 +632,8 @@ class IdentityProviderEndpointsTest {
                         true
                 );
 
-                Assertions.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-                Assertions.assertThat(response.getBody()).isEqualTo(originalIdpWithAliasId);
+                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+                assertThat(response.getBody()).isEqualTo(originalIdpWithAliasId);
             }
 
             @Test
@@ -666,7 +661,7 @@ class IdentityProviderEndpointsTest {
                         true
                 );
 
-                Assertions.assertThat(response.getStatusCode()).isEqualTo(UNPROCESSABLE_ENTITY);
+                assertThat(response.getStatusCode()).isEqualTo(UNPROCESSABLE_ENTITY);
             }
 
             @ParameterizedTest
@@ -711,7 +706,7 @@ class IdentityProviderEndpointsTest {
                         true
                 );
 
-                Assertions.assertThat(response.getStatusCode()).isEqualTo(expectedException);
+                assertThat(response.getStatusCode()).isEqualTo(expectedException);
             }
 
             private static Stream<Arguments> shouldRespondWithErrorCode_WhenExceptionIsThrownDuringAliasCreation() {
@@ -726,7 +721,7 @@ class IdentityProviderEndpointsTest {
         @Nested
         class Delete {
             @Test
-            void testDeleteIdpWithAlias() {
+            void deleteIdpWithAlias() {
                 final Pair<IdentityProvider<?>, IdentityProvider<?>> idpAndAlias = arrangeIdpWithAliasExists(UAA, customZoneId);
                 final IdentityProvider<?> idp = idpAndAlias.getLeft();
                 final IdentityProvider<?> aliasIdp = idpAndAlias.getRight();
@@ -740,18 +735,18 @@ class IdentityProviderEndpointsTest {
                 verify(mockEventPublisher, times(2)).publishEvent(entityDeletedEventCaptor.capture());
 
                 final EntityDeletedEvent<?> firstEvent = entityDeletedEventCaptor.getAllValues().get(0);
-                Assertions.assertThat(firstEvent).isNotNull();
-                Assertions.assertThat(firstEvent.getIdentityZoneId()).isEqualTo(UAA);
-                Assertions.assertThat(((IdentityProvider<?>) firstEvent.getSource()).getId()).isEqualTo(idp.getId());
+                assertThat(firstEvent).isNotNull();
+                assertThat(firstEvent.getIdentityZoneId()).isEqualTo(UAA);
+                assertThat(((IdentityProvider<?>) firstEvent.getSource()).getId()).isEqualTo(idp.getId());
 
                 final EntityDeletedEvent<?> secondEvent = entityDeletedEventCaptor.getAllValues().get(1);
-                Assertions.assertThat(secondEvent).isNotNull();
-                Assertions.assertThat(secondEvent.getIdentityZoneId()).isEqualTo(UAA);
-                Assertions.assertThat(((IdentityProvider<?>) secondEvent.getSource()).getId()).isEqualTo(aliasIdp.getId());
+                assertThat(secondEvent).isNotNull();
+                assertThat(secondEvent.getIdentityZoneId()).isEqualTo(UAA);
+                assertThat(((IdentityProvider<?>) secondEvent.getSource()).getId()).isEqualTo(aliasIdp.getId());
             }
 
             @Test
-            void testDeleteIdpWithAlias_DanglingReference() {
+            void deleteIdpWithAliasDanglingReference() {
                 final String idpId = UUID.randomUUID().toString();
                 final String aliasIdpId = UUID.randomUUID().toString();
 
@@ -776,13 +771,13 @@ class IdentityProviderEndpointsTest {
                 verify(mockEventPublisher, times(1)).publishEvent(entityDeletedEventCaptor.capture());
 
                 final EntityDeletedEvent<?> firstEvent = entityDeletedEventCaptor.getAllValues().get(0);
-                Assertions.assertThat(firstEvent).isNotNull();
-                Assertions.assertThat(firstEvent.getIdentityZoneId()).isEqualTo(UAA);
-                Assertions.assertThat(((IdentityProvider<?>) firstEvent.getSource()).getId()).isEqualTo(idpId);
+                assertThat(firstEvent).isNotNull();
+                assertThat(firstEvent.getIdentityZoneId()).isEqualTo(UAA);
+                assertThat(((IdentityProvider<?>) firstEvent.getSource()).getId()).isEqualTo(idpId);
             }
 
             @Test
-            void testDeleteIdpWithAlias_AliasFeatureDisabled() {
+            void deleteIdpWithAliasAliasFeatureDisabled() {
                 arrangeAliasEntitiesEnabled(false);
 
                 // ensure event publisher is present
@@ -803,8 +798,8 @@ class IdentityProviderEndpointsTest {
             }
 
             private Pair<IdentityProvider<?>, IdentityProvider<?>> arrangeIdpWithAliasExists(final String zone1Id, final String zone2Id) {
-                Assertions.assertThat(zone1Id).isNotBlank();
-                Assertions.assertThat(zone2Id).isNotBlank().isNotEqualTo(zone1Id);
+                assertThat(zone1Id).isNotBlank();
+                assertThat(zone2Id).isNotBlank().isNotEqualTo(zone1Id);
 
                 final String idpId = UUID.randomUUID().toString();
                 final String aliasIdpId = UUID.randomUUID().toString();
@@ -856,17 +851,17 @@ class IdentityProviderEndpointsTest {
         String zoneId = IdentityZone.getUaaZoneId();
         for (String type : Arrays.asList(OIDC10, OAUTH20)) {
             IdentityProvider<AbstractExternalOAuthIdentityProviderDefinition> externalOAuthDefinition = getExternalOAuthProvider();
-            assertNotNull(externalOAuthDefinition.getConfig().getRelyingPartySecret());
+            assertThat(externalOAuthDefinition.getConfig().getRelyingPartySecret()).isNotNull();
             externalOAuthDefinition.setType(type);
             when(mockIdentityProviderProvisioning.create(any(), eq(zoneId))).thenReturn(externalOAuthDefinition);
             ResponseEntity<IdentityProvider> response = identityProviderEndpoints.createIdentityProvider(externalOAuthDefinition, true);
             IdentityProvider created = response.getBody();
-            assertNotNull(created);
-            assertEquals(type, created.getType());
-            assertNotNull(created.getConfig());
-            assertInstanceOf(AbstractExternalOAuthIdentityProviderDefinition.class, created.getConfig());
-            assertNull(((AbstractExternalOAuthIdentityProviderDefinition) created.getConfig()).getRelyingPartySecret());
-            assertEquals(ClientAuthentication.CLIENT_SECRET_BASIC, ((AbstractExternalOAuthIdentityProviderDefinition) created.getConfig()).getAuthMethod());
+            assertThat(created).isNotNull();
+            assertThat(created.getType()).isEqualTo(type);
+            assertThat(created.getConfig()).isNotNull();
+            assertThat(created.getConfig()).isInstanceOf(AbstractExternalOAuthIdentityProviderDefinition.class);
+            assertThat(((AbstractExternalOAuthIdentityProviderDefinition) created.getConfig()).getRelyingPartySecret()).isNull();
+            assertThat(((AbstractExternalOAuthIdentityProviderDefinition) created.getConfig()).getAuthMethod()).isEqualTo(ClientAuthentication.CLIENT_SECRET_BASIC);
         }
     }
 
@@ -875,40 +870,40 @@ class IdentityProviderEndpointsTest {
         String zoneId = IdentityZone.getUaaZoneId();
         for (String type : Arrays.asList(OIDC10, OAUTH20)) {
             IdentityProvider<AbstractExternalOAuthIdentityProviderDefinition> externalOAuthDefinition = getExternalOAuthProvider();
-            assertNotNull(externalOAuthDefinition.getConfig().getRelyingPartySecret());
+            assertThat(externalOAuthDefinition.getConfig().getRelyingPartySecret()).isNotNull();
             externalOAuthDefinition.setType(type);
             when(mockIdentityProviderProvisioning.create(any(), eq(zoneId))).thenReturn(externalOAuthDefinition);
             ResponseEntity<IdentityProvider> response = identityProviderEndpoints.createIdentityProvider(externalOAuthDefinition, true);
             IdentityProvider created = response.getBody();
-            assertNotNull(created);
-            assertEquals(type, created.getType());
-            assertNotNull(created.getConfig());
-            assertInstanceOf(AbstractExternalOAuthIdentityProviderDefinition.class, created.getConfig());
-            assertNull(((AbstractExternalOAuthIdentityProviderDefinition) created.getConfig()).getRelyingPartySecret());
-            assertEquals(ClientAuthentication.CLIENT_SECRET_BASIC, ((AbstractExternalOAuthIdentityProviderDefinition) created.getConfig()).getAuthMethod());
+            assertThat(created).isNotNull();
+            assertThat(created.getType()).isEqualTo(type);
+            assertThat(created.getConfig()).isNotNull();
+            assertThat(created.getConfig()).isInstanceOf(AbstractExternalOAuthIdentityProviderDefinition.class);
+            assertThat(((AbstractExternalOAuthIdentityProviderDefinition) created.getConfig()).getRelyingPartySecret()).isNull();
+            assertThat(((AbstractExternalOAuthIdentityProviderDefinition) created.getConfig()).getAuthMethod()).isEqualTo(ClientAuthentication.CLIENT_SECRET_BASIC);
             externalOAuthDefinition.getConfig().setRelyingPartySecret(null);
             externalOAuthDefinition.getConfig().setAuthMethod("none");
             AbstractExternalOAuthIdentityProviderDefinition spy = Mockito.spy(externalOAuthDefinition.getConfig());
             when(mockIdentityProviderProvisioning.retrieve(eq(externalOAuthDefinition.getId()), eq(zoneId))).thenReturn(getExternalOAuthProvider());
             response = identityProviderEndpoints.updateIdentityProvider(created.getId(), externalOAuthDefinition, true);
             IdentityProvider upated = response.getBody();
-            assertNotNull(upated);
-            assertEquals(type, upated.getType());
-            assertNotNull(upated.getConfig());
+            assertThat(upated).isNotNull();
+            assertThat(upated.getType()).isEqualTo(type);
+            assertThat(upated.getConfig()).isNotNull();
             verify(spy, never()).setRelyingPartySecret(eq(getExternalOAuthProvider().getConfig().getRelyingPartySecret()));
-            assertEquals(ClientAuthentication.NONE, ((AbstractExternalOAuthIdentityProviderDefinition) upated.getConfig()).getAuthMethod());
+            assertThat(((AbstractExternalOAuthIdentityProviderDefinition) upated.getConfig()).getAuthMethod()).isEqualTo(ClientAuthentication.NONE);
         }
     }
 
     @Test
-    void testPatchIdentityProviderStatusInvalidPayload() {
+    void patchIdentityProviderStatusInvalidPayload() {
         IdentityProviderStatus identityProviderStatus = new IdentityProviderStatus();
         ResponseEntity responseEntity = identityProviderEndpoints.updateIdentityProviderStatus("123", identityProviderStatus);
-        assertEquals(UNPROCESSABLE_ENTITY, responseEntity.getStatusCode());
+        assertThat(responseEntity.getStatusCode()).isEqualTo(UNPROCESSABLE_ENTITY);
     }
 
     @Test
-    void testPatchIdentityProviderStatusInvalidIDP() {
+    void patchIdentityProviderStatusInvalidIDP() {
         String zoneId = IdentityZone.getUaaZoneId();
         IdentityProviderStatus identityProviderStatus = new IdentityProviderStatus();
         identityProviderStatus.setRequirePasswordChange(true);
@@ -917,11 +912,11 @@ class IdentityProviderEndpointsTest {
         notUAAIDP.setConfig(new SamlIdentityProviderDefinition());
         when(mockIdentityProviderProvisioning.retrieve(anyString(), eq(zoneId))).thenReturn(notUAAIDP);
         ResponseEntity responseEntity = identityProviderEndpoints.updateIdentityProviderStatus("123", identityProviderStatus);
-        assertEquals(UNPROCESSABLE_ENTITY, responseEntity.getStatusCode());
+        assertThat(responseEntity.getStatusCode()).isEqualTo(UNPROCESSABLE_ENTITY);
     }
 
     @Test
-    void testPatchIdentityProviderStatusWithNoIDPDefinition() {
+    void patchIdentityProviderStatusWithNoIDPDefinition() {
         String zoneId = IdentityZone.getUaaZoneId();
         IdentityProviderStatus identityProviderStatus = new IdentityProviderStatus();
         identityProviderStatus.setRequirePasswordChange(true);
@@ -930,11 +925,11 @@ class IdentityProviderEndpointsTest {
         invalidIDP.setType(OriginKeys.UAA);
         when(mockIdentityProviderProvisioning.retrieve(anyString(), eq(zoneId))).thenReturn(invalidIDP);
         ResponseEntity<IdentityProviderStatus> responseEntity = identityProviderEndpoints.updateIdentityProviderStatus("123", identityProviderStatus);
-        assertEquals(UNPROCESSABLE_ENTITY, responseEntity.getStatusCode());
+        assertThat(responseEntity.getStatusCode()).isEqualTo(UNPROCESSABLE_ENTITY);
     }
 
     @Test
-    void testPatchIdentityProviderStatusWithNoPasswordPolicy() {
+    void patchIdentityProviderStatusWithNoPasswordPolicy() {
         String zoneId = IdentityZone.getUaaZoneId();
         IdentityProviderStatus identityProviderStatus = new IdentityProviderStatus();
         identityProviderStatus.setRequirePasswordChange(true);
@@ -943,11 +938,11 @@ class IdentityProviderEndpointsTest {
         invalidIDP.setConfig(new UaaIdentityProviderDefinition(null, null));
         when(mockIdentityProviderProvisioning.retrieve(anyString(), eq(zoneId))).thenReturn(invalidIDP);
         ResponseEntity<IdentityProviderStatus> responseEntity = identityProviderEndpoints.updateIdentityProviderStatus("123", identityProviderStatus);
-        assertEquals(UNPROCESSABLE_ENTITY, responseEntity.getStatusCode());
+        assertThat(responseEntity.getStatusCode()).isEqualTo(UNPROCESSABLE_ENTITY);
     }
 
     @Test
-    void testPatchIdentityProviderStatus() {
+    void patchIdentityProviderStatus() {
         String zoneId = IdentityZone.getUaaZoneId();
         IdentityProviderStatus identityProviderStatus = new IdentityProviderStatus();
         identityProviderStatus.setRequirePasswordChange(true);
@@ -956,11 +951,11 @@ class IdentityProviderEndpointsTest {
         validIDP.setConfig(new UaaIdentityProviderDefinition(new PasswordPolicy(), null));
         when(mockIdentityProviderProvisioning.retrieve(anyString(), eq(zoneId))).thenReturn(validIDP);
         ResponseEntity responseEntity = identityProviderEndpoints.updateIdentityProviderStatus("123", identityProviderStatus);
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 
     @Test
-    void testDeleteIdentityProviderExisting() {
+    void deleteIdentityProviderExisting() {
         String zoneId = IdentityZone.getUaaZoneId();
         IdentityProvider validIDP = new IdentityProvider<>();
         validIDP.setType(OriginKeys.UAA);
@@ -976,12 +971,12 @@ class IdentityProviderEndpointsTest {
         ResponseEntity<IdentityProvider> deleteResponse =
                 identityProviderEndpoints.deleteIdentityProvider(
                         identityProviderIdentifier, false);
-        assertEquals(HttpStatus.OK, deleteResponse.getStatusCode());
-        assertEquals(validIDP, deleteResponse.getBody());
+        assertThat(deleteResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(deleteResponse.getBody()).isEqualTo(validIDP);
     }
 
     @Test
-    void testDeleteIdentityProviderNotExisting() {
+    void deleteIdentityProviderNotExisting() {
         String zoneId = IdentityZone.getUaaZoneId();
         String identityProviderIdentifier = UUID.randomUUID().toString();
         when(mockIdentityProviderProvisioning.retrieve(
@@ -990,12 +985,11 @@ class IdentityProviderEndpointsTest {
         ResponseEntity<IdentityProvider> deleteResponse =
                 identityProviderEndpoints.deleteIdentityProvider(
                         identityProviderIdentifier, false);
-        assertEquals(UNPROCESSABLE_ENTITY,
-                deleteResponse.getStatusCode());
+        assertThat(deleteResponse.getStatusCode()).isEqualTo(UNPROCESSABLE_ENTITY);
     }
 
     @Test
-    void testDeleteIdentityProviderResponseNotContainingRelyingPartySecret() {
+    void deleteIdentityProviderResponseNotContainingRelyingPartySecret() {
         String zoneId = IdentityZone.getUaaZoneId();
         IdentityProvider validIDP = new IdentityProvider<>();
         validIDP.setType(OIDC10);
@@ -1013,13 +1007,13 @@ class IdentityProviderEndpointsTest {
         ResponseEntity<IdentityProvider> deleteResponse =
                 identityProviderEndpoints.deleteIdentityProvider(
                         identityProviderIdentifier, false);
-        assertEquals(HttpStatus.OK, deleteResponse.getStatusCode());
-        assertNull(((AbstractExternalOAuthIdentityProviderDefinition) deleteResponse
-                .getBody().getConfig()).getRelyingPartySecret());
+        assertThat(deleteResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(((AbstractExternalOAuthIdentityProviderDefinition) deleteResponse
+                .getBody().getConfig()).getRelyingPartySecret()).isNull();
     }
 
     @Test
-    void testDeleteIdentityProviderResponseNotContainingBindPassword() {
+    void deleteIdentityProviderResponseNotContainingBindPassword() {
         String zoneId = IdentityZone.getUaaZoneId();
         IdentityProvider identityProvider = getLdapDefinition();
         when(mockIdentityProviderProvisioning.retrieve(
@@ -1031,9 +1025,9 @@ class IdentityProviderEndpointsTest {
         ResponseEntity<IdentityProvider> deleteResponse =
                 identityProviderEndpoints.deleteIdentityProvider(
                         identityProvider.getId(), false);
-        assertEquals(HttpStatus.OK, deleteResponse.getStatusCode());
-        assertNull(((LdapIdentityProviderDefinition) deleteResponse
-                .getBody().getConfig()).getBindPassword());
+        assertThat(deleteResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(((LdapIdentityProviderDefinition) deleteResponse
+                .getBody().getConfig()).getBindPassword()).isNull();
     }
 
     @Test
@@ -1047,21 +1041,21 @@ class IdentityProviderEndpointsTest {
             // standard secret usage
             when(spy.getRelyingPartySecret()).thenReturn("secret");
             identityProviderEndpoints.setAuthMethod(provider);
-            assertEquals(ClientAuthentication.CLIENT_SECRET_BASIC, provider.getConfig().getAuthMethod());
+            assertThat(provider.getConfig().getAuthMethod()).isEqualTo(ClientAuthentication.CLIENT_SECRET_BASIC);
             // use secrets in body
             when(spy.isClientAuthInBody()).thenReturn(true);
             identityProviderEndpoints.setAuthMethod(provider);
-            assertEquals(ClientAuthentication.CLIENT_SECRET_POST, provider.getConfig().getAuthMethod());
+            assertThat(provider.getConfig().getAuthMethod()).isEqualTo(ClientAuthentication.CLIENT_SECRET_POST);
             // no secret usage but treat it as public client
             when(spy.getRelyingPartySecret()).thenReturn(null);
             identityProviderEndpoints.setAuthMethod(provider);
-            assertEquals(ClientAuthentication.NONE, provider.getConfig().getAuthMethod());
+            assertThat(provider.getConfig().getAuthMethod()).isEqualTo(ClientAuthentication.NONE);
             // private_key_jwt in OIDC case
             if (OIDC10.equals(type)) {
                 OIDCIdentityProviderDefinition oidcSpy = (OIDCIdentityProviderDefinition) spy;
                 when(oidcSpy.getJwtClientAuthentication()).thenReturn(Boolean.TRUE);
                 identityProviderEndpoints.setAuthMethod(provider);
-                assertEquals(ClientAuthentication.PRIVATE_KEY_JWT, provider.getConfig().getAuthMethod());
+                assertThat(provider.getConfig().getAuthMethod()).isEqualTo(ClientAuthentication.PRIVATE_KEY_JWT);
             }
         }
     }

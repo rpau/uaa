@@ -21,7 +21,6 @@ import org.cloudfoundry.identity.uaa.util.ObjectUtils;
 import org.cloudfoundry.identity.uaa.zone.IdentityZone;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneSwitchingFilter;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -40,15 +39,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_AUTHORIZATION_CODE;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 @OAuth2ContextConfiguration(IdentityZoneEndpointsIntegrationTests.IdentityClient.class)
-public class IdentityZoneEndpointsIntegrationTests {
+class IdentityZoneEndpointsIntegrationTests {
     @RegisterExtension
     private static final ServerRunningExtension serverRunning = ServerRunningExtension.connect();
 
@@ -64,7 +59,7 @@ public class IdentityZoneEndpointsIntegrationTests {
     private String zoneId;
 
     @BeforeEach
-    public void createRestTemplate() {
+    void createRestTemplate() {
         client = (OAuth2RestTemplate) serverRunning.getRestTemplate();
         client.setErrorHandler(new OAuth2ErrorHandler(context.getResource()) {
             // Pass errors through in response entity for status code analysis
@@ -80,7 +75,7 @@ public class IdentityZoneEndpointsIntegrationTests {
     }
 
     @AfterEach
-    public void cleanup() {
+    void cleanup() {
         String clientCredentialsToken = IntegrationTestUtils.getClientCredentialsToken(serverRunning, "admin", "adminsecret");
         RestTemplate client = IntegrationTestUtils.getClientCredentialsTemplate(
                 IntegrationTestUtils.getClientCredentialsResource(serverRunning.getBaseUrl(), new String[0], "admin", "adminsecret")
@@ -92,7 +87,7 @@ public class IdentityZoneEndpointsIntegrationTests {
     }
 
     @Test
-    public void testCreateZone() {
+    void createZone() {
         zoneId = UUID.randomUUID().toString();
         String requestBody = "{\"id\":\"" + zoneId + "\", \"subdomain\":\"" + zoneId + "\", \"name\":\"testCreateZone() " + zoneId + "\"}";
 
@@ -107,7 +102,7 @@ public class IdentityZoneEndpointsIntegrationTests {
                 new ParameterizedTypeReference<>() {
                 });
 
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 
         RestTemplate adminClient = IntegrationTestUtils.getClientCredentialsTemplate(
                 IntegrationTestUtils.getClientCredentialsResource(serverRunning.getBaseUrl(), new String[0], "admin", "adminsecret")
@@ -138,16 +133,16 @@ public class IdentityZoneEndpointsIntegrationTests {
                 });
 
         IdentityProvider identityProvider = idpList.getBody().get(0);
-        assertThat(identityProvider.getIdentityZoneId(), is(zoneId));
-        assertThat(identityProvider.getOriginKey(), is(OriginKeys.UAA));
+        assertThat(identityProvider.getIdentityZoneId()).isEqualTo(zoneId);
+        assertThat(identityProvider.getOriginKey()).isEqualTo(OriginKeys.UAA);
 
         //the default created zone does have a definition, but no policy
-        assertNotNull(identityProvider.getConfig());
-        assertNull(ObjectUtils.castInstance(identityProvider.getConfig(), UaaIdentityProviderDefinition.class).getPasswordPolicy());
+        assertThat(identityProvider.getConfig()).isNotNull();
+        assertThat(ObjectUtils.castInstance(identityProvider.getConfig(), UaaIdentityProviderDefinition.class).getPasswordPolicy()).isNull();
     }
 
     @Test
-    public void testUpdateZoneAllowedGroups() {
+    void updateZoneAllowedGroups() {
         IdentityZone idZone = new IdentityZone();
         String id = UUID.randomUUID().toString();
         idZone.setId(id);
@@ -160,7 +155,7 @@ public class IdentityZoneEndpointsIntegrationTests {
                 new ParameterizedTypeReference<>() {
                 },
                 id);
-        assertEquals(HttpStatus.CREATED, response.getStatusCode(), response.getBody());
+        assertThat(response.getStatusCode()).as(response.getBody()).isEqualTo(HttpStatus.CREATED);
 
         List<String> existingGroups = List.of("sps.write", "sps.read", "idps.write", "idps.read", "clients.admin", "clients.write", "clients.read",
                 "clients.secret", "scim.write", "scim.read", "scim.create", "scim.userids", "scim.zones", "groups.update", "password.write", "oauth.login", "uaa.admin");
@@ -172,7 +167,7 @@ public class IdentityZoneEndpointsIntegrationTests {
                 new ParameterizedTypeReference<>() {
                 },
                 id);
-        assertEquals(HttpStatus.OK, response.getStatusCode(), response.getBody());
+        assertThat(response.getStatusCode()).as(response.getBody()).isEqualTo(HttpStatus.OK);
 
         List<String> notAllExistingGroups = List.of("clients.admin", "clients.write", "clients.read", "clients.secret");
         idZone.getConfig().getUserConfig().setAllowedGroups(notAllExistingGroups);
@@ -183,11 +178,11 @@ public class IdentityZoneEndpointsIntegrationTests {
                 new ParameterizedTypeReference<>() {
                 },
                 id);
-        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode(), response.getBody());
+        assertThat(response.getStatusCode()).as(response.getBody()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
     }
 
     @Test
-    public void testCreateZoneWithClient() {
+    void createZoneWithClient() {
         IdentityZone idZone = new IdentityZone();
         String id = UUID.randomUUID().toString();
         idZone.setId(id);
@@ -200,7 +195,7 @@ public class IdentityZoneEndpointsIntegrationTests {
                 new ParameterizedTypeReference<>() {
                 },
                 id);
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 
         UaaClientDetails clientDetails = new UaaClientDetails("test123", null, "openid", GRANT_TYPE_AUTHORIZATION_CODE, "uaa.resource");
         clientDetails.setClientSecret("testSecret");
@@ -214,7 +209,7 @@ public class IdentityZoneEndpointsIntegrationTests {
                 },
                 id);
 
-        assertEquals(HttpStatus.CREATED, clientCreateResponse.getStatusCode());
+        assertThat(clientCreateResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 
         ResponseEntity<Void> clientDeleteResponse = client.exchange(
                 serverRunning.getUrl("/identity-zones/" + id + "/clients/" + clientDetails.getClientId()),
@@ -224,12 +219,12 @@ public class IdentityZoneEndpointsIntegrationTests {
                 },
                 id);
 
-        assertEquals(HttpStatus.OK, clientDeleteResponse.getStatusCode());
+        assertThat(clientDeleteResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 
 
     @Test
-    public void testCreateZoneWithNonUniqueSubdomain() {
+    void createZoneWithNonUniqueSubdomain() {
         IdentityZone idZone1 = new IdentityZone();
         String id1 = UUID.randomUUID().toString();
         idZone1.setId(id1);
@@ -242,7 +237,7 @@ public class IdentityZoneEndpointsIntegrationTests {
                 new ParameterizedTypeReference<>() {
                 },
                 id1);
-        assertEquals(HttpStatus.CREATED, response1.getStatusCode());
+        assertThat(response1.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 
         IdentityZone idZone2 = new IdentityZone();
         String id2 = UUID.randomUUID().toString();
@@ -256,8 +251,8 @@ public class IdentityZoneEndpointsIntegrationTests {
                 new ParameterizedTypeReference<>() {
                 },
                 id2);
-        assertEquals(HttpStatus.CONFLICT, response2.getStatusCode());
-        Assertions.assertTrue(response2.getBody().get("error_description").toLowerCase().contains("subdomain"));
+        assertThat(response2.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(response2.getBody().get("error_description").toLowerCase().contains("subdomain")).isTrue();
     }
 
     static class IdentityClient extends ClientCredentialsResourceDetails {

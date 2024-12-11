@@ -16,8 +16,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -80,57 +80,53 @@ class KeystoneAuthenticationManagerTest {
 
     @MethodSource("parameters")
     @ParameterizedTest
-    void testV3Authentication(RestAuthenticationManager authzManager, String url) {
+    void v3Authentication(RestAuthenticationManager authzManager, String url) {
         initKeystoneAuthenticationManagerTest(authzManager, url);
         restAuthenticationManager.authenticate(input);
     }
 
     @MethodSource("parameters")
     @ParameterizedTest
-    void testUnknownVersion(RestAuthenticationManager authzManager, String url) {
+    void unknownVersion(RestAuthenticationManager authzManager, String url) {
         initKeystoneAuthenticationManagerTest(authzManager, url);
         Assumptions.assumeTrue(restAuthenticationManager instanceof KeystoneAuthenticationManager);
-        assertThrows(UnsupportedOperationException.class, () -> {
-            remoteUrl = "http://this.is.not.used/v4";
-            setUpRestAuthenticationManager(HttpStatus.OK);
-            restAuthenticationManager.authenticate(input);
-        });
+        remoteUrl = "http://this.is.not.used/v4";
+        setUpRestAuthenticationManager(HttpStatus.OK);
+        assertThatExceptionOfType(UnsupportedOperationException.class).isThrownBy(() ->
+                restAuthenticationManager.authenticate(input));
     }
 
     @MethodSource("parameters")
     @ParameterizedTest
-    void testUnauthorized(RestAuthenticationManager authzManager, String url) {
+    void unauthorized(RestAuthenticationManager authzManager, String url) {
         initKeystoneAuthenticationManagerTest(authzManager, url);
-        assertThrows(BadCredentialsException.class, () -> {
-            setUpRestAuthenticationManager(HttpStatus.UNAUTHORIZED);
-            restAuthenticationManager.authenticate(input);
-        });
+        setUpRestAuthenticationManager(HttpStatus.UNAUTHORIZED);
+        assertThatExceptionOfType(BadCredentialsException.class).isThrownBy(() ->
+                restAuthenticationManager.authenticate(input));
     }
 
     @MethodSource("parameters")
     @ParameterizedTest
     void test500Error(RestAuthenticationManager authzManager, String url) {
         initKeystoneAuthenticationManagerTest(authzManager, url);
-        assertThrows(RuntimeException.class, () -> {
-            setUpRestAuthenticationManager(HttpStatus.INTERNAL_SERVER_ERROR);
-            restAuthenticationManager.authenticate(input);
-        });
+        setUpRestAuthenticationManager(HttpStatus.INTERNAL_SERVER_ERROR);
+        assertThatExceptionOfType(RuntimeException.class).isThrownBy(() ->
+                restAuthenticationManager.authenticate(input));
     }
 
     @MethodSource("parameters")
     @ParameterizedTest
-    void testUnknownError(RestAuthenticationManager authzManager, String url) {
+    void unknownError(RestAuthenticationManager authzManager, String url) {
         initKeystoneAuthenticationManagerTest(authzManager, url);
-        assertThrows(RuntimeException.class, () -> {
-            setUpRestAuthenticationManager(HttpStatus.BAD_GATEWAY);
-            restAuthenticationManager.authenticate(input);
-        });
+        setUpRestAuthenticationManager(HttpStatus.BAD_GATEWAY);
+        assertThatExceptionOfType(RuntimeException.class).isThrownBy(() ->
+                restAuthenticationManager.authenticate(input));
     }
 
     @MethodSource("parameters")
     @ParameterizedTest
     void checkNullPassword(RestAuthenticationManager authzManager, String url) {
         initKeystoneAuthenticationManagerTest(authzManager, url);
-        assertFalse(restAuthenticationManager.isNullPassword());
+        assertThat(restAuthenticationManager.isNullPassword()).isFalse();
     }
 }

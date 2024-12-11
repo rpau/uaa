@@ -54,7 +54,7 @@ class DefaultRelyingPartyRegistrationRepositoryTest {
     private DefaultRelyingPartyRegistrationRepository repository;
 
     @BeforeAll
-    public static void beforeAll() {
+    static void beforeAll() {
         Security.addProvider(new BouncyCastleFipsProvider());
         new IdentityZoneHolder.Initializer(null, new SamlKeyManagerFactory(samlConfigProps));
     }

@@ -162,7 +162,7 @@ class SamlKeyManagerFactoryTests {
     }
 
     @Test
-    void testAddCertsKeysOnly() {
+    void addCertsKeysOnly() {
         config.setKeys(new HashMap<>());
         config.addAndActivateKey("cert-only", samlKeyCertOnly());
         SamlKeyManager manager1 = samlKeyManagerFactory.getKeyManager(config);

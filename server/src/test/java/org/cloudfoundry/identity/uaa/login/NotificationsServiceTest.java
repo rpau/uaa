@@ -18,9 +18,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.springframework.http.HttpMethod.POST;
 import static org.springframework.http.HttpMethod.PUT;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.jsonPath;
@@ -29,7 +28,7 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withBadRequest;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
-public class NotificationsServiceTest {
+class NotificationsServiceTest {
 
     private RestTemplate notificationsTemplate;
     private MockRestServiceServer mockNotificationsServer;
@@ -39,7 +38,7 @@ public class NotificationsServiceTest {
     private Map<String, Object> response;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         notificationsTemplate = new RestTemplate();
         mockNotificationsServer = MockRestServiceServer.createServer(notificationsTemplate);
 
@@ -55,7 +54,7 @@ public class NotificationsServiceTest {
         notificationsService = new NotificationsService(notificationsTemplate, "http://notifications.example.com", notifications, true) {
             @Override
             protected void internalSendMessage(String email, MessageType messageType, String subject, String htmlContent) {
-                assertEquals(IdentityZone.getUaa(), IdentityZoneHolder.get());
+                assertThat(IdentityZoneHolder.get()).isEqualTo(IdentityZone.getUaa());
                 super.internalSendMessage(email, messageType, subject, htmlContent);
             }
         };
@@ -77,12 +76,12 @@ public class NotificationsServiceTest {
     }
 
     @AfterEach
-    public void clearZone() {
+    void clearZone() {
         IdentityZoneHolder.clear();
     }
 
     @Test
-    public void testSendingMessageToEmailAddress() {
+    void sendingMessageToEmailAddress() {
 
         mockNotificationsServer.expect(requestTo("http://notifications.example.com/emails"))
                 .andExpect(method(POST))
@@ -98,7 +97,7 @@ public class NotificationsServiceTest {
     }
 
     @Test
-    public void testSendingMessageInAnotherZoneResets() {
+    void sendingMessageInAnotherZoneResets() {
         IdentityZone zone = MultitenancyFixture.identityZone("zone", "zone");
         IdentityZoneHolder.set(zone);
 
@@ -112,11 +111,11 @@ public class NotificationsServiceTest {
         notificationsService.sendMessage("user@example.com", MessageType.PASSWORD_RESET, "First message", "<p>Message</p>");
 
         mockNotificationsServer.verify();
-        assertSame(zone, IdentityZoneHolder.get());
+        assertThat(IdentityZoneHolder.get()).isSameAs(zone);
     }
 
     @Test
-    public void testSendingMessageInAnotherZoneResetsWhenError() {
+    void sendingMessageInAnotherZoneResetsWhenError() {
         IdentityZone zone = MultitenancyFixture.identityZone("zone", "zone");
         IdentityZoneHolder.set(zone);
 
@@ -128,11 +127,11 @@ public class NotificationsServiceTest {
                 .andRespond(withBadRequest());
         try {
             notificationsService.sendMessage("user@example.com", MessageType.PASSWORD_RESET, "First message", "<p>Message</p>");
-            fail();
+            fail("");
         } catch (HttpClientErrorException ignored) {
         }
 
         mockNotificationsServer.verify();
-        assertSame(zone, IdentityZoneHolder.get());
+        assertThat(IdentityZoneHolder.get()).isSameAs(zone);
     }
 }

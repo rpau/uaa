@@ -643,7 +643,7 @@ class ExternalOAuthAuthenticationManagerIT {
     }
 
     @Test
-    void testAdditionalParameterClientAuthInBody_is_used() {
+    void additionalParameterClientAuthInBodyIsUsed() {
         config.setClientAuthInBody(true);
         config.setAdditionalAuthzParameters(Map.of("token_format", "opaque"));
         mockUaaServer.expect(requestTo(config.getTokenUrl().toString()))
@@ -1024,7 +1024,7 @@ class ExternalOAuthAuthenticationManagerIT {
     }
 
     @Test
-    void testGetUserSetsTheRightOrigin() {
+    void getUserSetsTheRightOrigin() {
         externalOAuthAuthenticationManager.getUser(xCodeToken, externalOAuthAuthenticationManager.getExternalAuthenticationDetails(xCodeToken));
         assertThat(externalOAuthAuthenticationManager.getOrigin()).isEqualTo(ORIGIN);
 
@@ -1034,13 +1034,13 @@ class ExternalOAuthAuthenticationManagerIT {
     }
 
     @Test
-    void testGetUserIssuerOverrideNotUsed() {
+    void getUserIssuerOverrideNotUsed() {
         mockToken();
         assertThat(externalOAuthAuthenticationManager.getUser(xCodeToken, externalOAuthAuthenticationManager.getExternalAuthenticationDetails(xCodeToken))).isNotNull();
     }
 
     @Test
-    void testGetUserIssuerOverrideUsedNoMatch() {
+    void getUserIssuerOverrideUsedNoMatch() {
         config.setIssuer(ISSUER);
         mockToken();
 
@@ -1051,7 +1051,7 @@ class ExternalOAuthAuthenticationManagerIT {
     }
 
     @Test
-    void testGetUserIssuerOverrideUsedMatch() {
+    void getUserIssuerOverrideUsedMatch() {
         config.setIssuer(ISSUER);
         claims.remove("iss");
         claims.put("iss", ISSUER);

@@ -6,7 +6,7 @@ import org.cloudfoundry.identity.uaa.ratelimiting.internal.common.InternalLimite
 import org.cloudfoundry.identity.uaa.ratelimiting.util.NanoTimeSupplier;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class InternalLimiterFactoryImplTest {
     private static final String Global = WindowType.GLOBAL.windowType();
@@ -23,30 +23,30 @@ class InternalLimiterFactoryImplTest {
                 .name(NAME).windowType(Global).requestsPerWindow(requests)
                 .build();
 
-        assertEquals(REQUESTS_PER_WINDOW, factory.getRequestsPerWindow().toString());
-        assertEquals(NAME, factory.getName());
-        assertEquals(Global, factory.getWindowType());
-        assertTrue(factory.isGlobal());
+        assertThat(factory.getRequestsPerWindow().toString()).isEqualTo(REQUESTS_PER_WINDOW);
+        assertThat(factory.getName()).isEqualTo(NAME);
+        assertThat(factory.getWindowType()).isEqualTo(Global);
+        assertThat(factory.isGlobal()).isTrue();
 
         factory = InternalLimiterFactoryImpl.builder()
                 .name(NAME).windowType(NotGlobal).requestsPerWindow(requests)
                 .build();
 
-        assertEquals(REQUESTS_PER_WINDOW, factory.getRequestsPerWindow().toString());
-        assertEquals(NAME, factory.getName());
-        assertEquals(NotGlobal, factory.getWindowType());
-        assertFalse(factory.isGlobal());
+        assertThat(factory.getRequestsPerWindow().toString()).isEqualTo(REQUESTS_PER_WINDOW);
+        assertThat(factory.getName()).isEqualTo(NAME);
+        assertThat(factory.getWindowType()).isEqualTo(NotGlobal);
+        assertThat(factory.isGlobal()).isFalse();
 
         int windowSecs = factory.getWindowSecs();
         CompoundKey compoundKey = CompoundKey.from(NAME, factory.getWindowType(), "whatever");
 
         InternalLimiter limiter = factory.newLimiter(compoundKey, mockCurrentTimeSupplier.nowAsInstant());
 
-        assertEquals(compoundKey, limiter.getCompoundKey());
-        assertEquals(factory.getInitialRequestsRemaining(), limiter.getRequestsRemaining());
+        assertThat(limiter.getCompoundKey()).isEqualTo(compoundKey);
+        assertThat(limiter.getRequestsRemaining()).isEqualTo(factory.getInitialRequestsRemaining());
 
         mockCurrentTimeSupplier.add(windowSecs * 1000000000L); // Nanos
 
-        assertEquals(mockCurrentTimeSupplier.nowAsInstant(), limiter.getWindowEndExclusive());
+        assertThat(limiter.getWindowEndExclusive()).isEqualTo(mockCurrentTimeSupplier.nowAsInstant());
     }
 }

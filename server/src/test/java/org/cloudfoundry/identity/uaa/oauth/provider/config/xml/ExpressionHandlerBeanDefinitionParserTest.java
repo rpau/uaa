@@ -4,18 +4,18 @@ import org.cloudfoundry.identity.uaa.oauth.provider.expression.OAuth2MethodSecur
 import org.junit.jupiter.api.Test;
 import org.w3c.dom.Element;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-public class ExpressionHandlerBeanDefinitionParserTest {
+class ExpressionHandlerBeanDefinitionParserTest {
 
     @Test
-    public void getBeanClass() {
+    void getBeanClass() {
         ExpressionHandlerBeanDefinitionParser expressionHandlerBeanDefinitionParser = new ExpressionHandlerBeanDefinitionParser();
-        assertEquals(OAuth2MethodSecurityExpressionHandler.class, expressionHandlerBeanDefinitionParser.getBeanClass(mock(Element.class)));
+        assertThat(expressionHandlerBeanDefinitionParser.getBeanClass(mock(Element.class))).isEqualTo(OAuth2MethodSecurityExpressionHandler.class);
     }
 }

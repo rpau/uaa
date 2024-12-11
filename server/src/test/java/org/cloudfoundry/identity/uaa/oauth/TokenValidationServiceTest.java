@@ -1,7 +1,6 @@
 package org.cloudfoundry.identity.uaa.oauth;
 
 import com.google.common.collect.Lists;
-import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSSigner;
 import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
 import org.cloudfoundry.identity.uaa.oauth.common.exceptions.InvalidTokenException;
@@ -19,11 +18,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.cloudfoundry.identity.uaa.config.IdentityZoneConfigurationBootstrapTests.PRIVATE_KEY;
 import static org.cloudfoundry.identity.uaa.oauth.token.ClaimConstants.CID;
 import static org.cloudfoundry.identity.uaa.oauth.token.ClaimConstants.GRANTED_SCOPES;
@@ -33,12 +32,10 @@ import static org.cloudfoundry.identity.uaa.oauth.token.ClaimConstants.USER_ID;
 import static org.cloudfoundry.identity.uaa.util.UaaMapUtils.entry;
 import static org.cloudfoundry.identity.uaa.util.UaaMapUtils.map;
 import static org.cloudfoundry.identity.uaa.util.UaaStringUtils.DEFAULT_UAA_URL;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class TokenValidationServiceTest {
+class TokenValidationServiceTest {
     private TokenValidationService tokenValidationService;
     private UaaUserDatabase userDatabase;
     private TokenEndpointBuilder tokenEndpointBuilder;
@@ -51,7 +48,7 @@ public class TokenValidationServiceTest {
     private Map<String, Object> content;
 
     @BeforeEach
-    public void setup() throws ParseException, JOSEException {
+    void setup() {
         header = map(
                 entry("alg", "RS256"),
                 entry("kid", "key1"),
@@ -85,56 +82,46 @@ public class TokenValidationServiceTest {
     }
 
     @AfterEach
-    public void cleanup() {
+    void cleanup() {
         IdentityZoneHolder.clear();
     }
 
     @Test
-    public void validation_happyPath() {
+    void validation_happyPath() {
         String accessToken = UaaTokenUtils.constructToken(header, content, signer);
 
         tokenValidationService.validateToken(accessToken, true);
     }
 
     @Test
-    public void validation_enforcesKeyId() {
-        Throwable exception = assertThrows(InvalidTokenException.class, () -> {
-
-            header.put("kid", "testKey");
-
-            String accessToken = UaaTokenUtils.constructToken(header, content, signer);
-
-            tokenValidationService.validateToken(accessToken, true);
-        });
-        assertTrue(exception.getMessage().contains("Token header claim [kid] references unknown signing key : [testKey]"));
+    void validation_enforcesKeyId() {
+        header.put("kid", "testKey");
+        String accessToken = UaaTokenUtils.constructToken(header, content, signer);
+        assertThatThrownBy(() -> tokenValidationService.validateToken(accessToken, true))
+                .isInstanceOf(InvalidTokenException.class)
+                .hasMessageContaining("Token header claim [kid] references unknown signing key : [testKey]");
     }
 
     @Test
-    public void validationFails_whenUserNotFound() {
-        Throwable exception = assertThrows(InvalidTokenException.class, () -> {
-
-            when(userDatabase.retrieveUserById(userId)).thenThrow(UsernameNotFoundException.class);
-            String accessToken = UaaTokenUtils.constructToken(header, content, signer);
-
-            tokenValidationService.validateToken(accessToken, true);
-        });
-        assertTrue(exception.getMessage().contains("Token bears a non-existent user ID: " + userId));
+    void validationFails_whenUserNotFound() {
+        when(userDatabase.retrieveUserById(userId)).thenThrow(UsernameNotFoundException.class);
+        String accessToken = UaaTokenUtils.constructToken(header, content, signer);
+        assertThatThrownBy(() -> tokenValidationService.validateToken(accessToken, true))
+                .isInstanceOf(InvalidTokenException.class)
+                .hasMessageContaining("Token bears a non-existent user ID: " + userId);
     }
 
     @Test
-    public void validationFails_whenClientNotFound() {
-        Throwable exception = assertThrows(InvalidTokenException.class, () -> {
-
-            when(mockMultitenantClientServices.loadClientByClientId(clientId, IdentityZoneHolder.get().getId())).thenThrow(NoSuchClientException.class);
-            String accessToken = UaaTokenUtils.constructToken(header, content, signer);
-
-            tokenValidationService.validateToken(accessToken, true);
-        });
-        assertTrue(exception.getMessage().contains("Invalid client ID " + clientId));
+    void validationFails_whenClientNotFound() {
+        when(mockMultitenantClientServices.loadClientByClientId(clientId, IdentityZoneHolder.get().getId())).thenThrow(NoSuchClientException.class);
+        String accessToken = UaaTokenUtils.constructToken(header, content, signer);
+        assertThatThrownBy(() -> tokenValidationService.validateToken(accessToken, true))
+                .isInstanceOf(InvalidTokenException.class)
+                .hasMessageContaining("Invalid client ID " + clientId);
     }
 
     @Test
-    public void refreshToken_validatesWithScopeClaim_forBackwardsCompatibilityReasons() {
+    void refreshToken_validatesWithScopeClaim_forBackwardsCompatibilityReasons() {
         Map<String, Object> content = map(
                 entry(USER_ID, userId),
                 entry(JTI, "abcdefg-r"),
@@ -147,7 +134,7 @@ public class TokenValidationServiceTest {
     }
 
     @Test
-    public void refreshToken_validatesWithGrantedScopesClaim() {
+    void refreshToken_validatesWithGrantedScopesClaim() {
         Map<String, Object> content = map(
                 entry(USER_ID, userId),
                 entry(JTI, "abcdefg-r"),

@@ -7,7 +7,7 @@ import org.springframework.beans.factory.xml.ParserContext;
 import org.springframework.beans.factory.xml.XmlReaderContext;
 import org.w3c.dom.Element;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -15,7 +15,7 @@ import static org.mockito.Mockito.when;
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-public class ResourceServerBeanDefinitionParserTest {
+class ResourceServerBeanDefinitionParserTest {
 
     private ResourceServerBeanDefinitionParser parser;
     private Element element;
@@ -23,7 +23,7 @@ public class ResourceServerBeanDefinitionParserTest {
     private XmlReaderContext xmlReaderContext;
 
     @BeforeEach
-    public void setUp() throws Exception {
+    void setUp() throws Exception {
         element = mock(Element.class);
         parserContext = mock(ParserContext.class);
         xmlReaderContext = mock(XmlReaderContext.class);
@@ -33,24 +33,24 @@ public class ResourceServerBeanDefinitionParserTest {
     }
 
     @Test
-    public void parseEndpointAndReturnFilter() {
-        assertNotNull(parser.parseEndpointAndReturnFilter(element, parserContext, "tokenServiceRef", "serialRef"));
+    void parseEndpointAndReturnFilter() {
+        assertThat(parser.parseEndpointAndReturnFilter(element, parserContext, "tokenServiceRef", "serialRef")).isNotNull();
     }
 
     @Test
-    public void parseEndpointAndReturnFilterAuthRef() {
+    void parseEndpointAndReturnFilterAuthRef() {
         when(element.getAttribute("authentication-manager-ref")).thenReturn("ref");
-        assertNotNull(parser.parseEndpointAndReturnFilter(element, parserContext, "tokenServiceRef", "serialRef"));
+        assertThat(parser.parseEndpointAndReturnFilter(element, parserContext, "tokenServiceRef", "serialRef")).isNotNull();
     }
 
     @Test
-    public void parseEndpointAndReturnFilterAttributes() {
+    void parseEndpointAndReturnFilterAttributes() {
         when(element.getAttribute("resource-id")).thenReturn("resource-id");
         when(element.getAttribute("entry-point-ref")).thenReturn("entry-point-ref");
         when(element.getAttribute("authentication-manager-ref")).thenReturn(null);
         when(element.getAttribute("token-extractor-ref")).thenReturn("token-extractor-ref");
         when(element.getAttribute("auth-details-source-ref")).thenReturn("auth-details-source-ref");
         when(element.getAttribute("stateless")).thenReturn("true");
-        assertNotNull(parser.parseEndpointAndReturnFilter(element, parserContext, "tokenServiceRef", "serialRef"));
+        assertThat(parser.parseEndpointAndReturnFilter(element, parserContext, "tokenServiceRef", "serialRef")).isNotNull();
     }
 }

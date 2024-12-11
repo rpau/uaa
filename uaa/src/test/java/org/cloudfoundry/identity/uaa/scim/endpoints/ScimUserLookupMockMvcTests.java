@@ -23,10 +23,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -117,8 +114,8 @@ class ScimUserLookupMockMvcTests {
                 .andReturn().getResponse();
         Map<String, Object> map = JsonUtils.readValue(response.getContentAsString(), Map.class);
         List<Map<String, Object>> resources = (List<Map<String, Object>>) map.get("resources");
-        assertEquals(resources.size(), 1);
-        assertNotEquals(resources.get(0).get("origin"), "test-origin");
+        assertThat(resources.size()).isEqualTo(1);
+        assertThat(resources.get(0).get("origin")).isNotEqualTo("test-origin");
     }
 
     @Test
@@ -137,7 +134,7 @@ class ScimUserLookupMockMvcTests {
                 .andReturn().getResponse();
         Map<String, Object> map = JsonUtils.readValue(response.getContentAsString(), Map.class);
         List<Map<String, Object>> resources = (List<Map<String, Object>>) map.get("resources");
-        assertEquals(resources.size(), 2);
+        assertThat(resources.size()).isEqualTo(2);
     }
 
     @Test
@@ -255,16 +252,16 @@ class ScimUserLookupMockMvcTests {
 
     private void validateLookupResults(String[] usernames, String body) {
         Map<String, Object> map = JsonUtils.readValue(body, Map.class);
-        assertNotNull(map.get("resources"), "Response should contain 'resources' object");
-        assertNotNull(map.get("startIndex"), "Response should contain 'startIndex' object");
-        assertNotNull(map.get("itemsPerPage"), "Response should contain 'itemsPerPage' object");
-        assertNotNull(map.get("totalResults"), "Response should contain 'totalResults' object");
+        assertThat(map.get("resources")).as("Response should contain 'resources' object").isNotNull();
+        assertThat(map.get("startIndex")).as("Response should contain 'startIndex' object").isNotNull();
+        assertThat(map.get("itemsPerPage")).as("Response should contain 'itemsPerPage' object").isNotNull();
+        assertThat(map.get("totalResults")).as("Response should contain 'totalResults' object").isNotNull();
         List<Map<String, Object>> resources = (List<Map<String, Object>>) map.get("resources");
-        assertEquals(usernames.length, resources.size());
+        assertThat(resources.size()).isEqualTo(usernames.length);
         for (Map<String, Object> user : resources) {
-            assertNotNull(user.get(OriginKeys.ORIGIN), "Response should contain 'origin' object");
-            assertNotNull(user.get("id"), "Response should contain 'id' object");
-            assertNotNull(user.get("userName"), "Response should contain 'userName' object");
+            assertThat(user.get(OriginKeys.ORIGIN)).as("Response should contain 'origin' object").isNotNull();
+            assertThat(user.get("id")).as("Response should contain 'id' object").isNotNull();
+            assertThat(user.get("userName")).as("Response should contain 'userName' object").isNotNull();
             String userName = (String) user.get("userName");
             boolean found = false;
             for (String s : usernames) {
@@ -273,7 +270,7 @@ class ScimUserLookupMockMvcTests {
                     break;
                 }
             }
-            assertTrue(found, "Received non requested user in result set '" + userName + "'");
+            assertThat(found).as("Received non requested user in result set '" + userName + "'").isTrue();
         }
         for (String s : usernames) {
             boolean found = false;
@@ -284,7 +281,7 @@ class ScimUserLookupMockMvcTests {
                     break;
                 }
             }
-            assertTrue(found, "Missing user in result '" + s + "'");
+            assertThat(found).as("Missing user in result '" + s + "'").isTrue();
         }
     }
 

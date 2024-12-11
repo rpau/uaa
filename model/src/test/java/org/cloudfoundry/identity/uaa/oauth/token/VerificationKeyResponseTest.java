@@ -8,8 +8,8 @@ import org.junit.jupiter.api.Test;
 import java.util.Arrays;
 import java.util.HashMap;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 
 class VerificationKeyResponseTest {
 
@@ -30,27 +30,27 @@ class VerificationKeyResponseTest {
     }
 
     @Test
-    void testX509CertificateSet() {
+    void x509CertificateSet() {
         setupResponse("RSA", null, "certificate");
-        assertEquals("certificate", verificationKeyResponse.getCertX5c()[0]);
+        assertThat(verificationKeyResponse.getCertX5c()[0]).isEqualTo("certificate");
     }
 
     @Test
-    void testX509ThumbPrintSet() {
+    void x509ThumbPrintSet() {
         setupResponse("RSA", "thumbprint", null);
-        assertEquals("thumbprint", verificationKeyResponse.getCertX5t());
+        assertThat(verificationKeyResponse.getCertX5t()).isEqualTo("thumbprint");
     }
 
     @Test
-    void testKeyTypeNullException() {
-        assertThrows(IllegalArgumentException.class, () -> setupResponse(null, "thumbprint", "certificate"));
+    void keyTypeNullException() {
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> setupResponse(null, "thumbprint", "certificate"));
     }
 
     @Test
-    void testVerificationKeyResponse() {
+    void verificationKeyResponse() {
         setupResponse("RSA", "thumbprint", "certificate");
-        assertEquals(JsonWebKey.KeyType.valueOf("RSA"), verificationKeyResponse.getKty());
-        assertEquals("thumbprint", verificationKeyResponse.getX5t());
-        assertEquals("certificate", verificationKeyResponse.getCertX5c()[0]);
+        assertThat(verificationKeyResponse.getKty()).isEqualTo(JsonWebKey.KeyType.valueOf("RSA"));
+        assertThat(verificationKeyResponse.getX5t()).isEqualTo("thumbprint");
+        assertThat(verificationKeyResponse.getCertX5c()[0]).isEqualTo("certificate");
     }
 }

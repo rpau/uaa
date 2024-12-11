@@ -13,8 +13,6 @@ import org.cloudfoundry.identity.uaa.scim.ScimUserProvisioning;
 import org.cloudfoundry.identity.uaa.util.JsonUtils;
 import org.cloudfoundry.identity.uaa.zone.MultitenantClientServices;
 import org.cloudfoundry.identity.uaa.zone.beans.IdentityZoneManager;
-import org.hamcrest.CoreMatchers;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,6 +25,8 @@ import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.cloudfoundry.identity.uaa.codestore.ExpiringCodeType.INVITATION;
 import static org.cloudfoundry.identity.uaa.constants.OriginKeys.LDAP;
 import static org.cloudfoundry.identity.uaa.constants.OriginKeys.UAA;
@@ -34,8 +34,6 @@ import static org.cloudfoundry.identity.uaa.invitations.EmailInvitationsService.
 import static org.cloudfoundry.identity.uaa.invitations.EmailInvitationsService.USER_ID;
 import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.CLIENT_ID;
 import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.REDIRECT_URI;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.anyInt;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.doThrow;
@@ -92,7 +90,7 @@ class EmailInvitationsServiceTests {
         String redirectLocation = emailInvitationsService.acceptInvitation("code", "password").getRedirectUri();
         verify(mockScimUserProvisioning).verifyUser(user.getId(), user.getVersion(), zoneId);
         verify(mockScimUserProvisioning).changePassword(user.getId(), null, "password", zoneId);
-        assertEquals("/home", redirectLocation);
+        assertThat(redirectLocation).isEqualTo("/home");
     }
 
     @Test
@@ -102,10 +100,9 @@ class EmailInvitationsServiceTests {
         userData.put(EMAIL, "user@example.com");
         when(mockExpiringCodeStore.retrieveCode(anyString(), eq(zoneId))).thenReturn(new ExpiringCode("code", new Timestamp(System.currentTimeMillis()), JsonUtils.writeValueAsString(userData), "wrong-intent"));
 
-        HttpClientErrorException httpClientErrorException = Assertions.assertThrows(HttpClientErrorException.class,
-                () -> emailInvitationsService.acceptInvitation("code", "password"));
-
-        assertThat(httpClientErrorException.getMessage(), CoreMatchers.containsString("400 BAD_REQUEST"));
+        assertThatThrownBy(() -> emailInvitationsService.acceptInvitation("code", "password"))
+                .isInstanceOf(HttpClientErrorException.class)
+                .hasMessageContaining("400 BAD_REQUEST");
     }
 
     @Test
@@ -169,7 +166,7 @@ class EmailInvitationsServiceTests {
 
         verify(mockScimUserProvisioning).verifyUser(user.getId(), user.getVersion(), zoneId);
         verify(mockScimUserProvisioning).changePassword(user.getId(), null, "password", zoneId);
-        assertEquals("/home", redirectLocation);
+        assertThat(redirectLocation).isEqualTo("/home");
     }
 
     @Test
@@ -192,7 +189,7 @@ class EmailInvitationsServiceTests {
 
         verify(mockScimUserProvisioning).verifyUser(user.getId(), user.getVersion(), zoneId);
         verify(mockScimUserProvisioning).changePassword(user.getId(), null, "password", zoneId);
-        assertEquals("http://example.com/redirect/", redirectLocation);
+        assertThat(redirectLocation).isEqualTo("http://example.com/redirect/");
     }
 
     @Test
@@ -214,6 +211,6 @@ class EmailInvitationsServiceTests {
 
         verify(mockScimUserProvisioning).verifyUser(user.getId(), user.getVersion(), zoneId);
         verify(mockScimUserProvisioning).changePassword(user.getId(), null, "password", zoneId);
-        assertEquals("/home", redirectLocation);
+        assertThat(redirectLocation).isEqualTo("/home");
     }
 }

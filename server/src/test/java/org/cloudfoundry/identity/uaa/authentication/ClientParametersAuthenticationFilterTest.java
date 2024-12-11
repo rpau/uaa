@@ -23,10 +23,10 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-public class ClientParametersAuthenticationFilterTest {
+class ClientParametersAuthenticationFilterTest {
 
     @Test
-    public void doesNotContinueWithFilterChain_IfAuthenticationException() throws IOException, ServletException {
+    void doesNotContinueWithFilterChain_IfAuthenticationException() throws IOException, ServletException {
         ClientParametersAuthenticationFilter filter = new ClientParametersAuthenticationFilter();
 
         AuthenticationEntryPoint authenticationEntryPoint = mock(AuthenticationEntryPoint.class);
@@ -50,7 +50,7 @@ public class ClientParametersAuthenticationFilterTest {
     }
 
     @Test
-    public void testStoreClientAuthenticationMethod() throws IOException, ServletException {
+    void storeClientAuthenticationMethod() throws IOException, ServletException {
         ClientParametersAuthenticationFilter filter = new ClientParametersAuthenticationFilter();
 
         AuthenticationEntryPoint authenticationEntryPoint = mock(AuthenticationEntryPoint.class);
@@ -78,7 +78,7 @@ public class ClientParametersAuthenticationFilterTest {
     }
 
     @Test
-    public void testStoreClientAuthenticationMethodNoDetails() throws IOException, ServletException {
+    void storeClientAuthenticationMethodNoDetails() throws IOException, ServletException {
         ClientParametersAuthenticationFilter filter = new ClientParametersAuthenticationFilter();
 
         AuthenticationEntryPoint authenticationEntryPoint = mock(AuthenticationEntryPoint.class);
@@ -103,7 +103,7 @@ public class ClientParametersAuthenticationFilterTest {
     }
 
     @Test
-    public void testStoreClientAuthenticationMethodNoMethod() throws IOException, ServletException {
+    void storeClientAuthenticationMethodNoMethod() throws IOException, ServletException {
         ClientParametersAuthenticationFilter filter = new ClientParametersAuthenticationFilter();
 
         AuthenticationEntryPoint authenticationEntryPoint = mock(AuthenticationEntryPoint.class);

@@ -1,5 +1,9 @@
 package org.cloudfoundry.identity.uaa.ratelimiting.internal.common;
 
+import org.cloudfoundry.identity.uaa.ratelimiting.core.CompoundKey;
+import org.cloudfoundry.identity.uaa.ratelimiting.core.LoggingOption;
+import org.junit.jupiter.api.Test;
+
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -10,11 +14,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
-import org.cloudfoundry.identity.uaa.ratelimiting.core.CompoundKey;
-import org.cloudfoundry.identity.uaa.ratelimiting.core.LoggingOption;
-import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 class InternalLimiterTest {
     static final Instant NOW = Instant.parse("2000-01-01T00:00:00Z");
@@ -28,42 +29,42 @@ class InternalLimiterTest {
         int initialRequestsRemaining = 0;
         Instant windowEndExclusive = NOW.plusSeconds(1);
 
-        InternalLimiter limiter = new InternalLimiter( KEY_A, initialRequestsRemaining, windowEndExclusive );
+        InternalLimiter limiter = new InternalLimiter(KEY_A, initialRequestsRemaining, windowEndExclusive);
 
-        assertFalse(limiter.isExpired(NOW));
-        assertTrue(limiter.isExpired(windowEndExclusive));
+        assertThat(limiter.isExpired(NOW)).isFalse();
+        assertThat(limiter.isExpired(windowEndExclusive)).isTrue();
 
-        assertEquals(KEY_A, limiter.getCompoundKey());
-        assertEquals(initialRequestsRemaining, limiter.getRequestsRemaining());
-        assertEquals(windowEndExclusive, limiter.getWindowEndExclusive());
+        assertThat(limiter.getCompoundKey()).isEqualTo(KEY_A);
+        assertThat(limiter.getRequestsRemaining()).isEqualTo(initialRequestsRemaining);
+        assertThat(limiter.getWindowEndExclusive()).isEqualTo(windowEndExclusive);
     }
 
     @Test
     void shouldLimitLogic() {
-        RecordingInternalLimiter A = new RecordingInternalLimiter( KEY_A, 2, false );
-        RecordingInternalLimiter B = new RecordingInternalLimiter( KEY_B, 0, false );
-        RecordingInternalLimiter Z = new RecordingInternalLimiter( KEY_Z, 1, false );
+        RecordingInternalLimiter A = new RecordingInternalLimiter(KEY_A, 2, false);
+        RecordingInternalLimiter B = new RecordingInternalLimiter(KEY_B, 0, false);
+        RecordingInternalLimiter Z = new RecordingInternalLimiter(KEY_Z, 1, false);
 
         List<RecordingInternalLimiter> az = List.of(A, Z);
         List<RecordingInternalLimiter> bz = List.of(B, Z);
 
-        assertFalse(checkList(az));
-        assertTrue(checkList(bz));
-        assertTrue(checkList(az));
+        assertThat(checkList(az)).isFalse();
+        assertThat(checkList(bz)).isTrue();
+        assertThat(checkList(az)).isTrue();
 
-        assertEquals("Aok Zok Z-- A-- Bno Aok Zno", compressCalls());
+        assertThat(compressCalls()).isEqualTo("Aok Zok Z-- A-- Bno Aok Zno");
     }
 
     @Test
     void shouldLimitConcurrency() {
-        RecordingInternalLimiter A = new RecordingInternalLimiter( KEY_A, 200, true );
-        RecordingInternalLimiter B = new RecordingInternalLimiter( KEY_B, 200, true );
-        RecordingInternalLimiter Z = new RecordingInternalLimiter( KEY_Z, 398, true );
+        RecordingInternalLimiter A = new RecordingInternalLimiter(KEY_A, 200, true);
+        RecordingInternalLimiter B = new RecordingInternalLimiter(KEY_B, 200, true);
+        RecordingInternalLimiter Z = new RecordingInternalLimiter(KEY_Z, 398, true);
 
         List<RecordingInternalLimiter> az = List.of(A, Z);
         List<RecordingInternalLimiter> bz = List.of(B, Z);
 
-        Coordinator coordinator = new Coordinator( 2, 9, IllegalStateException::new );
+        Coordinator coordinator = new Coordinator(2, 9, IllegalStateException::new);
         run("1", coordinator, az);
         run("2", coordinator, bz);
 
@@ -71,8 +72,8 @@ class InternalLimiterTest {
         coordinator.start();
         coordinator.waitForDone();
 
-        List<String> problemStream = new StreamProcessor( compressCalls() ).process();
-        assertTrue(problemStream.isEmpty(), "unexpected sequence from:\n" + problemStream);
+        List<String> problemStream = new StreamProcessor(compressCalls()).process();
+        assertThat(problemStream.isEmpty()).as("unexpected sequence from:\n" + problemStream).isTrue();
     }
 
     // Start of stream:   A1ok B2ok Z1ok Z1-- A1-- Z2ok Z2-- B2-- B2ok Z2ok A1ok Z2-- B2-- Z1ok Z1-- A1--
@@ -84,7 +85,7 @@ class InternalLimiterTest {
         String nextNode;
 
         public StreamProcessor(String compressCalls) {
-            stream = new LinkedList<>( Arrays.asList(compressCalls.split(" ")) );
+            stream = new LinkedList<>(Arrays.asList(compressCalls.split(" ")));
         }
 
         private String getNode(int offsetIndex) {
@@ -176,13 +177,13 @@ class InternalLimiterTest {
 
         public Coordinator(int expectedThreads, int timeoutSecs, Function<String, ? extends RuntimeException> awaitFailureExceptionMapper) {
             if (timeoutSecs > 300) { // 5 mins
-                throw new IllegalArgumentException( "timeoutSecs exceeded 300 (5 mins)" );
+                throw new IllegalArgumentException("timeoutSecs exceeded 300 (5 mins)");
             }
             timeout = timeoutSecs;
             this.awaitFailureExceptionMapper = awaitFailureExceptionMapper;
-            ready = new CountDownLatch( expectedThreads );
-            start = new CountDownLatch( 1 );
-            done = new CountDownLatch( expectedThreads );
+            ready = new CountDownLatch(expectedThreads);
+            start = new CountDownLatch(1);
+            done = new CountDownLatch(expectedThreads);
         }
 
         public void ready() {
@@ -217,8 +218,7 @@ class InternalLimiterTest {
                     return true;
                 }
                 message += " timed out";
-            }
-            catch (InterruptedException e) {
+            } catch (InterruptedException e) {
                 message += ":" + e.getMessage();
             }
             if (awaitFailureExceptionMapper != null) {
@@ -229,7 +229,7 @@ class InternalLimiterTest {
     }
 
     private void run(String threadNumber, Coordinator coordinator, List<RecordingInternalLimiter> toProcess) {
-        Thread thread = new Thread( threadNumber ) {
+        Thread thread = new Thread(threadNumber) {
             @Override
             public void run() {
                 coordinator.ready();

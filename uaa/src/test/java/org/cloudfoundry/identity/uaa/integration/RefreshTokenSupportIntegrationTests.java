@@ -23,6 +23,7 @@ import org.cloudfoundry.identity.uaa.oauth.common.OAuth2AccessToken;
 import org.cloudfoundry.identity.uaa.oauth.jwt.JwtHelper;
 import org.cloudfoundry.identity.uaa.test.TestAccountExtension;
 import org.cloudfoundry.identity.uaa.test.UaaTestAccounts;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.http.HttpEntity;
@@ -37,20 +38,17 @@ import java.net.URI;
 import java.util.Collections;
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils.getHeaders;
 import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.USER_OAUTH_APPROVAL;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_AUTHORIZATION_CODE;
 import static org.cloudfoundry.identity.uaa.security.web.CookieBasedCsrfTokenRepository.DEFAULT_CSRF_COOKIE_NAME;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 /**
  * @author Dave Syer
  */
-public class RefreshTokenSupportIntegrationTests {
+class RefreshTokenSupportIntegrationTests {
 
     @RegisterExtension
     private static final ServerRunningExtension serverRunning = ServerRunningExtension.connect();
@@ -61,7 +59,7 @@ public class RefreshTokenSupportIntegrationTests {
     private static final TestAccountExtension testAccountSetup = TestAccountExtension.standard(serverRunning, testAccounts);
 
     @Test
-    public void testTokenRefreshedCorrectFlow() {
+    void tokenRefreshedCorrectFlow() {
         BasicCookieStore cookies = new BasicCookieStore();
 
         AuthorizationCodeResourceDetails resource = testAccounts.getDefaultAuthorizationCodeResource();
@@ -70,7 +68,7 @@ public class RefreshTokenSupportIntegrationTests {
                 .queryParam("state", "mystateid").queryParam("client_id", resource.getClientId())
                 .queryParam("redirect_uri", resource.getPreEstablishedRedirectUri()).build();
         ResponseEntity<Void> result = serverRunning.getForResponse(uri.toString(), getHeaders(cookies));
-        assertEquals(HttpStatus.FOUND, result.getStatusCode());
+        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.FOUND);
         String location = result.getHeaders().getLocation().toString();
 
         if (result.getHeaders().containsKey("Set-Cookie")) {
@@ -88,9 +86,9 @@ public class RefreshTokenSupportIntegrationTests {
             }
         }
         // should be directed to the login screen...
-        assertTrue(response.getBody().contains("/login.do"));
-        assertTrue(response.getBody().contains("username"));
-        assertTrue(response.getBody().contains("password"));
+        assertThat(response.getBody().contains("/login.do")).isTrue();
+        assertThat(response.getBody().contains("username")).isTrue();
+        assertThat(response.getBody().contains("password")).isTrue();
 
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("username", testAccounts.getUserName());
@@ -106,7 +104,7 @@ public class RefreshTokenSupportIntegrationTests {
                 cookies.addCookie(new BasicClientCookie(cookie.substring(0, nameLength), cookie.substring(nameLength + 1)));
             }
         }
-        assertEquals(HttpStatus.FOUND, result.getStatusCode());
+        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.FOUND);
 
 
         response = serverRunning.getForString(result.getHeaders().getLocation().toString(), getHeaders(cookies));
@@ -118,21 +116,20 @@ public class RefreshTokenSupportIntegrationTests {
         }
         if (response.getStatusCode() == HttpStatus.OK) {
             // The grant access page should be returned
-            assertTrue(response.getBody().contains("<h1>Application Authorization</h1>"));
+            assertThat(response.getBody().contains("<h1>Application Authorization</h1>")).isTrue();
 
             formData.clear();
             formData.add(USER_OAUTH_APPROVAL, "true");
             formData.add(DEFAULT_CSRF_COOKIE_NAME, IntegrationTestUtils.extractCookieCsrf(response.getBody()));
             result = serverRunning.postForResponse("/oauth/authorize", getHeaders(cookies), formData);
-            assertEquals(HttpStatus.FOUND, result.getStatusCode());
+            assertThat(result.getStatusCode()).isEqualTo(HttpStatus.FOUND);
             location = result.getHeaders().getLocation().toString();
         } else {
             // Token cached so no need for second approval
-            assertEquals(HttpStatus.FOUND, response.getStatusCode());
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FOUND);
             location = response.getHeaders().getLocation().toString();
         }
-        assertTrue(location.matches(resource.getPreEstablishedRedirectUri() + ".*code=.+"),
-                "Wrong location: " + location);
+        assertThat(location.matches(resource.getPreEstablishedRedirectUri() + ".*code=.+")).as("Wrong location: " + location).isTrue();
 
         formData.clear();
         formData.add("client_id", resource.getClientId());
@@ -145,7 +142,7 @@ public class RefreshTokenSupportIntegrationTests {
         tokenHeaders.set("Cache-Control", "no-store");
         @SuppressWarnings("rawtypes")
         ResponseEntity<Map> tokenResponse = serverRunning.postForMap("/oauth/token", formData, tokenHeaders);
-        assertEquals(HttpStatus.OK, tokenResponse.getStatusCode());
+        assertThat(tokenResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
 
         @SuppressWarnings("unchecked")
         OAuth2AccessToken accessToken = DefaultOAuth2AccessToken.valueOf(tokenResponse.getBody());
@@ -155,32 +152,28 @@ public class RefreshTokenSupportIntegrationTests {
         formData.add("grant_type", "refresh_token");
         formData.add("refresh_token", accessToken.getRefreshToken().getValue());
         tokenResponse = serverRunning.postForMap("/oauth/token", formData, tokenHeaders);
-        assertEquals(HttpStatus.OK, tokenResponse.getStatusCode());
-        assertEquals("no-store", tokenResponse.getHeaders().getFirst("Cache-Control"));
+        assertThat(tokenResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(tokenResponse.getHeaders().getFirst("Cache-Control")).isEqualTo("no-store");
         @SuppressWarnings("unchecked")
         OAuth2AccessToken newAccessToken = DefaultOAuth2AccessToken.valueOf(tokenResponse.getBody());
-        try {
+        Assertions.assertDoesNotThrow(() -> {
             JwtHelper.decode(newAccessToken.getValue());
-        } catch (IllegalArgumentException e) {
-            fail("Refreshed token was not a JWT");
-        }
-        assertNotEquals(newAccessToken.getValue(),
-                accessToken.getValue(),
-                "New access token should be different to the old one.");
+        }, "Refreshed token was not a JWT");
+        assertThat(accessToken.getValue()).as("New access token should be different to the old one.").isNotEqualTo(newAccessToken.getValue());
 
     }
 
     @Test
-    public void testRefreshTokenWithNonExistingZone() {
+    void refreshTokenWithNonExistingZone() {
         LinkedMultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("grant_type", "refresh_token");
         formData.add("refresh_token", "dummyrefreshtoken-r");
         ResponseEntity<Map> tokenResponse = serverRunning.postForMap(serverRunning.getAccessTokenUri().replace("localhost", "testzonedoesnotexist.localhost"), formData, new HttpHeaders());
-        assertEquals(HttpStatus.NOT_FOUND, tokenResponse.getStatusCode());
+        assertThat(tokenResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 
     @Test
-    public void testRefreshTokenWithInactiveZone() {
+    void refreshTokenWithInactiveZone() {
         RestTemplate identityClient = IntegrationTestUtils
                 .getClientCredentialsTemplate(IntegrationTestUtils.getClientCredentialsResource(serverRunning.getBaseUrl(),
                         new String[]{"zones.write", "zones.read", "scim.zones"}, "identity", "identitysecret"));
@@ -190,26 +183,26 @@ public class RefreshTokenSupportIntegrationTests {
         formData.add("grant_type", "refresh_token");
         formData.add("refresh_token", "dummyrefreshtoken-r");
         ResponseEntity<Map> tokenResponse = serverRunning.postForMap(serverRunning.getAccessTokenUri().replace("localhost", "testzoneinactive.localhost"), formData, new HttpHeaders());
-        assertEquals(HttpStatus.NOT_FOUND, tokenResponse.getStatusCode());
+        assertThat(tokenResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 
     @Test
-    public void testUserLoginViaPasswordGrantAndRefresh_usingClientWithEmptyClientSecret() {
+    void userLoginViaPasswordGrantAndRefreshUsingClientWithEmptyClientSecret() {
         ResponseEntity<String> responseEntity = PasswordGrantIntegrationTests.makePasswordGrantRequest(testAccounts.getUserName(), testAccounts.getPassword(), "cf", "", serverRunning.getAccessTokenUri());
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
         String refreshToken = PasswordGrantIntegrationTests.validateClientAuthenticationMethod(responseEntity, true);
         responseEntity = makeRefreshGrantRequest(refreshToken, "cf", "", serverRunning.getAccessTokenUri());
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
         PasswordGrantIntegrationTests.validateClientAuthenticationMethod(responseEntity, true);
     }
 
     @Test
-    public void testUserLoginViaPasswordGrantAndRefresh_usingConfidentialClient() {
+    void userLoginViaPasswordGrantAndRefreshUsingConfidentialClient() {
         ResponseEntity<String> responseEntity = PasswordGrantIntegrationTests.makePasswordGrantRequest(testAccounts.getUserName(), testAccounts.getPassword(), "app", "appclientsecret", serverRunning.getAccessTokenUri());
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
         String refreshToken = PasswordGrantIntegrationTests.validateClientAuthenticationMethod(responseEntity, false);
         responseEntity = makeRefreshGrantRequest(refreshToken, "app", "appclientsecret", serverRunning.getAccessTokenUri());
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
         PasswordGrantIntegrationTests.validateClientAuthenticationMethod(responseEntity, false);
     }
 

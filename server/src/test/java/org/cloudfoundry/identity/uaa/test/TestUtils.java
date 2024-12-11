@@ -21,10 +21,15 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class TestUtils {
 
@@ -153,6 +158,6 @@ public class TestUtils {
     }
 
     public static void assertNoSuchUser(JdbcTemplate template, String column, String value) {
-        assertThat(template.queryForObject("select count(id) from users where " + column + "='" + value + "'", Integer.class), is(0));
+        assertThat(template.queryForObject("select count(id) from users where " + column + "='" + value + "'", Integer.class)).isEqualTo(0);
     }
 }

@@ -46,102 +46,100 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.cloudfoundry.identity.uaa.oauth.jwk.JsonWebKey.KeyType.RSA;
 import static org.cloudfoundry.identity.uaa.oauth.jwk.JsonWebKey.KeyUse.sig;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.fail;
 
 public class RsaJsonWebKeyTests {
     private static final String ISSUER = "http://localhost:8080/issuer";
 
     @Test
-    public void create_key_from_pem_string() {
+    void create_key_from_pem_string() {
         KeyInfo keyInfo = KeyInfoBuilder.build("id", sampleRsaPrivateKey, ISSUER);
-        assertEquals("RSA", keyInfo.type());
-        assertNotNull(keyInfo.getVerifier());
+        assertThat(keyInfo.type()).isEqualTo("RSA");
+        assertThat(keyInfo.getVerifier()).isNotNull();
 
         JsonWebKey key = new JsonWebKey(KeyInfoBuilder.build("id", sampleRsaPrivateKey, ISSUER).getJwkMap()).setKid("id");
 
-        assertEquals(RSA, key.getKty());
-        assertEquals("RSA", key.getKeyProperties().get("kty"));
-        assertEquals("id", key.getKid());
-        assertEquals(sig, key.getUse());
-        assertEquals("sig", key.getKeyProperties().get("use"));
-        assertNotNull(key.getValue());
+        assertThat(key.getKty()).isEqualTo(RSA);
+        assertThat(key.getKeyProperties().get("kty")).isEqualTo("RSA");
+        assertThat(key.getKid()).isEqualTo("id");
+        assertThat(key.getUse()).isEqualTo(sig);
+        assertThat(key.getKeyProperties().get("use")).isEqualTo("sig");
+        assertThat(key.getValue()).isNotNull();
 
         PublicKey pk = parseKeyPair(keyInfo.verifierKey()).getPublic();
 
         BigInteger exponent = ((RSAPublicKey) pk).getPublicExponent();
         BigInteger modulus = ((RSAPublicKey) pk).getModulus();
         java.util.Base64.Encoder encoder = java.util.Base64.getUrlEncoder().withoutPadding();
-        assertEquals(encoder.encodeToString(exponent.toByteArray()), key.getKeyProperties().get("e"));
-        assertEquals(encoder.encodeToString(BigIntegerUtils.toBytesUnsigned(modulus)), key.getKeyProperties().get("n"));
+        assertThat(key.getKeyProperties().get("e")).isEqualTo(encoder.encodeToString(exponent.toByteArray()));
+        assertThat(key.getKeyProperties().get("n")).isEqualTo(encoder.encodeToString(BigIntegerUtils.toBytesUnsigned(modulus)));
     }
 
     @Test
-    public void create_key_from_public_pem_string() {
+    void create_key_from_public_pem_string() {
         KeyInfo keyInfo = KeyInfoBuilder.build("id", sampleRsaPrivateKey, ISSUER);
-        assertEquals("RSA", keyInfo.type());
-        assertNotNull(keyInfo.getVerifier());
+        assertThat(keyInfo.type()).isEqualTo("RSA");
+        assertThat(keyInfo.getVerifier()).isNotNull();
 
         Map<String, Object> jwkMap = keyInfo.getJwkMap();
         JsonWebKey jsonWebKey = new JsonWebKey(jwkMap);
         JsonWebKey key = jsonWebKey.setKid("id");
-        assertEquals(RSA, key.getKty());
-        assertEquals("RSA", key.getKeyProperties().get("kty"));
-        assertEquals("id", key.getKid());
-        assertEquals(sig, key.getUse());
-        assertEquals("sig", key.getKeyProperties().get("use"));
-        assertNotNull(key.getValue());
+        assertThat(key.getKty()).isEqualTo(RSA);
+        assertThat(key.getKeyProperties().get("kty")).isEqualTo("RSA");
+        assertThat(key.getKid()).isEqualTo("id");
+        assertThat(key.getUse()).isEqualTo(sig);
+        assertThat(key.getKeyProperties().get("use")).isEqualTo("sig");
+        assertThat(key.getValue()).isNotNull();
 
         PublicKey pk = parseKeyPair(keyInfo.verifierKey()).getPublic();
         BigInteger exponent = ((RSAPublicKey) pk).getPublicExponent();
         BigInteger modulus = ((RSAPublicKey) pk).getModulus();
 
         java.util.Base64.Encoder encoder = java.util.Base64.getUrlEncoder().withoutPadding();
-        assertEquals(encoder.encodeToString(exponent.toByteArray()), key.getKeyProperties().get("e"));
-        assertEquals(encoder.encodeToString(BigIntegerUtils.toBytesUnsigned(modulus)), key.getKeyProperties().get("n"));
+        assertThat(key.getKeyProperties().get("e")).isEqualTo(encoder.encodeToString(exponent.toByteArray()));
+        assertThat(key.getKeyProperties().get("n")).isEqualTo(encoder.encodeToString(BigIntegerUtils.toBytesUnsigned(modulus)));
     }
 
     @Test
-    public void deserialize_azure_keys() {
+    void deserialize_azure_keys() {
         deserialize_azure_keys(sampleRsaKeys);
     }
 
     @Test
-    public void ensure_that_duplicates_are_removed() {
+    void ensure_that_duplicates_are_removed() {
         JsonWebKeySet<JsonWebKey> keys = JsonUtils.readValue(sampleRsaKeys, new TypeReference<JsonWebKeySet<JsonWebKey>>() {
         });
         List<JsonWebKey> list = new ArrayList<>(keys.getKeys());
         list.addAll(keys.getKeys());
-        assertEquals(6, list.size());
+        assertThat(list.size()).isEqualTo(6);
         keys = new JsonWebKeySet<>(list);
         deserialize_azure_keys(JsonUtils.writeValueAsString(keys));
     }
 
     @Test
-    public void ensure_that_duplicates_get_the_last_object() {
+    void ensure_that_duplicates_get_the_last_object() {
         JsonWebKeySet<JsonWebKey> keys = JsonUtils.readValue(sampleRsaKeys, new TypeReference<JsonWebKeySet<JsonWebKey>>() {
         });
         List<JsonWebKey> list = new ArrayList<>(keys.getKeys());
         list.addAll(keys.getKeys());
-        assertEquals(6, list.size());
+        assertThat(list.size()).isEqualTo(6);
 
         Map<String, Object> p = new HashedMap(list.get(5).getKeyProperties());
         p.put("issuer", ISSUER);
         list.add(new VerificationKeyResponse(p));
-        assertEquals(7, list.size());
+        assertThat(list.size()).isEqualTo(7);
 
         keys = new JsonWebKeySet<>(list);
         keys = deserialize_azure_keys(JsonUtils.writeValueAsString(keys));
 
-        assertEquals(ISSUER, keys.getKeys().get(2).getKeyProperties().get("issuer"));
+        assertThat(keys.getKeys().get(2).getKeyProperties().get("issuer")).isEqualTo(ISSUER);
     }
 
     @Test
-    public void test_required_properties() {
+    void required_properties() {
         Map<String, Object> map = new HashMap();
         test_create_with_error(map);
         map.put("kty", "RSA");
@@ -149,23 +147,23 @@ public class RsaJsonWebKeyTests {
     }
 
     @Test
-    public void test_equals() {
+    void equals() {
         Map<String, Object> p1 = new HashMap<>();
         p1.put("kty", "RSA");
         Map<String, Object> p2 = new HashMap<>(p1);
-        assertEquals(new VerificationKeyResponse(p1), new VerificationKeyResponse(p2));
+        assertThat(new VerificationKeyResponse(p2)).isEqualTo(new VerificationKeyResponse(p1));
         p1.put("kid", "id");
-        assertNotEquals(new VerificationKeyResponse(p1), new VerificationKeyResponse(p2));
+        assertThat(new VerificationKeyResponse(p2)).isNotEqualTo(new VerificationKeyResponse(p1));
         p2.put("kid", "id");
-        assertEquals(new VerificationKeyResponse(p1), new VerificationKeyResponse(p2));
+        assertThat(new VerificationKeyResponse(p2)).isEqualTo(new VerificationKeyResponse(p1));
         p1.put("issuer", "issuer1");
         p2.put("issuer", "issuer2");
-        assertEquals(new VerificationKeyResponse(p1), new VerificationKeyResponse(p2));
+        assertThat(new VerificationKeyResponse(p2)).isEqualTo(new VerificationKeyResponse(p1));
         p1.remove("kid");
         p2.remove("kid");
-        assertNotEquals(new VerificationKeyResponse(p1), new VerificationKeyResponse(p2));
+        assertThat(new VerificationKeyResponse(p2)).isNotEqualTo(new VerificationKeyResponse(p1));
         p2.put("issuer", "issuer1");
-        assertEquals(new VerificationKeyResponse(p1), new VerificationKeyResponse(p2));
+        assertThat(new VerificationKeyResponse(p2)).isEqualTo(new VerificationKeyResponse(p1));
     }
 
     private void test_create_with_error(Map p) {
@@ -180,12 +178,12 @@ public class RsaJsonWebKeyTests {
     private JsonWebKeySet<JsonWebKey> deserialize_azure_keys(String json) {
         JsonWebKeySet<JsonWebKey> keys = JsonUtils.readValue(json, new TypeReference<JsonWebKeySet<JsonWebKey>>() {
         });
-        assertNotNull(keys);
-        assertNotNull(keys.getKeys());
-        assertEquals(3, keys.getKeys().size());
+        assertThat(keys).isNotNull();
+        assertThat(keys.getKeys()).isNotNull();
+        assertThat(keys.getKeys().size()).isEqualTo(3);
         for (JsonWebKey key : keys.getKeys()) {
-            assertNotNull(key);
-            assertNotNull(JsonWebKey.getRsaPublicKey(key));
+            assertThat(key).isNotNull();
+            assertThat(JsonWebKey.getRsaPublicKey(key)).isNotNull();
 
         }
         return keys;
@@ -324,14 +322,14 @@ public class RsaJsonWebKeyTests {
             "}";
 
     @Test
-    public void test_jwtKeyEndoding() {
+    void jwt_key_endoding() {
         JsonWebKeySet<JsonWebKey> keys = JsonWebKeyHelper.deserialize(issue1514KeyJson);
         PublicKey pk = parseKeyPair(issue1514Key.replace("\\n", "\n")).getPublic();
-        assertNotNull(keys);
-        assertNotNull(keys.getKeys());
+        assertThat(keys).isNotNull();
+        assertThat(keys.getKeys()).isNotNull();
         JsonWebKey key = keys.getKeys().get(0);
         BigInteger exponent = ((RSAPublicKey) pk).getPublicExponent();
         BigInteger modulus = ((RSAPublicKey) pk).getModulus();
-        assertEquals(key.getKeyProperties().get("n"), Base64URL.encode(((RSAPublicKey) pk).getModulus()).toString());
+        assertThat(Base64URL.encode(((RSAPublicKey) pk).getModulus()).toString()).isEqualTo(key.getKeyProperties().get("n"));
     }
 }

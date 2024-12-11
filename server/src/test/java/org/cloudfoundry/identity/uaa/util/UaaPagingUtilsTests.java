@@ -19,14 +19,14 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
-public class UaaPagingUtilsTests {
+class UaaPagingUtilsTests {
 
     List<String> list;
 
     @BeforeEach
-    public void createList() {
+    void createList() {
         list = new ArrayList<>();
         list.add("one");
         list.add("two");
@@ -35,51 +35,51 @@ public class UaaPagingUtilsTests {
     }
 
     @Test
-    public void testPagingSubListHighCount() {
+    void pagingSubListHighCount() {
         List<String> result = UaaPagingUtils.subList(list, 1, 100);
-        assertEquals(4, result.size());
-        assertEquals("one", result.get(0));
-        assertEquals("four", result.get(3));
+        assertThat(result.size()).isEqualTo(4);
+        assertThat(result.get(0)).isEqualTo("one");
+        assertThat(result.get(3)).isEqualTo("four");
     }
 
     @Test
-    public void testPagingSubListLowCount() {
+    void pagingSubListLowCount() {
         List<String> result = UaaPagingUtils.subList(list, 1, 2);
-        assertEquals(2, result.size());
-        assertEquals("one", result.get(0));
-        assertEquals("two", result.get(1));
+        assertThat(result.size()).isEqualTo(2);
+        assertThat(result.get(0)).isEqualTo("one");
+        assertThat(result.get(1)).isEqualTo("two");
     }
 
     @Test
-    public void testPagingSubListEqualCount() {
+    void pagingSubListEqualCount() {
         List<String> result = UaaPagingUtils.subList(list, 1, 4);
-        assertEquals(4, result.size());
-        assertEquals("one", result.get(0));
-        assertEquals("four", result.get(3));
+        assertThat(result.size()).isEqualTo(4);
+        assertThat(result.get(0)).isEqualTo("one");
+        assertThat(result.get(3)).isEqualTo("four");
 
     }
 
     @Test
-    public void testPagingSubListOneCount() {
+    void pagingSubListOneCount() {
         List<String> result = UaaPagingUtils.subList(list, 1, 1);
-        assertEquals(1, result.size());
-        assertEquals("one", result.get(0));
+        assertThat(result.size()).isEqualTo(1);
+        assertThat(result.get(0)).isEqualTo("one");
     }
 
     @Test
-    public void testPagingSubListPage() {
+    void pagingSubListPage() {
         List<String> result = UaaPagingUtils.subList(list, 3, 2);
-        assertEquals(2, result.size());
-        assertEquals("three", result.get(0));
-        assertEquals("four", result.get(1));
+        assertThat(result.size()).isEqualTo(2);
+        assertThat(result.get(0)).isEqualTo("three");
+        assertThat(result.get(1)).isEqualTo("four");
     }
 
     @Test
-    public void testPagingSubListPageHighCount() {
+    void pagingSubListPageHighCount() {
         List<String> result = UaaPagingUtils.subList(list, 2, 100);
-        assertEquals(3, result.size());
-        assertEquals("two", result.get(0));
-        assertEquals("four", result.get(2));
+        assertThat(result.size()).isEqualTo(3);
+        assertThat(result.get(0)).isEqualTo("two");
+        assertThat(result.get(2)).isEqualTo("four");
     }
 
 }

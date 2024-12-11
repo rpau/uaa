@@ -26,12 +26,12 @@ import org.springframework.web.servlet.View;
 
 import java.util.Locale;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Dave Syer
  */
-public class ForwardAwareInternalResourceViewResolverTests {
+class ForwardAwareInternalResourceViewResolverTests {
 
     private final ForwardAwareInternalResourceViewResolver resolver = new ForwardAwareInternalResourceViewResolver();
 
@@ -40,7 +40,7 @@ public class ForwardAwareInternalResourceViewResolverTests {
     private final GenericApplicationContext context = new GenericApplicationContext();
 
     @BeforeEach
-    public void start() {
+    void start() {
         ServletRequestAttributes attributes = new ServletRequestAttributes(request);
         LocaleContextHolder.setLocale(request.getLocale());
         RequestContextHolder.setRequestAttributes(attributes);
@@ -48,38 +48,38 @@ public class ForwardAwareInternalResourceViewResolverTests {
     }
 
     @AfterEach
-    public void clean() {
+    void clean() {
         RequestContextHolder.resetRequestAttributes();
     }
 
     @Test
-    public void testResolveNonForward() throws Exception {
+    void resolveNonForward() throws Exception {
         resolver.setApplicationContext(context);
         View view = resolver.resolveViewName("foo", Locale.US);
-        assertNotNull(view);
+        assertThat(view).isNotNull();
     }
 
     @Test
-    public void testResolveRedirect() throws Exception {
+    void resolveRedirect() throws Exception {
         resolver.setApplicationContext(context);
         View view = resolver.resolveViewName("redirect:foo", Locale.US);
-        assertNotNull(view);
+        assertThat(view).isNotNull();
     }
 
     @Test
-    public void testResolveForwardWithAccept() throws Exception {
+    void resolveForwardWithAccept() throws Exception {
         request.addHeader("Accept", "application/json");
         resolver.setApplicationContext(context);
         View view = resolver.resolveViewName("forward:foo", Locale.US);
-        assertNotNull(view);
+        assertThat(view).isNotNull();
     }
 
     @Test
-    public void testResolveForwardWithUnparseableAccept() throws Exception {
+    void resolveForwardWithUnparseableAccept() throws Exception {
         request.addHeader("Accept", "bar");
         resolver.setApplicationContext(context);
         View view = resolver.resolveViewName("forward:foo", Locale.US);
-        assertNotNull(view);
+        assertThat(view).isNotNull();
     }
 
 }

@@ -74,7 +74,7 @@ class ConfiguratorRelyingPartyRegistrationRepositoryTest {
     private ConfiguratorRelyingPartyRegistrationRepository repository;
 
     @BeforeAll
-    public static void beforeAll() {
+    static void beforeAll() {
         new IdentityZoneHolder.Initializer(null, new SamlKeyManagerFactory(samlConfigProps));
     }
 
@@ -87,7 +87,7 @@ class ConfiguratorRelyingPartyRegistrationRepositoryTest {
     void constructorWithNullConfiguratorThrows() {
         List<SignatureAlgorithm> signatureAlgorithms = List.of();
         assertThatThrownBy(() -> new ConfiguratorRelyingPartyRegistrationRepository(
-                        ENTITY_ID, ENTITY_ID_ALIAS, null, signatureAlgorithms, DEFAULT_NAME_ID)
+                ENTITY_ID, ENTITY_ID_ALIAS, null, signatureAlgorithms, DEFAULT_NAME_ID)
         ).isInstanceOf(IllegalArgumentException.class);
     }
 

@@ -51,7 +51,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * <pre>
@@ -151,7 +151,7 @@ public final class TestAccountExtension implements BeforeAllCallback {
     private void createClient(RestOperations client, ClientDetails clientDetails) {
         ResponseEntity<String> response = client.postForEntity(serverRunning.getClientsUri(), clientDetails,
                 String.class);
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
     }
 
     private boolean clientExists(RestOperations client, OAuth2ProtectedResourceDetails resource) {
@@ -180,7 +180,7 @@ public final class TestAccountExtension implements BeforeAllCallback {
             @SuppressWarnings("rawtypes")
             ResponseEntity<Map> results = client.getForEntity(serverRunning.getUserUri() + "?filter=userName eq \""
                     + user.getUsername() + "\"", Map.class);
-            assertEquals(HttpStatus.OK, results.getStatusCode());
+            assertThat(results.getStatusCode()).isEqualTo(HttpStatus.OK);
             @SuppressWarnings("unchecked")
             List<Map<String, ?>> resources = (List<Map<String, ?>>) results.getBody().get("resources");
             Map<String, ?> map;

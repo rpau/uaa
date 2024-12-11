@@ -14,10 +14,9 @@ import org.springframework.http.ResponseEntity;
 import java.util.Collections;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
-public class TokenKeyEndpointIntegrationTests {
+class TokenKeyEndpointIntegrationTests {
 
     @RegisterExtension
     private static final ServerRunningExtension serverRunning = ServerRunningExtension.connect();
@@ -28,7 +27,7 @@ public class TokenKeyEndpointIntegrationTests {
     private static final TestAccountExtension testAccountSetup = TestAccountExtension.standard(serverRunning, testAccounts);
 
     @Test
-    public void testTokenKey() {
+    void tokenKey() {
         HttpHeaders headers = new HttpHeaders();
         ClientCredentialsResourceDetails resource = testAccounts.getClientCredentialsResource("app", null, "app",
                 "appclientsecret");
@@ -38,10 +37,10 @@ public class TokenKeyEndpointIntegrationTests {
 
         @SuppressWarnings("rawtypes")
         ResponseEntity<Map> response = serverRunning.getForObject("/token_key", Map.class, headers);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         @SuppressWarnings("unchecked")
         Map<String, String> map = response.getBody();
-        assertNotNull(map.get("alg"));
-        assertNotNull(map.get("value"));
+        assertThat(map.get("alg")).isNotNull();
+        assertThat(map.get("value")).isNotNull();
     }
 }

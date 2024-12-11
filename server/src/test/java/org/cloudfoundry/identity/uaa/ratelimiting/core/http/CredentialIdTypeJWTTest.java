@@ -2,9 +2,10 @@ package org.cloudfoundry.identity.uaa.ratelimiting.core.http;
 
 import org.junit.jupiter.api.Test;
 
-import static org.cloudfoundry.identity.uaa.ratelimiting.core.http.CredentialIdTypeJWT.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.cloudfoundry.identity.uaa.ratelimiting.core.http.CredentialIdTypeJWT.AllJWT;
+import static org.cloudfoundry.identity.uaa.ratelimiting.core.http.CredentialIdTypeJWT.SectionJWT;
+import static org.cloudfoundry.identity.uaa.ratelimiting.core.http.CredentialIdTypeJWT.SectionRegexJWT;
 import static org.mockito.Mockito.when;
 
 class CredentialIdTypeJWTTest extends CredentialIdTypeAbstractTestJWT<CredentialIdTypeJWT> {
@@ -16,7 +17,7 @@ class CredentialIdTypeJWTTest extends CredentialIdTypeAbstractTestJWT<Credential
 
     @Test
     void key() {
-        assertEquals("JWT", credentialIdType.key());
+        assertThat(credentialIdType.key()).isEqualTo("JWT");
     }
 
     @Test
@@ -36,6 +37,6 @@ class CredentialIdTypeJWTTest extends CredentialIdTypeAbstractTestJWT<Credential
 
         AuthorizationCredentialIdExtractor factory = credentialIdType.factory("claims");
         when(requestInfo.getAuthorizationHeader()).thenReturn(null);
-        assertNull(factory.mapAuthorizationToCredentialsID(requestInfo));
+        assertThat(factory.mapAuthorizationToCredentialsID(requestInfo)).isNull();
     }
 }

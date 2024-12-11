@@ -3,8 +3,7 @@ package org.cloudfoundry.identity.statsd.integration;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class IntegrationTestUtils {
 
@@ -24,10 +23,10 @@ public class IntegrationTestUtils {
     }
 
     static long getStatsDValueFromMessage(String message) {
-        assertNotNull(message);
+        assertThat(message).isNotNull();
 
         String[] parts = message.split("[:|]");
-        assertTrue("g".equals(parts[2]) || "c".equals(parts[2]));
+        assertThat("g".equals(parts[2]) || "c".equals(parts[2])).isTrue();
 
         return Long.valueOf(parts[1]);
     }

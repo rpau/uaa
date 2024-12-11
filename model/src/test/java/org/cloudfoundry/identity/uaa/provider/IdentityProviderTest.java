@@ -1,5 +1,7 @@
 package org.cloudfoundry.identity.uaa.provider;
 
+import org.junit.jupiter.api.Test;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.constants.OriginKeys.KEYSTONE;
 import static org.cloudfoundry.identity.uaa.constants.OriginKeys.LDAP;
@@ -9,12 +11,10 @@ import static org.cloudfoundry.identity.uaa.constants.OriginKeys.SAML;
 import static org.cloudfoundry.identity.uaa.constants.OriginKeys.UAA;
 import static org.cloudfoundry.identity.uaa.constants.OriginKeys.UNKNOWN;
 
-import org.junit.jupiter.api.Test;
-
 class IdentityProviderTest {
 
     @Test
-    void testToString_ShouldContainAliasProperties() {
+    void toStringShouldContainAliasProperties() {
         final IdentityProvider<OIDCIdentityProviderDefinition> idp = new IdentityProvider<>();
         idp.setId("12345");
         idp.setName("some-name");
@@ -33,7 +33,7 @@ class IdentityProviderTest {
     }
 
     @Test
-    void testToString_AliasPropertiesAndIdzIdNull() {
+    void toStringAliasPropertiesAndIdzIdNull() {
         final IdentityProvider<OIDCIdentityProviderDefinition> idp = new IdentityProvider<>();
         idp.setId("12345");
         idp.setName("some-name");
@@ -50,7 +50,7 @@ class IdentityProviderTest {
     }
 
     @Test
-    void testEqualsAndHashCode() {
+    void equalsAndHashCode() {
         final String customZoneId = "custom-zone";
         final String aliasIdpId = "id-of-alias-idp";
 
@@ -100,7 +100,7 @@ class IdentityProviderTest {
     }
 
     @Test
-    void testGetAliasDescription() {
+    void getAliasDescription() {
         final String customZoneId = "custom-zone";
         final String aliasIdpId = "id-of-alias-idp";
 

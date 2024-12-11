@@ -25,13 +25,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.oauth.client.ClientConstants.TOKEN_SALT;
-import static org.hamcrest.CoreMatchers.hasItem;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.IsCollectionContaining.hasItems;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -187,47 +182,47 @@ class IdTokenCreatorTest {
     void create_includesStandardClaims() throws IdTokenCreationException {
         IdToken idToken = tokenCreator.create(clientDetails, user, userAuthenticationData);
 
-        assertThat(idToken, is(notNullValue()));
-        assertThat(idToken.sub, is("id1234"));
-        assertThat(idToken.aud, hasItem(clientId));
-        assertThat(idToken.iss, is(issuerUrl));
-        assertThat(idToken.exp, is(expDate));
-        assertThat(idToken.iat, is(iatDate));
-        assertThat(idToken.authTime, is(authTime));
-        assertThat(idToken.amr, hasItems(is("mfa"), is("ext")));
-        assertThat(idToken.acr, hasItems(is("urn:oasis:names:tc:SAML:2.0:ac:classes:Password")));
-        assertThat(idToken.azp, is(clientId));
+        assertThat(idToken).isNotNull();
+        assertThat(idToken.sub).isEqualTo("id1234");
+        assertThat(idToken.aud).contains(clientId);
+        assertThat(idToken.iss).isEqualTo(issuerUrl);
+        assertThat(idToken.exp).isEqualTo(expDate);
+        assertThat(idToken.iat).isEqualTo(iatDate);
+        assertThat(idToken.authTime).isEqualTo(authTime);
+        assertThat(idToken.amr).contains("mfa", "ext");
+        assertThat(idToken.acr).contains("urn:oasis:names:tc:SAML:2.0:ac:classes:Password");
+        assertThat(idToken.azp).isEqualTo(clientId);
     }
 
     @Test
     void create_includesAdditionalClaims() throws IdTokenCreationException {
         IdToken idToken = tokenCreator.create(clientDetails, user, userAuthenticationData);
 
-        assertThat(idToken, is(notNullValue()));
-        assertThat(idToken.givenName, is(givenName));
-        assertThat(idToken.familyName, is(familyName));
-        assertThat(idToken.previousLogonTime, is(previousLogonTime));
-        assertThat(idToken.phoneNumber, is(phoneNumber));
-        assertThat(idToken.roles, is(roles));
-        assertThat(idToken.userAttributes, is(userAttributes));
-        assertThat(idToken.scope, hasItem("openid"));
-        assertThat(idToken.emailVerified, is(true));
-        assertThat(idToken.nonce, is(nonce));
-        assertThat(idToken.email, is("spongebob@krustykrab.com"));
-        assertThat(idToken.clientId, is(clientId));
-        assertThat(idToken.grantType, is(grantType));
-        assertThat(idToken.userName, is(userName));
-        assertThat(idToken.zid, is(zoneId));
-        assertThat(idToken.origin, is(origin));
-        assertThat(idToken.jti, is("accessTokenId"));
-        assertThat(idToken.revSig, is("a039bd5"));
+        assertThat(idToken).isNotNull();
+        assertThat(idToken.givenName).isEqualTo(givenName);
+        assertThat(idToken.familyName).isEqualTo(familyName);
+        assertThat(idToken.previousLogonTime).isEqualTo(previousLogonTime);
+        assertThat(idToken.phoneNumber).isEqualTo(phoneNumber);
+        assertThat(idToken.roles).isEqualTo(roles);
+        assertThat(idToken.userAttributes).isEqualTo(userAttributes);
+        assertThat(idToken.scope).contains("openid");
+        assertThat(idToken.emailVerified).isTrue();
+        assertThat(idToken.nonce).isEqualTo(nonce);
+        assertThat(idToken.email).isEqualTo("spongebob@krustykrab.com");
+        assertThat(idToken.clientId).isEqualTo(clientId);
+        assertThat(idToken.grantType).isEqualTo(grantType);
+        assertThat(idToken.userName).isEqualTo(userName);
+        assertThat(idToken.zid).isEqualTo(zoneId);
+        assertThat(idToken.origin).isEqualTo(origin);
+        assertThat(idToken.jti).isEqualTo("accessTokenId");
+        assertThat(idToken.revSig).isEqualTo("a039bd5");
     }
 
     @Test
     void create_includesEmailVerified() throws IdTokenCreationException {
         user.setVerified(false);
         IdToken idToken = tokenCreator.create(clientDetails, user, userAuthenticationData);
-        assertThat(idToken.emailVerified, is(false));
+        assertThat(idToken.emailVerified).isFalse();
     }
 
     @Test
@@ -237,7 +232,7 @@ class IdTokenCreatorTest {
 
         IdToken idToken = tokenCreator.create(clientDetails, user, userAuthenticationData);
 
-        assertThat(idToken.roles, nullValue());
+        assertThat(idToken.roles).isNull();
     }
 
     @Test
@@ -246,7 +241,7 @@ class IdTokenCreatorTest {
 
         IdToken idToken = tokenCreator.create(clientDetails, user, userAuthenticationData);
 
-        assertThat(idToken.roles, nullValue());
+        assertThat(idToken.roles).isNull();
     }
 
     @Test
@@ -265,7 +260,7 @@ class IdTokenCreatorTest {
 
         IdToken idToken = tokenCreator.create(clientDetails, user, userAuthenticationData);
 
-        assertThat(idToken.roles, nullValue());
+        assertThat(idToken.roles).isNull();
     }
 
     @Test
@@ -275,7 +270,7 @@ class IdTokenCreatorTest {
 
         IdToken idToken = tokenCreator.create(clientDetails, user, userAuthenticationData);
 
-        assertThat(idToken.userAttributes, nullValue());
+        assertThat(idToken.userAttributes).isNull();
     }
 
     @Test
@@ -294,7 +289,7 @@ class IdTokenCreatorTest {
 
         IdToken idToken = tokenCreator.create(clientDetails, user, userAuthenticationData);
 
-        assertThat(idToken.userAttributes, nullValue());
+        assertThat(idToken.userAttributes).isNull();
     }
 
     @Test
@@ -303,9 +298,9 @@ class IdTokenCreatorTest {
 
         IdToken idToken = tokenCreator.create(clientDetails, user, userAuthenticationData);
 
-        assertThat(idToken.givenName, is(nullValue()));
-        assertThat(idToken.familyName, is(nullValue()));
-        assertThat(idToken.phoneNumber, is(nullValue()));
+        assertThat(idToken.givenName).isNull();
+        assertThat(idToken.familyName).isNull();
+        assertThat(idToken.phoneNumber).isNull();
     }
 
     @Test
@@ -338,31 +333,31 @@ class IdTokenCreatorTest {
 
         IdToken idToken = tokenCreator.create(clientDetails, user, userAuthenticationData);
 
-        assertThat(idToken.sub, is(nullValue()));
-        assertThat(idToken.aud, is(nullValue()));
-        assertThat(idToken.iss, is(nullValue()));
-        assertThat(idToken.exp, is(nullValue()));
-        assertThat(idToken.iat, is(nullValue()));
-        assertThat(idToken.authTime, is(nullValue()));
-        assertThat(idToken.amr, is(nullValue()));
-        assertThat(idToken.acr, is(nullValue()));
-        assertThat(idToken.azp, is(nullValue()));
-        assertThat(idToken.givenName, is(nullValue()));
-        assertThat(idToken.familyName, is(nullValue()));
-        assertThat(idToken.previousLogonTime, is(nullValue()));
-        assertThat(idToken.phoneNumber, is(nullValue()));
-        assertThat(idToken.roles, is(nullValue()));
-        assertThat(idToken.userAttributes, is(nullValue()));
-        assertThat(idToken.emailVerified, is(nullValue()));
-        assertThat(idToken.nonce, is(nullValue()));
-        assertThat(idToken.email, is(nullValue()));
-        assertThat(idToken.clientId, is(nullValue()));
-        assertThat(idToken.grantType, is(nullValue()));
-        assertThat(idToken.userName, is(nullValue()));
-        assertThat(idToken.zid, is(nullValue()));
-        assertThat(idToken.origin, is(nullValue()));
-        assertThat(idToken.jti, is(nullValue()));
-        assertThat(idToken.revSig, is(nullValue()));
+        assertThat(idToken.sub).isNull();
+        assertThat(idToken.aud).isNull();
+        assertThat(idToken.iss).isNull();
+        assertThat(idToken.exp).isNull();
+        assertThat(idToken.iat).isNull();
+        assertThat(idToken.authTime).isNull();
+        assertThat(idToken.amr).isNull();
+        assertThat(idToken.acr).isNull();
+        assertThat(idToken.azp).isNull();
+        assertThat(idToken.givenName).isNull();
+        assertThat(idToken.familyName).isNull();
+        assertThat(idToken.previousLogonTime).isNull();
+        assertThat(idToken.phoneNumber).isNull();
+        assertThat(idToken.roles).isNull();
+        assertThat(idToken.userAttributes).isNull();
+        assertThat(idToken.emailVerified).isNull();
+        assertThat(idToken.nonce).isNull();
+        assertThat(idToken.email).isNull();
+        assertThat(idToken.clientId).isNull();
+        assertThat(idToken.grantType).isNull();
+        assertThat(idToken.userName).isNull();
+        assertThat(idToken.zid).isNull();
+        assertThat(idToken.origin).isNull();
+        assertThat(idToken.jti).isNull();
+        assertThat(idToken.revSig).isNull();
     }
 
     @Test
@@ -374,6 +369,6 @@ class IdTokenCreatorTest {
 
         IdToken idToken = tokenCreator.create(clientDetails, user, userAuthenticationData);
 
-        assertThat(idToken.iss, is("http://myzone.localhost:8080/uaa/oauth/token"));
+        assertThat(idToken.iss).isEqualTo("http://myzone.localhost:8080/uaa/oauth/token");
     }
 }

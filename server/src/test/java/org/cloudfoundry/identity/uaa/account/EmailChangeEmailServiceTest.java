@@ -5,19 +5,24 @@ import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
 import org.cloudfoundry.identity.uaa.codestore.ExpiringCode;
 import org.cloudfoundry.identity.uaa.codestore.ExpiringCodeStore;
 import org.cloudfoundry.identity.uaa.error.UaaException;
+import org.cloudfoundry.identity.uaa.extensions.PollutionPreventionExtension;
 import org.cloudfoundry.identity.uaa.login.ThymeleafAdditional;
 import org.cloudfoundry.identity.uaa.login.ThymeleafConfig;
 import org.cloudfoundry.identity.uaa.message.EmailService;
 import org.cloudfoundry.identity.uaa.message.MessageService;
 import org.cloudfoundry.identity.uaa.message.MessageType;
+import org.cloudfoundry.identity.uaa.provider.NoSuchClientException;
 import org.cloudfoundry.identity.uaa.scim.ScimUser;
 import org.cloudfoundry.identity.uaa.scim.ScimUserProvisioning;
-import org.cloudfoundry.identity.uaa.extensions.PollutionPreventionExtension;
 import org.cloudfoundry.identity.uaa.util.JsonUtils;
-import org.cloudfoundry.identity.uaa.zone.*;
+import org.cloudfoundry.identity.uaa.zone.BrandingInformation;
+import org.cloudfoundry.identity.uaa.zone.IdentityZone;
+import org.cloudfoundry.identity.uaa.zone.IdentityZoneConfiguration;
+import org.cloudfoundry.identity.uaa.zone.IdentityZoneHolder;
+import org.cloudfoundry.identity.uaa.zone.MergedZoneBrandingInformation;
+import org.cloudfoundry.identity.uaa.zone.MultitenantClientServices;
 import org.cloudfoundry.identity.uaa.zone.beans.IdentityZoneManager;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,7 +31,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.cloudfoundry.identity.uaa.provider.NoSuchClientException;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -38,13 +42,18 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.cloudfoundry.identity.uaa.account.EmailChangeEmailService.CHANGE_EMAIL_REDIRECT_URL;
 import static org.cloudfoundry.identity.uaa.codestore.ExpiringCodeType.EMAIL;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.contains;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(SpringExtension.class)
 @ExtendWith(PollutionPreventionExtension.class)
@@ -143,8 +152,7 @@ class EmailChangeEmailServiceTest {
                 eq(zoneId))
         ).thenReturn(Collections.singletonList(new ScimUser()));
 
-        Assertions.assertThrows(UaaException.class,
-                () -> emailChangeEmailService.beginEmailChange("user-001", "user@example.com", "new@example.com", null, null));
+        assertThatExceptionOfType(UaaException.class).isThrownBy(() -> emailChangeEmailService.beginEmailChange("user-001", "user@example.com", "new@example.com", null, null));
     }
 
     @Test
@@ -199,14 +207,12 @@ class EmailChangeEmailServiceTest {
 
         String emailBody = emailBodyArgument.getValue();
 
-        assertThat(emailBody, containsString("<a href=\"http://localhost/login/verify_email?code=the_secret_code\">Verify your email</a>"));
-        assertThat(emailBody, containsString("a Best Company account"));
+        assertThat(emailBody).contains("<a href=\"http://localhost/login/verify_email?code=the_secret_code\">Verify your email</a>");
+        assertThat(emailBody).contains("a Best Company account");
     }
 
     /**
-     * @Deprecated
-     * We need this because {@link MergedZoneBrandingInformation#getProductLogo} calls {@link IdentityZoneHolder#get}
-     *
+     * @Deprecated We need this because {@link MergedZoneBrandingInformation#getProductLogo} calls {@link IdentityZoneHolder#get}
      */
     @Deprecated
     private void setIdentityZoneHolder(IdentityZone identityZone) {
@@ -228,35 +234,33 @@ class EmailChangeEmailServiceTest {
     @Test
     void completeVerification() {
         Map<String, String> response = setUpCompleteActivation("user-name", "app", "http://app.com/redirect");
-        assertEquals("user-001", response.get("userId"));
-        assertEquals("user-name", response.get("username"));
-        assertEquals("new@example.com", response.get("email"));
-        assertEquals("http://app.com/redirect", response.get("redirect_url"));
+        assertThat(response.get("userId")).isEqualTo("user-001");
+        assertThat(response.get("username")).isEqualTo("user-name");
+        assertThat(response.get("email")).isEqualTo("new@example.com");
+        assertThat(response.get("redirect_url")).isEqualTo("http://app.com/redirect");
     }
 
     @Test
     void completeVerificationWhereUsernameEqualsEmail() {
         Map<String, String> response = setUpCompleteActivation("user@example.com", "app", "http://app.com/redirect");
-        assertEquals("user-001", response.get("userId"));
-        assertEquals("new@example.com", response.get("username"));
-        assertEquals("new@example.com", response.get("email"));
-        assertEquals("http://app.com/redirect", response.get("redirect_url"));
+        assertThat(response.get("userId")).isEqualTo("user-001");
+        assertThat(response.get("username")).isEqualTo("new@example.com");
+        assertThat(response.get("email")).isEqualTo("new@example.com");
+        assertThat(response.get("redirect_url")).isEqualTo("http://app.com/redirect");
     }
 
     @Test
     void completeVerificationWithInvalidCode() {
         when(mockExpiringCodeStore.retrieveCode("invalid_code", zoneId)).thenReturn(null);
 
-        Assertions.assertThrows(UaaException.class,
-                () -> emailChangeEmailService.completeVerification("invalid_code"));
+        assertThatExceptionOfType(UaaException.class).isThrownBy(() -> emailChangeEmailService.completeVerification("invalid_code"));
     }
 
     @Test
     void completeVerificationWithInvalidIntent() {
         when(mockExpiringCodeStore.retrieveCode("invalid_code", zoneId)).thenReturn(new ExpiringCode("invalid_code", new Timestamp(System.currentTimeMillis()), null, "invalid-intent"));
 
-        Assertions.assertThrows(UaaException.class,
-                () -> emailChangeEmailService.completeVerification("invalid_code"));
+        assertThatExceptionOfType(UaaException.class).isThrownBy(() -> emailChangeEmailService.completeVerification("invalid_code"));
     }
 
     @Test
@@ -276,26 +280,26 @@ class EmailChangeEmailServiceTest {
         try {
             response = emailChangeEmailService.completeVerification("the_secret_code");
         } catch (NoSuchClientException e) {
-            assertNull(response.get("redirect_url"));
+            assertThat(response.get("redirect_url")).isNull();
         }
     }
 
     @Test
     void completeActivationWithNoClientId() {
         Map<String, String> response = setUpCompleteActivation("user@example.com", null, null);
-        assertNull(response.get("redirect_url"));
+        assertThat(response.get("redirect_url")).isNull();
     }
 
     @Test
     void completeActivationWhereWildcardsDoNotMatch() {
         Map<String, String> response = setUpCompleteActivation("user@example.com", "app", "http://blah.app.com/redirect");
-        assertEquals("http://fallback.url/redirect", response.get("redirect_url"));
+        assertThat(response.get("redirect_url")).isEqualTo("http://fallback.url/redirect");
     }
 
     @Test
     void completeActivationWithNoRedirectUri() {
         Map<String, String> response = setUpCompleteActivation("user@example.com", "app", null);
-        assertEquals("http://fallback.url/redirect", response.get("redirect_url"));
+        assertThat(response.get("redirect_url")).isEqualTo("http://fallback.url/redirect");
     }
 
     private Map<String, String> setUpCompleteActivation(String username, String clientId, String redirectUri) {
@@ -361,9 +365,9 @@ class EmailChangeEmailServiceTest {
 
         String emailBody = emailBodyArgument.getValue();
 
-        assertThat(emailBody, containsString("A request has been made to change the email for %s from %s to %s".formatted(zoneName, "user@example.com", "new@example.com")));
-        assertThat(emailBody, containsString("<a href=\"http://test.localhost/login/verify_email?code=the_secret_code\">Verify your email</a>"));
-        assertThat(emailBody, containsString("Thank you,<br />\n    " + zoneName));
+        assertThat(emailBody).contains("A request has been made to change the email for %s from %s to %s".formatted(zoneName, "user@example.com", "new@example.com"));
+        assertThat(emailBody).contains("<a href=\"http://test.localhost/login/verify_email?code=the_secret_code\">Verify your email</a>");
+        assertThat(emailBody).contains("Thank you,<br />\n    " + zoneName);
     }
 
 }

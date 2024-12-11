@@ -1,7 +1,6 @@
 package org.cloudfoundry.identity.uaa.db;
 
 import org.cloudfoundry.identity.uaa.annotations.WithDatabaseContext;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -11,6 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @WithDatabaseContext
 @Transactional
@@ -40,7 +41,7 @@ class SpringSessionAttributesTableTest {
         jdbcTemplate.query(
                 "select ATTRIBUTE_BYTES from SPRING_SESSION_ATTRIBUTES where SESSION_PRIMARY_ID = ?",
                 rs -> {
-                    Assertions.assertEquals(valueSize, rs.getBytes(1).length);
+                    assertThat(rs.getBytes(1).length).isEqualTo(valueSize);
                 },
                 primaryId);
     }

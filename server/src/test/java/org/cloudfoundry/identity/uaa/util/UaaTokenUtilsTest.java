@@ -17,6 +17,8 @@ import java.util.List;
 import java.util.Map;
 
 import static java.util.Collections.emptySet;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.GRANT_TYPE;
 import static org.cloudfoundry.identity.uaa.oauth.token.ClaimConstants.CID;
 import static org.cloudfoundry.identity.uaa.oauth.token.ClaimConstants.SUB;
@@ -25,74 +27,69 @@ import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYP
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_PASSWORD;
 import static org.cloudfoundry.identity.uaa.util.UaaTokenUtils.hasRequiredUserAuthorities;
 import static org.cloudfoundry.identity.uaa.util.UaaTokenUtils.isUserToken;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class UaaTokenUtilsTest {
+class UaaTokenUtilsTest {
 
     @Test
-    public void testRevocationHash() {
+    void revocationHash() {
         List<String> salts = new LinkedList<>();
         for (int i = 0; i < 3; i++) {
             salts.add(new AlphanumericRandomValueStringGenerator().generate());
         }
         String hash1 = UaaTokenUtils.getRevocationHash(salts);
         String hash2 = UaaTokenUtils.getRevocationHash(salts);
-        assertFalse(StringUtils.isEmpty(hash1), "Hash 1 should not be empty");
-        assertFalse(StringUtils.isEmpty(hash2), "Hash 2 should not be empty");
-        assertEquals(hash1, hash2);
+        assertThat(StringUtils.isEmpty(hash1)).as("Hash 1 should not be empty").isFalse();
+        assertThat(StringUtils.isEmpty(hash2)).as("Hash 2 should not be empty").isFalse();
+        assertThat(hash2).isEqualTo(hash1);
     }
 
     @Test
-    public void isJwtToken() {
+    void isJwtToken() {
 
         AlphanumericRandomValueStringGenerator generator = new AlphanumericRandomValueStringGenerator(36);
         String regular = generator.generate();
         String jwt = generator.generate() + "." + generator.generate() + "." + generator.generate();
-        assertFalse(UaaTokenUtils.isJwtToken(regular));
-        assertTrue(UaaTokenUtils.isJwtToken(jwt));
+        assertThat(UaaTokenUtils.isJwtToken(regular)).isFalse();
+        assertThat(UaaTokenUtils.isJwtToken(jwt)).isTrue();
     }
 
     @Test
-    public void is_user_token() {
+    void is_user_token() {
         Map<String, Object> claims = new HashMap();
 
         //no grant type - always is a user token
-        assertTrue(isUserToken(claims));
+        assertThat(isUserToken(claims)).isTrue();
         for (String grantType : Arrays.asList(GRANT_TYPE_PASSWORD, GRANT_TYPE_IMPLICIT, GRANT_TYPE_AUTHORIZATION_CODE)) {
             claims.put(GRANT_TYPE, grantType);
-            assertTrue(isUserToken(claims));
+            assertThat(isUserToken(claims)).isTrue();
         }
 
         claims.put(GRANT_TYPE, "client_credentials");
-        assertFalse(isUserToken(claims));
+        assertThat(isUserToken(claims)).isFalse();
 
         claims.clear();
 
         //user_id present - must be user token
         claims.put(ClaimConstants.USER_ID, "id");
-        assertTrue(isUserToken(claims));
+        assertThat(isUserToken(claims)).isTrue();
 
         //no user id and no grant type present - client token if sub.equals(cid)
         claims.clear();
         claims.put(SUB, "someClientId");
         claims.put(CID, "someClientId");
-        assertFalse(isUserToken(claims));
+        assertThat(isUserToken(claims)).isFalse();
     }
 
     @Test
-    public void required_user_groups_null_args_are_ok() {
-        assertTrue(hasRequiredUserAuthorities(null, null));
-        assertTrue(hasRequiredUserAuthorities(emptySet(), null));
-        assertTrue(hasRequiredUserAuthorities(null, emptySet()));
-        assertTrue(hasRequiredUserAuthorities(emptySet(), emptySet()));
+    void required_user_groups_null_args_are_ok() {
+        assertThat(hasRequiredUserAuthorities(null, null)).isTrue();
+        assertThat(hasRequiredUserAuthorities(emptySet(), null)).isTrue();
+        assertThat(hasRequiredUserAuthorities(null, emptySet())).isTrue();
+        assertThat(hasRequiredUserAuthorities(emptySet(), emptySet())).isTrue();
     }
 
     @Test
-    public void test_required_user_authorities_invalid() {
+    void required_user_authorities_invalid() {
         List<String> requiredGroups = Arrays.asList("scope1", "scope2", "scope3", "scope4");
         List<GrantedAuthority> userGroups = Arrays.asList(
                 new SimpleGrantedAuthority("scope1"),
@@ -101,11 +98,11 @@ public class UaaTokenUtilsTest {
                 new SimpleGrantedAuthority("scope5")
         );
 
-        assertFalse(UaaTokenUtils.hasRequiredUserAuthorities(requiredGroups, userGroups));
+        assertThat(UaaTokenUtils.hasRequiredUserAuthorities(requiredGroups, userGroups)).isFalse();
     }
 
     @Test
-    public void test_required_user_authorities_valid() {
+    void required_user_authorities_valid() {
         List<String> requiredGroups = Arrays.asList("scope1", "scope2", "scope3");
         List<GrantedAuthority> userGroups = Arrays.asList(
                 new SimpleGrantedAuthority("scope1"),
@@ -113,26 +110,26 @@ public class UaaTokenUtilsTest {
                 new SimpleGrantedAuthority("scope3"),
                 new SimpleGrantedAuthority("scope4")
         );
-        assertTrue(UaaTokenUtils.hasRequiredUserAuthorities(requiredGroups, userGroups));
+        assertThat(UaaTokenUtils.hasRequiredUserAuthorities(requiredGroups, userGroups)).isTrue();
     }
 
 
     @Test
-    public void test_required_user_groups_invalid() {
+    void required_user_groups_invalid() {
         List<String> requiredGroups = Arrays.asList("scope1", "scope2", "scope3", "scope5");
         List<String> userGroups = Arrays.asList("scope1", "scope2", "scope3", "scope4");
-        assertFalse(UaaTokenUtils.hasRequiredUserGroups(requiredGroups, userGroups));
+        assertThat(UaaTokenUtils.hasRequiredUserGroups(requiredGroups, userGroups)).isFalse();
     }
 
     @Test
-    public void test_required_user_groups_valid() {
+    void required_user_groups_valid() {
         List<String> requiredGroups = Arrays.asList("scope1", "scope2", "scope3");
         List<String> userGroups = Arrays.asList("scope1", "scope2", "scope3", "scope4");
-        assertTrue(UaaTokenUtils.hasRequiredUserGroups(requiredGroups, userGroups));
+        assertThat(UaaTokenUtils.hasRequiredUserGroups(requiredGroups, userGroups)).isTrue();
     }
 
     @Test
-    public void getClaims() throws KeyLengthException {
+    void getClaims() throws KeyLengthException {
         Map<String, Object> headers = new HashMap<>();
         headers.put("kid", "some-key");
         headers.put("alg", "HS256");
@@ -144,25 +141,25 @@ public class UaaTokenUtilsTest {
 
         Map<String, Object> claims = UaaTokenUtils.getClaims(jwt, Map.class);
 
-        assertEquals("openidclient", claims.get("cid"));
-        assertEquals("uaa", claims.get("origin"));
-        assertEquals(Arrays.asList("openidclient"), claims.get("aud"));
+        assertThat(claims.get("cid")).isEqualTo("openidclient");
+        assertThat(claims.get("origin")).isEqualTo("uaa");
+        assertThat(claims.get("aud")).isEqualTo(Arrays.asList("openidclient"));
 
         Claims claimObject = UaaTokenUtils.getClaimsFromTokenString(jwt);
 
-        assertEquals(claims.get("cid"), claimObject.getCid());
-        assertEquals(claims.get("origin"), claimObject.getOrigin());
-        assertEquals(claims.get("aud"), claimObject.getAud());
+        assertThat(claimObject.getCid()).isEqualTo(claims.get("cid"));
+        assertThat(claimObject.getOrigin()).isEqualTo(claims.get("origin"));
+        assertThat(claimObject.getAud()).isEqualTo(claims.get("aud"));
     }
 
     @Test
-    public void getClaims_throwsExceptionWhenJwtIsMalformed() {
-        assertThrows(InvalidTokenException.class, () ->
+    void getClaims_throwsExceptionWhenJwtIsMalformed() {
+        assertThatExceptionOfType(InvalidTokenException.class).isThrownBy(() ->
                 UaaTokenUtils.getClaims("not.a.jwt", Map.class));
     }
 
     @Test
-    public void getClaims_WhenClaimsAreMissing_returnsEmptyMap() {
+    void getClaims_WhenClaimsAreMissing_returnsEmptyMap() {
         Map<String, Object> headers = new HashMap<>();
         headers.put("kid", "some-key");
         headers.put("alg", "HS256");
@@ -170,8 +167,8 @@ public class UaaTokenUtilsTest {
 
         Map<String, Object> claims = UaaTokenUtils.getClaims(tokenWithNoClaims, Map.class);
 
-        assertNotNull(claims);
-        assertEquals(0, claims.size());
+        assertThat(claims).isNotNull();
+        assertThat(claims.size()).isEqualTo(0);
     }
 
 }

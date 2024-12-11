@@ -11,13 +11,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-public class WhitelabelApprovalEndpointTests {
+class WhitelabelApprovalEndpointTests {
 
     private final WhitelabelApprovalEndpoint endpoint = new WhitelabelApprovalEndpoint();
     private final Map<String, String> parameters = new HashMap<>();
@@ -34,7 +34,7 @@ public class WhitelabelApprovalEndpointTests {
     }
 
     @Test
-    public void testApprovalPage() throws Exception {
+    void approvalPage() throws Exception {
         request.setContextPath("/foo");
         parameters.put("client_id", "client");
         HashMap<String, Object> model = new HashMap<>();
@@ -42,15 +42,15 @@ public class WhitelabelApprovalEndpointTests {
         ModelAndView result = endpoint.getAccessConfirmation(model, request);
         result.getView().render(result.getModel(), request, response);
         String content = response.getContentAsString();
-        assertTrue(content.contains("<form"), "Wrong content: " + content);
-        assertTrue(content.contains("/foo/oauth/authorize"), "Wrong content: " + content);
-        assertTrue(!content.contains("${"), "Wrong content: " + content);
-        assertTrue(!content.contains("_csrf"), "Wrong content: " + content);
-        assertTrue(!content.contains("%"), "Wrong content: " + content);
+        assertThat(content.contains("<form")).as("Wrong content: " + content).isTrue();
+        assertThat(content.contains("/foo/oauth/authorize")).as("Wrong content: " + content).isTrue();
+        assertThat(content.contains("${")).as("Wrong content: " + content).isFalse();
+        assertThat(content.contains("_csrf")).as("Wrong content: " + content).isFalse();
+        assertThat(content.contains("%")).as("Wrong content: " + content).isFalse();
     }
 
     @Test
-    public void testApprovalPageWithScopes() throws Exception {
+    void approvalPageWithScopes() throws Exception {
         request.setContextPath("/foo");
         parameters.put("client_id", "client");
         HashMap<String, Object> model = new HashMap<>();
@@ -59,16 +59,16 @@ public class WhitelabelApprovalEndpointTests {
         ModelAndView result = endpoint.getAccessConfirmation(model, request);
         result.getView().render(result.getModel(), request, response);
         String content = response.getContentAsString();
-        assertTrue(content.contains("scope.read"), "Wrong content: " + content);
-        assertTrue(content.contains("checked"), "Wrong content: " + content);
-        assertTrue(content.contains("/foo/oauth/authorize"), "Wrong content: " + content);
-        assertTrue(!content.contains("${"), "Wrong content: " + content);
-        assertTrue(!content.contains("_csrf"), "Wrong content: " + content);
-        assertTrue(!content.contains("%"), "Wrong content: " + content);
+        assertThat(content.contains("scope.read")).as("Wrong content: " + content).isTrue();
+        assertThat(content.contains("checked")).as("Wrong content: " + content).isTrue();
+        assertThat(content.contains("/foo/oauth/authorize")).as("Wrong content: " + content).isTrue();
+        assertThat(content.contains("${")).as("Wrong content: " + content).isFalse();
+        assertThat(content.contains("_csrf")).as("Wrong content: " + content).isFalse();
+        assertThat(content.contains("%")).as("Wrong content: " + content).isFalse();
     }
 
     @Test
-    public void testApprovalPageWithCsrf() throws Exception {
+    void approvalPageWithCsrf() throws Exception {
         request.setContextPath("/foo");
         request.setAttribute("_csrf", new DefaultCsrfToken("X-CSRF-TOKEN", "_csrf", "FOO"));
         parameters.put("client_id", "client");
@@ -77,14 +77,14 @@ public class WhitelabelApprovalEndpointTests {
         ModelAndView result = endpoint.getAccessConfirmation(model, request);
         result.getView().render(result.getModel(), request, response);
         String content = response.getContentAsString();
-        assertTrue(content.contains("_csrf"), "Wrong content: " + content);
-        assertTrue(content.contains("/foo/oauth/authorize"), "Wrong content: " + content);
-        assertTrue(!content.contains("${"), "Wrong content: " + content);
+        assertThat(content.contains("_csrf")).as("Wrong content: " + content).isTrue();
+        assertThat(content.contains("/foo/oauth/authorize")).as("Wrong content: " + content).isTrue();
+        assertThat(content.contains("${")).as("Wrong content: " + content).isFalse();
     }
 
     // gh-1340
     @Test
-    public void testApprovalPageWithSuspectScope() throws Exception {
+    void approvalPageWithSuspectScope() throws Exception {
         request.setContextPath("/foo");
         parameters.put("client_id", "client");
         HashMap<String, Object> model = new HashMap<>();
@@ -95,12 +95,12 @@ public class WhitelabelApprovalEndpointTests {
         ModelAndView result = endpoint.getAccessConfirmation(model, request);
         result.getView().render(result.getModel(), request, response);
         String content = response.getContentAsString();
-        assertTrue(!content.contains(scope), "Wrong content: " + content);
-        assertTrue(content.contains(escapedScope), "Wrong content: " + content);
+        assertThat(content.contains(scope)).as("Wrong content: " + content).isFalse();
+        assertThat(content.contains(escapedScope)).as("Wrong content: " + content).isTrue();
     }
 
     @Test
-    public void testApprovalPageWithScopesInForm() throws Exception {
+    void approvalPageWithScopesInForm() throws Exception {
         String expectedContent = "<html><body><h1>OAuth Approval</h1><p>Do you authorize \"client\" to access your protected resources?</p>" +
                 "<form id=\"confirmationForm\" name=\"confirmationForm\" action=\"/foo/oauth/authorize\" method=\"post\">" +
                 "<input name=\"user_oauth_approval\" value=\"true\" type=\"hidden\"/><input type=\"hidden\" name=\"_csrf\" value=\"FOO\" /><ul>" +
@@ -116,11 +116,11 @@ public class WhitelabelApprovalEndpointTests {
         ModelAndView result = endpoint.getAccessConfirmation(model, request);
         result.getView().render(result.getModel(), request, response);
         String content = response.getContentAsString();
-        assertTrue(content.equals(expectedContent), "Wrong content: " + content);
+        assertThat(expectedContent).as("Wrong content: " + content).isEqualTo(content);
     }
 
     @Test
-    public void testApprovalPageWithoutScopesInForm() throws Exception {
+    void approvalPageWithoutScopesInForm() throws Exception {
         String expectedContent = "<html><body><h1>OAuth Approval</h1><p>Do you authorize \"client\" to access your protected resources?</p>" +
                 "<form id=\"confirmationForm\" name=\"confirmationForm\" action=\"/foo/oauth/authorize\" method=\"post\">" +
                 "<input name=\"user_oauth_approval\" value=\"true\" type=\"hidden\"/><input type=\"hidden\" name=\"_csrf\" value=\"FOO\" /><label>" +
@@ -136,6 +136,6 @@ public class WhitelabelApprovalEndpointTests {
         ModelAndView result = endpoint.getAccessConfirmation(model, request);
         result.getView().render(result.getModel(), request, response);
         String content = response.getContentAsString();
-        assertTrue(content.equals(expectedContent), "Wrong content: " + content);
+        assertThat(expectedContent).as("Wrong content: " + content).isEqualTo(content);
     }
 }

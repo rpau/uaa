@@ -16,17 +16,14 @@ import org.springframework.util.MultiValueMap;
 
 import java.util.Collections;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-public class ResourceOwnerPasswordAccessTokenProviderTests {
+class ResourceOwnerPasswordAccessTokenProviderTests {
 
     private final MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
 
@@ -49,47 +46,47 @@ public class ResourceOwnerPasswordAccessTokenProviderTests {
     private final ResourceOwnerPasswordResourceDetails resource = new ResourceOwnerPasswordResourceDetails();
 
     @Test
-    public void supportsResource() {
-        assertTrue(provider.supportsResource(new ResourceOwnerPasswordResourceDetails()));
+    void supportsResource() {
+        assertThat(provider.supportsResource(new ResourceOwnerPasswordResourceDetails())).isTrue();
     }
 
     @Test
-    public void supportsRefresh() {
-        assertFalse(provider.supportsRefresh(new AuthorizationCodeResourceDetails()));
+    void supportsRefresh() {
+        assertThat(provider.supportsRefresh(new AuthorizationCodeResourceDetails())).isFalse();
     }
 
     @Test
-    public void refreshAccessToken() {
-        assertThrows(IllegalArgumentException.class, () ->
-                assertNull(provider.refreshAccessToken(new AuthorizationCodeResourceDetails(), new DefaultOAuth2RefreshToken(""), new DefaultAccessTokenRequest(
-                        Collections.emptyMap()))));
+    void refreshAccessToken() {
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() ->
+                assertThat(provider.refreshAccessToken(new AuthorizationCodeResourceDetails(), new DefaultOAuth2RefreshToken(""), new DefaultAccessTokenRequest(
+                        Collections.emptyMap()))).isNull());
     }
 
     @Test
-    public void testGetAccessToken() throws Exception {
+    void getAccessToken() throws Exception {
         AccessTokenRequest request = new DefaultAccessTokenRequest();
         resource.setAccessTokenUri("http://localhost/oauth/token");
         resource.setUsername("foo");
         resource.setPassword("bar");
-        assertEquals("FOO", provider.obtainAccessToken(resource, request).getValue());
+        assertThat(provider.obtainAccessToken(resource, request).getValue()).isEqualTo("FOO");
     }
 
     @Test
-    public void testGetAccessTokenWithDynamicCredentials() throws Exception {
+    void getAccessTokenWithDynamicCredentials() throws Exception {
         AccessTokenRequest request = new DefaultAccessTokenRequest();
         request.set("username", "foo");
         request.set("password", "bar");
         resource.setAccessTokenUri("http://localhost/oauth/token");
-        assertEquals("FOO", provider.obtainAccessToken(resource, request).getValue());
+        assertThat(provider.obtainAccessToken(resource, request).getValue()).isEqualTo("FOO");
     }
 
     @Test
-    public void testCurrentUriNotUsed() throws Exception {
+    void currentUriNotUsed() throws Exception {
         AccessTokenRequest request = new DefaultAccessTokenRequest();
         request.set("username", "foo");
         request.setCurrentUri("urn:foo:bar");
         resource.setAccessTokenUri("http://localhost/oauth/token");
-        assertEquals("FOO", provider.obtainAccessToken(resource, request).getValue());
+        assertThat(provider.obtainAccessToken(resource, request).getValue()).isEqualTo("FOO");
     }
 
 }

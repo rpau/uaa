@@ -1,9 +1,5 @@
 package org.cloudfoundry.identity.uaa;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-
-
 import org.cloudfoundry.identity.statsd.UaaMetricsEmitter;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -12,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class UaaStatsdConfigurationSpringTest {
 
@@ -22,7 +20,7 @@ class UaaStatsdConfigurationSpringTest {
     class WithStatsdEnabled {
         @Test
         void statsdIsNotAvailable(@Autowired(required = false) UaaMetricsEmitter statsDClientWrapper) {
-            assertNotNull(statsDClientWrapper, "statsDClientWrapper must be available");
+            assertThat(statsDClientWrapper).as("statsDClientWrapper must be available").isNotNull();
         }
     }
 
@@ -33,7 +31,7 @@ class UaaStatsdConfigurationSpringTest {
     class WithStatsdExplicitlyDisabled {
         @Test
         void statsdIsNotAvailable(@Autowired(required = false) UaaMetricsEmitter statsDClientWrapper) {
-            assertNull(statsDClientWrapper, "statsDClientWrapper must not be available");
+            assertThat(statsDClientWrapper).as("statsDClientWrapper must not be available").isNull();
         }
     }
 
@@ -43,7 +41,7 @@ class UaaStatsdConfigurationSpringTest {
     class WithStatsdDisabledByDefault {
         @Test
         void statsdIsNotAvailable(@Autowired(required = false) UaaMetricsEmitter statsDClientWrapper) {
-            assertNull(statsDClientWrapper, "statsDClientWrapper must not be available");
+            assertThat(statsDClientWrapper).as("statsDClientWrapper must not be available").isNull();
         }
     }
 

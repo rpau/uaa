@@ -5,16 +5,16 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.util.SerializationUtils;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-public class OAuth2AuthenticationDetailsTests {
+class OAuth2AuthenticationDetailsTests {
 
     @Test
-    public void testSerializationWithDetails() {
+    void serializationWithDetails() {
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpSession mockHttpSession = new MockHttpSession();
         mockHttpSession.changeSessionId();
@@ -25,13 +25,13 @@ public class OAuth2AuthenticationDetailsTests {
         OAuth2AuthenticationDetails holder = new OAuth2AuthenticationDetails(request);
         OAuth2AuthenticationDetails other = (OAuth2AuthenticationDetails) SerializationUtils.deserialize(SerializationUtils
                 .serialize(holder));
-        assertEquals(holder, other);
-        assertEquals(holder.hashCode(), other.hashCode());
-        assertEquals(holder.toString(), other.toString());
-        assertEquals(holder.getSessionId(), other.getSessionId());
-        assertEquals(holder.getRemoteAddress(), other.getRemoteAddress());
-        assertEquals(holder.getTokenType(), other.getTokenType());
-        assertEquals(holder.getTokenValue(), other.getTokenValue());
+        assertThat(other).isEqualTo(holder);
+        assertThat(other.hashCode()).isEqualTo(holder.hashCode());
+        assertThat(other.toString()).isEqualTo(holder.toString());
+        assertThat(other.getSessionId()).isEqualTo(holder.getSessionId());
+        assertThat(other.getRemoteAddress()).isEqualTo(holder.getRemoteAddress());
+        assertThat(other.getTokenType()).isEqualTo(holder.getTokenType());
+        assertThat(other.getTokenValue()).isEqualTo(holder.getTokenValue());
     }
 
 }

@@ -44,12 +44,11 @@ import java.util.List;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
-public class IsSelfCheckTest {
+class IsSelfCheckTest {
 
     private IsSelfCheck bean;
     private UaaAuthentication authentication;
@@ -62,7 +61,7 @@ public class IsSelfCheckTest {
     private OAuth2Authentication oAuth2AuthenticationWithoutUser;
 
     @BeforeEach
-    public void getBean() {
+    void getBean() {
         id = new AlphanumericRandomValueStringGenerator(25).generate();
         clientId = id;
         request = new MockHttpServletRequest();
@@ -78,26 +77,26 @@ public class IsSelfCheckTest {
 
 
     @AfterEach
-    public void clearContext() {
+    void clearContext() {
         SecurityContextHolder.clearContext();
     }
 
     @Test
-    public void testSelfCheckLastUaaAuth() {
+    void selfCheckLastUaaAuth() {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         request.setPathInfo("/Users/" + id);
-        assertTrue(bean.isUserSelf(request, 1));
+        assertThat(bean.isUserSelf(request, 1)).isTrue();
     }
 
     @Test
-    public void testSelfCheckSecondUaaAuth() {
+    void selfCheckSecondUaaAuth() {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         request.setPathInfo("/Users/" + id + "/verify");
-        assertTrue(bean.isUserSelf(request, 1));
+        assertThat(bean.isUserSelf(request, 1)).isTrue();
     }
 
     @Test
-    public void testSelfCheck_TokenAuth() {
+    void selfCheckTokenAuth() {
         UaaClientDetails client = new UaaClientDetails();
         List<SimpleGrantedAuthority> authorities = new LinkedList<>();
         authorities.add(new SimpleGrantedAuthority("zones." + IdentityZoneHolder.get().getId() + ".admin"));
@@ -108,14 +107,14 @@ public class IsSelfCheckTest {
         SecurityContextHolder.getContext().setAuthentication(new OAuth2Authentication(authorizationRequest.createOAuth2Request(), userAuthentication));
 
         request.setPathInfo("/Users/" + id + "/verify");
-        assertTrue(bean.isUserSelf(request, 1));
+        assertThat(bean.isUserSelf(request, 1)).isTrue();
 
         request.setPathInfo("/Users/" + id);
-        assertTrue(bean.isUserSelf(request, 1));
+        assertThat(bean.isUserSelf(request, 1)).isTrue();
     }
 
     @Test
-    public void testSelfCheck_Token_ClientAuth_Fails() {
+    void selfCheckTokenClientAuthFails() {
         UaaClientDetails client = new UaaClientDetails();
         List<SimpleGrantedAuthority> authorities = new LinkedList<>();
         authorities.add(new SimpleGrantedAuthority("zones." + IdentityZoneHolder.get().getId() + ".admin"));
@@ -126,41 +125,41 @@ public class IsSelfCheckTest {
         SecurityContextHolder.getContext().setAuthentication(new OAuth2Authentication(authorizationRequest.createOAuth2Request(), userAuthentication));
 
         request.setPathInfo("/Users/" + id + "/verify");
-        assertFalse(bean.isUserSelf(request, 1));
+        assertThat(bean.isUserSelf(request, 1)).isFalse();
 
         request.setPathInfo("/Users/" + id);
-        assertFalse(bean.isUserSelf(request, 1));
+        assertThat(bean.isUserSelf(request, 1)).isFalse();
     }
 
     @Test
-    public void testSelfUserToken() {
+    void selfUserToken() {
         SecurityContextHolder.getContext().setAuthentication(oAuth2AuthenticationWithUser);
         request.setPathInfo("/oauth/token/revoke/user/" + id);
-        assertTrue(bean.isUserTokenRevocationForSelf(request, 4));
+        assertThat(bean.isUserTokenRevocationForSelf(request, 4)).isTrue();
 
         SecurityContextHolder.getContext().setAuthentication(oAuth2AuthenticationWithoutUser);
-        assertFalse(bean.isUserTokenRevocationForSelf(request, 4));
+        assertThat(bean.isUserTokenRevocationForSelf(request, 4)).isFalse();
 
         request.setPathInfo("/oauth/token/revoke/user/" + "other-user-id");
-        assertFalse(bean.isUserTokenRevocationForSelf(request, 4));
+        assertThat(bean.isUserTokenRevocationForSelf(request, 4)).isFalse();
     }
 
 
     @Test
-    public void testSelfClientToken() {
+    void selfClientToken() {
         SecurityContextHolder.getContext().setAuthentication(oAuth2AuthenticationWithUser);
         request.setPathInfo("/oauth/token/revoke/client/" + clientId);
-        assertTrue(bean.isClientTokenRevocationForSelf(request, 4));
+        assertThat(bean.isClientTokenRevocationForSelf(request, 4)).isTrue();
 
         SecurityContextHolder.getContext().setAuthentication(oAuth2AuthenticationWithoutUser);
-        assertTrue(bean.isClientTokenRevocationForSelf(request, 4));
+        assertThat(bean.isClientTokenRevocationForSelf(request, 4)).isTrue();
 
         request.setPathInfo("/oauth/token/revoke/client/" + "other-client-id");
-        assertFalse(bean.isClientTokenRevocationForSelf(request, 4));
+        assertThat(bean.isClientTokenRevocationForSelf(request, 4)).isFalse();
     }
 
     @Test
-    public void ensure_revoke_self_detects_client_vs_user() {
+    void ensure_revoke_self_detects_client_vs_user() {
         RevocableToken revocableUserToken = new RevocableToken()
                 .setTokenId("token-id")
                 .setUserId(id)
@@ -170,27 +169,27 @@ public class IsSelfCheckTest {
 
         //test with user authentication
         SecurityContextHolder.getContext().setAuthentication(oAuth2AuthenticationWithUser);
-        assertTrue(bean.isTokenRevocationForSelf(request, 3));
+        assertThat(bean.isTokenRevocationForSelf(request, 3)).isTrue();
         //change the user id on the token
         revocableUserToken.setUserId("other-user-id");
         //still succeed, the client matches
-        assertTrue(bean.isTokenRevocationForSelf(request, 3));
+        assertThat(bean.isTokenRevocationForSelf(request, 3)).isTrue();
         //change the client id on the token
         revocableUserToken.setClientId("other-client-id");
         //should fail
-        assertFalse(bean.isTokenRevocationForSelf(request, 3));
+        assertThat(bean.isTokenRevocationForSelf(request, 3)).isFalse();
         //restore user id
         revocableUserToken.setUserId(id);
         //succeed, the user matches
-        assertTrue(bean.isTokenRevocationForSelf(request, 3));
+        assertThat(bean.isTokenRevocationForSelf(request, 3)).isTrue();
 
         //test with client authentication
         SecurityContextHolder.getContext().setAuthentication(oAuth2AuthenticationWithoutUser);
         revocableUserToken.setClientId(clientId);
-        assertTrue(bean.isTokenRevocationForSelf(request, 3));
+        assertThat(bean.isTokenRevocationForSelf(request, 3)).isTrue();
         //change the client id on the token
         revocableUserToken.setClientId("other-client-id");
         //should fail
-        assertFalse(bean.isTokenRevocationForSelf(request, 3));
+        assertThat(bean.isTokenRevocationForSelf(request, 3)).isFalse();
     }
 }

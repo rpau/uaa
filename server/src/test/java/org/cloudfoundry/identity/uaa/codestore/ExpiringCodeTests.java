@@ -17,19 +17,18 @@ import org.junit.jupiter.api.Test;
 
 import java.sql.Timestamp;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
-public class ExpiringCodeTests {
+class ExpiringCodeTests {
     @Test
-    public void testIsExpired() {
+    void isExpired() {
         ExpiringCode expiringCode = new ExpiringCode();
-        assertFalse(expiringCode.isExpired());
+        assertThat(expiringCode.isExpired()).isFalse();
 
         expiringCode.setExpiresAt(new Timestamp(System.currentTimeMillis() - 1000));
-        assertTrue(expiringCode.isExpired());
+        assertThat(expiringCode.isExpired()).isTrue();
 
         expiringCode.setExpiresAt(new Timestamp(System.currentTimeMillis() + 1000));
-        assertFalse(expiringCode.isExpired());
+        assertThat(expiringCode.isExpired()).isFalse();
     }
 }

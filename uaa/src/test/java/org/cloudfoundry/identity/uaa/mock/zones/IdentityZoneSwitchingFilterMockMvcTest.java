@@ -22,10 +22,10 @@ import org.springframework.test.web.servlet.ResultMatcher;
 import java.util.Collections;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils.httpBearer;
 import static org.cloudfoundry.identity.uaa.zone.IdentityZoneSwitchingFilter.HEADER;
 import static org.cloudfoundry.identity.uaa.zone.IdentityZoneSwitchingFilter.SUBDOMAIN_HEADER;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -155,7 +155,7 @@ class IdentityZoneSwitchingFilterMockMvcTest {
         String adminToken = testClient.getClientCredentialsOAuthAccessToken("admin", "adminsecret", "scim.write");
         String scimReadZoneToken = MockMvcUtils.getZoneAdminToken(mockMvc, adminToken, zoneId, "zones." + zoneId + ".scim.read");
         ScimUser readUser = MockMvcUtils.readUserInZone(mockMvc, scimReadZoneToken, user.getId(), "", zoneId);
-        assertEquals(user.getId(), readUser.getId());
+        assertThat(readUser.getId()).isEqualTo(user.getId());
     }
 
     @Test
@@ -167,7 +167,7 @@ class IdentityZoneSwitchingFilterMockMvcTest {
     }
 
     @Test
-    void testScimWriteInAnotherZone() throws Exception {
+    void scimWriteInAnotherZone() throws Exception {
         final String zoneId = createZone(mockMvc, identityToken).getId();
         createScimUserUsingZonesScimWrite(mockMvc, generator, testClient, zoneId);
     }

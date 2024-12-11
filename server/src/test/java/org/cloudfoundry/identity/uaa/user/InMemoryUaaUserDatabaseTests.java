@@ -9,78 +9,76 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import java.util.Collections;
 import java.util.Date;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 
-public class InMemoryUaaUserDatabaseTests {
+class InMemoryUaaUserDatabaseTests {
 
     UaaUser user = new UaaUser("test-id", "username", "password", "email", UaaAuthority.USER_AUTHORITIES, "givenname", "familyname", new Date(), new Date(), OriginKeys.UAA, "externalID", false, IdentityZoneHolder.get().getId(), "test-id", new Date());
     InMemoryUaaUserDatabase db;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         db = new InMemoryUaaUserDatabase(Collections.singleton(user));
     }
 
 
     @Test
-    public void testRetrieveUserByName() {
-        assertSame(user, db.retrieveUserByName(user.getUsername(), user.getOrigin()));
+    void retrieveUserByName() {
+        assertThat(db.retrieveUserByName(user.getUsername(), user.getOrigin())).isSameAs(user);
     }
 
     @Test
-    public void testRetrieveUserPrototypeByName() {
-        assertSame(user.getUsername(), db.retrieveUserPrototypeByName(user.getUsername(), user.getOrigin()).getUsername());
+    void retrieveUserPrototypeByName() {
+        assertThat(db.retrieveUserPrototypeByName(user.getUsername(), user.getOrigin()).getUsername()).isSameAs(user.getUsername());
     }
 
     @Test
-    public void testRetrieveUserByNameInvalidOrigin() {
-        assertThrows(UsernameNotFoundException.class, () ->
+    void retrieveUserByNameInvalidOrigin() {
+        assertThatExceptionOfType(UsernameNotFoundException.class).isThrownBy(() ->
                 db.retrieveUserByName(user.getUsername(), OriginKeys.LDAP));
     }
 
     @Test
-    public void testRetrieveUserByNameInvalidUsername() {
-        assertThrows(UsernameNotFoundException.class, () ->
+    void retrieveUserByNameInvalidUsername() {
+        assertThatExceptionOfType(UsernameNotFoundException.class).isThrownBy(() ->
                 db.retrieveUserByName(user.getUsername() + "1", OriginKeys.UAA));
     }
 
     @Test
-    public void testRetrieveUserById() {
-        assertSame(user, db.retrieveUserById(user.getId()));
+    void retrieveUserById() {
+        assertThat(db.retrieveUserById(user.getId())).isSameAs(user);
     }
 
     @Test
-    public void testRetrieveUserPrototypeById() {
-        assertSame(user.getId(), db.retrieveUserById(user.getId()).getId());
+    void retrieveUserPrototypeById() {
+        assertThat(db.retrieveUserById(user.getId()).getId()).isSameAs(user.getId());
     }
 
     @Test
-    public void testRetrieveUserByInvalidId() {
-        assertThrows(UsernameNotFoundException.class, () ->
+    void retrieveUserByInvalidId() {
+        assertThatExceptionOfType(UsernameNotFoundException.class).isThrownBy(() ->
                 db.retrieveUserById(user.getId() + "1"));
     }
 
     @Test
-    public void retrieveUserByEmail() {
-        assertSame(user, db.retrieveUserByEmail(user.getEmail(), OriginKeys.UAA));
+    void retrieveUserByEmail() {
+        assertThat(db.retrieveUserByEmail(user.getEmail(), OriginKeys.UAA)).isSameAs(user);
     }
 
     @Test
-    public void retrieveUserPrototypeByEmail() {
-        assertSame(user.getEmail(), db.retrieveUserPrototypeByEmail(user.getEmail(), OriginKeys.UAA).getEmail());
+    void retrieveUserPrototypeByEmail() {
+        assertThat(db.retrieveUserPrototypeByEmail(user.getEmail(), OriginKeys.UAA).getEmail()).isSameAs(user.getEmail());
     }
 
     @Test
-    public void retrieveUserByEmail_with_invalidEmail() {
-        assertNull(db.retrieveUserByEmail("invalid.email@wrong.no", OriginKeys.UAA));
+    void retrieveUserByEmail_with_invalidEmail() {
+        assertThat(db.retrieveUserByEmail("invalid.email@wrong.no", OriginKeys.UAA)).isNull();
     }
 
     @Test
-    public void testUpdateUser() {
-        assertSame(user, db.retrieveUserById(user.getId()));
+    void updateUser() {
+        assertThat(db.retrieveUserById(user.getId())).isSameAs(user);
         UaaUser newUser = new UaaUser(
                 user.getId(),
                 user.getUsername(),
@@ -98,13 +96,13 @@ public class InMemoryUaaUserDatabaseTests {
                 user.getSalt(),
                 user.getPasswordLastModified());
         db.updateUser(user.getId(), newUser);
-        assertSame(newUser, db.retrieveUserById(user.getId()));
+        assertThat(db.retrieveUserById(user.getId())).isSameAs(newUser);
     }
 
     @Test
-    public void updateLastLogonTime() {
+    void updateLastLogonTime() {
         db.updateLastLogonTime("test-id");
         UaaUser uaaUser = db.retrieveUserById("test-id");
-        assertNotNull(uaaUser.getLastLogonTime());
+        assertThat(uaaUser.getLastLogonTime()).isNotNull();
     }
 }

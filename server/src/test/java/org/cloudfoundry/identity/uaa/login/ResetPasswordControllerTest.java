@@ -48,7 +48,7 @@ import org.thymeleaf.TemplateEngine;
 
 import java.sql.Timestamp;
 
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.contains;
@@ -112,7 +112,7 @@ class ResetPasswordControllerTest extends TestClassNullifier {
     }
 
     @Test
-    void testForgotPasswordPage() throws Exception {
+    void forgotPasswordPage() throws Exception {
         mockMvc.perform(get("/forgot_password")
                         .param("client_id", "example")
                         .param("redirect_uri", "http://example.com"))
@@ -123,7 +123,7 @@ class ResetPasswordControllerTest extends TestClassNullifier {
     }
 
     @Test
-    void testForgotPasswordWithSelfServiceDisabled() throws Exception {
+    void forgotPasswordWithSelfServiceDisabled() throws Exception {
         IdentityZone zone = MultitenancyFixture.identityZone("test-zone-id", "testsubdomain");
         zone.getConfig().getLinks().getSelfService().setSelfServiceLinksEnabled(false);
         IdentityZoneHolder.set(zone);
@@ -181,9 +181,9 @@ class ResetPasswordControllerTest extends TestClassNullifier {
             );
 
             String emailContent = captor.getValue();
-            assertThat(emailContent, containsString("A request has been made to reset your %s account password for %s".formatted(companyName, "user@example.com")));
-            assertThat(emailContent, containsString("Your account credentials for " + domain + " are managed by an external service. Please contact your administrator for password recovery requests."));
-            assertThat(emailContent, containsString("Thank you,<br />\n    " + companyName));
+            assertThat(emailContent).contains("A request has been made to reset your %s account password for %s".formatted(companyName, "user@example.com"));
+            assertThat(emailContent).contains("Your account credentials for " + domain + " are managed by an external service. Please contact your administrator for password recovery requests.");
+            assertThat(emailContent).contains("Thank you,<br />\n    " + companyName);
         } finally {
             IdentityZoneHolder.get().setConfig(defaultConfig);
         }
@@ -281,7 +281,7 @@ class ResetPasswordControllerTest extends TestClassNullifier {
     }
 
     @Test
-    void testInstructions() throws Exception {
+    void instructions() throws Exception {
         mockMvc.perform(get("/email_sent").param("code", "reset_password"))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Security-Policy", "frame-ancestors 'none'"))
@@ -289,7 +289,7 @@ class ResetPasswordControllerTest extends TestClassNullifier {
     }
 
     @Test
-    void testResetPasswordPage() throws Exception {
+    void resetPasswordPage() throws Exception {
         ExpiringCode code = codeStore.generateCode("{\"user_id\" : \"some-user-id\"}", new Timestamp(System.currentTimeMillis() + 1000000), null, IdentityZoneHolder.get().getId());
         mockMvc.perform(get("/reset_password").param("email", "user@example.com").param("code", code.getCode()))
                 .andExpect(status().isOk())
@@ -302,7 +302,7 @@ class ResetPasswordControllerTest extends TestClassNullifier {
     }
 
     @Test
-    void testResetPasswordPageWithPriorHeadRequest() throws Exception {
+    void resetPasswordPageWithPriorHeadRequest() throws Exception {
         ExpiringCode code = codeStore.generateCode("{\"user_id\" : \"some-user-id\"}", new Timestamp(System.currentTimeMillis() + 1000000), null, IdentityZoneHolder.get().getId());
         mockMvc.perform(head("/reset_password").param("email", "user@example.com").param("code", code.getCode()))
                 .andExpect(status().isOk());
@@ -317,7 +317,7 @@ class ResetPasswordControllerTest extends TestClassNullifier {
     }
 
     @Test
-    void testResetPasswordPageDuplicate() throws Exception {
+    void resetPasswordPageDuplicate() throws Exception {
         ExpiringCode code = codeStore.generateCode("{\"user_id\" : \"some-user-id\"}", new Timestamp(System.currentTimeMillis() + 1000000), null, IdentityZoneHolder.get().getId());
         mockMvc.perform(get("/reset_password").param("email", "user@example.com").param("code", code.getCode()))
                 .andExpect(status().isOk())
@@ -328,7 +328,7 @@ class ResetPasswordControllerTest extends TestClassNullifier {
     }
 
     @Test
-    void testResetPasswordPageWhenExpiringCodeNull() throws Exception {
+    void resetPasswordPageWhenExpiringCodeNull() throws Exception {
         mockMvc.perform(get("/reset_password").param("email", "user@example.com").param("code", "code1"))
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(view().name("forgot_password"))

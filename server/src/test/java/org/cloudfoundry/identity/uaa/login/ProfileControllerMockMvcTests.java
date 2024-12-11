@@ -7,9 +7,9 @@ import org.cloudfoundry.identity.uaa.approval.DescribedApproval;
 import org.cloudfoundry.identity.uaa.authentication.UaaPrincipal;
 import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
 import org.cloudfoundry.identity.uaa.constants.OriginKeys;
+import org.cloudfoundry.identity.uaa.extensions.PollutionPreventionExtension;
 import org.cloudfoundry.identity.uaa.home.BuildInfo;
 import org.cloudfoundry.identity.uaa.oauth.client.ClientConstants;
-import org.cloudfoundry.identity.uaa.extensions.PollutionPreventionExtension;
 import org.cloudfoundry.identity.uaa.security.beans.SecurityContextAccessor;
 import org.cloudfoundry.identity.uaa.zone.MultitenantClientServices;
 import org.cloudfoundry.identity.uaa.zone.beans.IdentityZoneManager;
@@ -35,13 +35,22 @@ import org.springframework.web.servlet.config.annotation.DefaultServletHandlerCo
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.approval.Approval.ApprovalStatus.APPROVED;
 import static org.cloudfoundry.identity.uaa.approval.Approval.ApprovalStatus.DENIED;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_AUTHORIZATION_CODE;
-import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasKey;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.hasValue;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -49,7 +58,10 @@ import static org.mockito.Mockito.when;
 import static org.springframework.http.MediaType.TEXT_HTML;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(SpringExtension.class)
 @ExtendWith(PollutionPreventionExtension.class)
@@ -96,9 +108,9 @@ class ProfileControllerMockMvcTests {
 
         @Bean
         ProfileController profileController(ApprovalStore approvalsService,
-                MultitenantClientServices clientDetailsService,
-                SecurityContextAccessor securityContextAccessor,
-                IdentityZoneManager identityZoneManager) {
+                                            MultitenantClientServices clientDetailsService,
+                                            SecurityContextAccessor securityContextAccessor,
+                                            IdentityZoneManager identityZoneManager) {
             return new ProfileController(approvalsService, clientDetailsService, securityContextAccessor, identityZoneManager);
         }
     }
@@ -223,24 +235,24 @@ class ProfileControllerMockMvcTests {
 
         ArgumentCaptor<String> args = ArgumentCaptor.forClass(String.class);
         Mockito.verify(approvalStore, Mockito.times(2)).revokeApprovalsForClientAndUser(args.capture(), args.capture(), args.capture());
-        assertEquals(6, args.getAllValues().size());
+        assertThat(args.getAllValues().size()).isEqualTo(6);
 
         ArgumentCaptor<DescribedApproval> captor = ArgumentCaptor.forClass(DescribedApproval.class);
         Mockito.verify(approvalStore, Mockito.times(2)).addApproval(captor.capture(), eq(currentIdentityZoneId));
 
-        assertEquals(2, captor.getAllValues().size());
+        assertThat(captor.getAllValues().size()).isEqualTo(2);
 
         DescribedApproval readApproval = captor.getAllValues().get(0);
-        assertEquals(USER_ID, readApproval.getUserId());
-        assertEquals("app", readApproval.getClientId());
-        assertEquals("thing.read", readApproval.getScope());
-        assertEquals(APPROVED, readApproval.getStatus());
+        assertThat(readApproval.getUserId()).isEqualTo(USER_ID);
+        assertThat(readApproval.getClientId()).isEqualTo("app");
+        assertThat(readApproval.getScope()).isEqualTo("thing.read");
+        assertThat(readApproval.getStatus()).isEqualTo(APPROVED);
 
         DescribedApproval writeApproval = captor.getAllValues().get(1);
-        assertEquals(USER_ID, writeApproval.getUserId());
-        assertEquals("app", writeApproval.getClientId());
-        assertEquals("thing.write", writeApproval.getScope());
-        assertEquals(DENIED, writeApproval.getStatus());
+        assertThat(writeApproval.getUserId()).isEqualTo(USER_ID);
+        assertThat(writeApproval.getClientId()).isEqualTo("app");
+        assertThat(writeApproval.getScope()).isEqualTo("thing.write");
+        assertThat(writeApproval.getStatus()).isEqualTo(DENIED);
     }
 
     @Test

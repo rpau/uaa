@@ -8,8 +8,7 @@ import java.sql.SQLException;
 import java.util.Collections;
 import java.util.stream.Stream;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class TestUtils {
 
@@ -33,7 +32,7 @@ public class TestUtils {
             final String userId) {
         String sql = "select count(id) from users where id='%s'".formatted(
                 userId);
-        assertThat(template.queryForObject(sql, Integer.class), is(0));
+        assertThat(template.queryForObject(sql, Integer.class)).isEqualTo(0);
     }
 
     public static ScimUser scimUserInstance(String email) {

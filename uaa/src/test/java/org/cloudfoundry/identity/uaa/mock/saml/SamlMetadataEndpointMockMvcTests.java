@@ -37,31 +37,31 @@ class SamlMetadataEndpointMockMvcTests {
     private WebApplicationContext webApplicationContext;
 
     @Test
-    void testSamlMetadataRootNoEndingSlash() throws Exception {
+    void samlMetadataRootNoEndingSlash() throws Exception {
         mockMvc.perform(get(new URI("/saml/metadata")))
                 .andExpect(status().isOk());
     }
 
     @Test
-    void testSamlMetadataRootWithEndingSlash() throws Exception {
+    void samlMetadataRootWithEndingSlash() throws Exception {
         mockMvc.perform(get(new URI("/saml/metadata/")))
                 .andExpect(status().isOk());
     }
 
     @Test
-    void testSamlMetadataDefaultNoEndingSlash() throws Exception {
+    void samlMetadataDefaultNoEndingSlash() throws Exception {
         mockMvc.perform(get(new URI("/saml/metadata/example")))
                 .andExpect(status().is4xxClientError());
     }
 
     @Test
-    void testSamlMetadataDefaultWithEndingSlash() throws Exception {
+    void samlMetadataDefaultWithEndingSlash() throws Exception {
         mockMvc.perform(get(new URI("/saml/metadata/example/")))
                 .andExpect(status().is4xxClientError());
     }
 
     @Test
-    void testSamlMetadataXMLValidation() throws Exception {
+    void samlMetadataXMLValidation() throws Exception {
 
         mockMvc.perform(get(new URI("/saml/metadata")))
                 .andDo(print())
@@ -85,12 +85,12 @@ class SamlMetadataEndpointMockMvcTests {
     }
 
     @Test
-    void testNonDefaultZoneSamlMetadataXMLValidation() throws Exception {
+    void nonDefaultZoneSamlMetadataXMLValidation() throws Exception {
         IdentityZone spZone = setupIdentityZone(true);
         String subdomain = spZone.getSubdomain();
 
         mockMvc.perform(get(new URI("/saml/metadata"))
-                .header(HOST, subdomain + ".localhost:8080"))
+                        .header(HOST, subdomain + ".localhost:8080"))
                 .andDo(print())
                 .andExpectAll(
                         status().isOk(),
@@ -116,7 +116,7 @@ class SamlMetadataEndpointMockMvcTests {
         private MockMvc mockMvc;
 
         @Test
-        void testSamlMetadataXMLValidation() throws Exception {
+        void samlMetadataXMLValidation() throws Exception {
 
             mockMvc.perform(get(new URI("/saml/metadata")))
                     .andDo(print())
@@ -132,12 +132,12 @@ class SamlMetadataEndpointMockMvcTests {
         }
 
         @Test
-        void testNonDefaultZoneSamlMetadataXMLValidation() throws Exception {
+        void nonDefaultZoneSamlMetadataXMLValidation() throws Exception {
             IdentityZone spZone = setupIdentityZone(true);
             String subdomain = spZone.getSubdomain();
 
             mockMvc.perform(get(new URI("/saml/metadata"))
-                    .header(HOST, subdomain + ".localhost:8080"))
+                            .header(HOST, subdomain + ".localhost:8080"))
                     .andDo(print())
                     .andExpectAll(
                             status().isOk(),
@@ -154,12 +154,12 @@ class SamlMetadataEndpointMockMvcTests {
         }
 
         @Test
-        void testNonDefaultZoneSamlMetadataXMLValidation_ZoneSamlEntityIDNotSet() throws Exception {
+        void nonDefaultZoneSamlMetadataXMLValidationZoneSamlEntityIDNotSet() throws Exception {
             IdentityZone alternativeSpZone = setupIdentityZone(false);
             String zoneSubdomain = alternativeSpZone.getSubdomain();
 
             mockMvc.perform(get(new URI("/saml/metadata"))
-                    .header(HOST, zoneSubdomain + ".localhost:8080"))
+                            .header(HOST, zoneSubdomain + ".localhost:8080"))
                     .andDo(print())
                     .andExpectAll(
                             status().isOk(),

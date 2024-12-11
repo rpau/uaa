@@ -388,7 +388,7 @@ class ScimUserEndpointDocs extends EndpointDocs {
     }
 
     @Test
-    void test_Find_Users() throws Exception {
+    void find_users() throws Exception {
         Snippet responseFields = responseFields(searchResponseFields);
         Snippet requestParameters = requestParameters(searchUsersParameters);
 
@@ -396,16 +396,16 @@ class ScimUserEndpointDocs extends EndpointDocs {
         webApplicationContext.getBean(UaaUserDatabase.class).updateLastLogonTime(user.getId());
 
         mockMvc.perform(
-                get("/Users")
-                        .accept(APPLICATION_JSON)
-                        .header("Authorization", "Bearer " + scimReadToken)
-                        .param("filter", "id eq \"%s\" or email eq \"%s\"".formatted(user.getId(), user.getUserName()))
-                        .param("sortBy", "email")
-                        .param("count", "50")
-                        .param("sortOrder", "ascending")
-                        .param("startIndex", "1")
-        )
-        .andExpect(status().isOk())
+                        get("/Users")
+                                .accept(APPLICATION_JSON)
+                                .header("Authorization", "Bearer " + scimReadToken)
+                                .param("filter", "id eq \"%s\" or email eq \"%s\"".formatted(user.getId(), user.getUserName()))
+                                .param("sortBy", "email")
+                                .param("count", "50")
+                                .param("sortOrder", "ascending")
+                                .param("startIndex", "1")
+                )
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.resources[0].previousLogonTime").exists())
                 .andExpect(jsonPath("$.resources[0].lastLogonTime").exists())
                 .andDo(
@@ -424,22 +424,22 @@ class ScimUserEndpointDocs extends EndpointDocs {
     }
 
     @Test
-    void test_Find_With_Attributes_Users() throws Exception {
+    void find_with_attributes_users() throws Exception {
         Snippet responseFields = responseFields(searchWithAttributesResponseFields);
         Snippet requestParameters = requestParameters(searchWithAttributes);
 
         mockMvc.perform(
-                get("/Users")
-                        .accept(APPLICATION_JSON)
-                        .header("Authorization", "Bearer " + scimReadToken)
-                        .param("attributes", "id,userName,emails,active")
-                        .param("filter", "id eq \"%s\"".formatted(user.getId()))
-                        .param("sortBy", "email")
-                        .param("count", "50")
-                        .param("sortOrder", "ascending")
-                        .param("startIndex", "1")
-        )
-        .andExpect(status().isOk())
+                        get("/Users")
+                                .accept(APPLICATION_JSON)
+                                .header("Authorization", "Bearer " + scimReadToken)
+                                .param("attributes", "id,userName,emails,active")
+                                .param("filter", "id eq \"%s\"".formatted(user.getId()))
+                                .param("sortBy", "email")
+                                .param("count", "50")
+                                .param("sortOrder", "ascending")
+                                .param("startIndex", "1")
+                )
+                .andExpect(status().isOk())
                 .andDo(print())
                 .andDo(
                         document("{ClassName}/{methodName}",
@@ -457,18 +457,18 @@ class ScimUserEndpointDocs extends EndpointDocs {
     }
 
     @Test
-    void test_Create_User() throws Exception {
+    void create_user() throws Exception {
 
         user = createScimUserObject();
 
         mockMvc.perform(
-                RestDocumentationRequestBuilders.post("/Users")
-                        .accept(APPLICATION_JSON)
-                        .header("Authorization", "Bearer " + scimWriteToken)
-                        .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                        .content(JsonUtils.writeValueAsString(user))
-        )
-        .andExpect(status().isCreated())
+                        RestDocumentationRequestBuilders.post("/Users")
+                                .accept(APPLICATION_JSON)
+                                .header("Authorization", "Bearer " + scimWriteToken)
+                                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                                .content(JsonUtils.writeValueAsString(user))
+                )
+                .andExpect(status().isCreated())
                 .andDo(
                         document("{ClassName}/{methodName}",
                                 preprocessRequest(prettyPrint()),
@@ -485,7 +485,7 @@ class ScimUserEndpointDocs extends EndpointDocs {
     }
 
     @Test
-    void test_status_unlock_user() throws Exception {
+    void status_unlock_user() throws Exception {
         UserAccountStatus alteredAccountStatus = new UserAccountStatus();
         alteredAccountStatus.setLocked(false);
         String jsonStatus = JsonUtils.writeValueAsString(alteredAccountStatus);
@@ -518,7 +518,7 @@ class ScimUserEndpointDocs extends EndpointDocs {
     }
 
     @Test
-    void test_status_password_expire_user() throws Exception {
+    void status_password_expire_user() throws Exception {
         UserAccountStatus alteredAccountStatus = new UserAccountStatus();
         alteredAccountStatus.setPasswordChangeRequired(true);
         String jsonStatus = JsonUtils.writeValueAsString(alteredAccountStatus);
@@ -551,7 +551,7 @@ class ScimUserEndpointDocs extends EndpointDocs {
     }
 
     @Test
-    void test_Update_User() throws Exception {
+    void update_user() throws Exception {
         ApprovalStore store = webApplicationContext.getBean(ApprovalStore.class);
         Approval approval = new Approval()
                 .setUserId(user.getId())
@@ -564,14 +564,14 @@ class ScimUserEndpointDocs extends EndpointDocs {
         user.setGroups(Collections.emptyList());
 
         mockMvc.perform(
-                RestDocumentationRequestBuilders.put("/Users/{userId}", user.getId())
-                        .accept(APPLICATION_JSON)
-                        .header("Authorization", "Bearer " + scimWriteToken)
-                        .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                        .header("If-Match", user.getVersion())
-                        .content(JsonUtils.writeValueAsString(user))
-        )
-        .andExpect(status().isOk())
+                        RestDocumentationRequestBuilders.put("/Users/{userId}", user.getId())
+                                .accept(APPLICATION_JSON)
+                                .header("Authorization", "Bearer " + scimWriteToken)
+                                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                                .header("If-Match", user.getVersion())
+                                .content(JsonUtils.writeValueAsString(user))
+                )
+                .andExpect(status().isOk())
                 .andDo(
                         document("{ClassName}/{methodName}",
                                 preprocessRequest(prettyPrint()),
@@ -590,7 +590,7 @@ class ScimUserEndpointDocs extends EndpointDocs {
     }
 
     @Test
-    void test_Patch_User() throws Exception {
+    void patch_user() throws Exception {
         ApprovalStore store = webApplicationContext.getBean(ApprovalStore.class);
         Approval approval = new Approval()
                 .setUserId(user.getId())
@@ -603,14 +603,14 @@ class ScimUserEndpointDocs extends EndpointDocs {
         user.setGroups(Collections.emptyList());
 
         mockMvc.perform(
-                RestDocumentationRequestBuilders.patch("/Users/{userId}", user.getId())
-                        .accept(APPLICATION_JSON)
-                        .header("Authorization", "Bearer " + scimWriteToken)
-                        .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                        .header("If-Match", user.getVersion())
-                        .content(JsonUtils.writeValueAsString(user))
-        )
-        .andExpect(status().isOk())
+                        RestDocumentationRequestBuilders.patch("/Users/{userId}", user.getId())
+                                .accept(APPLICATION_JSON)
+                                .header("Authorization", "Bearer " + scimWriteToken)
+                                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                                .header("If-Match", user.getVersion())
+                                .content(JsonUtils.writeValueAsString(user))
+                )
+                .andExpect(status().isOk())
                 .andDo(
                         document("{ClassName}/{methodName}",
                                 preprocessRequest(prettyPrint()),
@@ -627,7 +627,7 @@ class ScimUserEndpointDocs extends EndpointDocs {
     }
 
     @Test
-    void test_Delete_User() throws Exception {
+    void delete_user() throws Exception {
         ApprovalStore store = webApplicationContext.getBean(ApprovalStore.class);
         Approval approval = new Approval()
                 .setUserId(user.getId())
@@ -639,13 +639,13 @@ class ScimUserEndpointDocs extends EndpointDocs {
         store.addApproval(approval, IdentityZoneHolder.get().getId());
 
         mockMvc.perform(
-                RestDocumentationRequestBuilders.delete("/Users/{userId}", user.getId())
-                        .accept(APPLICATION_JSON)
-                        .header("Authorization", "Bearer " + scimWriteToken)
-                        .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                        .header("If-Match", user.getVersion())
-        )
-        .andExpect(status().isOk())
+                        RestDocumentationRequestBuilders.delete("/Users/{userId}", user.getId())
+                                .accept(APPLICATION_JSON)
+                                .header("Authorization", "Bearer " + scimWriteToken)
+                                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                                .header("If-Match", user.getVersion())
+                )
+                .andExpect(status().isOk())
                 .andDo(
                         document("{ClassName}/{methodName}",
                                 preprocessRequest(prettyPrint()),
@@ -664,7 +664,7 @@ class ScimUserEndpointDocs extends EndpointDocs {
     }
 
     @Test
-    void test_Get_User() throws Exception {
+    void get_user() throws Exception {
         ApprovalStore store = webApplicationContext.getBean(ApprovalStore.class);
         Approval approval = new Approval()
                 .setUserId(user.getId())
@@ -679,13 +679,13 @@ class ScimUserEndpointDocs extends EndpointDocs {
         webApplicationContext.getBean(UaaUserDatabase.class).updateLastLogonTime(user.getId());
 
         mockMvc.perform(
-                RestDocumentationRequestBuilders.get("/Users/{userId}", user.getId())
-                        .accept(APPLICATION_JSON)
-                        .header("Authorization", "Bearer " + scimReadToken)
-                        .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                        .header("If-Match", user.getVersion())
-        )
-        .andExpect(status().isOk())
+                        RestDocumentationRequestBuilders.get("/Users/{userId}", user.getId())
+                                .accept(APPLICATION_JSON)
+                                .header("Authorization", "Bearer " + scimReadToken)
+                                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                                .header("If-Match", user.getVersion())
+                )
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.previousLogonTime").exists())
                 .andExpect(jsonPath("$.lastLogonTime").exists())
                 .andDo(
@@ -707,7 +707,7 @@ class ScimUserEndpointDocs extends EndpointDocs {
 
 
     @Test
-    void test_Change_Password() throws Exception {
+    void change_password() throws Exception {
         PasswordChangeRequest request = new PasswordChangeRequest();
         request.setOldPassword("secret");
         request.setPassword("newsecret");
@@ -715,13 +715,13 @@ class ScimUserEndpointDocs extends EndpointDocs {
         String myToken = MockMvcUtils.getUserOAuthAccessToken(mockMvc, "app", "appclientsecret", user.getUserName(), "secret", null, null, true);
 
         mockMvc.perform(
-                RestDocumentationRequestBuilders.put("/Users/{userId}/password", user.getId())
-                        .accept(APPLICATION_JSON)
-                        .header("Authorization", "Bearer " + myToken)
-                        .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                        .content(JsonUtils.writeValueAsString(request))
-        )
-        .andExpect(status().isOk())
+                        RestDocumentationRequestBuilders.put("/Users/{userId}/password", user.getId())
+                                .accept(APPLICATION_JSON)
+                                .header("Authorization", "Bearer " + myToken)
+                                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                                .content(JsonUtils.writeValueAsString(request))
+                )
+                .andExpect(status().isOk())
                 .andDo(
                         document("{ClassName}/{methodName}",
                                 preprocessRequest(prettyPrint()),

@@ -42,7 +42,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.Collections;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Dave Syer
@@ -79,7 +79,7 @@ public class PasswordChangeEndpointIntegrationTests {
     }
 
     @BeforeEach
-    public void createRestTemplate() {
+    void createRestTemplate() {
         client = serverRunning.getRestTemplate();
         ((RestTemplate) serverRunning.getRestTemplate()).setErrorHandler(new OAuth2ErrorHandler(context.getResource()) {
             // Pass errors through in response entity for status code analysis
@@ -100,7 +100,7 @@ public class PasswordChangeEndpointIntegrationTests {
         client = serverRunning.getRestTemplate();
         ResponseEntity<ScimUser> response = createUser(JOE, "Joe", "User", "joe@blah.com");
         joe = response.getBody();
-        assertEquals(JOE, joe.getUserName());
+        assertThat(joe.getUserName()).isEqualTo(JOE);
     }
 
     // curl -v -H "Content-Type: application/json" -X PUT -H
@@ -109,7 +109,7 @@ public class PasswordChangeEndpointIntegrationTests {
     // http://localhost:8080/uaa/User/{id}/password
     @Test
     @OAuth2ContextConfiguration(OAuth2ContextConfiguration.ClientCredentials.class)
-    public void testChangePasswordSucceeds() {
+    void changePasswordSucceeds() {
         PasswordChangeRequest change = new PasswordChangeRequest();
         change.setPassword("Newpasswo3d");
 
@@ -118,12 +118,12 @@ public class PasswordChangeEndpointIntegrationTests {
                 .exchange(serverRunning.getUrl(userEndpoint) + "/{id}/password",
                         HttpMethod.PUT, new HttpEntity<>(change, headers),
                         Void.class, joe.getId());
-        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 
     @Test
     @OAuth2ContextConfiguration(OAuth2ContextConfiguration.ClientCredentials.class)
-    public void testChangePasswordSameAsOldFails() {
+    void changePasswordSameAsOldFails() {
         PasswordChangeRequest change = new PasswordChangeRequest();
         change.setPassword("pas5Word");
 
@@ -132,12 +132,12 @@ public class PasswordChangeEndpointIntegrationTests {
                 .exchange(serverRunning.getUrl(userEndpoint) + "/{id}/password",
                         HttpMethod.PUT, new HttpEntity<>(change, headers),
                         Void.class, joe.getId());
-        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, result.getStatusCode());
+        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
     }
 
     @Test
     @OAuth2ContextConfiguration(resource = OAuth2ContextConfiguration.Implicit.class, initialize = false)
-    public void testUserChangesOwnPassword() {
+    void userChangesOwnPassword() {
 
         MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
         parameters.set("source", "credentials");
@@ -154,12 +154,12 @@ public class PasswordChangeEndpointIntegrationTests {
                 .exchange(serverRunning.getUrl(userEndpoint) + "/{id}/password",
                         HttpMethod.PUT, new HttpEntity<>(change, headers),
                         Void.class, joe.getId());
-        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 
     @Test
     @OAuth2ContextConfiguration(resource = OAuth2ContextConfiguration.Implicit.class, initialize = false)
-    public void testUserMustSupplyOldPassword() {
+    void userMustSupplyOldPassword() {
 
         MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
         parameters.set("source", "credentials");
@@ -175,12 +175,12 @@ public class PasswordChangeEndpointIntegrationTests {
                 .exchange(serverRunning.getUrl(userEndpoint) + "/{id}/password",
                         HttpMethod.PUT, new HttpEntity<>(change, headers),
                         Void.class, joe.getId());
-        assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
+        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
     @Test
     @OAuth2ContextConfiguration(resource = OAuth2ContextConfiguration.ClientCredentials.class, initialize = false)
-    public void testUserAccountGetsUnlockedAfterPasswordChange() {
+    void userAccountGetsUnlockedAfterPasswordChange() {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
@@ -195,20 +195,20 @@ public class PasswordChangeEndpointIntegrationTests {
 
         ResponseEntity<Map> result = serverRunning.postForMap(
                 serverRunning.buildUri("/oauth/token").build().toString(), data, headers);
-        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
 
         // Lock out the account
         data.put("password", Collections.singletonList("randomPassword1"));
 
         for (int i = 0; i < 5; i++) {
             result = serverRunning.postForMap(serverRunning.buildUri("/oauth/token").build().toString(), data, headers);
-            assertEquals(HttpStatus.UNAUTHORIZED, result.getStatusCode());
+            assertThat(result.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
         }
 
         // Check that it is locked
         result = serverRunning.postForMap(serverRunning.buildUri("/oauth/token").build().toString(), data, headers);
-        assertEquals("Your account has been locked because of too many failed attempts to login.", result.getBody().get("error_description"));
-        assertEquals(HttpStatus.UNAUTHORIZED, result.getStatusCode());
+        assertThat(result.getBody().get("error_description")).isEqualTo("Your account has been locked because of too many failed attempts to login.");
+        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
 
         PasswordChangeRequest change = new PasswordChangeRequest();
         change.setPassword("Newpasswo3d");
@@ -225,7 +225,7 @@ public class PasswordChangeEndpointIntegrationTests {
                         + "/{id}/password",
                 HttpMethod.PUT, new HttpEntity<>(change, passwordChangeHeaders),
                 Void.class, joe.getId());
-        assertEquals(HttpStatus.OK, passwordChangeResult.getStatusCode());
+        assertThat(passwordChangeResult.getStatusCode()).isEqualTo(HttpStatus.OK);
 
         MultiValueMap<String, String> newData = new LinkedMultiValueMap<>();
         newData.put("grant_type", Collections.singletonList("password"));
@@ -234,7 +234,7 @@ public class PasswordChangeEndpointIntegrationTests {
 
         ResponseEntity<Map> updatedResult = serverRunning.postForMap(serverRunning.buildUri("/oauth/token").build()
                 .toString(), newData, headers);
-        assertEquals(HttpStatus.OK, updatedResult.getStatusCode());
+        assertThat(updatedResult.getStatusCode()).isEqualTo(HttpStatus.OK);
 
     }
 }

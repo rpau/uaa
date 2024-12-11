@@ -24,8 +24,7 @@ import java.sql.ResultSet;
 import java.util.Arrays;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @ImportResource(locations = {
         "classpath:spring/env.xml",
@@ -83,12 +82,10 @@ class TableAndColumnNormalizationTest {
                 if (name != null && DatabaseInformation1_5_3.tableNames.contains(name.toLowerCase())) {
                     count++;
                     logger.info("Validating table [" + name + "]");
-                    assertEquals(name.toLowerCase(),
-                            name,
-                            "Table[%s] is not lower case.".formatted(name));
+                    assertThat(name).as("Table[%s] is not lower case.".formatted(name)).isEqualTo(name.toLowerCase());
                 }
             }
-            assertEquals(DatabaseInformation1_5_3.tableNames.size(), count, "Table count:");
+            assertThat(count).as("Table count:").isEqualTo(DatabaseInformation1_5_3.tableNames.size());
         }
     }
 
@@ -105,10 +102,10 @@ class TableAndColumnNormalizationTest {
                 logger.info("Checking column [" + name + "." + col + "]");
                 if (name != null && DatabaseInformation1_5_3.tableNames.contains(name.toLowerCase())) {
                     logger.info("Validating column [" + name + "." + col + "]");
-                    assertEquals(col.toLowerCase(), col, "Column[%s.%s] is not lower case.".formatted(name, col));
+                    assertThat(col.toLowerCase()).as("Column[%s.%s] is not lower case.".formatted(name, col)).isEqualTo(col);
                 }
             }
-            assertTrue(hadSomeResults, "Getting columns from db metadata should have returned some results");
+            assertThat(hadSomeResults).as("Getting columns from db metadata should have returned some results").isTrue();
         }
     }
 }

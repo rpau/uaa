@@ -20,13 +20,8 @@ import org.springframework.web.client.RestTemplate;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.eq;
@@ -81,12 +76,12 @@ class OidcMetadataFetcherTest {
 
             metadataDiscoverer.fetchMetadataAndUpdateDefinition(definition);
 
-            assertThat(definition, is(notNullValue()));
-            assertThat(definition.getAuthUrl().toString(), is("http://authz.should.not.have.been.updated"));
-            assertThat(definition.getTokenUrl().toString(), is("http://token.should.not.have.been.updated"));
-            assertThat(definition.getUserInfoUrl().toString(), is("http://userinfo.should.not.have.been.updated"));
-            assertThat(definition.getTokenKeyUrl().toString(), is("http://jwks.should.not.have.been.updated"));
-            assertThat(definition.getIssuer(), is("should-not-have-been-updated"));
+            assertThat(definition).isNotNull();
+            assertThat(definition.getAuthUrl().toString()).isEqualTo("http://authz.should.not.have.been.updated");
+            assertThat(definition.getTokenUrl().toString()).isEqualTo("http://token.should.not.have.been.updated");
+            assertThat(definition.getUserInfoUrl().toString()).isEqualTo("http://userinfo.should.not.have.been.updated");
+            assertThat(definition.getTokenKeyUrl().toString()).isEqualTo("http://jwks.should.not.have.been.updated");
+            assertThat(definition.getIssuer()).isEqualTo("should-not-have-been-updated");
         }
 
         @Test
@@ -96,12 +91,12 @@ class OidcMetadataFetcherTest {
 
             metadataDiscoverer.fetchMetadataAndUpdateDefinition(definition);
 
-            assertThat(definition, is(notNullValue()));
-            assertThat(definition.getAuthUrl().toString(), is("http://authz.endpoint"));
-            assertThat(definition.getTokenUrl().toString(), is("http://token.endpoint"));
-            assertThat(definition.getUserInfoUrl().toString(), is("http://userinfo.endpoint"));
-            assertThat(definition.getTokenKeyUrl().toString(), is("http://jwks.uri"));
-            assertThat(definition.getIssuer(), is("metadataissuer"));
+            assertThat(definition).isNotNull();
+            assertThat(definition.getAuthUrl().toString()).isEqualTo("http://authz.endpoint");
+            assertThat(definition.getTokenUrl().toString()).isEqualTo("http://token.endpoint");
+            assertThat(definition.getUserInfoUrl().toString()).isEqualTo("http://userinfo.endpoint");
+            assertThat(definition.getTokenKeyUrl().toString()).isEqualTo("http://jwks.uri");
+            assertThat(definition.getIssuer()).isEqualTo("metadataissuer");
         }
 
         @Test
@@ -173,7 +168,7 @@ class OidcMetadataFetcherTest {
                     .thenReturn(responseEntity);
             when(responseEntity.getStatusCode()).thenReturn(HttpStatus.FORBIDDEN);
 
-            assertThrows(IllegalArgumentException.class, () -> metadataDiscoverer.fetchWebKeySet(definition));
+            assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> metadataDiscoverer.fetchWebKeySet(definition));
 
             verify(urlContentCache, times(0))
                     .getUrlContent(
@@ -201,13 +196,13 @@ class OidcMetadataFetcherTest {
 
             metadataDiscoverer.fetchMetadataAndUpdateDefinition(definition);
 
-            assertThat(definition, is(notNullValue()));
-            assertThat(definition.getDiscoveryUrl(), nullValue());
-            assertThat(definition.getAuthUrl().toString(), is("http://authz.not.updated"));
-            assertThat(definition.getTokenUrl().toString(), is("http://token.not.updated"));
-            assertThat(definition.getTokenKeyUrl().toString(), is("http://jwk.not.updated"));
-            assertThat(definition.getUserInfoUrl().toString(), is("http://userinfo.not.updated"));
-            assertThat(definition.getIssuer(), is("issuer-not-changed"));
+            assertThat(definition).isNotNull();
+            assertThat(definition.getDiscoveryUrl()).isNull();
+            assertThat(definition.getAuthUrl().toString()).isEqualTo("http://authz.not.updated");
+            assertThat(definition.getTokenUrl().toString()).isEqualTo("http://token.not.updated");
+            assertThat(definition.getTokenKeyUrl().toString()).isEqualTo("http://jwk.not.updated");
+            assertThat(definition.getUserInfoUrl().toString()).isEqualTo("http://userinfo.not.updated");
+            assertThat(definition.getIssuer()).isEqualTo("issuer-not-changed");
 
             verifyNoInteractions(urlContentCache);
         }
@@ -230,7 +225,7 @@ class OidcMetadataFetcherTest {
             when(urlContentCache.getUrlContent(anyString(), any(RestTemplate.class), any(HttpMethod.class), any(HttpEntity.class)))
                     .thenReturn("".getBytes());
 
-            assertThrows(OidcMetadataFetchingException.class, () -> metadataDiscoverer.fetchWebKeySet(definition));
+            assertThatExceptionOfType(OidcMetadataFetchingException.class).isThrownBy(() -> metadataDiscoverer.fetchWebKeySet(definition));
         }
 
         @Test
@@ -239,7 +234,7 @@ class OidcMetadataFetcherTest {
             when(urlContentCache.getUrlContent(anyString(), any(RestTemplate.class), any(HttpMethod.class), any(HttpEntity.class)))
                     .thenReturn("{x}".getBytes());
 
-            assertThrows(OidcMetadataFetchingException.class, () -> metadataDiscoverer.fetchWebKeySet(definition));
+            assertThatExceptionOfType(OidcMetadataFetchingException.class).isThrownBy(() -> metadataDiscoverer.fetchWebKeySet(definition));
         }
     }
 
@@ -259,24 +254,24 @@ class OidcMetadataFetcherTest {
         void getConfigFromJwksUri() throws OidcMetadataFetchingException, MalformedURLException {
 
             JsonWebKeySet<JsonWebKey> keys = metadataDiscoverer.fetchWebKeySet(new ClientJwtConfiguration("http://token_keys", null));
-            assertNotNull(keys);
-            assertEquals(1, keys.getKeys().size());
-            assertEquals("id", keys.getKeys().get(0).getKid());
+            assertThat(keys).isNotNull();
+            assertThat(keys.getKeys().size()).isEqualTo(1);
+            assertThat(keys.getKeys().get(0).getKid()).isEqualTo("id");
         }
 
         @Test
         void getConfigFromJwks() throws OidcMetadataFetchingException, MalformedURLException {
 
             JsonWebKeySet<JsonWebKey> keys = metadataDiscoverer.fetchWebKeySet(ClientJwtConfiguration.parse("{\"keys\":[{\"alg\":\"RS256\",\"e\":\"e\",\"kid\":\"a\",\"kty\":\"RSA\",\"n\":\"n\"}]}"));
-            assertNotNull(keys);
-            assertEquals(1, keys.getKeys().size());
-            assertEquals("a", keys.getKeys().get(0).getKid());
+            assertThat(keys).isNotNull();
+            assertThat(keys.getKeys().size()).isEqualTo(1);
+            assertThat(keys.getKeys().get(0).getKid()).isEqualTo("a");
         }
 
         @Test
         void failWithInvalidConfig() throws OidcMetadataFetchingException, MalformedURLException {
 
-            assertThrows(OidcMetadataFetchingException.class, () -> metadataDiscoverer.fetchWebKeySet(new ClientJwtConfiguration(null, null)));
+            assertThatExceptionOfType(OidcMetadataFetchingException.class).isThrownBy(() -> metadataDiscoverer.fetchWebKeySet(new ClientJwtConfiguration(null, null)));
         }
     }
 

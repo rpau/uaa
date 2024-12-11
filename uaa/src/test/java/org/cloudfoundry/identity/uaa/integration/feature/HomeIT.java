@@ -14,9 +14,7 @@
 package org.cloudfoundry.identity.uaa.integration.feature;
 
 import org.cloudfoundry.identity.uaa.oauth.client.test.TestAccounts;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -27,10 +25,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringJUnitConfig(classes = DefaultIntegrationTestConfig.class)
-public class HomeIT {
+class HomeIT {
     @Autowired
     TestAccounts testAccounts;
 
@@ -47,7 +45,7 @@ public class HomeIT {
     private HomePagePerspective asOnHomePage;
 
     @AfterEach
-    public void logout_and_clear_cookies() {
+    void logout_and_clear_cookies() {
         try {
             webDriver.get(baseUrl + "/logout.do");
         } catch (org.openqa.selenium.TimeoutException x) {
@@ -58,7 +56,7 @@ public class HomeIT {
     }
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         logout_and_clear_cookies();
         webDriver.get(baseUrl + "/login");
         webDriver.findElement(By.name("username")).sendKeys(testAccounts.getUserName());
@@ -69,24 +67,24 @@ public class HomeIT {
     }
 
     @Test
-    public void testMessage() {
-        Assertions.assertEquals("Where to?", webDriver.findElement(By.tagName("h1")).getText());
+    void message() {
+        assertThat(webDriver.findElement(By.tagName("h1")).getText()).isEqualTo("Where to?");
     }
 
     @Test
-    public void theHeaderDropdown() {
-        Assertions.assertNotNull(asOnHomePage.getUsernameElement());
-        Assertions.assertFalse(asOnHomePage.getAccountSettingsElement().isDisplayed());
-        Assertions.assertFalse(asOnHomePage.getSignOutElement().isDisplayed());
+    void theHeaderDropdown() {
+        assertThat(asOnHomePage.getUsernameElement()).isNotNull();
+        assertThat(asOnHomePage.getAccountSettingsElement().isDisplayed()).isFalse();
+        assertThat(asOnHomePage.getSignOutElement().isDisplayed()).isFalse();
 
         asOnHomePage.getUsernameElement().click();
 
-        Assertions.assertTrue(asOnHomePage.getAccountSettingsElement().isDisplayed());
-        Assertions.assertTrue(asOnHomePage.getSignOutElement().isDisplayed());
+        assertThat(asOnHomePage.getAccountSettingsElement().isDisplayed()).isTrue();
+        assertThat(asOnHomePage.getSignOutElement().isDisplayed()).isTrue();
 
         asOnHomePage.getAccountSettingsElement().click();
 
-        assertThat(webDriver.findElement(By.cssSelector("h1")).getText(), Matchers.containsString("Account Settings"));
+        assertThat(webDriver.findElement(By.cssSelector("h1")).getText()).contains("Account Settings");
     }
 
     static class HomePagePerspective {

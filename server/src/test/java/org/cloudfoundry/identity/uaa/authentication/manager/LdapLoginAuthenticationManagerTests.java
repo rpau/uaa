@@ -31,13 +31,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static java.util.Collections.emptyList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.provider.ExternalIdentityProviderDefinition.USER_ATTRIBUTE_PREFIX;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -146,44 +141,44 @@ class LdapLoginAuthenticationManagerTests {
     }
 
     @Test
-    void testGetUserWithExtendedLdapInfo() {
+    void getUserWithExtendedLdapInfo() {
         UaaUser user = am.getUser(auth, null);
-        assertEquals(DN, user.getExternalId());
-        assertEquals(LDAP_EMAIL, user.getEmail());
-        assertEquals(origin, user.getOrigin());
-        assertFalse(user.isVerified());
+        assertThat(user.getExternalId()).isEqualTo(DN);
+        assertThat(user.getEmail()).isEqualTo(LDAP_EMAIL);
+        assertThat(user.getOrigin()).isEqualTo(origin);
+        assertThat(user.isVerified()).isFalse();
     }
 
     @Test
-    void testGetUserWithNonLdapInfo() {
+    void getUserWithNonLdapInfo() {
         UserDetails mockNonLdapUserDetails = mockNonLdapUserDetails();
         when(mockNonLdapUserDetails.getUsername()).thenReturn(TEST_EMAIL);
         when(auth.getPrincipal()).thenReturn(mockNonLdapUserDetails);
         UaaUser user = am.getUser(auth, null);
-        assertEquals(TEST_EMAIL, user.getExternalId());
-        assertEquals(TEST_EMAIL, user.getEmail());
-        assertEquals(origin, user.getOrigin());
+        assertThat(user.getExternalId()).isEqualTo(TEST_EMAIL);
+        assertThat(user.getEmail()).isEqualTo(TEST_EMAIL);
+        assertThat(user.getOrigin()).isEqualTo(origin);
     }
 
     @Test
-    void testUserAuthenticated() {
+    void userAuthenticated() {
         UaaUser user = getUaaUser();
         UaaUser userFromRequest = am.getUser(auth, null);
         definition.setAutoAddGroups(true);
         UaaUser result = am.userAuthenticated(auth, user, userFromRequest);
-        assertSame(dbUser, result);
+        assertThat(result).isSameAs(dbUser);
         verify(publisher, times(1)).publishEvent(ArgumentMatchers.any());
 
         definition.setAutoAddGroups(false);
         result = am.userAuthenticated(auth, userFromRequest, user);
-        assertSame(dbUser, result);
+        assertThat(result).isSameAs(dbUser);
         verify(publisher, times(2)).publishEvent(ArgumentMatchers.any());
     }
 
     @Test
     void shadowUserCreationDisabledWillNotAddShadowUser() {
         definition.setAddShadowUserOnLogin(false);
-        assertFalse(am.isAddNewShadowUser());
+        assertThat(am.isAddNewShadowUser()).isFalse();
     }
 
     @Test
@@ -197,9 +192,9 @@ class LdapLoginAuthenticationManagerTests {
         ArgumentCaptor<ExternalGroupAuthorizationEvent> captor = ArgumentCaptor.forClass(ExternalGroupAuthorizationEvent.class);
         verify(publisher, times(1)).publishEvent(captor.capture());
 
-        assertEquals(LDAP_EMAIL, captor.getValue().getUser().getEmail());
-        assertEquals("MarissaChanged", captor.getValue().getUser().getGivenName());
-        assertEquals("BloggsChanged", captor.getValue().getUser().getFamilyName());
+        assertThat(captor.getValue().getUser().getEmail()).isEqualTo(LDAP_EMAIL);
+        assertThat(captor.getValue().getUser().getGivenName()).isEqualTo("MarissaChanged");
+        assertThat(captor.getValue().getUser().getFamilyName()).isEqualTo("BloggsChanged");
     }
 
     @Test
@@ -213,21 +208,21 @@ class LdapLoginAuthenticationManagerTests {
         ArgumentCaptor<ExternalGroupAuthorizationEvent> captor = ArgumentCaptor.forClass(ExternalGroupAuthorizationEvent.class);
         verify(publisher, times(1)).publishEvent(captor.capture());
 
-        assertEquals(user.getModified(), captor.getValue().getUser().getModified());
+        assertThat(captor.getValue().getUser().getModified()).isEqualTo(user.getModified());
     }
 
     @Test
-    void test_authentication_attributes() {
+    void authentication_attributes() {
         test_authentication_attributes(false);
     }
 
     @Test
-    void test_authentication_attributes_store_custom_attributes() {
+    void authentication_attributes_store_custom_attributes() {
         test_authentication_attributes(true);
     }
 
     @Test
-    void test_group_white_list_with_wildcard() {
+    void group_white_list_with_wildcard() {
         UaaUser user = getUaaUser();
         ExtendedLdapUserImpl authDetails =
                 getAuthDetails(
@@ -252,40 +247,26 @@ class LdapLoginAuthenticationManagerTests {
 
 
         definition.setExternalGroupsWhitelist(emptyList());
-        assertThat(am.getExternalUserAuthorities(authDetails),
-                containsInAnyOrder()
-        );
+        assertThat(am.getExternalUserAuthorities(authDetails)).containsExactlyInAnyOrder();
 
         definition.setExternalGroupsWhitelist(null);
-        assertThat(am.getExternalUserAuthorities(authDetails),
-                containsInAnyOrder()
-        );
+        assertThat(am.getExternalUserAuthorities(authDetails)).containsExactlyInAnyOrder();
 
         definition.setExternalGroupsWhitelist(Collections.singletonList("ldap.role.1.a"));
-        assertThat(am.getExternalUserAuthorities(authDetails),
-                containsInAnyOrder("ldap.role.1.a")
-        );
+        assertThat(am.getExternalUserAuthorities(authDetails)).containsExactlyInAnyOrder("ldap.role.1.a");
 
         definition.setExternalGroupsWhitelist(Arrays.asList("ldap.role.1.a", "ldap.role.2.*"));
-        assertThat(am.getExternalUserAuthorities(authDetails),
-                containsInAnyOrder("ldap.role.1.a", "ldap.role.2.a", "ldap.role.2.b")
-        );
+        assertThat(am.getExternalUserAuthorities(authDetails)).containsExactlyInAnyOrder("ldap.role.1.a", "ldap.role.2.a", "ldap.role.2.b");
 
 
         definition.setExternalGroupsWhitelist(Collections.singletonList("ldap.role.*.*"));
-        assertThat(am.getExternalUserAuthorities(authDetails),
-                containsInAnyOrder("ldap.role.1.a", "ldap.role.1.b", "ldap.role.2.a", "ldap.role.2.b")
-        );
+        assertThat(am.getExternalUserAuthorities(authDetails)).containsExactlyInAnyOrder("ldap.role.1.a", "ldap.role.1.b", "ldap.role.2.a", "ldap.role.2.b");
 
         definition.setExternalGroupsWhitelist(Arrays.asList("ldap.role.*.*", "ldap.role.*"));
-        assertThat(am.getExternalUserAuthorities(authDetails),
-                containsInAnyOrder("ldap.role.1.a", "ldap.role.1.b", "ldap.role.1", "ldap.role.2.a", "ldap.role.2.b", "ldap.role.2")
-        );
+        assertThat(am.getExternalUserAuthorities(authDetails)).containsExactlyInAnyOrder("ldap.role.1.a", "ldap.role.1.b", "ldap.role.1", "ldap.role.2.a", "ldap.role.2.b", "ldap.role.2");
 
         definition.setExternalGroupsWhitelist(Collections.singletonList("ldap*"));
-        assertThat(am.getExternalUserAuthorities(authDetails),
-                containsInAnyOrder("ldap.role.1.a", "ldap.role.1.b", "ldap.role.1", "ldap.role.2.a", "ldap.role.2.b", "ldap.role.2")
-        );
+        assertThat(am.getExternalUserAuthorities(authDetails)).containsExactlyInAnyOrder("ldap.role.1.a", "ldap.role.1.b", "ldap.role.1", "ldap.role.2.a", "ldap.role.2.b", "ldap.role.2");
     }
 
     void test_authentication_attributes(boolean storeUserInfo) {
@@ -335,15 +316,15 @@ class LdapLoginAuthenticationManagerTests {
             verify(db, never()).storeUserInfo(anyString(), eq(info));
         }
 
-        assertEquals(2, authentication.getUserAttributes().size(), "Expected two user attributes");
-        assertNotNull(authentication.getUserAttributes().get(COST_CENTERS), "Expected cost center attribute");
-        assertEquals(DENVER_CO, authentication.getUserAttributes().getFirst(COST_CENTERS));
+        assertThat(authentication.getUserAttributes().size()).as("Expected two user attributes").isEqualTo(2);
+        assertThat(authentication.getUserAttributes().get(COST_CENTERS)).as("Expected cost center attribute").isNotNull();
+        assertThat(authentication.getUserAttributes().getFirst(COST_CENTERS)).isEqualTo(DENVER_CO);
 
-        assertNotNull(authentication.getUserAttributes().get(MANAGERS), "Expected manager attribute");
-        assertEquals(2, authentication.getUserAttributes().get(MANAGERS).size(), "Expected 2 manager attribute values");
-        assertThat(authentication.getUserAttributes().get(MANAGERS), containsInAnyOrder(JOHN_THE_SLOTH, KARI_THE_ANT_EATER));
+        assertThat(authentication.getUserAttributes().get(MANAGERS)).as("Expected manager attribute").isNotNull();
+        assertThat(authentication.getUserAttributes().get(MANAGERS).size()).as("Expected 2 manager attribute values").isEqualTo(2);
+        assertThat(authentication.getUserAttributes().get(MANAGERS)).containsExactlyInAnyOrder(JOHN_THE_SLOTH, KARI_THE_ANT_EATER);
 
-        assertThat(authentication.getAuthenticationMethods(), containsInAnyOrder("ext", "pwd"));
+        assertThat(authentication.getAuthenticationMethods()).containsExactlyInAnyOrder("ext", "pwd");
 
 
     }

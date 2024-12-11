@@ -33,18 +33,15 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-public class OAuth2RestTemplateTests {
+class OAuth2RestTemplateTests {
 
     private BaseOAuth2ProtectedResourceDetails resource;
 
@@ -57,7 +54,7 @@ public class OAuth2RestTemplateTests {
     private HttpHeaders headers;
 
     @BeforeEach
-    public void open() throws Exception {
+    void open() throws Exception {
         resource = new BaseOAuth2ProtectedResourceDetails();
         // Facebook and older specs:
         resource.setTokenName("bearer_token");
@@ -73,17 +70,17 @@ public class OAuth2RestTemplateTests {
     }
 
     @Test
-    public void testNonBearerToken() throws Exception {
+    void nonBearerToken() throws Exception {
         DefaultOAuth2AccessToken token = new DefaultOAuth2AccessToken("12345");
         token.setTokenType("MINE");
         restTemplate.getOAuth2ClientContext().setAccessToken(token);
         ClientHttpRequest http = restTemplate.createRequest(URI.create("https://nowhere.com/api/crap"), HttpMethod.GET);
         String auth = http.getHeaders().getFirst("Authorization");
-        assertTrue(auth.startsWith("MINE "));
+        assertThat(auth.startsWith("MINE ")).isTrue();
     }
 
     @Test
-    public void testCustomAuthenticator() throws Exception {
+    void customAuthenticator() throws Exception {
         DefaultOAuth2AccessToken token = new DefaultOAuth2AccessToken("12345");
         token.setTokenType("MINE");
         restTemplate.setAuthenticator(new OAuth2RequestAuthenticator() {
@@ -95,90 +92,89 @@ public class OAuth2RestTemplateTests {
         restTemplate.getOAuth2ClientContext().setAccessToken(token);
         ClientHttpRequest http = restTemplate.createRequest(URI.create("https://nowhere.com/api/crap"), HttpMethod.GET);
         String auth = http.getHeaders().getFirst("X-Authorization");
-        assertEquals("MINE Nah-nah-na-nah-nah", auth);
+        assertThat(auth).isEqualTo("MINE Nah-nah-na-nah-nah");
     }
 
     /**
      * tests appendQueryParameter
      */
     @Test
-    public void testAppendQueryParameter() throws Exception {
+    void appendQueryParameter() throws Exception {
         OAuth2AccessToken token = new DefaultOAuth2AccessToken("12345");
         URI appended = restTemplate.appendQueryParameter(URI.create("https://graph.facebook.com/search?type=checkin"),
                 token);
-        assertEquals("https://graph.facebook.com/search?type=checkin&bearer_token=12345", appended.toString());
+        assertThat(appended).hasToString("https://graph.facebook.com/search?type=checkin&bearer_token=12345");
     }
 
     /**
      * tests appendQueryParameter
      */
     @Test
-    public void testAppendQueryParameterWithNoExistingParameters() throws Exception {
+    void appendQueryParameterWithNoExistingParameters() throws Exception {
         OAuth2AccessToken token = new DefaultOAuth2AccessToken("12345");
         URI appended = restTemplate.appendQueryParameter(URI.create("https://graph.facebook.com/search"), token);
-        assertEquals("https://graph.facebook.com/search?bearer_token=12345", appended.toString());
+        assertThat(appended).hasToString("https://graph.facebook.com/search?bearer_token=12345");
     }
 
     /**
      * tests encoding of access token value
      */
     @Test
-    public void testDoubleEncodingOfParameterValue() throws Exception {
+    void doubleEncodingOfParameterValue() throws Exception {
         OAuth2AccessToken token = new DefaultOAuth2AccessToken("1/qIxxx");
         URI appended = restTemplate.appendQueryParameter(URI.create("https://graph.facebook.com/search"), token);
-        assertEquals("https://graph.facebook.com/search?bearer_token=1%2FqIxxx", appended.toString());
+        assertThat(appended).hasToString("https://graph.facebook.com/search?bearer_token=1%2FqIxxx");
     }
 
     /**
      * tests no double encoding of existing query parameter
      */
     @Test
-    public void testNonEncodingOfUriTemplate() throws Exception {
+    void nonEncodingOfUriTemplate() throws Exception {
         OAuth2AccessToken token = new DefaultOAuth2AccessToken("12345");
         UriTemplate uriTemplate = new UriTemplate("https://graph.facebook.com/fql?q={q}");
         URI expanded = uriTemplate.expand("[q: fql]");
         URI appended = restTemplate.appendQueryParameter(expanded, token);
-        assertEquals("https://graph.facebook.com/fql?q=%5Bq:%20fql%5D&bearer_token=12345", appended.toString());
+        assertThat(appended).hasToString("https://graph.facebook.com/fql?q=%5Bq:%20fql%5D&bearer_token=12345");
     }
 
     /**
      * tests URI with fragment value
      */
     @Test
-    public void testFragmentUri() throws Exception {
+    void fragmentUri() throws Exception {
         OAuth2AccessToken token = new DefaultOAuth2AccessToken("1234");
         URI appended = restTemplate.appendQueryParameter(URI.create("https://graph.facebook.com/search#foo"), token);
-        assertEquals("https://graph.facebook.com/search?bearer_token=1234#foo", appended.toString());
+        assertThat(appended).hasToString("https://graph.facebook.com/search?bearer_token=1234#foo");
     }
 
     /**
      * tests encoding of access token value passed in protected requests ref: SECOAUTH-90
      */
     @Test
-    public void testDoubleEncodingOfAccessTokenValue() throws Exception {
+    void doubleEncodingOfAccessTokenValue() throws Exception {
         // try with fictitious token value with many characters to encode
         OAuth2AccessToken token = new DefaultOAuth2AccessToken("1 qI+x:y=z");
         // System.err.println(UriUtils.encodeQueryParam(token.getValue(), "UTF-8"));
         URI appended = restTemplate.appendQueryParameter(URI.create("https://graph.facebook.com/search"), token);
-        assertEquals("https://graph.facebook.com/search?bearer_token=1+qI%2Bx%3Ay%3Dz", appended.toString());
+        assertThat(appended).hasToString("https://graph.facebook.com/search?bearer_token=1+qI%2Bx%3Ay%3Dz");
     }
 
     @Test
-    public void testNoRetryAccessDeniedExceptionForNoExistingToken() {
-        assertThrows(AccessTokenRequiredException.class, () -> {
-            restTemplate.setAccessTokenProvider(new StubAccessTokenProvider());
-            restTemplate.setRequestFactory(new ClientHttpRequestFactory() {
-                public ClientHttpRequest createRequest(URI uri, HttpMethod httpMethod) throws IOException {
-                    throw new AccessTokenRequiredException(resource);
-                }
-            });
-            restTemplate.doExecute(new URI("https://foo"), HttpMethod.GET, new NullRequestCallback(),
-                    new SimpleResponseExtractor());
+    void noRetryAccessDeniedExceptionForNoExistingToken() {
+        restTemplate.setAccessTokenProvider(new StubAccessTokenProvider());
+        restTemplate.setRequestFactory(new ClientHttpRequestFactory() {
+            public ClientHttpRequest createRequest(URI uri, HttpMethod httpMethod) throws IOException {
+                throw new AccessTokenRequiredException(resource);
+            }
         });
+        assertThatExceptionOfType(AccessTokenRequiredException.class).isThrownBy(() ->
+                restTemplate.doExecute(new URI("https://foo"), HttpMethod.GET, new NullRequestCallback(),
+                        new SimpleResponseExtractor()));
     }
 
     @Test
-    public void testRetryAccessDeniedException() throws Exception {
+    void retryAccessDeniedException() throws Exception {
         final AtomicBoolean failed = new AtomicBoolean(false);
         restTemplate.getOAuth2ClientContext().setAccessToken(new DefaultOAuth2AccessToken("TEST"));
         restTemplate.setAccessTokenProvider(new StubAccessTokenProvider());
@@ -193,68 +189,72 @@ public class OAuth2RestTemplateTests {
         });
         Boolean result = restTemplate.doExecute(new URI("https://foo"), HttpMethod.GET, new NullRequestCallback(),
                 new SimpleResponseExtractor());
-        assertTrue(result);
+        assertThat(result).isTrue();
     }
 
     @Test
-    public void testNewTokenAcquiredIfExpired() throws Exception {
+    void newTokenAcquiredIfExpired() throws Exception {
         DefaultOAuth2AccessToken token = new DefaultOAuth2AccessToken("TEST");
         token.setExpiration(new Date(System.currentTimeMillis() - 1000));
         restTemplate.getOAuth2ClientContext().setAccessToken(token);
         restTemplate.setAccessTokenProvider(new StubAccessTokenProvider());
         OAuth2AccessToken newToken = restTemplate.getAccessToken();
-        assertNotNull(newToken);
-        assertTrue(!token.equals(newToken));
+        assertThat(newToken)
+                .isNotNull()
+                .isNotEqualTo(token);
     }
 
     // gh-1478
     @Test
-    public void testNewTokenAcquiredWithDefaultClockSkew() {
+    void newTokenAcquiredWithDefaultClockSkew() {
         DefaultOAuth2AccessToken token = new DefaultOAuth2AccessToken("TEST");
         token.setExpiration(new Date(System.currentTimeMillis() + 29000));    // Default clock skew is 30 secs
         restTemplate.getOAuth2ClientContext().setAccessToken(token);
         restTemplate.setAccessTokenProvider(new StubAccessTokenProvider());
         OAuth2AccessToken newToken = restTemplate.getAccessToken();
-        assertNotNull(newToken);
-        assertTrue(!token.equals(newToken));
+        assertThat(newToken)
+                .isNotNull()
+                .isNotEqualTo(token);
     }
 
     // gh-1478
     @Test
-    public void testNewTokenAcquiredIfLessThanConfiguredClockSkew() {
+    void newTokenAcquiredIfLessThanConfiguredClockSkew() {
         DefaultOAuth2AccessToken token = new DefaultOAuth2AccessToken("TEST");
         token.setExpiration(new Date(System.currentTimeMillis() + 5000));
         restTemplate.setClockSkew(6);
         restTemplate.getOAuth2ClientContext().setAccessToken(token);
         restTemplate.setAccessTokenProvider(new StubAccessTokenProvider());
         OAuth2AccessToken newToken = restTemplate.getAccessToken();
-        assertNotNull(newToken);
-        assertTrue(!token.equals(newToken));
+        assertThat(newToken)
+                .isNotNull()
+                .isNotEqualTo(token);
     }
 
     // gh-1478
     @Test
-    public void testNewTokenNotAcquiredIfGreaterThanConfiguredClockSkew() {
+    void newTokenNotAcquiredIfGreaterThanConfiguredClockSkew() {
         DefaultOAuth2AccessToken token = new DefaultOAuth2AccessToken("TEST");
         token.setExpiration(new Date(System.currentTimeMillis() + 5000));
         restTemplate.setClockSkew(4);
         restTemplate.getOAuth2ClientContext().setAccessToken(token);
         restTemplate.setAccessTokenProvider(new StubAccessTokenProvider());
         OAuth2AccessToken newToken = restTemplate.getAccessToken();
-        assertNotNull(newToken);
-        assertTrue(token.equals(newToken));
+        assertThat(newToken)
+                .isNotNull()
+                .isEqualTo(token);
     }
 
     // gh-1478
     @Test
-    public void testNegativeClockSkew() {
-        assertThrows(IllegalArgumentException.class, () ->
+    void negativeClockSkew() {
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() ->
                 restTemplate.setClockSkew(-1));
     }
 
     // gh-1909
     @Test
-    public void testClockSkewPropagationIntoAccessTokenProviderChain() {
+    void clockSkewPropagationIntoAccessTokenProviderChain() {
         AccessTokenProvider provider = new AccessTokenProviderChain(List.of());
         restTemplate.setAccessTokenProvider(provider);
         restTemplate.setClockSkew(5);
@@ -262,12 +262,12 @@ public class OAuth2RestTemplateTests {
         Field field = ReflectionUtils.findField(provider.getClass(), "clockSkew");
         field.setAccessible(true);
 
-        assertEquals(5, ReflectionUtils.getField(field, provider));
+        assertThat(ReflectionUtils.getField(field, provider)).isEqualTo(5);
     }
 
     // gh-1909
     @Test
-    public void testApplyClockSkewOnProvidedAccessTokenProviderChain() {
+    void applyClockSkewOnProvidedAccessTokenProviderChain() {
         AccessTokenProvider provider = new AccessTokenProviderChain(List.of());
         restTemplate.setClockSkew(5);
         restTemplate.setAccessTokenProvider(provider);
@@ -275,12 +275,12 @@ public class OAuth2RestTemplateTests {
         Field field = ReflectionUtils.findField(provider.getClass(), "clockSkew");
         field.setAccessible(true);
 
-        assertEquals(5, ReflectionUtils.getField(field, provider));
+        assertThat(ReflectionUtils.getField(field, provider)).isEqualTo(5);
     }
 
     // gh-1909
     @Test
-    public void testClockSkewPropagationSkippedForNonAccessTokenProviderChainInstances() {
+    void clockSkewPropagationSkippedForNonAccessTokenProviderChainInstances() {
         restTemplate.setClockSkew(5);
         restTemplate.setAccessTokenProvider(null);
         restTemplate.setClockSkew(5);
@@ -289,7 +289,7 @@ public class OAuth2RestTemplateTests {
     }
 
     @Test
-    public void testTokenIsResetIfInvalid() throws Exception {
+    void tokenIsResetIfInvalid() throws Exception {
         DefaultOAuth2AccessToken token = new DefaultOAuth2AccessToken("TEST");
         token.setExpiration(new Date(System.currentTimeMillis() - 1000));
         restTemplate.getOAuth2ClientContext().setAccessToken(token);
@@ -302,13 +302,13 @@ public class OAuth2RestTemplateTests {
         });
         try {
             OAuth2AccessToken newToken = restTemplate.getAccessToken();
-            assertNotNull(newToken);
+            assertThat(newToken).isNotNull();
             fail("Expected UserRedirectRequiredException");
         } catch (UserRedirectRequiredException e) {
             // planned
         }
         // context token should be reset as it clearly is invalid at this point
-        assertNull(restTemplate.getOAuth2ClientContext().getAccessToken());
+        assertThat(restTemplate.getOAuth2ClientContext().getAccessToken()).isNull();
     }
 
     private final class SimpleResponseExtractor implements ResponseExtractor<Boolean> {
@@ -341,5 +341,4 @@ public class OAuth2RestTemplateTests {
             return true;
         }
     }
-
 }

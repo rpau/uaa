@@ -12,14 +12,14 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 
-public class ExternalOAuthIdentityProviderConfigValidatorTest {
+class ExternalOAuthIdentityProviderConfigValidatorTest {
     private AbstractExternalOAuthIdentityProviderDefinition definition;
     private BaseIdentityProviderValidator validator;
 
     @BeforeEach
-    public void setup() throws MalformedURLException {
+    void setup() throws MalformedURLException {
         definition = new OIDCIdentityProviderDefinition();
         definition.setAuthUrl(new URL("http://oidc10.random-made-up-url.com/oauth/authorize"));
         definition.setTokenUrl(new URL("http://oidc10.random-made-up-url.com/oauth/token"));
@@ -33,7 +33,7 @@ public class ExternalOAuthIdentityProviderConfigValidatorTest {
     }
 
     @Test
-    public void discovery_url_renders_other_urls_nullable() throws Exception {
+    void discovery_url_renders_other_urls_nullable() throws Exception {
         definition.setAuthUrl(null);
         definition.setTokenUrl(null);
         definition.setTokenKeyUrl(null);
@@ -44,82 +44,74 @@ public class ExternalOAuthIdentityProviderConfigValidatorTest {
     }
 
     @Test
-    public void configWithNullAuthUrl_ThrowsException() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            definition.setAuthUrl(null);
-            validator = new ExternalOAuthIdentityProviderConfigValidator();
-            validator.validate(definition);
-        });
+    void configWithNullAuthUrl_ThrowsException() {
+        definition.setAuthUrl(null);
+        validator = new ExternalOAuthIdentityProviderConfigValidator();
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() ->
+                validator.validate(definition));
     }
 
     @Test
-    public void configWithNullTokenUrl_ThrowsException() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            definition.setTokenUrl(null);
-            validator = new ExternalOAuthIdentityProviderConfigValidator();
-            validator.validate(definition);
-        });
+    void configWithNullTokenUrl_ThrowsException() {
+        definition.setTokenUrl(null);
+        validator = new ExternalOAuthIdentityProviderConfigValidator();
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() ->
+                validator.validate(definition));
     }
 
     @Test
-    public void configWithNullRelyingPartyId_ThrowsException() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            definition.setRelyingPartyId(null);
-            validator = new ExternalOAuthIdentityProviderConfigValidator();
-            validator.validate(definition);
-        });
+    void configWithNullRelyingPartyId_ThrowsException() {
+        definition.setRelyingPartyId(null);
+        validator = new ExternalOAuthIdentityProviderConfigValidator();
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() ->
+                validator.validate(definition));
     }
 
     @Test
-    public void configWithNullRelyingPartySecret_ThrowsException() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            definition.setRelyingPartySecret(null);
-            definition.setAuthMethod(ClientAuthentication.CLIENT_SECRET_BASIC);
-            validator = new ExternalOAuthIdentityProviderConfigValidator();
-            validator.validate(definition);
-        });
+    void configWithNullRelyingPartySecret_ThrowsException() {
+        definition.setRelyingPartySecret(null);
+        definition.setAuthMethod(ClientAuthentication.CLIENT_SECRET_BASIC);
+        validator = new ExternalOAuthIdentityProviderConfigValidator();
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() ->
+                validator.validate(definition));
     }
 
     @Test
-    public void configWithJwtClientConfiguratButAuthMethodSecret_ThrowsException() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            definition.setRelyingPartySecret("secret");
-            ((OIDCIdentityProviderDefinition) definition).setJwtClientAuthentication(new Object());
-            validator = new ExternalOAuthIdentityProviderConfigValidator();
-            validator.validate(definition);
-        });
+    void configWithJwtClientConfiguratButAuthMethodSecret_ThrowsException() {
+        definition.setRelyingPartySecret("secret");
+        ((OIDCIdentityProviderDefinition) definition).setJwtClientAuthentication(new Object());
+        validator = new ExternalOAuthIdentityProviderConfigValidator();
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() ->
+                validator.validate(definition));
     }
 
     @Test
-    public void configWithPrivateKeyJwtButNoJwtConfiguration_ThrowsException() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            definition.setAuthMethod(ClientAuthentication.PRIVATE_KEY_JWT);
-            validator = new ExternalOAuthIdentityProviderConfigValidator();
-            validator.validate(definition);
-        });
+    void configWithPrivateKeyJwtButNoJwtConfiguration_ThrowsException() {
+        definition.setAuthMethod(ClientAuthentication.PRIVATE_KEY_JWT);
+        validator = new ExternalOAuthIdentityProviderConfigValidator();
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() ->
+                validator.validate(definition));
     }
 
     @Test
-    public void configWithInvalidAuthMethod_ThrowsException() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            definition.setAuthMethod("no-sure-about-this");
-            validator = new ExternalOAuthIdentityProviderConfigValidator();
-            validator.validate(definition);
-        });
+    void configWithInvalidAuthMethod_ThrowsException() {
+        definition.setAuthMethod("no-sure-about-this");
+        validator = new ExternalOAuthIdentityProviderConfigValidator();
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() ->
+                validator.validate(definition));
     }
 
     @Test
-    public void configWithShowLinkTextTrue_mustHaveLinkText() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            definition.setShowLinkText(true);
-            definition.setLinkText(null);
-            validator = new ExternalOAuthIdentityProviderConfigValidator();
-            validator.validate(definition);
-        });
+    void configWithShowLinkTextTrue_mustHaveLinkText() {
+        definition.setShowLinkText(true);
+        definition.setLinkText(null);
+        validator = new ExternalOAuthIdentityProviderConfigValidator();
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() ->
+                validator.validate(definition));
     }
 
     @Test
-    public void configWithShowLinkTextFalse_doesNotNeedLinkText() {
+    void configWithShowLinkTextFalse_doesNotNeedLinkText() {
         definition.setShowLinkText(false);
         definition.setLinkText(null);
         validator = new ExternalOAuthIdentityProviderConfigValidator();
@@ -127,7 +119,7 @@ public class ExternalOAuthIdentityProviderConfigValidatorTest {
     }
 
     @Test
-    public void no_client_secret_needed_for_implicit() {
+    void no_client_secret_needed_for_implicit() {
         definition.setRelyingPartySecret(null);
         definition.setResponseType("code id_token");
         validator = new ExternalOAuthIdentityProviderConfigValidator();
@@ -136,22 +128,21 @@ public class ExternalOAuthIdentityProviderConfigValidatorTest {
 
 
     @Test
-    public void configCannotBeNull() {
-        assertThrows(IllegalArgumentException.class, () ->
+    void configCannotBeNull() {
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() ->
                 validator.validate((AbstractExternalOAuthIdentityProviderDefinition) null));
     }
 
     @Test
-    public void tokenKeyUrl_orTokenKeyMustBeSpecified() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            definition.setTokenKey(null);
-            definition.setTokenKeyUrl(null);
-            validator.validate(definition);
-        });
+    void tokenKeyUrl_orTokenKeyMustBeSpecified() {
+        definition.setTokenKey(null);
+        definition.setTokenKeyUrl(null);
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() ->
+                validator.validate(definition));
     }
 
     @Test
-    public void testAdditionalParametersAdd() {
+    void additionalParametersAdd() {
         OIDCIdentityProviderDefinition oidcIdentityProviderDefinition = (OIDCIdentityProviderDefinition) definition;
         // nothing
         oidcIdentityProviderDefinition.setAdditionalAuthzParameters(null);
@@ -165,12 +156,10 @@ public class ExternalOAuthIdentityProviderConfigValidatorTest {
     }
 
     @Test
-    public void testAdditionalParametersError() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            OIDCIdentityProviderDefinition oidcIdentityProviderDefinition = (OIDCIdentityProviderDefinition) definition;
-            // one standard parameter, should fail
-            oidcIdentityProviderDefinition.setAdditionalAuthzParameters(Map.of("token_format", "jwt", "code", "1234"));
-            validator.validate(definition);
-        });
+    void additionalParametersError() {
+        OIDCIdentityProviderDefinition oidcIdentityProviderDefinition = (OIDCIdentityProviderDefinition) definition;
+        oidcIdentityProviderDefinition.setAdditionalAuthzParameters(Map.of("token_format", "jwt", "code", "1234"));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() ->
+                validator.validate(definition));
     }
 }

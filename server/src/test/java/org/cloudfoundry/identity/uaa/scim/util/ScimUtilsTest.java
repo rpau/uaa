@@ -4,9 +4,9 @@ import org.cloudfoundry.identity.uaa.codestore.ExpiringCode;
 import org.cloudfoundry.identity.uaa.codestore.ExpiringCodeStore;
 import org.cloudfoundry.identity.uaa.codestore.ExpiringCodeType;
 import org.cloudfoundry.identity.uaa.constants.OriginKeys;
+import org.cloudfoundry.identity.uaa.extensions.PollutionPreventionExtension;
 import org.cloudfoundry.identity.uaa.scim.ScimUser;
 import org.cloudfoundry.identity.uaa.scim.exception.InvalidScimResourceException;
-import org.cloudfoundry.identity.uaa.extensions.PollutionPreventionExtension;
 import org.cloudfoundry.identity.uaa.zone.IdentityZone;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,10 +24,12 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(PollutionPreventionExtension.class)
 class ScimUtilsTest {
@@ -64,8 +66,8 @@ class ScimUtilsTest {
                 eq("REGISTRATION"),
                 eq(currentZoneId));
 
-        assertThat(timestampArgumentCaptor.getValue().after(before), is(true));
-        assertThat(timestampArgumentCaptor.getValue().before(after), is(true));
+        assertThat(timestampArgumentCaptor.getValue().after(before)).isEqualTo(true);
+        assertThat(timestampArgumentCaptor.getValue().before(after)).isEqualTo(true);
     }
 
     @Nested
@@ -103,7 +105,7 @@ class ScimUtilsTest {
 
                 URL expected = new URL("http://localhost:8080/uaa/verify_user?code=code");
 
-                assertThat(actual.toString(), is(expected.toString()));
+                assertThat(actual.toString()).isEqualTo(expected.toString());
             }
 
         }
@@ -120,7 +122,7 @@ class ScimUtilsTest {
 
                 URL expected = new URL("http://subdomain.localhost:8080/uaa/verify_user?code=code");
 
-                assertThat(actual.toString(), is(expected.toString()));
+                assertThat(actual.toString()).isEqualTo(expected.toString());
             }
         }
     }
@@ -137,7 +139,7 @@ class ScimUtilsTest {
         emails.add(email2);
         user.setEmails(emails);
 
-        assertThrows(InvalidScimResourceException.class, () -> ScimUtils.validate(user));
+        assertThatExceptionOfType(InvalidScimResourceException.class).isThrownBy(() -> ScimUtils.validate(user));
     }
 
     @Test
@@ -149,7 +151,7 @@ class ScimUtilsTest {
         emails.add(email);
         user.setEmails(emails);
 
-        assertThrows(InvalidScimResourceException.class, () -> ScimUtils.validate(user));
+        assertThatExceptionOfType(InvalidScimResourceException.class).isThrownBy(() -> ScimUtils.validate(user));
     }
 
     @Test
@@ -158,7 +160,7 @@ class ScimUtilsTest {
         user.setOrigin(OriginKeys.UAA);
         user.addEmail("jo@blah.com");
 
-        assertThrows(InvalidScimResourceException.class, () -> ScimUtils.validate(user));
+        assertThatExceptionOfType(InvalidScimResourceException.class).isThrownBy(() -> ScimUtils.validate(user));
     }
 
 }

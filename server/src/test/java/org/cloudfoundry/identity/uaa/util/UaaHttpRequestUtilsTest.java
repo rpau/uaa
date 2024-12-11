@@ -30,9 +30,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.cloudfoundry.identity.uaa.util.UaaHttpRequestUtils.createRequestFactory;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
 import static org.springframework.http.HttpStatus.OK;
 
 public class UaaHttpRequestUtilsTest {
@@ -47,14 +47,14 @@ public class UaaHttpRequestUtilsTest {
     private NetworkTestUtils.SimpleHttpResponseHandler httpsResponseHandler;
 
     @BeforeAll
-    public static void storeSystemProxyConfig() {
+    static void storeSystemProxyConfig() {
         for (String s : Arrays.asList(HTTP_HOST_PROPERTY, HTTP_PORT_PROPERTY, HTTPS_HOST_PROPERTY, HTTPS_PORT_PROPERTY)) {
             systemProxyConfig.put(s, System.getProperty(s));
         }
     }
 
     @AfterAll
-    public static void restoreSystemProxyConfig() {
+    static void restoreSystemProxyConfig() {
         for (Map.Entry<String, String> entry : systemProxyConfig.entrySet()) {
             if (entry.getValue() != null) {
                 System.setProperty(entry.getKey(), entry.getValue());
@@ -77,7 +77,7 @@ public class UaaHttpRequestUtilsTest {
     private String httpUrl;
 
     @BeforeEach
-    public void setup() throws Exception {
+    void setup() throws Exception {
         clearSystemProxyConfig();
         File keystore = NetworkTestUtils.getKeystore(new Date(), 10);
         HttpHeaders headers = new HttpHeaders();
@@ -92,13 +92,13 @@ public class UaaHttpRequestUtilsTest {
     }
 
     @AfterEach
-    public void teardown() {
+    void teardown() {
         httpsServer.stop(0);
         httpServer.stop(0);
     }
 
     @Test
-    public void testHttpProxy() throws Exception {
+    void httpProxy() throws Exception {
         String host = "localhost";
         System.setProperty(HTTP_HOST_PROPERTY, host);
         System.setProperty(HTTP_PORT_PROPERTY, String.valueOf(httpServer.getAddress().getPort()));
@@ -106,7 +106,7 @@ public class UaaHttpRequestUtilsTest {
     }
 
     @Test
-    public void testHttpsProxy() throws Exception {
+    void httpsProxy() throws Exception {
         String host = "localhost";
         System.setProperty("https.protocols", " TLSv1.2, TLSv1.3 ");
         System.setProperty(HTTPS_HOST_PROPERTY, host);
@@ -115,7 +115,7 @@ public class UaaHttpRequestUtilsTest {
     }
 
     @Test
-    public void testHttpIpProxy() throws Exception {
+    void httpIpProxy() throws Exception {
         String ip = "127.0.0.1";
         System.setProperty(HTTP_HOST_PROPERTY, ip);
         System.setProperty(HTTP_PORT_PROPERTY, String.valueOf(httpServer.getAddress().getPort()));
@@ -123,7 +123,7 @@ public class UaaHttpRequestUtilsTest {
     }
 
     @Test
-    public void testHttpsIpProxy() throws Exception {
+    void httpsIpProxy() throws Exception {
         String ip = "127.0.0.1";
         System.setProperty(HTTPS_HOST_PROPERTY, ip);
         System.setProperty(HTTPS_PORT_PROPERTY, String.valueOf(httpServer.getAddress().getPort()));
@@ -140,26 +140,26 @@ public class UaaHttpRequestUtilsTest {
             template.getForObject(url, String.class);
         } catch (Exception ignored) {
         }
-        assertEquals(1, routePlanner.routes.size());
-        assertEquals(expectedHost, routePlanner.routes.get(0).getProxyHost().getHostName());
-        assertEquals(expectedPort, routePlanner.routes.get(0).getProxyHost().getPort());
-        assertEquals(wantHandlerInvoked, httpResponseHandler.wasInvoked());
+        assertThat(routePlanner.routes.size()).isEqualTo(1);
+        assertThat(routePlanner.routes.get(0).getProxyHost().getHostName()).isEqualTo(expectedHost);
+        assertThat(routePlanner.routes.get(0).getProxyHost().getPort()).isEqualTo(expectedPort);
+        assertThat(httpResponseHandler.wasInvoked()).isEqualTo(wantHandlerInvoked);
     }
 
     @Test
-    public void skipSslValidation() {
+    void skipSslValidation() {
         RestTemplate restTemplate = new RestTemplate(createRequestFactory(true, 10_000));
-        assertEquals(OK, restTemplate.getForEntity(httpsUrl, String.class).getStatusCode());
+        assertThat(restTemplate.getForEntity(httpsUrl, String.class).getStatusCode()).isEqualTo(OK);
     }
 
     @Test
-    public void trustedOnly() {
+    void trustedOnly() {
         RestTemplate restTemplate = new RestTemplate(UaaHttpRequestUtils.createRequestFactory(false, 10_000));
         try {
             restTemplate.getForEntity(httpsUrl, String.class);
             fail("We should not reach this step if the above URL is using a self signed certificate");
         } catch (RestClientException e) {
-            assertEquals(SSLHandshakeException.class, e.getCause().getClass());
+            assertThat(e.getCause().getClass()).isEqualTo(SSLHandshakeException.class);
         }
     }
 

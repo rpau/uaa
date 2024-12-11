@@ -18,14 +18,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
-public class ExceptionReportHttpMessageConverterTest {
+class ExceptionReportHttpMessageConverterTest {
 
     private ExceptionReportHttpMessageConverter exceptionReportHttpMessageConverter;
     private HttpMessageConverter httpMessageConverter;
     private HttpOutputMessage httpOutputMessage;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         exceptionReportHttpMessageConverter = new ExceptionReportHttpMessageConverter();
 
         httpMessageConverter = mock(HttpMessageConverter.class);
@@ -38,7 +38,7 @@ public class ExceptionReportHttpMessageConverterTest {
     }
 
     @Test
-    public void testWriteInternal() throws Exception {
+    void writeInternal() throws Exception {
         ExceptionReport report = new ExceptionReport(new Exception("oh noes!"));
 
         exceptionReportHttpMessageConverter.writeInternal(report, httpOutputMessage);
@@ -51,7 +51,7 @@ public class ExceptionReportHttpMessageConverterTest {
     }
 
     @Test
-    public void testWriteInteralWithExtraInfo() throws Exception {
+    void writeInteralWithExtraInfo() throws Exception {
         Map<String, Object> extraInfo = new HashMap<>();
         extraInfo.put("user_id", "cba09242-aa43-4247-9aa0-b5c75c281f94");
         extraInfo.put("active", true);

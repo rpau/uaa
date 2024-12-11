@@ -40,8 +40,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Integration test to verify that the userid translation use cases are
@@ -85,7 +84,7 @@ public class CfUserIdTranslationEndpointIntegrationTests {
                 ScimUser.class);
 
         ScimUser joe = newuser.getBody();
-        assertEquals(JOE, joe.getUserName());
+        assertThat(joe.getUserName()).isEqualTo(JOE);
 
         PasswordChangeRequest change = new PasswordChangeRequest();
         change.setPassword("Passwo3d");
@@ -95,7 +94,7 @@ public class CfUserIdTranslationEndpointIntegrationTests {
                 .exchange(serverRunning.getUrl(userEndpoint) + "/{id}/password",
                         HttpMethod.PUT, new HttpEntity<PasswordChangeRequest>(change, headers),
                         Void.class, joe.getId());
-        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
 
         // The implicit grant for cf requires extra parameters in the
         // authorization request
@@ -104,7 +103,7 @@ public class CfUserIdTranslationEndpointIntegrationTests {
     }
 
     @BeforeEach
-    public void setErrorHandlerOnRestTemplate() {
+    void setErrorHandlerOnRestTemplate() {
         ((RestTemplate) serverRunning.getRestTemplate()).setErrorHandler(new OAuth2ErrorHandler(context.getResource()) {
             // Pass errors through in response entity for status code analysis
             @Override
@@ -119,45 +118,45 @@ public class CfUserIdTranslationEndpointIntegrationTests {
     }
 
     @Test
-    public void findUsersWithExplicitFilterSucceeds() {
+    void findUsersWithExplicitFilterSucceeds() {
         @SuppressWarnings("rawtypes")
         ResponseEntity<Map> response = serverRunning.getForObject(idsEndpoint + "?filter=userName eq \"" + JOE + "\"",
                 Map.class);
         @SuppressWarnings("unchecked")
         Map<String, Object> results = response.getBody();
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(1, results.get("totalResults"));
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(results.get("totalResults")).isEqualTo(1);
     }
 
     @Test
-    public void findUsersExplicitEmailFails() {
+    void findUsersExplicitEmailFails() {
         @SuppressWarnings("rawtypes")
         ResponseEntity<Map> response = serverRunning.getForObject(idsEndpoint + "?filter=emails.value sw \"joe\"",
                 Map.class);
         @SuppressWarnings("unchecked")
         Map<String, Object> results = response.getBody();
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertNotNull(results.get("error"), "There should be an error");
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(results.get("error")).as("There should be an error").isNotNull();
     }
 
     @Test
-    public void findUsersExplicitPresentFails() {
+    void findUsersExplicitPresentFails() {
         @SuppressWarnings("rawtypes")
         ResponseEntity<Map> response = serverRunning.getForObject(idsEndpoint + "?filter=pr userType", Map.class);
         @SuppressWarnings("unchecked")
         Map<String, Object> results = response.getBody();
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertNotNull(results.get("error"), "There should be an error");
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(results.get("error")).as("There should be an error").isNotNull();
     }
 
     @Test
-    public void findUsersExplicitGroupFails() {
+    void findUsersExplicitGroupFails() {
         @SuppressWarnings("rawtypes")
         ResponseEntity<Map> response = serverRunning.getForObject(idsEndpoint + "?filter=groups.display co \"foo\"",
                 Map.class);
         @SuppressWarnings("unchecked")
         Map<String, Object> results = response.getBody();
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertNotNull(results.get("error"), "There should be an error");
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(results.get("error")).as("There should be an error").isNotNull();
     }
 }

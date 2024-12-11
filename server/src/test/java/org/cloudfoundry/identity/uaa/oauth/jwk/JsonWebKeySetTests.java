@@ -22,11 +22,9 @@ import java.text.ParseException;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.cloudfoundry.identity.uaa.oauth.jwk.JsonWebKey.KeyUse.sig;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class JsonWebKeySetTests {
 
@@ -127,112 +125,97 @@ public class JsonWebKeySetTests {
 
 
     @Test
-    public void test_multi_key() {
+    void multi_key() {
         JsonWebKeySet<JsonWebKey> keys = test_key(multiKeyJson);
-        assertEquals(3, keys.getKeys().size());
+        assertThat(keys.getKeys().size()).isEqualTo(3);
         JsonWebKey key = keys.getKeys().get(1);
-        assertEquals("HMACSHA256", key.getAlgorithm());
+        assertThat(key.getAlgorithm()).isEqualTo("HMACSHA256");
 
-        assertEquals(
-                "test-mac-key",
-                key.getValue()
-        );
+        assertThat(key.getValue()).isEqualTo("test-mac-key");
 
-        assertEquals(
-                "test-mac-key",
-                key.getKeyProperties().get("k")
-        );
+        assertThat(key.getKeyProperties().get("k")).isEqualTo("test-mac-key");
 
-        assertNull(key.getUse());
-        assertEquals(new LinkedHashSet<>(Arrays.asList(JsonWebKey.KeyOperation.sign, JsonWebKey.KeyOperation.verify)), key.getKeyOps());
+        assertThat(key.getUse()).isNull();
+        assertThat(key.getKeyOps()).isEqualTo(new LinkedHashSet<>(Arrays.asList(JsonWebKey.KeyOperation.sign, JsonWebKey.KeyOperation.verify)));
     }
 
     @Test
-    public void test_multi_key_rfc7518() {
+    void multi_key_rfc7518() {
         JsonWebKeySet<JsonWebKey> keys = test_key(multiKeyJson);
-        assertEquals(3, keys.getKeys().size());
+        assertThat(keys.getKeys().size()).isEqualTo(3);
         JsonWebKey key = keys.getKeys().get(2);
-        assertEquals("HS256", key.getAlgorithm());
+        assertThat(key.getAlgorithm()).isEqualTo("HS256");
 
-        assertEquals(
-                "test-oct-key",
-                key.getValue()
-        );
+        assertThat(key.getValue()).isEqualTo("test-oct-key");
 
-        assertEquals(
-                "test-oct-key",
-                key.getKeyProperties().get("k")
-        );
+        assertThat(key.getKeyProperties().get("k")).isEqualTo("test-oct-key");
 
-        assertNull(key.getUse());
-        assertEquals(new LinkedHashSet<>(Arrays.asList(JsonWebKey.KeyOperation.verify)), key.getKeyOps());
+        assertThat(key.getUse()).isNull();
+        assertThat(key.getKeyOps()).isEqualTo(new LinkedHashSet<>(Arrays.asList(JsonWebKey.KeyOperation.verify)));
     }
 
     @Test
-    public void test_single_key() {
+    void single_key() {
         test_key(singleKeyJson);
     }
 
     public JsonWebKeySet<JsonWebKey> test_key(String json) {
         JsonWebKeySet<JsonWebKey> keys = JsonWebKeyHelper.deserialize(json);
-        assertNotNull(keys);
-        assertNotNull(keys.getKeys());
+        assertThat(keys).isNotNull();
+        assertThat(keys.getKeys()).isNotNull();
         JsonWebKey key = keys.getKeys().get(0);
-        assertEquals("RS256", key.getAlgorithm());
-        assertEquals(
-                "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDHFr+KICms+tuT1OXJwhCUmR2d\nKVy7psa8xzElSyzqx7oJyfJ1JZyOzToj9T5SfTIq396agbHJWVfYphNahvZ/7uMX\nqHxf+ZH9BL1gk9Y6kCnbM5R60gfwjyW1/dQPjOzn9N394zd2FJoFHwdq9Qs0wBug\nspULZVNRxq7veq/fzwIDAQAB\n-----END PUBLIC KEY-----",
-                key.getValue()
-        );
-        assertEquals(sig, key.getUse());
+        assertThat(key.getAlgorithm()).isEqualTo("RS256");
+        assertThat(key.getValue()).isEqualTo("-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDHFr+KICms+tuT1OXJwhCUmR2d\nKVy7psa8xzElSyzqx7oJyfJ1JZyOzToj9T5SfTIq396agbHJWVfYphNahvZ/7uMX\nqHxf+ZH9BL1gk9Y6kCnbM5R60gfwjyW1/dQPjOzn9N394zd2FJoFHwdq9Qs0wBug\nspULZVNRxq7veq/fzwIDAQAB\n-----END PUBLIC KEY-----");
+        assertThat(key.getUse()).isEqualTo(sig);
         return keys;
     }
 
     @Test
-    public void testUnknownKeyType() {
+    void unknownKeyType() {
         JsonWebKeySet<JsonWebKey> keys = JsonWebKeyHelper.deserialize(unknownKeyJson);
-        assertEquals(0, keys.getKeys().size());
+        assertThat(keys.getKeys().size()).isEqualTo(0);
     }
 
     @Test
-    public void testIgnoreUnknownKeyTypes() {
+    void ignoreUnknownKeyTypes() {
         JsonWebKeySet<JsonWebKey> keys = JsonWebKeyHelper.deserialize(someUnknownKeysJson);
-        assertEquals(1, keys.getKeys().size());
+        assertThat(keys.getKeys().size()).isEqualTo(1);
     }
 
     @Test
-    public void testJsonKeySetParseJson() throws ParseException {
+    void jsonKeySetParseJson() throws ParseException {
         String jsonConfig = "{\"keys\":[{\"kty\":\"RSA\",\"e\":\"AQAB\",\"use\":\"sig\",\"kid\":\"key-1\",\"alg\":\"RS256\",\"n\":\"xMi4Z4FBfQEOdNYLmzxkYJvP02TSeapZMKMQo90JQRL07ttIKcDMP6pGcirOGSQWWBBpvdo5EnVOiNzViu9JCJP2IWbHJ4sRe0S1dySYdBRVV_ZkgWOrj7Cr2yT0ZVvCCzH7NAWmlA6LUV19Mnp-ugeGoxK-fsk8SRLS_Z9JdyxgOb3tPxdDas3MZweMZ6HqujoAAG9NASBGjFNXbhMckrEfecwm3OJzsjGFxhqXRqkTsGEHvzETMxfvSkTkldOzmErnjpwyoOPLrXcWIs1wvdXHakfVHSvyb3T4gm3ZfOOoUf6lrd2w1pF_PkA88NkjN2-W9fQmbUzNgVjEQiXo4w\"}]}";
         JsonWebKeySet<JsonWebKey> keys = JsonWebKeyHelper.parseConfiguration(jsonConfig);
-        assertEquals(1, keys.getKeys().size());
-        assertEquals(1, keys.getKeySetMap().size());
+        assertThat(keys.getKeys().size()).isEqualTo(1);
+        assertThat(keys.getKeySetMap().size()).isEqualTo(1);
         JWKSet joseSet = JWKSet.parse(keys.getKeySetMap());
-        assertNotNull(joseSet);
-        assertEquals(1, joseSet.size());
+        assertThat(joseSet).isNotNull();
+        assertThat(joseSet.size()).isEqualTo(1);
     }
 
     @Test
-    public void testJsonKeySetParsePublicKey() throws ParseException {
+    void jsonKeySetParsePublicKey() throws ParseException {
         String publicKey = "-----BEGIN PUBLIC KEY-----MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxMi4Z4FBfQEOdNYLmzxkYJvP02TSeapZMKMQo90JQRL07ttIKcDMP6pGcirOGSQWWBBpvdo5EnVOiNzViu9JCJP2IWbHJ4sRe0S1dySYdBRVV/ZkgWOrj7Cr2yT0ZVvCCzH7NAWmlA6LUV19Mnp+ugeGoxK+fsk8SRLS/Z9JdyxgOb3tPxdDas3MZweMZ6HqujoAAG9NASBGjFNXbhMckrEfecwm3OJzsjGFxhqXRqkTsGEHvzETMxfvSkTkldOzmErnjpwyoOPLrXcWIs1wvdXHakfVHSvyb3T4gm3ZfOOoUf6lrd2w1pF/PkA88NkjN2+W9fQmbUzNgVjEQiXo4wIDAQAB-----END PUBLIC KEY-----";
         JsonWebKeySet<JsonWebKey> keys = JsonWebKeyHelper.parseConfiguration(publicKey);
-        assertEquals(1, keys.getKeys().size());
-        assertEquals(1, keys.getKeySetMap().size());
+        assertThat(keys.getKeys().size()).isEqualTo(1);
+        assertThat(keys.getKeySetMap().size()).isEqualTo(1);
         JWKSet joseSet = JWKSet.parse(keys.getKeySetMap());
-        assertNotNull(joseSet);
-        assertEquals(1, joseSet.size());
+        assertThat(joseSet).isNotNull();
+        assertThat(joseSet.size()).isEqualTo(1);
     }
 
     @Test
-    public void testJsonKeySetParseFailurePEM() throws ParseException {
+    void jsonKeySetParseFailurePEM() throws ParseException {
         String publicKey = "-----BEGIN PUBLIC KEY-----tokenKey-----END PUBLIC KEY-----";
-        assertThrows(IllegalArgumentException.class, () -> JsonWebKeyHelper.parseConfiguration(publicKey));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> JsonWebKeyHelper.parseConfiguration(publicKey));
     }
 
     @Test
-    public void testJsonKeySetParseRawKey() {
+    void jsonKeySetParseRawKey() {
         String macKey = "tokenKey";
         JsonWebKeySet<JsonWebKey> keys = JsonWebKeyHelper.parseConfiguration(macKey);
-        assertEquals(1, keys.getKeys().size());
-        assertEquals(JsonWebKey.KeyType.MAC, keys.getKeys().get(0).getKty());
-        assertEquals(macKey, keys.getKeys().get(0).getValue());
+        assertThat(keys.getKeys().size()).isEqualTo(1);
+        assertThat(keys.getKeys().get(0).getKty()).isEqualTo(JsonWebKey.KeyType.MAC);
+        assertThat(keys.getKeys().get(0).getValue()).isEqualTo(macKey);
     }
 }

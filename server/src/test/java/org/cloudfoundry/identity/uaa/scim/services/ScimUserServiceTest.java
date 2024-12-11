@@ -66,7 +66,7 @@ class ScimUserServiceTest {
     @Nested
     private abstract class Base {
         @Test
-        final void testUpdate_ShouldThrow_WhenAliasPropertiesAreInvalid() {
+        final void updateShouldThrowWhenAliasPropertiesAreInvalid() {
             // mock existing user
             final ScimUser existingUser = mock(ScimUser.class);
             when(scimUserProvisioning.retrieve(userId, idzId)).thenReturn(existingUser);
@@ -101,7 +101,7 @@ class ScimUserServiceTest {
         }
 
         @Test
-        void testUpdate_ShouldAlsoUpdateAlias_WhenAliasPropertiesAreValid() {
+        void updateShouldAlsoUpdateAliasWhenAliasPropertiesAreValid() {
             // mock existing user
             final ScimUser existingUser = buildExemplaryUser(userId, idzId, origin);
             when(scimUserProvisioning.retrieve(userId, idzId)).thenReturn(existingUser);
@@ -142,7 +142,7 @@ class ScimUserServiceTest {
         }
 
         @Test
-        void testUpdate_ShouldUpdateOnlyOriginalUser_WhenAliasEnabledAndPropertiesAreValid() {
+        void updateShouldUpdateOnlyOriginalUserWhenAliasEnabledAndPropertiesAreValid() {
             // mock existing user
             final ScimUser existingUser = buildExemplaryUser(userId, idzId, origin);
             when(scimUserProvisioning.retrieve(userId, idzId)).thenReturn(existingUser);

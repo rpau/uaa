@@ -27,13 +27,12 @@ import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.util.HashMap;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Dave Syer
  */
-public class ConvertingExceptionViewTests {
+class ConvertingExceptionViewTests {
 
     private ConvertingExceptionView view;
 
@@ -44,20 +43,20 @@ public class ConvertingExceptionViewTests {
     private final MockHttpServletResponse response = new MockHttpServletResponse();
 
     @Test
-    public void testGetContentType() {
+    void getContentType() {
         RuntimeException e = new RuntimeException("Unexpected error");
         view = new ConvertingExceptionView(new ResponseEntity<ExceptionReport>(new ExceptionReport(e),
                 HttpStatus.INTERNAL_SERVER_ERROR), messageConverters);
-        assertEquals(MediaType.APPLICATION_JSON_UTF8_VALUE, view.getContentType());
+        assertThat(view.getContentType()).isEqualTo(MediaType.APPLICATION_JSON_UTF8_VALUE);
     }
 
     @Test
-    public void testRender() throws Exception {
+    void render() throws Exception {
         RuntimeException e = new RuntimeException("Unexpected error");
         view = new ConvertingExceptionView(new ResponseEntity<ExceptionReport>(new ExceptionReport(e),
                 HttpStatus.INTERNAL_SERVER_ERROR), messageConverters);
         view.render(new HashMap<String, Object>(), request, response);
-        assertNotNull(response.getContentAsString());
+        assertThat(response.getContentAsString()).isNotNull();
     }
 
 }

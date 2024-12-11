@@ -44,7 +44,7 @@ class UaaAuthenticationSerializationTests {
     private static final String KARI_THE_ANT_EATER = "Kari the Ant Eater";
 
     @Test
-    void test_serialization() {
+    void serialization() {
         UaaPrincipal principal = new UaaPrincipal("id", "username", "email", "origin", "externalId", "zoneId");
         HttpSession session = mock(HttpSession.class);
         when(session.getId()).thenReturn("id");
@@ -110,7 +110,7 @@ class UaaAuthenticationSerializationTests {
     }
 
     @Test
-    void testDeserializationWithoutAuthenticatedTime() {
+    void deserializationWithoutAuthenticatedTime() {
         String data = "{\"principal\":{\"id\":\"user-id\",\"name\":\"username\",\"email\":\"email\",\"origin\":\"uaa\",\"externalId\":null,\"zoneId\":\"uaa\"},\"credentials\":null,\"authorities\":[],\"details\":null,\"authenticated\":true,\"authenticatedTime\":1438649464353,\"name\":\"username\"}";
         UaaAuthentication authentication1 = JsonUtils.readValue(data, UaaAuthentication.class);
         assertThat(authentication1.getAuthenticatedTime()).isEqualTo(1438649464353L);

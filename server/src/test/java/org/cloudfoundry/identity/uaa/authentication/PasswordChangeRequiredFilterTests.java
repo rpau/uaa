@@ -37,7 +37,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
-public class PasswordChangeRequiredFilterTests {
+class PasswordChangeRequiredFilterTests {
     private PasswordChangeRequiredFilter filter;
     private MockHttpSession session;
     private MockHttpServletRequest request;
@@ -46,7 +46,7 @@ public class PasswordChangeRequiredFilterTests {
     private FilterChain chain;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         UaaAuthentication authentication = new UaaAuthentication(
                 new UaaPrincipal("fake-id", "fake-username", "email@email.com", "origin", "", "uaa"),
                 emptyList(),
@@ -67,13 +67,13 @@ public class PasswordChangeRequiredFilterTests {
     }
 
     @AfterEach
-    public void teardown() {
+    void teardown() {
         SecurityContextHolder.clearContext();
         IdentityZoneHolder.clear();
     }
 
     @Test
-    public void password_change_required() throws Exception {
+    void password_change_required() throws Exception {
         SessionUtils.setPasswordChangeRequired(session, true);
         filter.doFilterInternal(request, response, chain);
         verifyNoInteractions(chain);
@@ -81,14 +81,14 @@ public class PasswordChangeRequiredFilterTests {
     }
 
     @Test
-    public void password_change_not_required() throws Exception {
+    void password_change_not_required() throws Exception {
         filter.doFilterInternal(request, response, chain);
         verifyNoInteractions(entryPoint);
         verify(chain, times(1)).doFilter(same(request), same(response));
     }
 
     @Test
-    public void no_authentication() throws Exception {
+    void no_authentication() throws Exception {
         SecurityContextHolder.clearContext();
         filter.doFilterInternal(request, response, chain);
         verifyNoInteractions(entryPoint);

@@ -9,10 +9,10 @@ import org.cloudfoundry.identity.uaa.scim.jdbc.JdbcScimGroupMembershipManager;
 import org.cloudfoundry.identity.uaa.scim.jdbc.JdbcScimGroupProvisioning;
 import org.cloudfoundry.identity.uaa.scim.jdbc.JdbcScimUserProvisioning;
 import org.cloudfoundry.identity.uaa.scim.test.TestUtils;
-import org.cloudfoundry.identity.uaa.util.beans.DbUtils;
 import org.cloudfoundry.identity.uaa.util.MapCollector;
 import org.cloudfoundry.identity.uaa.util.PredicateMatcher;
 import org.cloudfoundry.identity.uaa.util.TimeServiceImpl;
+import org.cloudfoundry.identity.uaa.util.beans.DbUtils;
 import org.cloudfoundry.identity.uaa.zone.IdentityZone;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneHolder;
 import org.cloudfoundry.identity.uaa.zone.JdbcIdentityZoneProvisioning;
@@ -35,9 +35,8 @@ import java.util.List;
 import java.util.Map;
 
 import static java.util.Collections.emptyList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -86,8 +85,8 @@ class ScimGroupBootstrapTests {
         uDB.createUser(TestUtils.scimUserInstance("mgr1"), "test", IdentityZone.getUaaZoneId());
         uDB.createUser(TestUtils.scimUserInstance("hr1"), "test", IdentityZone.getUaaZoneId());
 
-        assertEquals(7, uDB.retrieveAll(IdentityZone.getUaaZoneId()).size());
-        assertEquals(0, gDB.retrieveAll(IdentityZone.getUaaZoneId()).size());
+        assertThat(uDB.retrieveAll(IdentityZone.getUaaZoneId()).size()).isEqualTo(7);
+        assertThat(gDB.retrieveAll(IdentityZone.getUaaZoneId()).size()).isEqualTo(0);
 
         bootstrap = new ScimGroupBootstrap(gDB, uDB, mDB);
     }
@@ -96,12 +95,12 @@ class ScimGroupBootstrapTests {
     void canAddGroups() throws Exception {
         bootstrap.setGroups(StringUtils.commaDelimitedListToSet("org1.dev,org1.qa,org1.engg,org1.mgr,org1.hr").stream().collect(new MapCollector<>(s -> s, s -> null)));
         bootstrap.afterPropertiesSet();
-        assertEquals(5, gDB.retrieveAll(IdentityZone.getUaaZoneId()).size());
-        assertNotNull(bootstrap.getGroup("org1.dev"));
-        assertNotNull(bootstrap.getGroup("org1.qa"));
-        assertNotNull(bootstrap.getGroup("org1.engg"));
-        assertNotNull(bootstrap.getGroup("org1.mgr"));
-        assertNotNull(bootstrap.getGroup("org1.hr"));
+        assertThat(gDB.retrieveAll(IdentityZone.getUaaZoneId()).size()).isEqualTo(5);
+        assertThat(bootstrap.getGroup("org1.dev")).isNotNull();
+        assertThat(bootstrap.getGroup("org1.qa")).isNotNull();
+        assertThat(bootstrap.getGroup("org1.engg")).isNotNull();
+        assertThat(bootstrap.getGroup("org1.mgr")).isNotNull();
+        assertThat(bootstrap.getGroup("org1.hr")).isNotNull();
     }
 
     @Test
@@ -126,14 +125,14 @@ class ScimGroupBootstrapTests {
         bootstrap.setGroups(StringUtils.commaDelimitedListToSet("multiple_bootstrap_group").stream().collect(new MapCollector<>(s -> s, s -> s)));
         bootstrap.afterPropertiesSet();
 
-        assertNotNull(bootstrap.getGroup("multiple_bootstrap_group"));
+        assertThat(bootstrap.getGroup("multiple_bootstrap_group")).isNotNull();
     }
 
     @Test
-    void testNullGroups() throws Exception {
+    void nullGroups() throws Exception {
         bootstrap.setGroups(null);
         bootstrap.afterPropertiesSet();
-        assertEquals(0, gDB.retrieveAll(IdentityZone.getUaaZoneId()).size());
+        assertThat(gDB.retrieveAll(IdentityZone.getUaaZoneId()).size()).isEqualTo(0);
     }
 
     @Test
@@ -150,12 +149,12 @@ class ScimGroupBootstrapTests {
         ));
         bootstrap.afterPropertiesSet();
 
-        assertEquals(5, gDB.retrieveAll(IdentityZone.getUaaZoneId()).size());
-        assertEquals(7, uDB.retrieveAll(IdentityZone.getUaaZoneId()).size());
-        assertEquals(2, bootstrap.getGroup("org1.qa").getMembers().size());
-        assertEquals(1, bootstrap.getGroup("org1.hr").getMembers().size());
-        assertEquals(3, bootstrap.getGroup("org1.engg").getMembers().size());
-        assertEquals(5, mDB.getMembers(bootstrap.getGroup("org1.dev").getId(), false, IdentityZone.getUaaZoneId()).size());
+        assertThat(gDB.retrieveAll(IdentityZone.getUaaZoneId()).size()).isEqualTo(5);
+        assertThat(uDB.retrieveAll(IdentityZone.getUaaZoneId()).size()).isEqualTo(7);
+        assertThat(bootstrap.getGroup("org1.qa").getMembers().size()).isEqualTo(2);
+        assertThat(bootstrap.getGroup("org1.hr").getMembers().size()).isEqualTo(1);
+        assertThat(bootstrap.getGroup("org1.engg").getMembers().size()).isEqualTo(3);
+        assertThat(mDB.getMembers(bootstrap.getGroup("org1.dev").getId(), false, IdentityZone.getUaaZoneId()).size()).isEqualTo(5);
     }
 
     @Test
@@ -167,10 +166,10 @@ class ScimGroupBootstrapTests {
         bootstrap.afterPropertiesSet();
 
         ScimGroup group;
-        assertNotNull(group = bootstrap.getGroup("something"));
-        assertNotNull(group = gDB.retrieve(group.getId(), IdentityZone.getUaaZoneId()));
-        assertEquals("something", group.getDisplayName());
-        assertEquals("Do something else", group.getDescription());
+        assertThat(group = bootstrap.getGroup("something")).isNotNull();
+        assertThat(group = gDB.retrieve(group.getId(), IdentityZone.getUaaZoneId())).isNotNull();
+        assertThat(group.getDisplayName()).isEqualTo("something");
+        assertThat(group.getDescription()).isEqualTo("Do something else");
     }
 
     @Test

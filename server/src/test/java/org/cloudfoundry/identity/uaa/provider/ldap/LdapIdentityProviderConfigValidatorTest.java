@@ -22,9 +22,8 @@ import org.cloudfoundry.identity.uaa.provider.LdapIdentityProviderDefinition;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.cloudfoundry.identity.uaa.constants.OriginKeys.LDAP;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doNothing;
@@ -32,42 +31,39 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-public class LdapIdentityProviderConfigValidatorTest {
+class LdapIdentityProviderConfigValidatorTest {
 
     LdapIdentityProviderConfigValidator validator;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         validator = spy(new LdapIdentityProviderConfigValidator());
     }
 
     @Test
-    public void null_identity_provider() {
-        Throwable exception = assertThrows(IllegalArgumentException.class, () ->
-                validator.validate((IdentityProvider<AbstractIdentityProviderDefinition>) null));
-        assertTrue(exception.getMessage().contains("Provider cannot be null"));
+    void null_identity_provider() {
+        assertThatThrownBy(() -> validator.validate((IdentityProvider<AbstractIdentityProviderDefinition>) null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Provider cannot be null");
     }
 
     @Test
-    public void invalid_ldap_origin() {
-        Throwable exception = assertThrows(IllegalArgumentException.class, () -> {
-            IdentityProvider<LdapIdentityProviderDefinition> ldap = new IdentityProvider<>();
-            ldap.setType(LDAP);
-            ldap.setOriginKey("other");
-            validator.validate(ldap);
-        });
-        assertTrue(exception.getMessage().contains("LDAP provider originKey must be set to '%s'".formatted(LDAP)));
+    void invalid_ldap_origin() {
+        IdentityProvider<LdapIdentityProviderDefinition> ldap = new IdentityProvider<>();
+        ldap.setType(LDAP);
+        ldap.setOriginKey("other");
+        assertThatThrownBy(() -> validator.validate(ldap))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("LDAP provider originKey must be set to '%s'".formatted(LDAP));
     }
 
-
     @Test
-    public void valid_ldap_origin() {
+    void valid_ldap_origin() {
         IdentityProvider<LdapIdentityProviderDefinition> ldap = new IdentityProvider<>();
         ldap.setType(LDAP);
         ldap.setOriginKey(LDAP);
         doNothing().when(validator).validate(any(AbstractIdentityProviderDefinition.class));
         validator.validate(ldap);
         verify(validator, times(1)).validate((AbstractIdentityProviderDefinition) isNull());
-
     }
 }

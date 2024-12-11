@@ -16,9 +16,8 @@ package org.cloudfoundry.identity.uaa.user;
 import org.cloudfoundry.identity.uaa.test.UaaTestAccounts;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 
 class UaaUserEditorTests {
     private static final UaaTestAccounts testAccounts = UaaTestAccounts.standard(null);
@@ -32,14 +31,14 @@ class UaaUserEditorTests {
     private static final String AUTH_2 = "openid";
 
     @Test
-    void testShortFormat() {
+    void shortFormat() {
         UaaUserEditor editor = new UaaUserEditor();
         editor.setAsText("%s|%s".formatted(UNM, PWD));
         validate((UaaUser) editor.getValue(), UNM, PWD, UNM, null, null, null);
     }
 
     @Test
-    void testShortFormatWithAuthorities() {
+    void shortFormatWithAuthorities() {
         UaaUserEditor editor = new UaaUserEditor();
         editor.setAsText("%s|%s|%s".formatted(UNM, PWD, AUTH_1));
         validate((UaaUser) editor.getValue(), UNM, PWD, UNM, null, null, AUTH_1.split(","));
@@ -49,14 +48,14 @@ class UaaUserEditorTests {
     }
 
     @Test
-    void testLongFormat() {
+    void longFormat() {
         UaaUserEditor editor = new UaaUserEditor();
         editor.setAsText("%s|%s|%s|%s|%s".formatted(UNM, PWD, EMAIL, FNM, LNM));
         validate((UaaUser) editor.getValue(), UNM, PWD, EMAIL, FNM, LNM, null);
     }
 
     @Test
-    void testLongFormatWithAuthorities() {
+    void longFormatWithAuthorities() {
         UaaUserEditor editor = new UaaUserEditor();
         editor.setAsText("%s|%s|%s|%s|%s|%s".formatted(UNM, PWD, EMAIL, FNM, LNM, AUTH_1));
         validate((UaaUser) editor.getValue(), UNM, PWD, EMAIL, FNM, LNM, AUTH_1.split(","));
@@ -66,25 +65,25 @@ class UaaUserEditorTests {
     }
 
     @Test
-    void testInvalidFormat() {
+    void invalidFormat() {
         UaaUserEditor editor = new UaaUserEditor();
-        assertThrows(IllegalArgumentException.class, () -> editor.setAsText("%s|%s|%s|%s".formatted(UNM, PWD, FNM, LNM)));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> editor.setAsText("%s|%s|%s|%s".formatted(UNM, PWD, FNM, LNM)));
     }
 
     @Test
-    void testAuthorities() {
+    void authorities() {
         UaaUserEditor editor = new UaaUserEditor();
         editor.setAsText("marissa|koala|marissa@test.org|Marissa|Bloggs|uaa.admin");
         UaaUser user = (UaaUser) editor.getValue();
-        assertEquals(UaaAuthority.ADMIN_AUTHORITIES, user.getAuthorities());
+        assertThat(user.getAuthorities()).isEqualTo(UaaAuthority.ADMIN_AUTHORITIES);
     }
 
     @Test
-    void testOrigin() {
+    void origin() {
         UaaUserEditor editor = new UaaUserEditor();
         editor.setAsText("marissa|koala|marissa@test.org|Marissa|Bloggs|uaa.admin|origin");
         UaaUser user = (UaaUser) editor.getValue();
-        assertEquals("origin", user.getOrigin());
+        assertThat(user.getOrigin()).isEqualTo("origin");
     }
 
     @Test
@@ -97,15 +96,15 @@ class UaaUserEditorTests {
 
     private void validate(UaaUser user, String expectedUnm, String expectedPwd, String expectedEmail,
                           String expectedFnm, String expectedLnm, String[] expectedAuth) {
-        assertEquals(expectedUnm, user.getUsername());
-        assertEquals(expectedPwd, user.getPassword());
-        assertEquals(expectedEmail, user.getEmail());
-        assertEquals(expectedFnm, user.getGivenName());
-        assertEquals(expectedLnm, user.getFamilyName());
-        assertTrue(user.getAuthorities().toString().contains("uaa.user"));
+        assertThat(user.getUsername()).isEqualTo(expectedUnm);
+        assertThat(user.getPassword()).isEqualTo(expectedPwd);
+        assertThat(user.getEmail()).isEqualTo(expectedEmail);
+        assertThat(user.getGivenName()).isEqualTo(expectedFnm);
+        assertThat(user.getFamilyName()).isEqualTo(expectedLnm);
+        assertThat(user.getAuthorities().toString().contains("uaa.user")).isTrue();
         if (expectedAuth != null) {
             for (String auth : expectedAuth) {
-                assertTrue(user.getAuthorities().toString().contains(auth));
+                assertThat(user.getAuthorities().toString().contains(auth)).isTrue();
             }
         }
     }

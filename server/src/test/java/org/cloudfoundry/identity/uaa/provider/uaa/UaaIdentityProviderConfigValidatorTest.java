@@ -7,7 +7,7 @@ import org.cloudfoundry.identity.uaa.provider.UaaIdentityProviderDefinition;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 
 class UaaIdentityProviderConfigValidatorTest {
 
@@ -15,7 +15,7 @@ class UaaIdentityProviderConfigValidatorTest {
     UaaIdentityProviderConfigValidator configValidator;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         uaaIdentityProviderDef = new UaaIdentityProviderDefinition();
         uaaIdentityProviderDef.setPasswordPolicy(new PasswordPolicy(8, 8, 1, 1, 8, 1, 3));
         uaaIdentityProviderDef.setLockoutPolicy(new LockoutPolicy(1, 1, 1));
@@ -40,19 +40,17 @@ class UaaIdentityProviderConfigValidatorTest {
     }
 
     @Test
-    public void passwordPolicyIsNotNullAndIncomplete() {
+    void passwordPolicyIsNotNullAndIncomplete() {
         uaaIdentityProviderDef.setPasswordPolicy(new PasswordPolicy(8, 8, -1, 1, 8, 1, 3));
-        assertThrows(IllegalArgumentException.class, () -> {
-            configValidator.validate(uaaIdentityProviderDef);
-        });
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() ->
+                configValidator.validate(uaaIdentityProviderDef));
     }
 
     @Test
-    public void lockoutPolicyIsNotNullAndIncomplete() {
+    void lockoutPolicyIsNotNullAndIncomplete() {
         uaaIdentityProviderDef.setLockoutPolicy(new LockoutPolicy(-1, 1, 1));
-        assertThrows(IllegalArgumentException.class, () -> {
-            configValidator.validate(uaaIdentityProviderDef);
-        });
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() ->
+                configValidator.validate(uaaIdentityProviderDef));
     }
 
 }

@@ -1,21 +1,5 @@
 package org.cloudfoundry.identity.uaa.scim;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.cloudfoundry.identity.uaa.constants.OriginKeys.UAA;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.sql.Timestamp;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Objects;
-import java.util.UUID;
-
 import org.cloudfoundry.identity.uaa.alias.EntityAliasFailedException;
 import org.cloudfoundry.identity.uaa.alias.EntityAliasHandler;
 import org.cloudfoundry.identity.uaa.alias.EntityAliasHandlerEnsureConsistencyTest;
@@ -33,6 +17,22 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
+
+import java.sql.Timestamp;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Objects;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.cloudfoundry.identity.uaa.constants.OriginKeys.UAA;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ScimUserAliasHandlerEnsureConsistencyTest extends EntityAliasHandlerEnsureConsistencyTest<ScimUser> {
@@ -279,14 +279,11 @@ class ScimUserAliasHandlerEnsureConsistencyTest extends EntityAliasHandlerEnsure
 
                 mockCreateEntityThrows_UsernameAlreadyOccupied(originalEntity.getUserName(), customZoneId);
 
-                final EntityAliasFailedException exception = assertThrows(EntityAliasFailedException.class, () ->
-                        aliasHandler.ensureConsistencyOfAliasEntity(originalEntity, existingEntity)
-                );
-                assertThat(exception.getHttpStatus()).isEqualTo(HttpStatus.CONFLICT.value());
-                assertThat(exception.getMessage()).isEqualTo(
-                        "Could not create ScimUser[id=null,zid='%s',aliasId='%s',aliasZid='uaa']. A user with the same username already exists in the alias zone."
-                                .formatted(customZoneId, existingEntity.getId())
-                );
+                assertThatThrownBy(() -> aliasHandler.ensureConsistencyOfAliasEntity(originalEntity, existingEntity))
+                        .isInstanceOf(EntityAliasFailedException.class)
+                        .hasMessage("Could not create ScimUser[id=null,zid='%s',aliasId='%s',aliasZid='uaa']. A user with the same username already exists in the alias zone."
+                                .formatted(customZoneId, existingEntity.getId()))
+                        .satisfies(e -> assertThat(((EntityAliasFailedException) e).getHttpStatus()).isEqualTo(HttpStatus.CONFLICT.value()));
             }
         }
 

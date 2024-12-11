@@ -19,18 +19,14 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-public class ImplicitAccessTokenProviderTests {
+class ImplicitAccessTokenProviderTests {
 
     private final MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
 
@@ -46,63 +42,61 @@ public class ImplicitAccessTokenProviderTests {
     private final ImplicitResourceDetails resource = new ImplicitResourceDetails();
 
     @Test
-    public void testRedirectNotSpecified() {
-        assertThrows(IllegalStateException.class, () -> {
-            AccessTokenRequest request = new DefaultAccessTokenRequest();
-            provider.obtainAccessToken(resource, request);
-        });
+    void redirectNotSpecified() {
+        AccessTokenRequest request = new DefaultAccessTokenRequest();
+        assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() ->
+                provider.obtainAccessToken(resource, request));
     }
 
     @Test
-    public void supportsResource() {
-        assertTrue(provider.supportsResource(new ImplicitResourceDetails()));
+    void supportsResource() {
+        assertThat(provider.supportsResource(new ImplicitResourceDetails())).isTrue();
     }
 
     @Test
-    public void supportsRefresh() {
-        assertFalse(provider.supportsRefresh(new ImplicitResourceDetails()));
+    void supportsRefresh() {
+        assertThat(provider.supportsRefresh(new ImplicitResourceDetails())).isFalse();
     }
 
     @Test
-    public void refreshAccessToken() {
-        assertNull(provider.refreshAccessToken(new ImplicitResourceDetails(), new DefaultOAuth2RefreshToken(""), new DefaultAccessTokenRequest(
-                Collections.emptyMap())));
+    void refreshAccessToken() {
+        assertThat(provider.refreshAccessToken(new ImplicitResourceDetails(), new DefaultOAuth2RefreshToken(""), new DefaultAccessTokenRequest(
+                Collections.emptyMap()))).isNull();
     }
 
     @Test
-    public void testImplicitResponseExtractor() throws IOException {
-        assertNull(provider.getResponseExtractor().extractData(new MockClientHttpResponse(new byte[0], 200)));
+    void implicitResponseExtractor() throws IOException {
+        assertThat(provider.getResponseExtractor().extractData(new MockClientHttpResponse(new byte[0], 200))).isNull();
     }
 
     @Test
-    public void obtainAccessToken() {
+    void obtainAccessToken() {
         ImplicitResourceDetails details = new ImplicitResourceDetails();
         details.setScope(Set.of("openid").stream().toList());
-        assertFalse(details.isClientOnly());
-        assertNotNull(provider.obtainAccessToken(details, new DefaultAccessTokenRequest(Map.of("scope", new String[]{"x"}, "redirect_uri",
-                new String[]{"x"}, "client_id", new String[]{"x"}))));
+        assertThat(details.isClientOnly()).isFalse();
+        assertThat(provider.obtainAccessToken(details, new DefaultAccessTokenRequest(Map.of("scope", new String[]{"x"}, "redirect_uri",
+                new String[]{"x"}, "client_id", new String[]{"x"})))).isNotNull();
     }
 
     @Test
-    public void obtainAccessTokenNoRecdirect() {
-        assertThrows(IllegalStateException.class, () -> {
-            ImplicitResourceDetails details = new ImplicitResourceDetails();
-            details.setScope(Set.of("openid").stream().toList());
-            assertFalse(details.isClientOnly());
-            assertNotNull(provider.obtainAccessToken(details, new DefaultAccessTokenRequest(Map.of("scope", new String[]{"x"}, "client_id", new String[]{"x"}))));
-        });
+    void obtainAccessTokenNoRecdirect() {
+        ImplicitResourceDetails details = new ImplicitResourceDetails();
+        details.setScope(Set.of("openid").stream().toList());
+        assertThat(details.isClientOnly()).isFalse();
+        assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() ->
+                assertThat(provider.obtainAccessToken(details, new DefaultAccessTokenRequest(Map.of("scope", new String[]{"x"}, "client_id", new String[]{"x"})))).isNotNull());
     }
 
     @Test
-    public void testGetAccessTokenRequest() {
+    void getAccessTokenRequest() {
         AccessTokenRequest request = new DefaultAccessTokenRequest();
         resource.setClientId("foo");
         resource.setAccessTokenUri("http://localhost/oauth/authorize");
         resource.setPreEstablishedRedirectUri("https://anywhere.com");
-        assertEquals("FOO", provider.obtainAccessToken(resource, request).getValue());
-        assertEquals("foo", params.getFirst("client_id"));
-        assertEquals("token", params.getFirst("response_type"));
-        assertEquals("https://anywhere.com", params.getFirst("redirect_uri"));
+        assertThat(provider.obtainAccessToken(resource, request).getValue()).isEqualTo("FOO");
+        assertThat(params.getFirst("client_id")).isEqualTo("foo");
+        assertThat(params.getFirst("response_type")).isEqualTo("token");
+        assertThat(params.getFirst("redirect_uri")).isEqualTo("https://anywhere.com");
     }
 
 }

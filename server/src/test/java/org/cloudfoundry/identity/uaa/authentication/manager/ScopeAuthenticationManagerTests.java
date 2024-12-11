@@ -20,20 +20,18 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class ScopeAuthenticationManagerTests {
+class ScopeAuthenticationManagerTests {
     private ScopeAuthenticationManager authenticationManager;
     private Map<String, String> clientCredentials;
     private ClientDetailsService service;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         authenticationManager = new ScopeAuthenticationManager();
         authenticationManager.setThrowOnNotAuthenticated(true);
         authenticationManager.setRequiredScopes(Collections.singletonList("oauth.login"));
@@ -57,35 +55,34 @@ public class ScopeAuthenticationManagerTests {
     }
 
     @Test
-    public void testPasswordAuthenticate() {
+    void passwordAuthenticate() {
         UsernamePasswordAuthenticationToken userAuth = new UsernamePasswordAuthenticationToken("username", "password");
-        assertFalse(authenticate(userAuth).isAuthenticated()); //false since we don't authenticate the user yet
+        assertThat(authenticate(userAuth).isAuthenticated()).isFalse(); //false since we don't authenticate the user yet
     }
 
     @Test
-    public void testPasswordAuthenticateSucceed() {
+    void passwordAuthenticateSucceed() {
         UsernamePasswordAuthenticationToken userAuth = new UsernamePasswordAuthenticationToken("username", "password", UaaAuthority.USER_AUTHORITIES);
-        assertTrue(authenticate(userAuth).isAuthenticated());
+        assertThat(authenticate(userAuth).isAuthenticated()).isTrue();
     }
 
     @Test
-    public void testAuthenticate() {
-        assertTrue(authenticate(null).isAuthenticated());
+    void testAuthenticate() {
+        assertThat(authenticate(null).isAuthenticated()).isTrue();
     }
 
     @Test
-    public void testAuthenticateInsufficientScope() {
-        assertThrows(InsufficientScopeException.class, () -> {
-            clientCredentials.put("scope", "oauth.approval");
-            authenticate(null);
-        });
+    void authenticateInsufficientScope() {
+        clientCredentials.put("scope", "oauth.approval");
+        assertThatExceptionOfType(InsufficientScopeException.class).isThrownBy(() ->
+                authenticate(null));
     }
 
     @Test
-    public void testDedup() {
+    void dedup() {
         List<String> l1 = Arrays.asList("test", "test", "test");
-        assertEquals(1, authenticationManager.dedup(l1).size());
+        assertThat(authenticationManager.dedup(l1).size()).isEqualTo(1);
         l1 = Arrays.asList("t1", "t2", "t3");
-        assertEquals(3, authenticationManager.dedup(l1).size());
+        assertThat(authenticationManager.dedup(l1).size()).isEqualTo(3);
     }
 }

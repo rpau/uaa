@@ -7,17 +7,15 @@ import org.junit.jupiter.api.Test;
 import java.util.Collections;
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.cloudfoundry.identity.uaa.test.ModelTestUtils.getResourceAsString;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TokenPolicyTest {
+class TokenPolicyTest {
 
     @Test
-    public void json_has_expected_properties() {
+    void json_has_expected_properties() {
         TokenPolicy tokenPolicy = new TokenPolicy();
         tokenPolicy.setAccessTokenValidity(1234);
         tokenPolicy.setRefreshTokenValidity(9876);
@@ -26,107 +24,100 @@ public class TokenPolicyTest {
         String json = JsonUtils.writeValueAsString(tokenPolicy);
         Map properties = JsonUtils.readValue(json, Map.class);
 
-        assertNotNull(properties);
-        assertEquals(1234, properties.get("accessTokenValidity"));
-        assertEquals(9876, properties.get("refreshTokenValidity"));
-        assertNotNull(properties.get("keys"));
+        assertThat(properties).isNotNull()
+                .containsEntry("accessTokenValidity", 1234)
+                .containsEntry("refreshTokenValidity", 9876)
+                .containsKey("keys");
         Map keys = (Map) properties.get("keys");
-        assertNotNull(keys);
-        assertEquals(keys.size(), 1);
-        assertEquals("KeyKeyKey", ((Map) keys.get("aKeyId")).get("signingKey"));
+        assertThat(keys).isNotNull()
+                .hasSize(1);
+        assertThat(((Map) keys.get("aKeyId"))).containsEntry("signingKey", "KeyKeyKey");
     }
 
     @Test
-    public void test_default_values() {
+    void default_values() {
         TokenPolicy policy = new TokenPolicy();
-        assertFalse(policy.isRefreshTokenUnique());
-        assertFalse(policy.isJwtRevocable());
-        assertFalse(policy.isRefreshTokenRotate());
-        assertEquals(TokenConstants.TokenFormat.OPAQUE.getStringValue(), policy.getRefreshTokenFormat());
+        assertThat(policy.isRefreshTokenUnique()).isFalse();
+        assertThat(policy.isJwtRevocable()).isFalse();
+        assertThat(policy.isRefreshTokenRotate()).isFalse();
+        assertThat(policy.getRefreshTokenFormat()).isEqualTo(TokenConstants.TokenFormat.OPAQUE.getStringValue());
     }
 
     @Test
-    public void test_set_values() {
+    void set_values() {
         TokenPolicy policy = new TokenPolicy();
         policy.setRefreshTokenUnique(true);
         policy.setJwtRevocable(true);
         policy.setRefreshTokenRotate(true);
         policy.setRefreshTokenFormat(TokenConstants.TokenFormat.JWT.getStringValue());
-        assertTrue(policy.isRefreshTokenUnique());
-        assertTrue(policy.isJwtRevocable());
-        assertTrue(policy.isRefreshTokenRotate());
-        assertEquals(TokenConstants.TokenFormat.JWT.getStringValue(), policy.getRefreshTokenFormat());
+        assertThat(policy.isRefreshTokenUnique()).isTrue();
+        assertThat(policy.isJwtRevocable()).isTrue();
+        assertThat(policy.isRefreshTokenRotate()).isTrue();
+        assertThat(policy.getRefreshTokenFormat()).isEqualTo(TokenConstants.TokenFormat.JWT.getStringValue());
     }
 
     @Test
-    public void nullSigningKey() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            TokenPolicy tokenPolicy = new TokenPolicy();
-            tokenPolicy.setKeys(Collections.singletonMap("key-id", null));
-        });
+    void nullSigningKey() {
+        TokenPolicy tokenPolicy = new TokenPolicy();
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() ->
+                tokenPolicy.setKeys(Collections.singletonMap("key-id", null)));
     }
 
     @Test
-    public void emptySigningKey() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            TokenPolicy tokenPolicy = new TokenPolicy();
-            tokenPolicy.setKeys(Collections.singletonMap("key-id", "             "));
-        });
+    void emptySigningKey() {
+        TokenPolicy tokenPolicy = new TokenPolicy();
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() ->
+                tokenPolicy.setKeys(Collections.singletonMap("key-id", "             ")));
     }
 
     @Test
-    public void nullKeyId() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            TokenPolicy tokenPolicy = new TokenPolicy();
-            tokenPolicy.setKeys(Collections.singletonMap(null, "signing-key"));
-        });
+    void nullKeyId() {
+        TokenPolicy tokenPolicy = new TokenPolicy();
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() ->
+                tokenPolicy.setKeys(Collections.singletonMap(null, "signing-key")));
     }
 
     @Test
-    public void emptyKeyId() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            TokenPolicy tokenPolicy = new TokenPolicy();
-            tokenPolicy.setKeys(Collections.singletonMap(" ", "signing-key"));
-        });
+    void emptyKeyId() {
+        TokenPolicy tokenPolicy = new TokenPolicy();
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() ->
+                tokenPolicy.setKeys(Collections.singletonMap(" ", "signing-key")));
     }
 
     @Test
-    public void deserializationOfTokenPolicyWithVerificationKey_doesNotFail() {
+    void deserializationOfTokenPolicyWithVerificationKey_doesNotFail() {
         String jsonTokenPolicy = "{\"keys\":{\"key-id-1\":{\"verificationKey\":\"some-verification-key-1\",\"signingKey\":\"some-signing-key-1\"}}}";
         TokenPolicy tokenPolicy = JsonUtils.readValue(jsonTokenPolicy, TokenPolicy.class);
-        assertEquals("some-signing-key-1", tokenPolicy.getKeys().get("key-id-1").getSigningKey());
+        assertThat(tokenPolicy.getKeys().get("key-id-1").getSigningKey()).isEqualTo("some-signing-key-1");
     }
 
     @Test
-    public void tokenPolicy_whenInvalidUniquenessValue_throwsException() {
-        Throwable exception = assertThrows(IllegalArgumentException.class, () -> {
-
-            TokenPolicy tokenPolicy = new TokenPolicy();
-
-            tokenPolicy.setRefreshTokenFormat("invalid");
-        });
-        assertTrue(exception.getMessage().contains("Invalid refresh token format invalid. Acceptable values are: [opaque, jwt]"));
+    void tokenPolicy_whenInvalidUniquenessValue_throwsException() {
+        TokenPolicy tokenPolicy = new TokenPolicy();
+        assertThatThrownBy(() -> tokenPolicy.setRefreshTokenFormat("invalid"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Invalid refresh token format invalid. Acceptable values are: [opaque, jwt]");
     }
 
     @Test
-    public void deserializationOfTokenPolicyWithNoActiveKeyIdWithMultipleKeys_doesNotFail() {
+    void deserializationOfTokenPolicyWithNoActiveKeyIdWithMultipleKeys_doesNotFail() {
         String jsonTokenPolicy = "{\"keys\":{\"key-id-1\":{\"signingKey\":\"some-signing-key-1\"},\"key-id-2\":{\"signingKey\":\"some-signing-key-2\"}}}";
         TokenPolicy tokenPolicy = JsonUtils.readValue(jsonTokenPolicy, TokenPolicy.class);
-        assertEquals("some-signing-key-1", tokenPolicy.getKeys().get("key-id-1").getSigningKey());
-        assertEquals("some-signing-key-2", tokenPolicy.getKeys().get("key-id-2").getSigningKey());
+        assertThat(tokenPolicy.getKeys().get("key-id-1").getSigningKey()).isEqualTo("some-signing-key-1");
+        assertThat(tokenPolicy.getKeys().get("key-id-2").getSigningKey()).isEqualTo("some-signing-key-2");
     }
 
     @Test
-    public void tokenPolicy_not_changed_if_keys_null() {
+    void tokenPolicy_not_changed_if_keys_null() {
         final String sampleIdentityZone = getResourceAsString(getClass(), "SampleIdentityZone.json");
         IdentityZone identityZone = JsonUtils.readValue(sampleIdentityZone, IdentityZone.class);
         TokenPolicy tokenPolicy = identityZone.getConfig().getTokenPolicy();
-        assertEquals("some-signing-key-1", tokenPolicy.getKeys().get("key-id-1").getSigningKey());
-        assertEquals("some-cert", tokenPolicy.getKeys().get("key-id-1").getSigningCert());
-        assertEquals("RS256", tokenPolicy.getKeys().get("key-id-1").getSigningAlg());
+        assertThat(tokenPolicy.getKeys().get("key-id-1").getSigningKey()).isEqualTo("some-signing-key-1");
+        assertThat(tokenPolicy.getKeys().get("key-id-1").getSigningCert()).isEqualTo("some-cert");
+        assertThat(tokenPolicy.getKeys().get("key-id-1").getSigningAlg()).isEqualTo("RS256");
         tokenPolicy.setKeys(null);
-        assertEquals("some-signing-key-1", tokenPolicy.getKeys().get("key-id-1").getSigningKey());
-        assertEquals("some-cert", tokenPolicy.getKeys().get("key-id-1").getSigningCert());
-        assertEquals("RS256", tokenPolicy.getKeys().get("key-id-1").getSigningAlg());
+        assertThat(tokenPolicy.getKeys().get("key-id-1").getSigningKey()).isEqualTo("some-signing-key-1");
+        assertThat(tokenPolicy.getKeys().get("key-id-1").getSigningCert()).isEqualTo("some-cert");
+        assertThat(tokenPolicy.getKeys().get("key-id-1").getSigningAlg()).isEqualTo("RS256");
     }
 }

@@ -21,11 +21,9 @@ import org.springframework.web.context.WebApplicationContext;
 import java.net.URL;
 import java.util.ArrayList;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsNot.not;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.http.MediaType.TEXT_PLAIN;
@@ -70,7 +68,7 @@ public class ClientMetadataAdminEndpointsMockMvcTest {
         String marissaToken = getUserAccessToken(clientId);
         MockHttpServletResponse response = getTestClientMetadata(clientId, marissaToken);
 
-        assertThat(response.getStatus(), is(HttpStatus.OK.value()));
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
     }
 
     private String getUserAccessToken(String clientId) throws Exception {
@@ -90,7 +88,7 @@ public class ClientMetadataAdminEndpointsMockMvcTest {
 
         MockHttpServletResponse response = getTestClientMetadata(clientId, adminClientTokenWithClientsRead);
 
-        assertThat(response.getStatus(), is(HttpStatus.NOT_FOUND.value()));
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.NOT_FOUND.value());
     }
 
     @Test
@@ -163,11 +161,11 @@ public class ClientMetadataAdminEndpointsMockMvcTest {
         updatedClientMetadata.setAppLaunchUrl(appLaunchUrl);
 
         ResultActions perform = performUpdate(updatedClientMetadata);
-        assertThat(perform.andReturn().getResponse().getContentAsString(), containsString(appLaunchUrl.toString()));
+        assertThat(perform.andReturn().getResponse().getContentAsString()).contains(appLaunchUrl.toString());
 
         MockHttpServletResponse response = getTestClientMetadata(clientId, adminClientTokenWithClientsRead);
-        assertThat(response.getStatus(), is(HttpStatus.OK.value()));
-        assertThat(response.getContentAsString(), containsString(appLaunchUrl.toString()));
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
+        assertThat(response.getContentAsString()).contains(appLaunchUrl.toString());
     }
 
     private ResultActions performUpdate(ClientMetadata updatedClientMetadata) throws Exception {
@@ -197,7 +195,7 @@ public class ClientMetadataAdminEndpointsMockMvcTest {
                 .contentType(APPLICATION_JSON)
                 .content(JsonUtils.writeValueAsString(updatedClientMetadata));
         MockHttpServletResponse response = mockMvc.perform(updateClientPut).andReturn().getResponse();
-        assertThat(response.getStatus(), is(HttpStatus.FORBIDDEN.value()));
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.FORBIDDEN.value());
     }
 
     @Test
@@ -217,11 +215,11 @@ public class ClientMetadataAdminEndpointsMockMvcTest {
                 .contentType(APPLICATION_JSON)
                 .content(JsonUtils.writeValueAsString(updatedClientMetadata));
         ResultActions perform = mockMvc.perform(updateClientPut);
-        assertThat(perform.andReturn().getResponse().getContentAsString(), containsString(appLaunchUrl.toString()));
+        assertThat(perform.andReturn().getResponse().getContentAsString()).contains(appLaunchUrl.toString());
 
         MockHttpServletResponse response = getTestClientMetadata(clientId, adminClientTokenWithClientsRead);
-        assertThat(response.getStatus(), is(HttpStatus.OK.value()));
-        assertThat(response.getContentAsString(), containsString(appLaunchUrl.toString()));
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
+        assertThat(response.getContentAsString()).contains(appLaunchUrl.toString());
     }
 
     @Test
@@ -240,7 +238,7 @@ public class ClientMetadataAdminEndpointsMockMvcTest {
                 .contentType(APPLICATION_JSON)
                 .content(JsonUtils.writeValueAsString(clientMetadata));
         ResultActions perform = mockMvc.perform(updateClientPut);
-        assertEquals(perform.andReturn().getResponse().getStatus(), NOT_FOUND.value());
+        assertThat(NOT_FOUND.value()).isEqualTo(perform.andReturn().getResponse().getStatus());
     }
 
     @Test
@@ -260,7 +258,7 @@ public class ClientMetadataAdminEndpointsMockMvcTest {
                 .contentType(APPLICATION_JSON)
                 .content(JsonUtils.writeValueAsString(clientMetadata));
         ResultActions perform = mockMvc.perform(updateClientPut);
-        assertEquals(perform.andReturn().getResponse().getStatus(), HttpStatus.BAD_REQUEST.value());
+        assertThat(HttpStatus.BAD_REQUEST.value()).isEqualTo(perform.andReturn().getResponse().getStatus());
     }
 
     private MockHttpServletResponse getTestClientMetadata(String clientId, String token) throws Exception {

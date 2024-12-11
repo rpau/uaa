@@ -45,8 +45,8 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -206,7 +206,7 @@ class HomeControllerViewTests extends TestClassNullifier {
 
     @Test
     void handleRequestRejected() {
-        assertEquals("external_auth_error", homeController.handleRequestRejected(mock(Model.class), new RequestRejectedException(""), ""));
+        assertThat(homeController.handleRequestRejected(mock(Model.class), new RequestRejectedException(""), "")).isEqualTo("external_auth_error");
     }
 
     @Test

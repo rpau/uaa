@@ -22,12 +22,10 @@ import org.springframework.web.client.RestOperations;
 import java.util.Collections;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringJUnitConfig(classes = DefaultIntegrationTestConfig.class)
-public class UserTokenGrantIT {
+class UserTokenGrantIT {
 
     @Autowired
     @RegisterExtension
@@ -57,7 +55,7 @@ public class UserTokenGrantIT {
     final String empty_string = "";
 
     @AfterEach
-    public void logout_and_clear_cookies() {
+    void logout_and_clear_cookies() {
         try {
             webDriver.get(baseUrl + "/logout.do");
         } catch (org.openqa.selenium.TimeoutException x) {
@@ -69,7 +67,7 @@ public class UserTokenGrantIT {
     }
 
     @Test
-    public void testExchangeFromConfidentialClientWithCfClientWithEmptySecret() {
+    void exchangeFromConfidentialClientWithCfClientWithEmptySecret() {
         // Given Create password token from confidential client
         String token = getPasswordGrantToken(user_token_id, user_token_secret);
 
@@ -77,12 +75,12 @@ public class UserTokenGrantIT {
         String newToken = doUserTokenGrant("cf", token, HttpStatus.OK);
 
         // Then validation expected result
-        assertNotNull(newToken);
+        assertThat(newToken).isNotNull();
         checkRefreshToken(newToken);
     }
 
     @Test
-    public void testExchangeFromConfidentialClientWithConfidentialClient() {
+    void exchangeFromConfidentialClientWithConfidentialClient() {
         // Given Create password token from confidential client
         String token = getPasswordGrantToken(user_token_id, user_token_secret);
 
@@ -94,7 +92,7 @@ public class UserTokenGrantIT {
     }
 
     @Test
-    public void testExchangeFromPublicClientWithPublicClient() {
+    void exchangeFromPublicClientWithPublicClient() {
         // Given Create password token from public client
         String token = getPasswordGrantToken(user_token_public_id, empty_string);
 
@@ -106,7 +104,7 @@ public class UserTokenGrantIT {
     }
 
     @Test
-    public void testExchangeFromPublicClientWithConfidentialClient() {
+    void exchangeFromPublicClientWithConfidentialClient() {
         // Given Create password token from public client
         String token = getPasswordGrantToken(user_token_public_id, empty_string);
 
@@ -118,7 +116,7 @@ public class UserTokenGrantIT {
     }
 
     @Test
-    public void testExchangeFromConfidentialClientWithAdminClientExpectUnauthorized() {
+    void exchangeFromConfidentialClientWithAdminClientExpectUnauthorized() {
         // Given Create password token from public client
         String token = getPasswordGrantToken(user_token_id, user_token_secret);
 
@@ -139,7 +137,7 @@ public class UserTokenGrantIT {
         ResponseEntity<Map> responseEntity = restOperations.exchange(baseUrl + "/oauth/token", HttpMethod.POST, new HttpEntity<>(postBody, headers),
                 Map.class);
 
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
         return (String) responseEntity.getBody().get("access_token");
     }
 
@@ -163,7 +161,7 @@ public class UserTokenGrantIT {
         } catch (HttpClientErrorException clientErrorException) {
             responseStatus = clientErrorException.getStatusCode();
         }
-        assertEquals(expectedStatus, responseStatus);
+        assertThat(responseStatus).isEqualTo(expectedStatus);
 
         if (expectedStatus == HttpStatus.OK) {
             Map<String, Object> params = responseEntity.getBody();
@@ -174,8 +172,8 @@ public class UserTokenGrantIT {
     }
 
     private void checkRefreshToken(String token) {
-        assertNotNull(token);
-        assertEquals(34, token.length());
-        assertTrue(token.endsWith("-r"));
+        assertThat(token).isNotNull();
+        assertThat(token.length()).isEqualTo(34);
+        assertThat(token.endsWith("-r")).isTrue();
     }
 }

@@ -27,17 +27,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.cloudfoundry.identity.uaa.oauth.token.ClaimConstants.ROLES;
 import static org.cloudfoundry.identity.uaa.oauth.token.ClaimConstants.USER_ATTRIBUTES;
 import static org.cloudfoundry.identity.uaa.oauth.token.ClaimConstants.USER_ID;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class UserInfoEndpointTests {
 
@@ -113,14 +107,14 @@ class UserInfoEndpointTests {
         UserInfoResponse userInfoResponse = endpoint.loginInfo(new OAuth2Authentication(createOauthRequest(Collections.singletonList(
                 "openid")), authentication));
 
-        assertEquals("olds", userInfoResponse.getUserName());
-        assertEquals("Dale Olds", userInfoResponse.getFullName());
-        assertEquals("olds@vmware.com", userInfoResponse.getEmail());
-        assertEquals("8505551234", userInfoResponse.getPhoneNumber());
-        assertFalse(userInfoResponse.isEmailVerified());
-        assertEquals(1000, (long) userInfoResponse.getPreviousLogonSuccess());
-        assertEquals(user.getId(), userInfoResponse.getSub());
-        assertNull(userInfoResponse.getUserAttributes());
+        assertThat(userInfoResponse.getUserName()).isEqualTo("olds");
+        assertThat(userInfoResponse.getFullName()).isEqualTo("Dale Olds");
+        assertThat(userInfoResponse.getEmail()).isEqualTo("olds@vmware.com");
+        assertThat(userInfoResponse.getPhoneNumber()).isEqualTo("8505551234");
+        assertThat(userInfoResponse.isEmailVerified()).isFalse();
+        assertThat((long) userInfoResponse.getPreviousLogonSuccess()).isEqualTo(1000);
+        assertThat(userInfoResponse.getSub()).isEqualTo(user.getId());
+        assertThat(userInfoResponse.getUserAttributes()).isNull();
     }
 
     @Test
@@ -132,8 +126,8 @@ class UserInfoEndpointTests {
         UserInfoResponse userInfoResponse = endpoint.loginInfo(new OAuth2Authentication(createOauthRequest(Collections.singletonList(
                 "openid")), authentication));
 
-        assertEquals("somename", userInfoResponse.getUserName());
-        assertTrue(userInfoResponse.isEmailVerified());
+        assertThat(userInfoResponse.getUserName()).isEqualTo("somename");
+        assertThat(userInfoResponse.isEmailVerified()).isTrue();
     }
 
     @Test
@@ -146,7 +140,7 @@ class UserInfoEndpointTests {
         UserInfoResponse map = endpoint.loginInfo(new OAuth2Authentication(createOauthRequest(Collections.singletonList(
                 "openid")), authentication));
 
-        assertNull(map.getPreviousLogonSuccess());
+        assertThat(map.getPreviousLogonSuccess()).isNull();
     }
 
     @Test
@@ -159,38 +153,36 @@ class UserInfoEndpointTests {
         );
         OAuth2Request request = createOauthRequest(Arrays.asList(USER_ATTRIBUTES, "openid", ROLES));
         UserInfoResponse map = endpoint.loginInfo(new OAuth2Authentication(request, authentication));
-        assertEquals("olds", map.getUserName());
-        assertEquals("Dale Olds", map.getFullName());
-        assertEquals("olds@vmware.com", map.getEmail());
-        assertEquals("8505551234", map.getPhoneNumber());
-        assertEquals(user.getId(), map.getSub());
-        assertEquals(user.getGivenName(), map.getGivenName());
-        assertEquals(user.getFamilyName(), map.getFamilyName());
-        assertNotNull(map.getUserAttributes());
+        assertThat(map.getUserName()).isEqualTo("olds");
+        assertThat(map.getFullName()).isEqualTo("Dale Olds");
+        assertThat(map.getEmail()).isEqualTo("olds@vmware.com");
+        assertThat(map.getPhoneNumber()).isEqualTo("8505551234");
+        assertThat(map.getSub()).isEqualTo(user.getId());
+        assertThat(map.getGivenName()).isEqualTo(user.getGivenName());
+        assertThat(map.getFamilyName()).isEqualTo(user.getFamilyName());
+        assertThat(map.getUserAttributes()).isNotNull();
         Map<String, List<String>> userAttributes = map.getUserAttributes();
-        assertEquals(info.getUserAttributes().get(MULTI_VALUE), userAttributes.get(MULTI_VALUE));
-        assertEquals(info.getUserAttributes().get(SINGLE_VALUE), userAttributes.get(SINGLE_VALUE));
-        assertNull(userAttributes.get(USER_ID));
+        assertThat(userAttributes).containsEntry(MULTI_VALUE, info.getUserAttributes().get(MULTI_VALUE))
+                .containsEntry(SINGLE_VALUE, info.getUserAttributes().get(SINGLE_VALUE))
+                .doesNotContainKey(USER_ID);
         List<String> infoRoles = info.getRoles();
-        assertNotNull(infoRoles);
-        assertThat(infoRoles, containsInAnyOrder(roles.toArray()));
+        assertThat(infoRoles).containsExactlyInAnyOrderElementsOf(roles);
 
         //remove permissions
         request = createOauthRequest(Collections.singletonList("openid"));
         map = endpoint.loginInfo(new OAuth2Authentication(request, authentication));
-        assertNull(map.getUserAttributes());
-        assertNull(map.getRoles());
+        assertThat(map.getUserAttributes()).isNull();
+        assertThat(map.getRoles()).isNull();
     }
 
     @Test
     void missingUser() {
         UaaAuthentication authentication = UaaAuthenticationTestFactory.getAuthentication("nonexist-id", "Dale",
                 "olds@vmware.com");
-        assertThrows(UsernameNotFoundException.class,
-                () -> endpoint.loginInfo(
-                        new OAuth2Authentication(createOauthRequest(
-                                Collections.singletonList("openid")),
-                                authentication)));
+        assertThatExceptionOfType(UsernameNotFoundException.class).isThrownBy(() -> endpoint.loginInfo(
+                new OAuth2Authentication(createOauthRequest(
+                        Collections.singletonList("openid")),
+                        authentication)));
     }
 
     private static OAuth2Request createOauthRequest(final List<String> scopes) {

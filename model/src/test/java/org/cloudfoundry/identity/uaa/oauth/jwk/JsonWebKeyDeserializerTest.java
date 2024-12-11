@@ -4,12 +4,10 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import org.cloudfoundry.identity.uaa.util.JsonUtils;
 import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.oauth.jwk.JsonWebKey.KeyType.EC;
 import static org.cloudfoundry.identity.uaa.oauth.jwk.JsonWebKey.KeyType.oct;
 import static org.cloudfoundry.identity.uaa.test.ModelTestUtils.getResourceAsString;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 class JsonWebKeyDeserializerTest {
 
@@ -25,82 +23,82 @@ class JsonWebKeyDeserializerTest {
     private static final String keyECJwkSet = getResourceAsString(JsonWebKeyDeserializerTest.class, "JwkSet-ECProvider.json");
 
     @Test
-    void testWebKeysMicrosoft() {
+    void webKeysMicrosoft() {
         JsonWebKeySet<JsonWebKey> keys = JsonUtils.readValue(microsoftJwKSet, new TypeReference<JsonWebKeySet<JsonWebKey>>() {
         });
-        assertNotNull(keys);
-        assertNotNull(keys.getKeys());
-        assertEquals(3, keys.getKeys().size());
+        assertThat(keys).isNotNull();
+        assertThat(keys.getKeys()).isNotNull();
+        assertThat(keys.getKeys().size()).isEqualTo(3);
         for (JsonWebKey key : keys.getKeys()) {
-            assertNotNull(key);
-            assertNotNull(JsonWebKey.getRsaPublicKey(key));
-            assertNotNull(key.getKid());
-            assertEquals(key.getKid(), key.getX5t());
+            assertThat(key).isNotNull();
+            assertThat(JsonWebKey.getRsaPublicKey(key)).isNotNull();
+            assertThat(key.getKid()).isNotNull();
+            assertThat(key.getX5t()).isEqualTo(key.getKid());
         }
     }
 
     @Test
-    void testWebKeysUaa() {
+    void webKeysUaa() {
         JsonWebKeySet<JsonWebKey> keys = JsonUtils.readValue(uaaLegacyJwkSet, new TypeReference<JsonWebKeySet<JsonWebKey>>() {
         });
-        assertNotNull(keys);
-        assertNotNull(keys.getKeys());
-        assertEquals(1, keys.getKeys().size());
+        assertThat(keys).isNotNull();
+        assertThat(keys.getKeys()).isNotNull();
+        assertThat(keys.getKeys().size()).isEqualTo(1);
         for (JsonWebKey key : keys.getKeys()) {
-            assertNotNull(key);
-            assertNotNull(JsonWebKey.getRsaPublicKey(key));
-            assertNull(key.getX5t());
-            assertNull(key.getX5c());
+            assertThat(key).isNotNull();
+            assertThat(JsonWebKey.getRsaPublicKey(key)).isNotNull();
+            assertThat(key.getX5t()).isNull();
+            assertThat(key.getX5c()).isNull();
         }
     }
 
     @Test
-    void testWebKeysKeycloak() {
+    void webKeysKeycloak() {
         JsonWebKeySet<JsonWebKey> keys = JsonUtils.readValue(keyCloakJwkSet, new TypeReference<JsonWebKeySet<JsonWebKey>>() {
         });
-        assertNotNull(keys);
-        assertNotNull(keys.getKeys());
-        assertEquals(1, keys.getKeys().size());
+        assertThat(keys).isNotNull();
+        assertThat(keys.getKeys()).isNotNull();
+        assertThat(keys.getKeys().size()).isEqualTo(1);
         for (JsonWebKey key : keys.getKeys()) {
-            assertNotNull(key);
-            assertNotNull(JsonWebKey.getRsaPublicKey(key));
-            assertNotNull(key.getX5t());
-            assertEquals("m-ERKoK9FRe8S9gP0eMI3OP4oljfQMOa3bukzi8ASmM", key.getKid());
-            assertEquals("Zv-dxo0VbAZrjp7gBP97yyjdxC8", key.getX5t());
+            assertThat(key).isNotNull();
+            assertThat(JsonWebKey.getRsaPublicKey(key)).isNotNull();
+            assertThat(key.getX5t()).isNotNull();
+            assertThat(key.getKid()).isEqualTo("m-ERKoK9FRe8S9gP0eMI3OP4oljfQMOa3bukzi8ASmM");
+            assertThat(key.getX5t()).isEqualTo("Zv-dxo0VbAZrjp7gBP97yyjdxC8");
         }
     }
 
     @Test
-    void testWebKeysOcted() {
+    void webKeysOcted() {
         JsonWebKeySet<JsonWebKey> keys = JsonUtils.readValue(keyOctedJwkSet, new TypeReference<JsonWebKeySet<JsonWebKey>>() {
         });
-        assertNotNull(keys);
-        assertNotNull(keys.getKeys());
-        assertEquals(1, keys.getKeys().size());
+        assertThat(keys).isNotNull();
+        assertThat(keys.getKeys()).isNotNull();
+        assertThat(keys.getKeys().size()).isEqualTo(1);
         for (JsonWebKey key : keys.getKeys()) {
-            assertNotNull(key);
-            assertEquals(oct, key.getKty());
-            assertEquals("tokenKey", key.getValue());
-            assertEquals("legacy-token-key", key.getKid());
+            assertThat(key).isNotNull();
+            assertThat(key.getKty()).isEqualTo(oct);
+            assertThat(key.getValue()).isEqualTo("tokenKey");
+            assertThat(key.getKid()).isEqualTo("legacy-token-key");
         }
     }
 
     @Test
-    void testWebKeysEllipticCurve() {
+    void webKeysEllipticCurve() {
         JsonWebKeySet<JsonWebKey> keys = JsonUtils.readValue(keyECJwkSet, new TypeReference<JsonWebKeySet<JsonWebKey>>() {
         });
-        assertNotNull(keys);
-        assertNotNull(keys.getKeys());
-        assertEquals(1, keys.getKeys().size());
+        assertThat(keys).isNotNull();
+        assertThat(keys.getKeys()).isNotNull();
+        assertThat(keys.getKeys().size()).isEqualTo(1);
         for (JsonWebKey key : keys.getKeys()) {
-            assertNotNull(key);
-            assertNull(key.getValue());
-            assertEquals(EC, key.getKty());
-            assertEquals("ES256", key.getAlgorithm());
-            assertEquals("ec-key-1", key.getKid());
-            assertEquals("gI0GAILBdu7T53akrFmMyGcsF3n5dO7MmwNBHKW5SV0", key.getKeyProperties().get("x"));
-            assertEquals("SLW_xSffzlPWrHEVI30DHM_4egVwt3NQqeUD7nMFpps", key.getKeyProperties().get("y"));
-            assertEquals("P-256", key.getKeyProperties().get("crv"));
+            assertThat(key).isNotNull();
+            assertThat(key.getValue()).isNull();
+            assertThat(key.getKty()).isEqualTo(EC);
+            assertThat(key.getAlgorithm()).isEqualTo("ES256");
+            assertThat(key.getKid()).isEqualTo("ec-key-1");
+            assertThat(key.getKeyProperties().get("x")).isEqualTo("gI0GAILBdu7T53akrFmMyGcsF3n5dO7MmwNBHKW5SV0");
+            assertThat(key.getKeyProperties().get("y")).isEqualTo("SLW_xSffzlPWrHEVI30DHM_4egVwt3NQqeUD7nMFpps");
+            assertThat(key.getKeyProperties().get("crv")).isEqualTo("P-256");
         }
     }
 }

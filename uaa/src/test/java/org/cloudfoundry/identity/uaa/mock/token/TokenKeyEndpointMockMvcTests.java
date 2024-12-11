@@ -26,15 +26,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.any;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.collection.IsMapContaining.hasKey;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.hamcrest.Matchers.hasKey;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -156,7 +152,7 @@ class TokenKeyEndpointMockMvcTests {
         Map<String, Object> defaultKey = JsonUtils.readValue(defaultZoneResponse.getResponse().getContentAsString(), Map.class);
         VerificationKeyResponse defaultKeyResponse = new VerificationKeyResponse(defaultKey);
 
-        assertNotEquals(nonDefaultKeyResponse.getValue(), defaultKeyResponse.getValue());
+        assertThat(defaultKeyResponse.getValue()).isNotEqualTo(nonDefaultKeyResponse.getValue());
     }
 
     @Test
@@ -295,75 +291,75 @@ class TokenKeyEndpointMockMvcTests {
 
     private void validateKey(Map<String, Object> key) {
         Object kty = key.get("kty");
-        assertNotNull(kty);
-        assertTrue(kty instanceof String);
-        assertEquals("RSA", kty);
+        assertThat(kty).isNotNull();
+        assertThat(kty instanceof String).isTrue();
+        assertThat(kty).isEqualTo("RSA");
 
         Object use = key.get("use"); //optional
         //values for use are
         //1. sig - key used to verify the signature
         //2. enc - key used to
-        assertNotNull(use);
-        assertTrue(use instanceof String);
-        assertEquals("sig", use);
+        assertThat(use).isNotNull();
+        assertThat(use instanceof String).isTrue();
+        assertThat(use).isEqualTo("sig");
 
 
         Object keyOps = key.get("key_ops");
         //an String[] containing values like
         //sign, verify, encrypt, decrypt, wrapKey, unwrapKey, deriveKey, deriveBits
         //should not be used together with 'use' (mutually exclusive)
-        assertNull(keyOps);
+        assertThat(keyOps).isNull();
 
         Object alg = key.get("alg");
         //optional - algorithm of key
-        assertNotNull(alg);
-        assertTrue(alg instanceof String);
-        assertEquals("RS256", alg);
+        assertThat(alg).isNotNull();
+        assertThat(alg instanceof String).isTrue();
+        assertThat(alg).isEqualTo("RS256");
 
         Object kid = key.get("kid");
         //optional - indicates the id for a certain key
         //single key doesn't need one
-        assertEquals("testKey", kid);
+        assertThat(kid).isEqualTo("testKey");
 
         Object x5u = key.get("x5u");
         //optional - URL that points to a X.509 key or certificate
-        assertNull(x5u);
+        assertThat(x5u).isNull();
 
         Object x5c = key.get("x5c");
         //optional - contains a chain of one or more
         //PKIX certificate
-        assertNull(x5c);
+        assertThat(x5c).isNull();
 
         Object x5t = key.get("x5t");
         //optional - x509 certificate SHA-1
-        assertNull(x5t);
+        assertThat(x5t).isNull();
 
         Object x5tHashS256 = key.get("x5t#S256");
         //optional
-        assertNull(x5tHashS256);
+        assertThat(x5tHashS256).isNull();
 
         Object actual = key.get("value");
-        assertNotNull(actual);
-        assertTrue(actual instanceof String);
-        assertEquals(verifyKey, actual);
+        assertThat(actual).isNotNull();
+        assertThat(actual instanceof String).isTrue();
+        assertThat(actual).isEqualTo(verifyKey);
 
 
         Object e = key.get("e");
-        assertNotNull(e);
-        assertTrue(e instanceof String);
-        assertEquals("AQAB", e);
+        assertThat(e).isNotNull();
+        assertThat(e instanceof String).isTrue();
+        assertThat(e).isEqualTo("AQAB");
         isUrlSafeBase64((String) e);
 
         Object n = key.get("n");
-        assertNotNull(n);
-        assertTrue(n instanceof String);
+        assertThat(n).isNotNull();
+        assertThat(n instanceof String).isTrue();
         isUrlSafeBase64((String) n);
 
     }
 
     private void validateKeys(Map<String, Object> response) {
         List<Map<String, Object>> keys = (List<Map<String, Object>>) response.get("keys");
-        assertNotNull(keys);
+        assertThat(keys).isNotNull();
 
         Map<String, ? extends Map<String, Object>> keysMap = keys.stream().collect(new MapCollector<>(k -> (String) k.get("kid"), k -> k));
 
@@ -374,7 +370,7 @@ class TokenKeyEndpointMockMvcTests {
     private void isUrlSafeBase64(String base64) {
         java.util.Base64.Encoder encoder = java.util.Base64.getUrlEncoder().withoutPadding();
         java.util.Base64.Decoder decoder = java.util.Base64.getUrlDecoder();
-        assertEquals(base64, encoder.encodeToString(decoder.decode(base64)));
+        assertThat(encoder.encodeToString(decoder.decode(base64))).isEqualTo(base64);
     }
 
 }

@@ -37,8 +37,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.Collections;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Integration test to verify that the trusted client use cases are supported
@@ -84,7 +83,7 @@ public class CfScimUserEndpointIntegrationTests {
                 ScimUser.class);
 
         joe = newuser.getBody();
-        assertEquals(JOE, joe.getUserName());
+        assertThat(joe.getUserName()).isEqualTo(JOE);
 
         PasswordChangeRequest change = new PasswordChangeRequest();
         change.setPassword("Passwo3d");
@@ -94,7 +93,7 @@ public class CfScimUserEndpointIntegrationTests {
                 .exchange(serverRunning.getUrl(usersEndpoint) + "/{id}/password",
                         HttpMethod.PUT, new HttpEntity<PasswordChangeRequest>(change, headers),
                         Void.class, joe.getId());
-        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
 
         // The implicit grant for cf requires extra parameters in the
         // authorization request
@@ -104,7 +103,7 @@ public class CfScimUserEndpointIntegrationTests {
     }
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         ((RestTemplate) serverRunning.getRestTemplate()).setErrorHandler(
                 new UaaOauth2ErrorHandler(context.getResource(), HttpStatus.Series.SERVER_ERROR)
         );
@@ -119,7 +118,7 @@ public class CfScimUserEndpointIntegrationTests {
     }
 
     @Test
-    public void changePasswordSucceeds() {
+    void changePasswordSucceeds() {
 
         PasswordChangeRequest change = new PasswordChangeRequest();
         change.setOldPassword("Passwo3d");
@@ -131,41 +130,41 @@ public class CfScimUserEndpointIntegrationTests {
                 .exchange(serverRunning.getUrl(usersEndpoint) + "/{id}/password",
                         HttpMethod.PUT, new HttpEntity<PasswordChangeRequest>(change, headers),
                         Void.class, joe.getId());
-        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
 
     }
 
     @Test
-    public void userInfoSucceeds() {
+    void userInfoSucceeds() {
 
         HttpHeaders headers = new HttpHeaders();
         RestOperations client = serverRunning.getRestTemplate();
         ResponseEntity<Void> result = client.exchange(serverRunning.getUrl("/userinfo"), HttpMethod.GET,
                 new HttpEntity<Void>(null, headers), Void.class, joe.getId());
-        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
 
     }
 
     @Test
-    public void deleteUserFails() {
+    void deleteUserFails() {
         RestOperations client = serverRunning.getRestTemplate();
         @SuppressWarnings("rawtypes")
         ResponseEntity<Map> response = deleteUser(client, joe.getId(), joe.getVersion());
-        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
         @SuppressWarnings("unchecked")
         Map<String, String> error = response.getBody();
         // System.err.println(error);
-        assertEquals("insufficient_scope", error.get("error"));
+        assertThat(error.get("error")).isEqualTo("insufficient_scope");
     }
 
     @Test
-    public void findUsersFails() {
+    void findUsersFails() {
         @SuppressWarnings("rawtypes")
         ResponseEntity<Map> response = serverRunning.getForObject(usersEndpoint, Map.class);
         @SuppressWarnings("unchecked")
         Map<String, Object> results = response.getBody();
-        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
-        assertNotNull(results.get("error"), "There should be an error");
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(results.get("error")).as("There should be an error").isNotNull();
     }
 
 }

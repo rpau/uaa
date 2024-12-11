@@ -41,13 +41,11 @@ import org.springframework.http.MediaType;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.HttpStatus.FOUND;
 import static org.springframework.http.HttpStatus.OK;
 
-public class FormLoginIntegrationTests {
+class FormLoginIntegrationTests {
 
     @RegisterExtension
     private static final ServerRunningExtension serverRunning = ServerRunningExtension.connect();
@@ -64,7 +62,7 @@ public class FormLoginIntegrationTests {
     CloseableHttpClient httpclient;
 
     @BeforeEach
-    public void createHttpClient() {
+    void createHttpClient() {
         httpclient = HttpClients.custom()
                 .setDefaultRequestConfig(RequestConfig.custom().setCookieSpec(CookieSpecs.STANDARD).build())
                 .setDefaultHeaders(headers)
@@ -73,43 +71,43 @@ public class FormLoginIntegrationTests {
     }
 
     @AfterEach
-    public void closeClient() throws Exception {
+    void closeClient() throws Exception {
         httpclient.close();
     }
 
 
     @Test
-    public void testUnauthenticatedRedirect() throws Exception {
+    void unauthenticatedRedirect() throws Exception {
         String location = serverRunning.getBaseUrl() + "/";
         HttpGet httpget = new HttpGet(location);
         httpget.setConfig(
                 RequestConfig.custom().setRedirectsEnabled(false).build()
         );
         CloseableHttpResponse response = httpclient.execute(httpget);
-        assertEquals(FOUND.value(), response.getStatusLine().getStatusCode());
+        assertThat(response.getStatusLine().getStatusCode()).isEqualTo(FOUND.value());
         location = response.getFirstHeader("Location").getValue();
         response.close();
         httpget.completed();
-        assertTrue(location.contains("/login"));
+        assertThat(location.contains("/login")).isTrue();
     }
 
     @Test
-    public void testSuccessfulAuthenticationFlow() throws Exception {
+    void successfulAuthenticationFlow() throws Exception {
         //request home page /
         String location = serverRunning.getBaseUrl() + "/";
         HttpGet httpget = new HttpGet(location);
         CloseableHttpResponse response = httpclient.execute(httpget);
 
-        assertEquals(OK.value(), response.getStatusLine().getStatusCode());
+        assertThat(response.getStatusLine().getStatusCode()).isEqualTo(OK.value());
 
         String body = EntityUtils.toString(response.getEntity());
         EntityUtils.consume(response.getEntity());
         response.close();
         httpget.completed();
 
-        assertTrue(body.contains("/login.do"));
-        assertTrue(body.contains("username"));
-        assertTrue(body.contains("password"));
+        assertThat(body.contains("/login.do")).isTrue();
+        assertThat(body.contains("username")).isTrue();
+        assertThat(body.contains("password")).isTrue();
 
         String csrf = IntegrationTestUtils.extractCookieCsrf(body);
 
@@ -121,7 +119,7 @@ public class FormLoginIntegrationTests {
                 .build();
 
         response = httpclient.execute(loginPost);
-        assertEquals(FOUND.value(), response.getStatusLine().getStatusCode());
+        assertThat(response.getStatusLine().getStatusCode()).isEqualTo(FOUND.value());
         location = response.getFirstHeader("Location").getValue();
         response.close();
 
@@ -132,18 +130,18 @@ public class FormLoginIntegrationTests {
         Cookie jsessionidCookie = cookieStore.getCookies().stream()
                 .filter(cookie -> "JSESSIONID".equals(cookie.getName()))
                 .findAny().orElse(null);
-        assertNotNull(jsessionidCookie);
+        assertThat(jsessionidCookie).isNotNull();
         HttpUriRequest getRequestAfterLogin = RequestBuilder.get()
                 .setUri(location)
                 .addHeader("Cookie", "JSESSIONID=" + jsessionidCookie.getValue())
                 .build();
 
         response = httpclient.execute(getRequestAfterLogin);
-        assertEquals(OK.value(), response.getStatusLine().getStatusCode());
+        assertThat(response.getStatusLine().getStatusCode()).isEqualTo(OK.value());
 
         body = EntityUtils.toString(response.getEntity());
         response.close();
-        assertTrue(body.contains("Sign Out"));
+        assertThat(body.contains("Sign Out")).isTrue();
     }
 
 }

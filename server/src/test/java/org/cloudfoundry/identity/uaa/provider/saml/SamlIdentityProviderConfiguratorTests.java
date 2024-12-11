@@ -51,8 +51,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.cloudfoundry.identity.uaa.constants.OriginKeys.SAML;
-import static org.cloudfoundry.identity.uaa.util.AssertThrowsWithMessage.assertThrowsWithMessageThat;
-import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -87,7 +85,7 @@ public class SamlIdentityProviderConfiguratorTests {
     }
 
     @BeforeEach
-    public void beforeEach() {
+    void beforeEach() {
         samlConfiguration = new SamlConfiguration();
 
         slowHttpServer = new SlowHttpServer();
@@ -107,18 +105,18 @@ public class SamlIdentityProviderConfiguratorTests {
     }
 
     @AfterEach
-    public void afterEach() {
+    void afterEach() {
         slowHttpServer.stop();
     }
 
     @Test
-    void testAddNullProvider() {
+    void addNullProvider() {
         assertThatThrownBy(() -> configurator.validateSamlIdentityProviderDefinition(null, false))
                 .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    void testAddNullProviderAlias() {
+    void addNullProviderAlias() {
         singleAdd.setIdpEntityAlias(null);
 
         assertThatThrownBy(() -> configurator.validateSamlIdentityProviderDefinition(singleAdd, false))
@@ -126,7 +124,7 @@ public class SamlIdentityProviderConfiguratorTests {
     }
 
     @Test
-    void testGetEntityID() {
+    void getEntityID() {
         when(fixedHttpMetaDataProvider.fetchMetadata(any(), anyBoolean())).thenReturn(getSimpleSamlPhpMetadata("http://simplesamlphp.somewhere.com").getBytes());
         BootstrapSamlIdentityProviderData bootstrap = new BootstrapSamlIdentityProviderData(configurator);
         bootstrap.setIdentityProviders(BootstrapSamlIdentityProviderDataTests.parseYaml(BootstrapSamlIdentityProviderDataTests.sampleYaml));
@@ -166,7 +164,7 @@ public class SamlIdentityProviderConfiguratorTests {
     }
 
     @Test
-    void testGetEntityIDExists() {
+    void getEntityIDExists() {
         BootstrapSamlIdentityProviderData bootstrap = new BootstrapSamlIdentityProviderData(configurator);
         bootstrap.setIdentityProviders(BootstrapSamlIdentityProviderDataTests.parseYaml(BootstrapSamlIdentityProviderDataTests.sampleYaml));
         bootstrap.afterPropertiesSet();
@@ -174,17 +172,15 @@ public class SamlIdentityProviderConfiguratorTests {
             if ("okta-local-2".equalsIgnoreCase(def.getIdpEntityAlias())) {
                 when(idp2.getConfig()).thenReturn(def.clone().setIdpEntityAlias("okta-local-1"));
                 when(provisioning.retrieveActiveByTypes(anyString(), eq(SAML))).thenReturn(List.of(idp2));
-                assertThrowsWithMessageThat(
-                        IdpAlreadyExistsException.class,
-                        () -> configurator.validateSamlIdentityProviderDefinition(def, true),
-                        startsWith("Duplicate entity ID:http://www.okta.com")
-                );
+                assertThatThrownBy(() -> configurator.validateSamlIdentityProviderDefinition(def, true))
+                        .isInstanceOf(IdpAlreadyExistsException.class)
+                        .hasMessageStartingWith("Duplicate entity ID:http://www.okta.com");
             }
         }
     }
 
     @Test
-    void testGetIdentityProviderDefinitionsForAllowedProviders() {
+    void getIdentityProviderDefinitionsForAllowedProviders() {
         List<String> clientIdpAliases = asList("simplesamlphp-url", "okta-local-2");
         String xmlMetadata = getOktaMetadata("http://www.okta.com/k2lw4l5bPODCMIIDBRYZ");
 
@@ -208,7 +204,7 @@ public class SamlIdentityProviderConfiguratorTests {
     }
 
     @Test
-    void testReturnNoIdpsInZoneForClientWithNoAllowedProviders() {
+    void returnNoIdpsInZoneForClientWithNoAllowedProviders() {
         List<String> clientIdpAliases = Collections.singletonList("non-existent");
         String xmlMetadata = getOktaMetadata("http://www.okta.com/k2lw4l5bPODCMIIDBRYZ");
 

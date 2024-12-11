@@ -26,15 +26,10 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringJUnitConfig(classes = DefaultIntegrationTestConfig.class)
-public class RateLimitingIT {
+class RateLimitingIT {
 
     @Autowired
     @RegisterExtension
@@ -57,7 +52,7 @@ public class RateLimitingIT {
 
     @BeforeEach
     @AfterEach
-    public void logout_and_clear_cookies() {
+    void logout_and_clear_cookies() {
         try {
             webDriver.get(baseUrl + "/logout.do");
         } catch (org.openqa.selenium.TimeoutException x) {
@@ -68,11 +63,11 @@ public class RateLimitingIT {
     }
 
     @Test
-    public void infoEndpointRateLimited() throws InterruptedException {
+    void infoEndpointRateLimited() throws InterruptedException {
         RestOperations restTemplate = serverRunning.getRestTemplate();
         //One Request should pass
         ResponseEntity<String> response = restTemplate.getForEntity(baseUrl + "/info", String.class);
-        assertNotEquals(HttpStatus.TOO_MANY_REQUESTS, response.getStatusCode());
+        assertThat(response.getStatusCode()).isNotEqualTo(HttpStatus.TOO_MANY_REQUESTS);
         boolean rateLimited = false;
         int infoLimit = 20;
         int requestCount = 50;
@@ -83,22 +78,21 @@ public class RateLimitingIT {
         //Check numbers
         long limits = responses.stream().filter(s -> HttpStatus.TOO_MANY_REQUESTS.equals(s.getStatusCode())).count();
         long oKs = responses.stream().filter(s -> HttpStatus.OK.equals(s.getStatusCode())).count();
-        assertEquals(requestCount, limits + oKs);
+        assertThat(limits + oKs).isEqualTo(requestCount);
         //Expect limited count around expected ones, more limited then with OK and check with tolerance of 2 that only expected limits are done
         if (limits > oKs && limits > (infoLimit - 2) && limits < (requestCount - infoLimit + 2)) {
             rateLimited = true;
         }
-        assertTrue(
-                rateLimited, "Rate limit counters are not as expected. Request: " + requestCount + ", Limit: " + infoLimit + ", blocked: " + limits
-                        + ", allowed: " + oKs);
+        assertThat(rateLimited).as("Rate limit counters are not as expected. Request: " + requestCount + ", Limit: " + infoLimit + ", blocked: " + limits
+                + ", allowed: " + oKs).isTrue();
         //After 1s, New Limit should be available
         TimeUnit.SECONDS.sleep(1);
         response = restTemplate.getForEntity(baseUrl + "/info", String.class);
-        assertNotEquals(HttpStatus.TOO_MANY_REQUESTS, response.getStatusCode());
+        assertThat(response.getStatusCode()).isNotEqualTo(HttpStatus.TOO_MANY_REQUESTS);
     }
 
     @Test
-    public void rateLimitingStatusActive() {
+    void rateLimitingStatusActive() {
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
         headers.add("Authorization", ((UaaTestAccounts) testAccounts).getAuthorizationHeader(testAccounts.getAdminClientId(),
@@ -109,7 +103,7 @@ public class RateLimitingIT {
                 new HttpEntity<>(new LinkedMultiValueMap<>(), headers),
                 String.class);
 
-        assertNotNull(responseEntity);
-        assertThat(responseEntity.getBody(), containsString("\"status\" : \"ACTIVE\""));
+        assertThat(responseEntity).isNotNull();
+        assertThat(responseEntity.getBody()).contains("\"status\" : \"ACTIVE\"");
     }
 }

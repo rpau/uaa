@@ -29,8 +29,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.security.SecureRandom;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringJUnitConfig(classes = DefaultIntegrationTestConfig.class)
 public class ChangePasswordIT {
@@ -61,7 +60,7 @@ public class ChangePasswordIT {
 
     @BeforeEach
     @AfterEach
-    public void logout_and_clear_cookies() {
+    void logout_and_clear_cookies() {
         try {
             webDriver.get(baseUrl + "/logout.do");
         } catch (org.openqa.selenium.TimeoutException x) {
@@ -72,7 +71,7 @@ public class ChangePasswordIT {
     }
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         int randomInt = new SecureRandom().nextInt();
 
         String adminAccessToken = testClient.getOAuthAccessToken("admin", "adminsecret", "client_credentials", "clients.read clients.write clients.secret clients.admin");
@@ -87,14 +86,14 @@ public class ChangePasswordIT {
     }
 
     @Test
-    public void testChangePassword() {
+    void testChangePassword() {
         webDriver.get(baseUrl + "/change_password");
         signIn(userEmail, PASSWORD);
 
         changePassword(PASSWORD, NEW_PASSWORD, "new");
         WebElement errorMessage = webDriver.findElement(By.className("error-message"));
-        assertTrue(errorMessage.isDisplayed());
-        assertEquals("Passwords must match and not be empty.", errorMessage.getText());
+        assertThat(errorMessage.isDisplayed()).isTrue();
+        assertThat(errorMessage.getText()).isEqualTo("Passwords must match and not be empty.");
 
         changePassword(PASSWORD, NEW_PASSWORD, NEW_PASSWORD);
         signOut();
@@ -103,7 +102,7 @@ public class ChangePasswordIT {
     }
 
     @Test
-    public void displaysErrorWhenPasswordContravenesPolicy() {
+    void displaysErrorWhenPasswordContravenesPolicy() {
         //the only policy we can contravene by default is the length
 
         String newPassword = new RandomValueStringGenerator(260).generate();
@@ -112,8 +111,8 @@ public class ChangePasswordIT {
 
         changePassword(PASSWORD, newPassword, newPassword);
         WebElement errorMessage = webDriver.findElement(By.className("error-message"));
-        assertTrue(errorMessage.isDisplayed());
-        assertEquals("Password must be no more than 255 characters in length.", errorMessage.getText());
+        assertThat(errorMessage.isDisplayed()).isTrue();
+        assertThat(errorMessage.getText()).isEqualTo("Password must be no more than 255 characters in length.");
     }
 
     private void changePassword(String originalPassword, String newPassword, String confirmPassword) {

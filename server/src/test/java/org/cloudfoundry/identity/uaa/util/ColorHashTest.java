@@ -2,19 +2,18 @@ package org.cloudfoundry.identity.uaa.util;
 
 import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.util.ColorHash.getColor;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
-public class ColorHashTest {
+class ColorHashTest {
     @Test
-    public void getColorResultIsConsistent() {
+    void getColorResultIsConsistent() {
         String input1 = "cat";
         String input2 = "dog";
 
-        assertEquals(getColor(input1), getColor(input1));
-        assertEquals(getColor(input2), getColor(input2));
+        assertThat(getColor(input1)).isEqualTo(getColor(input1));
+        assertThat(getColor(input2)).isEqualTo(getColor(input2));
 
-        assertNotEquals(getColor(input1), getColor(input2));
+        assertThat(getColor(input2)).isNotEqualTo(getColor(input1));
     }
 }

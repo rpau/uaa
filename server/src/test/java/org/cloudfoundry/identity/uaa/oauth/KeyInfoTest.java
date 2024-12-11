@@ -2,12 +2,10 @@ package org.cloudfoundry.identity.uaa.oauth;
 
 import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-public class KeyInfoTest {
+class KeyInfoTest {
 
     private static final String sampleRsaPrivateKey = """
             -----BEGIN RSA PRIVATE KEY-----
@@ -28,57 +26,53 @@ public class KeyInfoTest {
 
 
     @Test
-    public void HmacKeyShouldSetFieldsCorrectly() {
+    void HmacKeyShouldSetFieldsCorrectly() {
         KeyInfo hmacKeyInfo = new KeyInfo("key-id", "secret", "https://localhost");
 
-        assertThat(hmacKeyInfo.type(), is("MAC"));
+        assertThat(hmacKeyInfo.type()).isEqualTo("MAC");
     }
 
     @Test
-    public void HmacKeyShouldSetKeyUrlWithASecureProtocol() {
+    void HmacKeyShouldSetKeyUrlWithASecureProtocol() {
         KeyInfo hmacKeyInfo = new KeyInfo("key-id", "secret", "http://localhost/path2");
 
-        assertThat(hmacKeyInfo.keyURL(), is("https://localhost/path2/token_keys"));
+        assertThat(hmacKeyInfo.keyURL()).isEqualTo("https://localhost/path2/token_keys");
     }
 
     @Test
-    public void RsaKeyShouldSetFieldsCorrectly() {
+    void RsaKeyShouldSetFieldsCorrectly() {
         KeyInfo keyInfo = new KeyInfo("key-id", sampleRsaPrivateKey, "https://localhost");
 
-        assertThat(keyInfo.type(), is("RSA"));
+        assertThat(keyInfo.type()).isEqualTo("RSA");
     }
 
     @Test
-    public void Rsa512KeyShouldSetFieldsCorrectly() {
+    void Rsa512KeyShouldSetFieldsCorrectly() {
         KeyInfo keyInfo = new KeyInfo("key-id", sampleRsaPrivateKey, "https://localhost", "RS512", null);
 
-        assertThat(keyInfo.type(), is("RSA"));
-        assertThat(keyInfo.algorithm(), is("RS512"));
+        assertThat(keyInfo.type()).isEqualTo("RSA");
+        assertThat(keyInfo.algorithm()).isEqualTo("RS512");
     }
 
     @Test
-    public void RsaKeyShouldSetKeyUrlWithASecureProtocol() {
+    void RsaKeyShouldSetKeyUrlWithASecureProtocol() {
         KeyInfo keyInfo = new KeyInfo("key-id", sampleRsaPrivateKey, "http://localhost/path");
 
-        assertThat(keyInfo.keyURL(), is("https://localhost/path/token_keys"));
+        assertThat(keyInfo.keyURL()).isEqualTo("https://localhost/path/token_keys");
     }
 
     @Test
-    public void creatingHmacKeyWithInvalidUrlShouldFail() {
-        Throwable exception = assertThrows(IllegalArgumentException.class, () -> {
-
-            new KeyInfo("id", "secret", "foo bar");
-        });
-        assertTrue(exception.getMessage().contains("Invalid Key URL"));
+    void creatingHmacKeyWithInvalidUrlShouldFail() {
+        assertThatThrownBy(() -> new KeyInfo("id", "secret", "foo bar"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Invalid Key URL");
     }
 
 
     @Test
-    public void creatingRsaKeyWithInvalidUrlShouldFail() {
-        Throwable exception = assertThrows(IllegalArgumentException.class, () -> {
-
-            new KeyInfo("id", "secret", "foo bar");
-        });
-        assertTrue(exception.getMessage().contains("Invalid Key URL"));
+    void creatingRsaKeyWithInvalidUrlShouldFail() {
+        assertThatThrownBy(() -> new KeyInfo("id", "secret", "foo bar"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Invalid Key URL");
     }
 }

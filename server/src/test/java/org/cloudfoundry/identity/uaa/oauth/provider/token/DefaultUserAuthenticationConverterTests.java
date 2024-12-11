@@ -13,9 +13,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
@@ -33,10 +32,10 @@ class DefaultUserAuthenticationConverterTests {
         lists.add("a2");
         map.put(UserAuthenticationConverter.AUTHORITIES, lists);
 
-        assertNull(converter.extractAuthentication(Collections.emptyMap()));
+        assertThat(converter.extractAuthentication(Collections.emptyMap())).isNull();
         Authentication authentication = converter.extractAuthentication(map);
 
-        assertEquals(2, authentication.getAuthorities().size());
+        assertThat(authentication.getAuthorities().size()).isEqualTo(2);
     }
 
     @Test
@@ -47,7 +46,7 @@ class DefaultUserAuthenticationConverterTests {
 
         Authentication authentication = converter.extractAuthentication(map);
 
-        assertEquals(2, authentication.getAuthorities().size());
+        assertThat(authentication.getAuthorities().size()).isEqualTo(2);
     }
 
     @Test
@@ -61,7 +60,7 @@ class DefaultUserAuthenticationConverterTests {
         converter.setUserDetailsService(userDetailsService);
         Authentication authentication = converter.extractAuthentication(map);
 
-        assertEquals("ROLE_SPAM", authentication.getAuthorities().iterator().next().toString());
+        assertThat(authentication.getAuthorities().iterator().next().toString()).isEqualTo("ROLE_SPAM");
     }
 
     @Test
@@ -71,7 +70,7 @@ class DefaultUserAuthenticationConverterTests {
 
         Authentication authentication = converter.extractAuthentication(map);
 
-        assertEquals("test_user", authentication.getPrincipal());
+        assertThat(authentication.getPrincipal()).isEqualTo("test_user");
     }
 
     @Test
@@ -80,7 +79,7 @@ class DefaultUserAuthenticationConverterTests {
         converter.setDefaultAuthorities(new String[]{"user"});
         Map<String, ?> map = converter.convertUserAuthentication(authentication);
 
-        assertEquals("test_user", map.get(UserAuthenticationConverter.USERNAME));
+        assertThat(map.get(UserAuthenticationConverter.USERNAME)).isEqualTo("test_user");
     }
 
     @Test
@@ -94,7 +93,7 @@ class DefaultUserAuthenticationConverterTests {
 
         Authentication authentication = converter.extractAuthentication(map);
 
-        assertEquals("test_user", authentication.getPrincipal());
+        assertThat(authentication.getPrincipal()).isEqualTo("test_user");
     }
 
     @Test
@@ -107,14 +106,13 @@ class DefaultUserAuthenticationConverterTests {
 
         Map<String, ?> map = converter.convertUserAuthentication(authentication);
 
-        assertEquals("test_user", map.get(customUserClaim));
+        assertThat(map.get(customUserClaim)).isEqualTo("test_user");
     }
 
     @Test
     void shouldAuthorities() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            DefaultUserAuthenticationConverter converter = new DefaultUserAuthenticationConverter();
-            converter.getAuthorities(Map.of("authorities", 1));
-        });
+        DefaultUserAuthenticationConverter converter = new DefaultUserAuthenticationConverter();
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() ->
+                converter.getAuthorities(Map.of("authorities", 1)));
     }
 }

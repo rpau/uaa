@@ -34,17 +34,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.cloudfoundry.identity.uaa.provider.ExternalIdentityProviderDefinition.USER_NAME_ATTRIBUTE_NAME;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.fail;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
 @SpringJUnitConfig(classes = DefaultIntegrationTestConfig.class)
-public class PrivateKeyJwtClientAuthIT {
+class PrivateKeyJwtClientAuthIT {
 
     //jwt.token.signing-key from uaa.yml
     @Value("${integration.test.signing-key}")
@@ -72,7 +69,7 @@ public class PrivateKeyJwtClientAuthIT {
     RestOperations restOperations;
 
     @Test
-    public void testPasswordGrantWithClientUsingPrivateKeyJwtAndExpectValidToken() {
+    void passwordGrantWithClientUsingPrivateKeyJwtAndExpectValidToken() {
         // Given, client with jwks trusted keys
         String usedClientId = "client_with_jwks_trust";
         Map<String, Object> expectedClaims = Map.of(
@@ -86,12 +83,12 @@ public class PrivateKeyJwtClientAuthIT {
         // When
         String accessToken = getPasswordGrantToken(usedClientId, "access_token", OK);
         // Then
-        assertNotNull(accessToken);
+        assertThat(accessToken).isNotNull();
         assertThat(getTokenClaims(accessToken)).containsAllEntriesOf(expectedClaims);
     }
 
     @Test
-    public void testClientCredentialGrantWithClientUsingPrivateKeyJwtAndExpectValidToken() {
+    void clientCredentialGrantWithClientUsingPrivateKeyJwtAndExpectValidToken() {
         // Given, client with jwks trusted keys
         String usedClientId = "client_with_jwks_trust";
         Map<String, Object> expectedClaims = Map.of(
@@ -103,13 +100,13 @@ public class PrivateKeyJwtClientAuthIT {
         // When
         String accessToken = getClientCredentialsGrantToken(usedClientId, "access_token", OK);
         // Then
-        assertNotNull(accessToken);
+        assertThat(accessToken).isNotNull();
         assertThat(getTokenClaims(accessToken)).containsAllEntriesOf(expectedClaims);
         assertThat(getTokenClaims(accessToken)).doesNotContainKeys("user_name", "origin");
     }
 
     @Test
-    public void testClientCredentialGrantWithClientUsingPrivateKeyJwtUriAndExpectValidToken() {
+    void clientCredentialGrantWithClientUsingPrivateKeyJwtUriAndExpectValidToken() {
         // Given, client with jwks_uri keys
         String usedClientId = "client_with_allowpublic_and_jwks_uri_trust";
         Map<String, Object> expectedClaims = Map.of(
@@ -121,13 +118,13 @@ public class PrivateKeyJwtClientAuthIT {
         // When
         String accessToken = getClientCredentialsGrantToken(usedClientId, "access_token", OK);
         // Then
-        assertNotNull(accessToken);
+        assertThat(accessToken).isNotNull();
         assertThat(getTokenClaims(accessToken)).containsAllEntriesOf(expectedClaims);
         assertThat(getTokenClaims(accessToken)).doesNotContainKeys("user_name", "origin");
     }
 
     @Test
-    public void testRefreshAfterPasswordWithClientUsingPrivateKeyJwtUriAndExpectValidToken() {
+    void refreshAfterPasswordWithClientUsingPrivateKeyJwtUriAndExpectValidToken() {
         // Given, client with jwks_uri keys
         String usedClientId = "client_with_allowpublic_and_jwks_uri_trust";
         Map<String, Object> expectedClaims = Map.of(
@@ -141,16 +138,16 @@ public class PrivateKeyJwtClientAuthIT {
         // When
         String refreshToken = getPasswordGrantToken(usedClientId, "refresh_token", OK);
         // Then
-        assertNotNull(refreshToken);
+        assertThat(refreshToken).isNotNull();
         // When
         String accessToken = getRefreshGrantToken(usedClientId, refreshToken, "access_token", OK);
         // Then
-        assertNotNull(accessToken);
+        assertThat(accessToken).isNotNull();
         assertThat(getTokenClaims(accessToken)).containsAllEntriesOf(expectedClaims);
     }
 
     @Test
-    public void testJwtBearerAfterPasswordWithClientUsingPrivateKeyJwtUriAndExpectValidToken() {
+    void jwtBearerAfterPasswordWithClientUsingPrivateKeyJwtUriAndExpectValidToken() {
         // Given, client with jwks_uri keys
         String usedClientId = "client_with_allowpublic_and_jwks_uri_trust";
         Map<String, Object> expectedClaims = Map.of(
@@ -164,12 +161,12 @@ public class PrivateKeyJwtClientAuthIT {
         // When
         String passwordToken = getPasswordGrantToken(usedClientId, "access_token", OK);
         // Then
-        assertNotNull(passwordToken);
+        assertThat(passwordToken).isNotNull();
         assertThat(getTokenClaims(passwordToken)).containsAllEntriesOf(expectedClaims);
         // When
         String accessToken = getJwtBearerGrantToken(usedClientId, passwordToken, "access_token", OK);
         // Then
-        assertNotNull(accessToken);
+        assertThat(accessToken).isNotNull();
         assertThat(getTokenClaims(accessToken)).containsAllEntriesOf(Map.of(
                 "client_auth_method", "private_key_jwt",
                 "client_id", usedClientId,
@@ -181,7 +178,7 @@ public class PrivateKeyJwtClientAuthIT {
     }
 
     @Test
-    public void testPasswordGrantWithClientUsingOidcProxyAndExpectValidToken() throws Exception {
+    void passwordGrantWithClientUsingOidcProxyAndExpectValidToken() throws Exception {
         // Given
         String usedClientId = "client_with_allowpublic_and_jwks_uri_trust";
         String expectedOriginKey = "oidc-proxy";
@@ -201,7 +198,7 @@ public class PrivateKeyJwtClientAuthIT {
             // When Password Grant with OIDC proxy in between
             String accessToken = getPasswordProxyGrantToken(usedClientId, "access_token", expectedOriginKey, OK);
             // Then
-            assertNotNull(accessToken);
+            assertThat(accessToken).isNotNull();
             assertThat(getTokenClaims(accessToken)).containsAllEntriesOf(expectedClaims);
         } finally {
             IntegrationTestUtils.deleteProvider(clientCredentialsToken, baseUrl, "uaa", expectedOriginKey);
@@ -209,7 +206,7 @@ public class PrivateKeyJwtClientAuthIT {
     }
 
     @Test
-    public void testAutorizationCodeGrantWithClientUsingOidcProxyAndExpectValidToken() throws Exception {
+    void autorizationCodeGrantWithClientUsingOidcProxyAndExpectValidToken() throws Exception {
         // Given
         String expectedOriginKey = "oidc-proxy-private-key-jwt";
         String usedClientId = "client_with_allowpublic_and_jwks_uri_trust";
@@ -245,20 +242,20 @@ public class PrivateKeyJwtClientAuthIT {
     }
 
     @Test
-    public void testPasswordGrantWithClientUsingPrivateKeyJwtAndExpectClientError() {
+    void passwordGrantWithClientUsingPrivateKeyJwtAndExpectClientError() {
         // When
         String response = getPasswordGrantToken("admin", "access_token", UNAUTHORIZED);
         // Then
-        assertNotNull(response);
+        assertThat(response).isNotNull();
         assertThat(response).contains("401");
     }
 
     @Test
-    public void testClientCredentialGrantWithClientUsingPrivateKeyJwtAndExpectClientError() {
+    void clientCredentialGrantWithClientUsingPrivateKeyJwtAndExpectClientError() {
         // When
         String response = getClientCredentialsGrantToken("any-other-not-existing-client", "access_token", UNAUTHORIZED);
         // Then
-        assertNotNull(response);
+        assertThat(response).isNotNull();
         assertThat(response).contains("401");
     }
 
@@ -306,10 +303,10 @@ public class PrivateKeyJwtClientAuthIT {
         try {
             responseEntity = restOperations.exchange(baseUrl + "/oauth/token", HttpMethod.POST, new HttpEntity<>(postBody, headers), Map.class);
         } catch (HttpClientErrorException e) {
-            assertNotEquals(expected, OK, "Expected OK, but the call failed");
+            assertThat(expected).as("Expected OK, but the call failed").isNotEqualTo(OK);
             return e.getMessage();
         }
-        assertEquals(expected, responseEntity.getStatusCode());
+        assertThat(responseEntity.getStatusCode()).isEqualTo(expected);
         if (expected == OK) {
             return (String) responseEntity.getBody().get(returnToken);
         } else {

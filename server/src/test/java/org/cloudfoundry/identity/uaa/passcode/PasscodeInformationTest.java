@@ -15,9 +15,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -26,7 +25,7 @@ class PasscodeInformationTest {
     Map<String, Object> authorizationParameters;
 
     @BeforeEach
-    public void before() {
+    void before() {
         uaaPrincipal = new UaaPrincipal(
                 "marissa-id", "marissa", "marissa@test.org", "origin", null, IdentityZoneHolder.get().getId()
         );
@@ -41,11 +40,11 @@ class PasscodeInformationTest {
                         uaaPrincipal.getOrigin(),
                         Collections.emptyList());
 
-        assertNull(passcodeInformation.getPasscode());
-        assertEquals(uaaPrincipal.getName(), passcodeInformation.getUsername());
-        assertEquals(uaaPrincipal.getOrigin(), passcodeInformation.getOrigin());
-        assertEquals(uaaPrincipal.getId(), passcodeInformation.getUserId());
-        assertEquals(Collections.emptyList(), passcodeInformation.getSamlAuthorities());
+        assertThat(passcodeInformation.getPasscode()).isNull();
+        assertThat(passcodeInformation.getUsername()).isEqualTo(uaaPrincipal.getName());
+        assertThat(passcodeInformation.getOrigin()).isEqualTo(uaaPrincipal.getOrigin());
+        assertThat(passcodeInformation.getUserId()).isEqualTo(uaaPrincipal.getId());
+        assertThat(passcodeInformation.getSamlAuthorities()).isEqualTo(Collections.emptyList());
     }
 
     @Test
@@ -53,10 +52,10 @@ class PasscodeInformationTest {
         final PasscodeInformation passcodeInformation =
                 new PasscodeInformation(uaaPrincipal, authorizationParameters);
 
-        assertNull(passcodeInformation.getPasscode());
-        assertEquals(uaaPrincipal.getName(), passcodeInformation.getUsername());
-        assertEquals(uaaPrincipal.getOrigin(), passcodeInformation.getOrigin());
-        assertEquals(uaaPrincipal.getId(), passcodeInformation.getUserId());
+        assertThat(passcodeInformation.getPasscode()).isNull();
+        assertThat(passcodeInformation.getUsername()).isEqualTo(uaaPrincipal.getName());
+        assertThat(passcodeInformation.getOrigin()).isEqualTo(uaaPrincipal.getOrigin());
+        assertThat(passcodeInformation.getUserId()).isEqualTo(uaaPrincipal.getId());
     }
 
     @Test
@@ -70,16 +69,16 @@ class PasscodeInformationTest {
         final PasscodeInformation passcodeInformation =
                 new PasscodeInformation(uaaAuthentication, authorizationParameters);
 
-        assertNull(passcodeInformation.getPasscode());
-        assertEquals(uaaPrincipal.getName(), passcodeInformation.getUsername());
-        assertEquals(uaaPrincipal.getOrigin(), passcodeInformation.getOrigin());
-        assertEquals(uaaPrincipal.getId(), passcodeInformation.getUserId());
+        assertThat(passcodeInformation.getPasscode()).isNull();
+        assertThat(passcodeInformation.getUsername()).isEqualTo(uaaPrincipal.getName());
+        assertThat(passcodeInformation.getOrigin()).isEqualTo(uaaPrincipal.getOrigin());
+        assertThat(passcodeInformation.getUserId()).isEqualTo(uaaPrincipal.getId());
     }
 
     @Test
     void passcodeInformationThrowsExceptionOnUnknownPrincipal() {
         UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken("unknown principal type", "");
-        assertThrows(PasscodeEndpoint.UnknownPrincipalException.class, () ->
+        assertThatExceptionOfType(PasscodeEndpoint.UnknownPrincipalException.class).isThrownBy(() ->
                 new PasscodeInformation(token, authorizationParameters));
     }
 
@@ -88,7 +87,7 @@ class PasscodeInformationTest {
         Authentication authentication = mock(Authentication.class);
         when(authentication.getPrincipal()).thenReturn(mock(Principal.class));
 
-        assertThrows(PasscodeEndpoint.UnknownPrincipalException.class, () ->
+        assertThatExceptionOfType(PasscodeEndpoint.UnknownPrincipalException.class).isThrownBy(() ->
                 new PasscodeInformation(authentication, authorizationParameters));
     }
 }

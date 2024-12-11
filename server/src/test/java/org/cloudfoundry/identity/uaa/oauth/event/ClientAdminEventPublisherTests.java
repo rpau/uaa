@@ -27,7 +27,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.Collections;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -110,7 +110,7 @@ class ClientAdminEventPublisherTests {
         when(mockMultitenantClientServices.loadClientByClientId("foo")).thenReturn(uaaUaaClientDetails);
         subject.clientJwtChange("foo");
         verify(mockApplicationEventPublisher).publishEvent(isA(ClientJwtChangeEvent.class));
-        assertEquals(AuditEventType.ClientJwtChangeSuccess, new ClientJwtChangeEvent(uaaUaaClientDetails, SecurityContextHolder.getContext().getAuthentication(), "uaa").getAuditEvent().getType());
+        assertThat(new ClientJwtChangeEvent(uaaUaaClientDetails, SecurityContextHolder.getContext().getAuthentication(), "uaa").getAuditEvent().getType()).isEqualTo(AuditEventType.ClientJwtChangeSuccess);
     }
 
     @Test
@@ -119,6 +119,6 @@ class ClientAdminEventPublisherTests {
         when(mockMultitenantClientServices.loadClientByClientId("foo")).thenReturn(uaaUaaClientDetails);
         subject.clientJwtFailure("foo", new RuntimeException("planned"));
         verify(mockApplicationEventPublisher).publishEvent(isA(ClientJwtFailureEvent.class));
-        assertEquals(AuditEventType.ClientJwtChangeFailure, new ClientJwtFailureEvent("", uaaUaaClientDetails, SecurityContextHolder.getContext().getAuthentication(), "uaa").getAuditEvent().getType());
+        assertThat(new ClientJwtFailureEvent("", uaaUaaClientDetails, SecurityContextHolder.getContext().getAuthentication(), "uaa").getAuditEvent().getType()).isEqualTo(AuditEventType.ClientJwtChangeFailure);
     }
 }

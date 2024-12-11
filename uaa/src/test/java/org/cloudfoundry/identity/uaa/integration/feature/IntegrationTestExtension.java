@@ -26,7 +26,7 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.fail;
 
 /**
  * <pre>

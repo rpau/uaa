@@ -14,7 +14,7 @@ import org.springframework.security.web.authentication.preauth.PreAuthenticatedA
 
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -23,7 +23,7 @@ import static org.mockito.Mockito.when;
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-public class OAuth2AuthenticationManagerTests {
+class OAuth2AuthenticationManagerTests {
 
     private final OAuth2AuthenticationManager manager = new OAuth2AuthenticationManager();
 
@@ -39,18 +39,18 @@ public class OAuth2AuthenticationManagerTests {
     }
 
     @Test
-    public void testDetailsAdded() throws Exception {
+    void detailsAdded() throws Exception {
         manager.afterPropertiesSet();
         Mockito.when(tokenServices.loadAuthentication("FOO")).thenReturn(authentication);
         PreAuthenticatedAuthenticationToken request = new PreAuthenticatedAuthenticationToken("FOO", "");
         request.setDetails("BAR");
         Authentication result = manager.authenticate(request);
-        assertEquals(authentication, result);
-        assertEquals("BAR", result.getDetails());
+        assertThat(result).isEqualTo(authentication);
+        assertThat(result.getDetails()).isEqualTo("BAR");
     }
 
     @Test
-    public void testClientDetailsEnhanced() throws Exception {
+    void clientDetailsEnhanced() throws Exception {
         authentication.setDetails("DETAILS");
         ClientDetailsService uaaClientDetails = mock(ClientDetailsService.class);
         UaaClientDetails uaaClient = mock(UaaClientDetails.class);
@@ -65,13 +65,13 @@ public class OAuth2AuthenticationManagerTests {
         OAuth2AuthenticationDetails details = new OAuth2AuthenticationDetails(servletRequest);
         request.setDetails(details);
         Authentication result = manager.authenticate(request);
-        assertEquals(authentication, result);
-        assertEquals("BAR", ((OAuth2AuthenticationDetails) result.getDetails()).getTokenValue());
-        assertEquals("DETAILS", ((OAuth2AuthenticationDetails) result.getDetails()).getDecodedDetails());
+        assertThat(result).isEqualTo(authentication);
+        assertThat(((OAuth2AuthenticationDetails) result.getDetails()).getTokenValue()).isEqualTo("BAR");
+        assertThat(((OAuth2AuthenticationDetails) result.getDetails()).getDecodedDetails()).isEqualTo("DETAILS");
     }
 
     @Test
-    public void testDetailsEnhanced() throws Exception {
+    void detailsEnhanced() throws Exception {
         authentication.setDetails("DETAILS");
         Mockito.when(tokenServices.loadAuthentication("FOO")).thenReturn(authentication);
         PreAuthenticatedAuthenticationToken request = new PreAuthenticatedAuthenticationToken("FOO", "");
@@ -80,13 +80,13 @@ public class OAuth2AuthenticationManagerTests {
         OAuth2AuthenticationDetails details = new OAuth2AuthenticationDetails(servletRequest);
         request.setDetails(details);
         Authentication result = manager.authenticate(request);
-        assertEquals(authentication, result);
-        assertEquals("BAR", ((OAuth2AuthenticationDetails) result.getDetails()).getTokenValue());
-        assertEquals("DETAILS", ((OAuth2AuthenticationDetails) result.getDetails()).getDecodedDetails());
+        assertThat(result).isEqualTo(authentication);
+        assertThat(((OAuth2AuthenticationDetails) result.getDetails()).getTokenValue()).isEqualTo("BAR");
+        assertThat(((OAuth2AuthenticationDetails) result.getDetails()).getDecodedDetails()).isEqualTo("DETAILS");
     }
 
     @Test
-    public void testDetailsEnhancedOnce() throws Exception {
+    void detailsEnhancedOnce() throws Exception {
         authentication.setDetails("DETAILS");
         Mockito.when(tokenServices.loadAuthentication("FOO")).thenReturn(authentication);
         PreAuthenticatedAuthenticationToken request = new PreAuthenticatedAuthenticationToken("FOO", "");
@@ -98,9 +98,9 @@ public class OAuth2AuthenticationManagerTests {
         // Authenticate the same request again to simulate what happens if the app is caching the result from
         // tokenServices.loadAuthentication():
         result = manager.authenticate(request);
-        assertEquals(authentication, result);
-        assertEquals("BAR", ((OAuth2AuthenticationDetails) result.getDetails()).getTokenValue());
-        assertEquals("DETAILS", ((OAuth2AuthenticationDetails) result.getDetails()).getDecodedDetails());
+        assertThat(result).isEqualTo(authentication);
+        assertThat(((OAuth2AuthenticationDetails) result.getDetails()).getTokenValue()).isEqualTo("BAR");
+        assertThat(((OAuth2AuthenticationDetails) result.getDetails()).getDecodedDetails()).isEqualTo("DETAILS");
     }
 
 }

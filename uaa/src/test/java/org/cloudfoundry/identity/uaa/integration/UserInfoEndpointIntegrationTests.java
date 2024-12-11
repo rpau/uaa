@@ -24,16 +24,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.isA;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Dave Syer
  */
 @OAuth2ContextConfiguration
-public class UserInfoEndpointIntegrationTests {
+class UserInfoEndpointIntegrationTests {
 
     @RegisterExtension
     private static final ServerRunningExtension serverRunning = ServerRunningExtension.connect();
@@ -50,9 +50,9 @@ public class UserInfoEndpointIntegrationTests {
      * tests a happy-day flow of the <code>/userinfo</code> endpoint
      */
     @Test
-    void testHappyDay() {
+    void happyDay() {
         ResponseEntity<String> user = serverRunning.getForString("/userinfo");
-        assertEquals(HttpStatus.OK, user.getStatusCode());
+        assertThat(user.getStatusCode()).isEqualTo(HttpStatus.OK);
 
         String infoResponseString = user.getBody();
 

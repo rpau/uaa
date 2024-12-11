@@ -12,7 +12,6 @@ import org.cloudfoundry.identity.uaa.util.UaaRandomStringUtil;
 import org.cloudfoundry.identity.uaa.zone.IdentityZone;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneProvisioning;
 import org.cloudfoundry.identity.uaa.zone.beans.IdentityZoneManager;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,25 +36,17 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toSet;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.cloudfoundry.identity.uaa.constants.OriginKeys.LDAP;
 import static org.cloudfoundry.identity.uaa.constants.OriginKeys.OAUTH20;
 import static org.cloudfoundry.identity.uaa.constants.OriginKeys.OIDC10;
 import static org.cloudfoundry.identity.uaa.constants.OriginKeys.SAML;
 import static org.cloudfoundry.identity.uaa.constants.OriginKeys.UAA;
 import static org.cloudfoundry.identity.uaa.provider.ExternalIdentityProviderDefinition.USER_NAME_ATTRIBUTE_NAME;
-import static org.cloudfoundry.identity.uaa.util.AssertThrowsWithMessage.assertThrowsWithMessageThat;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasKey;
-import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
-import static org.hamcrest.Matchers.startsWith;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.anyString;
@@ -150,8 +141,8 @@ class ExternalOAuthProviderConfiguratorTests {
         when(mockIdentityProviderProvisioning.retrieveAll(eq(true), anyString())).thenReturn(Arrays.asList(oidcProvider, oauthProvider, new IdentityProvider<>().setType(LDAP)));
 
         List<IdentityProvider> activeExternalOAuthProviders = configurator.retrieveAll(true, IdentityZone.getUaaZoneId());
-        assertEquals(2, activeExternalOAuthProviders.size());
-        verify(configurator, times(1)).overlay(eq(config));
+        assertThat(activeExternalOAuthProviders).hasSize(2);
+        verify(configurator, times(1)).overlay(config);
     }
 
     @Test
@@ -159,8 +150,8 @@ class ExternalOAuthProviderConfiguratorTests {
         when(mockIdentityProviderProvisioning.retrieveAll(eq(true), anyString())).thenReturn(Arrays.asList(oidcProvider, oauthProvider, new IdentityProvider<>().setType(LDAP)));
 
         List<IdentityProvider> activeExternalOAuthProviders = configurator.retrieveActive(IdentityZone.getUaaZoneId());
-        assertEquals(2, activeExternalOAuthProviders.size());
-        verify(configurator, times(1)).overlay(eq(config));
+        assertThat(activeExternalOAuthProviders).hasSize(2);
+        verify(configurator, times(1)).overlay(config);
         verify(configurator, times(1)).retrieveAll(eq(true), anyString());
     }
 
@@ -184,7 +175,7 @@ class ExternalOAuthProviderConfiguratorTests {
                 }).toList();
         lenient().when(mockIdentityProviderProvisioning.retrieveActiveByTypes(zoneId, types)).thenReturn(idps);
 
-        assertTrue(configurator.retrieveActiveByTypes(zoneId, types).isEmpty());
+        assertThat(configurator.retrieveActiveByTypes(zoneId, types)).isEmpty();
     }
 
     private static Stream<Arguments> retrieveActiveByTypes_ShouldReturnEmptyListWhenNeitherOidcNorOAuthInTypes() {
@@ -198,7 +189,7 @@ class ExternalOAuthProviderConfiguratorTests {
 
     @Test
     void retrieveActiveByNullType() {
-        assertEquals(0, configurator.retrieveActiveByTypes(IdentityZone.getUaaZoneId(), null).size());
+        assertThat(configurator.retrieveActiveByTypes(IdentityZone.getUaaZoneId(), null)).isEmpty();
     }
 
     @ParameterizedTest
@@ -244,12 +235,12 @@ class ExternalOAuthProviderConfiguratorTests {
         /* the result should contain only IdPs of type "oauth2.0" and "oidc1.0" and only if the corresponding type
          * was part of the input types */
         final int expectedSize = (inputContainsOauth ? 1 : 0) + (inputContainsOidc ? 1 : 0);
-        assertEquals(expectedSize, result.size());
+        assertThat(result).hasSize(expectedSize);
 
         final Set<String> typesInResult = result.stream().map(IdentityProvider::getType).collect(toSet());
-        assertEquals(expectedSize, typesInResult.size());
-        assertEquals(inputContainsOauth, typesInResult.contains(OAUTH20));
-        assertEquals(inputContainsOidc, typesInResult.contains(OIDC10));
+        assertThat(typesInResult).hasSize(expectedSize);
+        assertThat(typesInResult.contains(OAUTH20)).isEqualTo(inputContainsOauth);
+        assertThat(typesInResult.contains(OIDC10)).isEqualTo(inputContainsOidc);
 
         if (inputContainsOidc) {
             verify(mockOidcMetadataFetcher, times(1)).fetchMetadataAndUpdateDefinition(any());
@@ -284,8 +275,8 @@ class ExternalOAuthProviderConfiguratorTests {
 
         IdentityProvider<OIDCIdentityProviderDefinition> activeExternalOAuthProvider = configurator.retrieveByIssuer(issuer, IdentityZone.getUaaZoneId());
 
-        assertEquals(issuer, activeExternalOAuthProvider.getConfig().getIssuer());
-        verify(configurator, times(1)).overlay(eq(config));
+        assertThat(activeExternalOAuthProvider.getConfig().getIssuer()).isEqualTo(issuer);
+        verify(configurator, times(1)).overlay(config);
         verify(configurator, times(1)).retrieveAll(eq(true), anyString());
     }
 
@@ -303,7 +294,7 @@ class ExternalOAuthProviderConfiguratorTests {
 
         IdentityProvider<OIDCIdentityProviderDefinition> activeExternalOAuthProvider = configurator.retrieveByIssuer(issuer, IdentityZone.getUaaZoneId());
 
-        assertEquals(issuer, activeExternalOAuthProvider.getConfig().getIssuer());
+        assertThat(activeExternalOAuthProvider.getConfig().getIssuer()).isEqualTo(issuer);
         verify(configurator, times(1)).overlay(config);
         verify(configurator, times(1)).retrieveByExternId(anyString(), anyString(), anyString());
     }
@@ -328,7 +319,7 @@ class ExternalOAuthProviderConfiguratorTests {
 
         IdentityProvider<OIDCIdentityProviderDefinition> activeExternalOAuthProvider = configurator.retrieveByIssuer(issuer, "customer");
 
-        assertEquals(issuer, activeExternalOAuthProvider.getConfig().getIssuer());
+        assertThat(activeExternalOAuthProvider.getConfig().getIssuer()).isEqualTo(issuer);
         verify(configurator, times(1)).overlay(config);
         verify(configurator, times(1)).retrieveByExternId(anyString(), anyString(), anyString());
         verify(configurator, times(1)).retrieveAll(eq(true), anyString());
@@ -343,11 +334,9 @@ class ExternalOAuthProviderConfiguratorTests {
         extraZone.getConfig().getUserConfig().setAllowOriginLoop(false);
         when(identityZoneManager.getCurrentIdentityZoneId()).thenReturn(IdentityZone.getUaaZoneId());
         when(identityZoneManager.getCurrentIdentityZone()).thenReturn(extraZone);
-        assertThrowsWithMessageThat(
-                IncorrectResultSizeDataAccessException.class,
-                () -> configurator.retrieveByIssuer(issuer, IdentityZone.getUaaZoneId()),
-                startsWith("No provider with unique issuer[%s] found".formatted(issuer))
-        );
+        assertThatThrownBy(() -> configurator.retrieveByIssuer(issuer, IdentityZone.getUaaZoneId()))
+                .isInstanceOf(IncorrectResultSizeDataAccessException.class)
+                .hasMessageStartingWith("No provider with unique issuer[%s] found".formatted(issuer));
     }
 
     @Test
@@ -359,11 +348,9 @@ class ExternalOAuthProviderConfiguratorTests {
         extraZone.getConfig().getUserConfig().setAllowOriginLoop(false);
         when(identityZoneManager.getCurrentIdentityZoneId()).thenReturn(IdentityZone.getUaaZoneId());
         when(identityZoneManager.getCurrentIdentityZone()).thenReturn(extraZone);
-        assertThrowsWithMessageThat(
-                IncorrectResultSizeDataAccessException.class,
-                () -> configurator.retrieveByIssuer(issuer, IdentityZone.getUaaZoneId()),
-                startsWith("Active provider with unique issuer[%s] not found".formatted(issuer))
-        );
+        assertThatThrownBy(() -> configurator.retrieveByIssuer(issuer, IdentityZone.getUaaZoneId()))
+                .isInstanceOf(IncorrectResultSizeDataAccessException.class)
+                .hasMessageStartingWith("Active provider with unique issuer[%s] not found".formatted(issuer));
     }
 
     @Test
@@ -372,11 +359,9 @@ class ExternalOAuthProviderConfiguratorTests {
         when(mockIdentityProviderProvisioning.retrieveAll(eq(true), anyString())).thenReturn(Arrays.asList(oauthProvider, new IdentityProvider<>().setType(LDAP)));
         when(identityZoneManager.getCurrentIdentityZoneId()).thenReturn(IdentityZone.getUaaZoneId());
         when(identityZoneManager.getCurrentIdentityZone()).thenReturn(IdentityZone.getUaa());
-        assertThrowsWithMessageThat(
-                IncorrectResultSizeDataAccessException.class,
-                () -> configurator.retrieveByIssuer(issuer, IdentityZone.getUaaZoneId()),
-                equalTo("Active provider with issuer[%s] not found".formatted(issuer))
-        );
+        assertThatThrownBy(() -> configurator.retrieveByIssuer(issuer, IdentityZone.getUaaZoneId()))
+                .isInstanceOf(IncorrectResultSizeDataAccessException.class)
+                .hasMessage("Active provider with issuer[%s] not found".formatted(issuer));
     }
 
     @Test
@@ -392,11 +377,9 @@ class ExternalOAuthProviderConfiguratorTests {
         }).when(mockOidcMetadataFetcher)
                 .fetchMetadataAndUpdateDefinition(any(OIDCIdentityProviderDefinition.class));
 
-        assertThrowsWithMessageThat(
-                IncorrectResultSizeDataAccessException.class,
-                () -> configurator.retrieveByIssuer(issuer, IdentityZone.getUaaZoneId()),
-                equalTo("Duplicate providers with issuer[%s] not found".formatted(issuer))
-        );
+        assertThatThrownBy(() -> configurator.retrieveByIssuer(issuer, IdentityZone.getUaaZoneId()))
+                .isInstanceOf(IncorrectResultSizeDataAccessException.class)
+                .hasMessage("Duplicate providers with issuer[%s] not found".formatted(issuer));
     }
 
     @Test
@@ -404,11 +387,11 @@ class ExternalOAuthProviderConfiguratorTests {
         when(mockIdentityProviderProvisioning.retrieveByOrigin(eq(OIDC10), anyString())).thenReturn(oidcProvider);
         when(mockIdentityProviderProvisioning.retrieveByOrigin(eq(OAUTH20), anyString())).thenReturn(oauthProvider);
 
-        assertNotNull(configurator.retrieveByOrigin(OIDC10, IdentityZone.getUaaZoneId()));
-        verify(configurator, times(1)).overlay(eq(config));
+        assertThat(configurator.retrieveByOrigin(OIDC10, IdentityZone.getUaaZoneId())).isNotNull();
+        verify(configurator, times(1)).overlay(config);
 
         reset(configurator);
-        assertNotNull(configurator.retrieveByOrigin(OAUTH20, IdentityZone.getUaaZoneId()));
+        assertThat(configurator.retrieveByOrigin(OAUTH20, IdentityZone.getUaaZoneId())).isNotNull();
         verify(configurator, never()).overlay(any());
     }
 
@@ -417,18 +400,18 @@ class ExternalOAuthProviderConfiguratorTests {
         when(mockIdentityProviderProvisioning.retrieve(eq(OIDC10), anyString())).thenReturn(oidcProvider);
         when(mockIdentityProviderProvisioning.retrieve(eq(OAUTH20), anyString())).thenReturn(oauthProvider);
 
-        assertNotNull(configurator.retrieve(OIDC10, "id"));
-        verify(configurator, times(1)).overlay(eq(config));
+        assertThat(configurator.retrieve(OIDC10, "id")).isNotNull();
+        verify(configurator, times(1)).overlay(config);
 
         reset(configurator);
-        assertNotNull(configurator.retrieve(OAUTH20, "id"));
+        assertThat(configurator.retrieve(OAUTH20, "id")).isNotNull();
         verify(configurator, never()).overlay(any());
     }
 
     @Test
     void getParameterizedClass() {
-        assertEquals(OIDCIdentityProviderDefinition.class, oidc.getParameterizedClass());
-        assertEquals(RawExternalOAuthIdentityProviderDefinition.class, oauth.getParameterizedClass());
+        assertThat(oidc.getParameterizedClass()).isEqualTo(OIDCIdentityProviderDefinition.class);
+        assertThat(oauth.getParameterizedClass()).isEqualTo(RawExternalOAuthIdentityProviderDefinition.class);
     }
 
     @Test
@@ -438,7 +421,7 @@ class ExternalOAuthProviderConfiguratorTests {
 
         Map<String, String> queryParams =
                 UriComponentsBuilder.fromUriString(authzUri).build().getQueryParams().toSingleValueMap();
-        assertThat(queryParams, hasKey("nonce"));
+        assertThat(queryParams).containsKey("nonce");
     }
 
     @Test
@@ -460,8 +443,9 @@ class ExternalOAuthProviderConfiguratorTests {
 
         Map<String, String> queryParams =
                 UriComponentsBuilder.fromUriString(authzUri).build().getQueryParams().toSingleValueMap();
-        assertThat(queryParams, hasKey("code_challenge"));
-        assertThat(queryParams, hasKey("code_challenge_method"));
+        assertThat(queryParams)
+                .containsKey("code_challenge")
+                .containsKey("code_challenge_method");
     }
 
     @Test
@@ -473,34 +457,35 @@ class ExternalOAuthProviderConfiguratorTests {
 
         Map<String, String> queryParams =
                 UriComponentsBuilder.fromUriString(authzUri).build().getQueryParams().toSingleValueMap();
-        assertThat(queryParams, hasKey("code_challenge"));
-        assertThat(queryParams, hasKey("code_challenge_method"));
+        assertThat(queryParams)
+                .containsKey("code_challenge")
+                .containsKey("code_challenge_method");
     }
 
     @Test
     void oidcIdPPkceEqual() throws CloneNotSupportedException {
         OIDCIdentityProviderDefinition oidc1 = (OIDCIdentityProviderDefinition) oidc.clone();
-        assertEquals(oidc, oidc1);
+        assertThat(oidc1).isEqualTo(oidc);
     }
 
     @Test
     void oidcIdPPkceNotEqual() throws CloneNotSupportedException {
         OIDCIdentityProviderDefinition oidc1 = (OIDCIdentityProviderDefinition) oidc.clone();
         oidc.setPkce(false);
-        assertNotEquals(oidc, oidc1);
+        assertThat(oidc1).isNotEqualTo(oidc);
     }
 
     @Test
     void oidcIdPPkceHashCodeNotEqual() throws CloneNotSupportedException {
         OIDCIdentityProviderDefinition oidc1 = (OIDCIdentityProviderDefinition) oidc.clone();
         oidc.setPkce(false);
-        assertNotEquals(oidc.hashCode(), oidc1.hashCode());
+        assertThat(oidc1).doesNotHaveSameHashCodeAs(oidc);
     }
 
     @Test
     void oidcIdPPkceHashCodeEqual() throws CloneNotSupportedException {
         OIDCIdentityProviderDefinition oidc1 = (OIDCIdentityProviderDefinition) oidc.clone();
-        assertEquals(oidc.hashCode(), oidc1.hashCode());
+        assertThat(oidc1).hasSameHashCodeAs(oidc);
     }
 
     @Test
@@ -531,7 +516,7 @@ class ExternalOAuthProviderConfiguratorTests {
         when(mockUaaRandomStringUtil.getSecureRandom(anyInt())).thenReturn("01234567890123456789012345678901234567890123456789");
         String authorizationURI = configurator.getIdpAuthenticationUrl(oidc, "alias", mockHttpServletRequest);
 
-        assertThat(authorizationURI, Matchers.startsWith("https://accounts.google.com/o/oauth2/v2/auth"));
+        assertThat(authorizationURI).startsWith("https://accounts.google.com/o/oauth2/v2/auth");
         verify(configurator).overlay(oidc);
     }
 
@@ -544,13 +529,14 @@ class ExternalOAuthProviderConfiguratorTests {
         Map<String, String> queryParams =
                 UriComponentsBuilder.fromUriString(authzUri).build().getQueryParams().toSingleValueMap();
 
-        assertThat(authzUri, startsWith(oidc.getAuthUrl().toString()));
-        assertThat(queryParams, hasEntry("client_id", oidc.getRelyingPartyId()));
-        assertThat(queryParams, hasEntry("response_type", "id_token+code"));
-        assertThat(queryParams, hasEntry(is("redirect_uri"), containsString("login%2Fcallback%2Falias")));
-        assertThat(queryParams, hasEntry("scope", "openid+password.write"));
-        assertThat(queryParams, hasEntry("state", "01234567890123456789012345678901234567890123456789"));
-        assertThat(queryParams, hasKey("nonce"));
+        assertThat(authzUri).startsWith(oidc.getAuthUrl().toString());
+        assertThat(queryParams)
+                .containsEntry("client_id", oidc.getRelyingPartyId())
+                .containsEntry("response_type", "id_token+code")
+                .containsEntry("scope", "openid+password.write")
+                .containsEntry("state", "01234567890123456789012345678901234567890123456789")
+                .containsKey("nonce");
+        assertThat(queryParams.get("redirect_uri")).contains("login%2Fcallback%2Falias");
     }
 
     @Test
@@ -566,12 +552,13 @@ class ExternalOAuthProviderConfiguratorTests {
         Map<String, String> queryParams =
                 UriComponentsBuilder.fromUriString(authzUri).build().getQueryParams().toSingleValueMap();
 
-        assertThat(authzUri, startsWith(oidc.getAuthUrl().toString()));
-        assertThat(queryParams, hasEntry("client_id", oidc.getRelyingPartyId()));
-        assertThat(queryParams, hasEntry("response_type", "code"));
-        assertThat(queryParams, hasEntry(is("redirect_uri"), containsString("login%2Fcallback%2Falias")));
-        assertThat(queryParams, hasEntry("scope", "openid+password.write"));
-        assertThat(queryParams, hasEntry("state", "01234567890123456789012345678901234567890123456789"));
+        assertThat(authzUri).startsWith(oidc.getAuthUrl().toString());
+        assertThat(queryParams)
+                .containsEntry("client_id", oidc.getRelyingPartyId())
+                .containsEntry("response_type", "code")
+                .containsEntry("scope", "openid+password.write")
+                .containsEntry("state", "01234567890123456789012345678901234567890123456789");
+        assertThat(queryParams.get("redirect_uri")).contains("login%2Fcallback%2Falias");
     }
 
     @Test
@@ -582,26 +569,26 @@ class ExternalOAuthProviderConfiguratorTests {
                 .fetchMetadataAndUpdateDefinition(any(OIDCIdentityProviderDefinition.class));
 
         List<IdentityProvider> providers = configurator.retrieveAll(true, IdentityZone.getUaaZoneId());
-        assertEquals(1, providers.size());
-        assertEquals(oauthProvider.getName(), providers.get(0).getName());
-        verify(configurator, times(1)).overlay(eq(config));
+        assertThat(providers).hasSize(1);
+        assertThat(providers.get(0).getName()).isEqualTo(oauthProvider.getName());
+        verify(configurator, times(1)).overlay(config);
     }
 
     @Test
-    void testGetIdpAuthenticationUrlAndCheckTokenFormatParameter() {
+    void getIdpAuthenticationUrlAndCheckTokenFormatParameter() {
         when(mockUaaRandomStringUtil.getSecureRandom(anyInt())).thenReturn("01234567890123456789012345678901234567890123456789");
         String authzUri = configurator.getIdpAuthenticationUrl(oidc, OIDC10, mockHttpServletRequest);
 
         Map<String, String> queryParams =
                 UriComponentsBuilder.fromUriString(authzUri).build().getQueryParams().toSingleValueMap();
-        assertThat(queryParams, hasEntry("token_format", "jwt"));
+        assertThat(queryParams).containsEntry("token_format", "jwt");
     }
 
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
-    void testIdpWithAliasExistsInZone(final boolean resultFromDelegate) {
+    void idpWithAliasExistsInZone(final boolean resultFromDelegate) {
         final String zoneId = RANDOM_STRING_GENERATOR.generate();
         when(mockIdentityProviderProvisioning.idpWithAliasExistsInZone(zoneId)).thenReturn(resultFromDelegate);
-        assertEquals(resultFromDelegate, configurator.idpWithAliasExistsInZone(zoneId));
+        assertThat(configurator.idpWithAliasExistsInZone(zoneId)).isEqualTo(resultFromDelegate);
     }
 }

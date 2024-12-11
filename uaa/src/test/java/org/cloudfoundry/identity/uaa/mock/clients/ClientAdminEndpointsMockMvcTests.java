@@ -78,6 +78,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.mock.util.ClientDetailsHelper.arrayFromString;
 import static org.cloudfoundry.identity.uaa.mock.util.ClientDetailsHelper.clientArrayFromString;
 import static org.cloudfoundry.identity.uaa.mock.util.ClientDetailsHelper.clientFromString;
@@ -87,16 +88,7 @@ import static org.cloudfoundry.identity.uaa.oauth.client.SecretChangeRequest.Cha
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_AUTHORIZATION_CODE;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_JWT_BEARER;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThan;
-import static org.hamcrest.Matchers.hasEntry;
-import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.iterableWithSize;
-import static org.hamcrest.core.Is.is;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -111,7 +103,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 // TODO: This class has a lot of helpers, why?
 @DefaultTestContext
-public class ClientAdminEndpointsMockMvcTests {
+class ClientAdminEndpointsMockMvcTests {
 
     private static final String SECRET = "secret";
     private static final String testPassword = "password";
@@ -196,12 +188,12 @@ public class ClientAdminEndpointsMockMvcTests {
         ClientDetails client = createClient(adminToken, new RandomValueStringGenerator().generate(), SECRET,
                 Collections.singleton("client_credentials"));
         verify(mockApplicationEventPublisher, times(1)).publishEvent(abstractUaaEventCaptor.capture());
-        assertEquals(AuditEventType.ClientCreateSuccess, abstractUaaEventCaptor.getValue().getAuditEvent().getType());
-        assertEquals("Client " + client.getClientId(), client.getAdditionalInformation().get("name"));
+        assertThat(abstractUaaEventCaptor.getValue().getAuditEvent().getType()).isEqualTo(AuditEventType.ClientCreateSuccess);
+        assertThat(client.getAdditionalInformation().get("name")).isEqualTo("Client " + client.getClientId());
     }
 
     @Test
-    void testCreateClientWithJwtBearerGrant() throws Exception {
+    void createClientWithJwtBearerGrant() throws Exception {
         String id = new RandomValueStringGenerator().generate();
         ClientDetails client = createBaseClient(id, SECRET, Collections.singletonList(GRANT_TYPE_JWT_BEARER), null, Collections.singletonList(id + ".read"));
         MockHttpServletRequestBuilder createClientPost = post("/oauth/clients")
@@ -214,7 +206,7 @@ public class ClientAdminEndpointsMockMvcTests {
     }
 
     @Test
-    void testCreateClientWithJwtBearerGrantInvalid() throws Exception {
+    void createClientWithJwtBearerGrantInvalid() throws Exception {
         String id = new RandomValueStringGenerator().generate();
         ClientDetails client = createBaseClient(id, SECRET, Collections.singletonList(GRANT_TYPE_JWT_BEARER), null, null);
         MockHttpServletRequestBuilder createClientPost = post("/oauth/clients")
@@ -223,12 +215,12 @@ public class ClientAdminEndpointsMockMvcTests {
                 .contentType(APPLICATION_JSON)
                 .content(JsonUtils.writeValueAsString(client));
         MvcResult mvcResult = mockMvc.perform(createClientPost).andExpect(status().isBadRequest()).andReturn();
-        assertTrue(mvcResult.getResponse().getContentAsString().contains("Scope cannot be empty for grant_type " + GRANT_TYPE_JWT_BEARER));
+        assertThat(mvcResult.getResponse().getContentAsString().contains("Scope cannot be empty for grant_type " + GRANT_TYPE_JWT_BEARER)).isTrue();
         verify(mockApplicationEventPublisher, times(0)).publishEvent(abstractUaaEventCaptor.capture());
     }
 
     @Test
-    void testCreateClientWithInvalidRedirectUrl() throws Exception {
+    void createClientWithInvalidRedirectUrl() throws Exception {
         UaaClientDetails client = createBaseClient(new RandomValueStringGenerator().generate(), SECRET, Collections.singleton("implicit"));
         client.setRegisteredRedirectUri(Collections.singleton("*/**"));
         MockHttpServletRequestBuilder createClientPost = post("/oauth/clients")
@@ -241,7 +233,7 @@ public class ClientAdminEndpointsMockMvcTests {
     }
 
     @Test
-    void testCreateClientWithValidLongRedirectUri() throws Exception {
+    void createClientWithValidLongRedirectUri() throws Exception {
         String id = new RandomValueStringGenerator().generate();
         UaaClientDetails client = createBaseClient(id, SECRET, Collections.singletonList(GRANT_TYPE_JWT_BEARER), null, Collections.singletonList(id + ".read"));
 
@@ -295,7 +287,7 @@ public class ClientAdminEndpointsMockMvcTests {
     }
 
     @Test
-    void testCreateClient_With_Long_Secret() throws Exception {
+    void createClientWithLongSecret() throws Exception {
         UaaClientDetails client = createBaseClient(new RandomValueStringGenerator().generate(), SECRET_TOO_LONG, Collections.singleton("client_credentials"));
         MockHttpServletRequestBuilder createClientPost = post("/oauth/clients")
                 .header("Authorization", "Bearer " + adminToken)
@@ -308,7 +300,7 @@ public class ClientAdminEndpointsMockMvcTests {
     }
 
     @Test
-    void testCreateClient_With_Secondary_Secret() throws Exception {
+    void createClientWithSecondarySecret() throws Exception {
         var client = new ClientDetailsCreation();
         client.setClientId(new RandomValueStringGenerator().generate());
         client.setClientSecret("primarySecret");
@@ -326,17 +318,17 @@ public class ClientAdminEndpointsMockMvcTests {
 
         getClient(client.getClientId());
         verify(mockApplicationEventPublisher).publishEvent(abstractUaaEventCaptor.capture());
-        assertEquals(AuditEventType.ClientCreateSuccess, abstractUaaEventCaptor.getValue().getAuditEvent().getType());
+        assertThat(abstractUaaEventCaptor.getValue().getAuditEvent().getType()).isEqualTo(AuditEventType.ClientCreateSuccess);
     }
 
     @Test
-    void testClientCRUDAsAdminUser() throws Exception {
+    void clientCRUDAsAdminUser() throws Exception {
         setupAdminUserToken();
         ClientDetails client = createClient(adminUserToken, SECRET, new RandomValueStringGenerator().generate(),
                 Collections.singleton("client_credentials"));
         verify(mockApplicationEventPublisher, times(2)).publishEvent(abstractUaaEventCaptor.capture());
         for (AbstractUaaEvent event : abstractUaaEventCaptor.getAllValues()) {
-            assertEquals(AuditEventType.ClientCreateSuccess, event.getAuditEvent().getType());
+            assertThat(event.getAuditEvent().getType()).isEqualTo(AuditEventType.ClientCreateSuccess);
         }
 
         MockHttpServletRequestBuilder getClient = get("/oauth/clients/" + client.getClientId())
@@ -346,7 +338,7 @@ public class ClientAdminEndpointsMockMvcTests {
                 .andExpect(status().isOk())
                 .andReturn();
         UaaClientDetails clientDetails = JsonUtils.readValue(mvcResult.getResponse().getContentAsString(), UaaClientDetails.class);
-        assertEquals(client.getClientId(), clientDetails.getClientId());
+        assertThat(clientDetails.getClientId()).isEqualTo(client.getClientId());
 
         clientDetails.setAuthorizedGrantTypes(Collections.singleton(GRANT_TYPE_AUTHORIZATION_CODE));
         MockHttpServletRequestBuilder updateClient = put("/oauth/clients/" + client.getClientId())
@@ -356,7 +348,7 @@ public class ClientAdminEndpointsMockMvcTests {
                 .content(JsonUtils.writeValueAsString(clientDetails));
         MvcResult result = mockMvc.perform(updateClient).andExpect(status().isOk()).andReturn();
         UaaClientDetails updatedClientDetails = JsonUtils.readValue(result.getResponse().getContentAsString(), UaaClientDetails.class);
-        assertEquals(client.getClientId(), updatedClientDetails.getClientId());
+        assertThat(updatedClientDetails.getClientId()).isEqualTo(client.getClientId());
         assertThat(updatedClientDetails.getAuthorizedGrantTypes(), PredicateMatcher.has(m -> m.equals(GRANT_TYPE_AUTHORIZATION_CODE)));
 
         MockHttpServletRequestBuilder deleteClient = delete("/oauth/clients/" + client.getClientId())
@@ -364,7 +356,7 @@ public class ClientAdminEndpointsMockMvcTests {
                 .accept(APPLICATION_JSON);
         MvcResult deleteResult = mockMvc.perform(deleteClient).andExpect(status().isOk()).andReturn();
         UaaClientDetails deletedClientDetails = JsonUtils.readValue(deleteResult.getResponse().getContentAsString(), UaaClientDetails.class);
-        assertEquals(client.getClientId(), deletedClientDetails.getClientId());
+        assertThat(deletedClientDetails.getClientId()).isEqualTo(client.getClientId());
     }
 
     @Test
@@ -376,16 +368,16 @@ public class ClientAdminEndpointsMockMvcTests {
         ClientMetadata clientMetadata = obtainClientMetadata(clientDetails.getClientId());
         SearchResults<Map<String, Object>> marissa = (SearchResults<Map<String, Object>>) scimUserEndpoints.findUsers("id,userName", "userName eq \"" + testUser.getUserName() + "\"", "userName", "asc", 0, 1);
         String marissaId = (String) marissa.getResources().iterator().next().get("id");
-        assertEquals(marissaId, clientMetadata.getCreatedBy());
+        assertThat(clientMetadata.getCreatedBy()).isEqualTo(marissaId);
 
         clientDetails = createClient(Collections.singletonList("uaa.resource"));
 
         clientMetadata = obtainClientMetadata(clientDetails.getClientId());
-        assertEquals(marissaId, clientMetadata.getCreatedBy());
+        assertThat(clientMetadata.getCreatedBy()).isEqualTo(marissaId);
     }
 
     @Test
-    void test_Read_Restricted_Scopes() throws Exception {
+    void read_restricted_scopes() throws Exception {
         MockHttpServletRequestBuilder createClientPost = get("/oauth/clients/restricted")
                 .header("Authorization", "Bearer " + adminToken)
                 .accept(APPLICATION_JSON)
@@ -397,7 +389,7 @@ public class ClientAdminEndpointsMockMvcTests {
     }
 
     @Test
-    void testCreate_RestrictedClient_Fails() throws Exception {
+    void createRestrictedClientFails() throws Exception {
         String id = new RandomValueStringGenerator().generate();
         List<String> grantTypes = Arrays.asList("client_credentials", "password");
         UaaClientDetails clientWithAuthorities = createBaseClient(id, SECRET, grantTypes, new UaaScopes().getUaaScopes(), null);
@@ -419,7 +411,7 @@ public class ClientAdminEndpointsMockMvcTests {
     }
 
     @Test
-    void testCreate_RestrictedClient_Succeeds() throws Exception {
+    void createRestrictedClientSucceeds() throws Exception {
         String id = new RandomValueStringGenerator().generate();
         List<String> scopes = Collections.singletonList("openid");
         UaaClientDetails client = createBaseClient(id, SECRET, Arrays.asList("client_credentials", "password"), scopes, scopes);
@@ -448,7 +440,7 @@ public class ClientAdminEndpointsMockMvcTests {
     }
 
     @Test
-    void testCreateClientsTxFailure_Secret_Too_Long() throws Exception {
+    void createClientsTxFailureSecretTooLong() throws Exception {
         int count = 5;
         UaaClientDetails[] details = createBaseClients(count, SECRET_TOO_LONG, null);
         MockHttpServletRequestBuilder createClientPost = post("/oauth/clients/tx")
@@ -462,7 +454,7 @@ public class ClientAdminEndpointsMockMvcTests {
     }
 
     @Test
-    void testCreateClientsTxSuccess() throws Exception {
+    void createClientsTxSuccess() throws Exception {
         int count = 5;
         UaaClientDetails[] details = createBaseClients(count, SECRET, null);
         MockHttpServletRequestBuilder createClientPost = post("/oauth/clients/tx")
@@ -475,17 +467,17 @@ public class ClientAdminEndpointsMockMvcTests {
         ClientDetails[] clients = clientArrayFromString(result.andReturn().getResponse().getContentAsString());
         for (ClientDetails client : clients) {
             ClientDetails c = getClient(client.getClientId());
-            assertNotNull(c);
-            assertNull(c.getClientSecret());
+            assertThat(c).isNotNull();
+            assertThat(c.getClientSecret()).isNull();
         }
         verify(mockApplicationEventPublisher, times(count)).publishEvent(abstractUaaEventCaptor.capture());
         for (AbstractUaaEvent event : abstractUaaEventCaptor.getAllValues()) {
-            assertEquals(AuditEventType.ClientCreateSuccess, event.getAuditEvent().getType());
+            assertThat(event.getAuditEvent().getType()).isEqualTo(AuditEventType.ClientCreateSuccess);
         }
     }
 
     @Test
-    void testCreateClientsTxDuplicateId() throws Exception {
+    void createClientsTxDuplicateId() throws Exception {
         UaaClientDetails[] details = createBaseClients(5, SECRET, null);
         details[details.length - 1] = details[0];
         MockHttpServletRequestBuilder createClientPost = post("/oauth/clients/tx")
@@ -495,13 +487,13 @@ public class ClientAdminEndpointsMockMvcTests {
                 .content(JsonUtils.writeValueAsString(details));
         mockMvc.perform(createClientPost).andExpect(status().isConflict());
         for (ClientDetails client : details) {
-            assertNull(getClient(client.getClientId()));
+            assertThat(getClient(client.getClientId())).isNull();
         }
         verify(mockApplicationEventPublisher, times(0)).publishEvent(abstractUaaEventCaptor.capture());
     }
 
     @Test
-    void test_InZone_ClientWrite_Failure_with_Min_Length_Secret() throws Exception {
+    void in_zone_client_write_failure_with_min_length_secret() throws Exception {
         String subdomain = generator.generate();
         MockMvcUtils.IdentityZoneCreationResult result = MockMvcUtils.createOtherIdentityZoneAndReturnResult(subdomain, mockMvc, webApplicationContext, null, IdentityZoneHolder.getCurrentZoneId());
         result.getIdentityZone().getConfig().setClientSecretPolicy(new ClientSecretPolicy(7, 255, 0, 0, 0, 0, 6));
@@ -515,7 +507,7 @@ public class ClientAdminEndpointsMockMvcTests {
     }
 
     @Test
-    void test_InZone_ClientWrite_Failure_with_Secret_Too_Long() throws Exception {
+    void in_zone_client_write_failure_with_secret_too_long() throws Exception {
         String subdomain = generator.generate();
         MockMvcUtils.IdentityZoneCreationResult result = MockMvcUtils.createOtherIdentityZoneAndReturnResult(subdomain, mockMvc, webApplicationContext, null, IdentityZoneHolder.getCurrentZoneId());
         result.getIdentityZone().getConfig().setClientSecretPolicy(new ClientSecretPolicy(0, 5, 0, 0, 0, 0, 6));
@@ -529,7 +521,7 @@ public class ClientAdminEndpointsMockMvcTests {
     }
 
     @Test
-    void test_InZone_ClientWrite_Failure_with_Secret_Requires_Uppercase_Character() throws Exception {
+    void in_zone_client_write_failure_with_secret_requires_uppercase_character() throws Exception {
         String subdomain = generator.generate();
         MockMvcUtils.IdentityZoneCreationResult result = MockMvcUtils.createOtherIdentityZoneAndReturnResult(subdomain, mockMvc, webApplicationContext, null, IdentityZoneHolder.getCurrentZoneId());
         result.getIdentityZone().getConfig().setClientSecretPolicy(new ClientSecretPolicy(0, 255, 1, 0, 0, 0, 6));
@@ -543,7 +535,7 @@ public class ClientAdminEndpointsMockMvcTests {
     }
 
     @Test
-    void test_InZone_ClientWrite_Failure_with_Secret_Requires_Lowercase_Character() throws Exception {
+    void in_zone_client_write_failure_with_secret_requires_lowercase_character() throws Exception {
         String subdomain = generator.generate();
         MockMvcUtils.IdentityZoneCreationResult result = MockMvcUtils.createOtherIdentityZoneAndReturnResult(subdomain, mockMvc, webApplicationContext, null, IdentityZoneHolder.getCurrentZoneId());
         result.getIdentityZone().getConfig().setClientSecretPolicy(new ClientSecretPolicy(0, 255, 0, 1, 0, 0, 6));
@@ -557,7 +549,7 @@ public class ClientAdminEndpointsMockMvcTests {
     }
 
     @Test
-    void test_InZone_ClientWrite_Success_with_Complex_Secret_Policy() throws Exception {
+    void in_zone_client_write_success_with_complex_secret_policy() throws Exception {
         String subdomain = generator.generate();
         MockMvcUtils.IdentityZoneCreationResult result = MockMvcUtils.createOtherIdentityZoneAndReturnResult(subdomain, mockMvc, webApplicationContext, null, IdentityZoneHolder.getCurrentZoneId());
         result.getIdentityZone().getConfig().setClientSecretPolicy(new ClientSecretPolicy(6, 255, 1, 1, 1, 1, 6));
@@ -571,7 +563,7 @@ public class ClientAdminEndpointsMockMvcTests {
     }
 
     @Test
-    void test_InZone_ClientWrite_Failure_with_Secret_Requires_Special_Character() throws Exception {
+    void in_zone_client_write_failure_with_secret_requires_special_character() throws Exception {
         String subdomain = generator.generate();
         MockMvcUtils.IdentityZoneCreationResult result = MockMvcUtils.createOtherIdentityZoneAndReturnResult(subdomain, mockMvc, webApplicationContext, null, IdentityZoneHolder.getCurrentZoneId());
         result.getIdentityZone().getConfig().setClientSecretPolicy(new ClientSecretPolicy(0, 255, 0, 0, 0, 1, 6));
@@ -585,7 +577,7 @@ public class ClientAdminEndpointsMockMvcTests {
     }
 
     @Test
-    void test_InZone_ClientWrite_Failure_with_Secret_Requires_Digit() throws Exception {
+    void in_zone_client_write_failure_with_secret_requires_digit() throws Exception {
         String subdomain = generator.generate();
         MockMvcUtils.IdentityZoneCreationResult result = MockMvcUtils.createOtherIdentityZoneAndReturnResult(subdomain, mockMvc, webApplicationContext, null, IdentityZoneHolder.getCurrentZoneId());
         result.getIdentityZone().getConfig().setClientSecretPolicy(new ClientSecretPolicy(0, 255, 0, 0, 1, 0, 6));
@@ -599,7 +591,7 @@ public class ClientAdminEndpointsMockMvcTests {
     }
 
     @Test
-    void test_InZone_ClientWrite_Using_ZonesDotAdmin() throws Exception {
+    void in_zone_client_write_using_zones_dot_admin() throws Exception {
         String subdomain = generator.generate();
         MockMvcUtils.IdentityZoneCreationResult result = MockMvcUtils.createOtherIdentityZoneAndReturnResult(subdomain, mockMvc, webApplicationContext, null, IdentityZoneHolder.getCurrentZoneId());
         String clientId = generator.generate();
@@ -610,7 +602,7 @@ public class ClientAdminEndpointsMockMvcTests {
     }
 
     @Test
-    void test_InZone_ClientWrite_Using_ZonesDotClientsDotAdmin() throws Exception {
+    void in_zone_client_write_using_zones_dot_clients_dot_admin() throws Exception {
         String subdomain = generator.generate();
         MockMvcUtils.IdentityZoneCreationResult result = MockMvcUtils.createOtherIdentityZoneAndReturnResult(subdomain, mockMvc, webApplicationContext, null, IdentityZoneHolder.getCurrentZoneId());
         String id = result.getIdentityZone().getId();
@@ -644,7 +636,7 @@ public class ClientAdminEndpointsMockMvcTests {
         UaaClientDetails createdClient = MockMvcUtils.createClient(mockMvc, adminUserToken, client,
                 result.getIdentityZone(), status().isCreated());
 
-        assertEquals(client.getClientId(), createdClient.getClientId());
+        assertThat(createdClient.getClientId()).isEqualTo(client.getClientId());
 
         MockHttpServletRequestBuilder getClient = get("/oauth/clients/" + client.getClientId())
                 .header("Authorization", "Bearer " + adminUserToken)
@@ -654,7 +646,7 @@ public class ClientAdminEndpointsMockMvcTests {
                 .andExpect(status().isOk())
                 .andReturn();
         UaaClientDetails clientDetails = JsonUtils.readValue(mvcResult.getResponse().getContentAsString(), UaaClientDetails.class);
-        assertEquals(client.getClientId(), clientDetails.getClientId());
+        assertThat(clientDetails.getClientId()).isEqualTo(client.getClientId());
 
         clientDetails.setAuthorizedGrantTypes(Collections.singleton(GRANT_TYPE_AUTHORIZATION_CODE));
         MockHttpServletRequestBuilder updateClient = put("/oauth/clients/" + client.getClientId())
@@ -665,7 +657,7 @@ public class ClientAdminEndpointsMockMvcTests {
                 .content(JsonUtils.writeValueAsString(clientDetails));
         mvcResult = mockMvc.perform(updateClient).andExpect(status().isOk()).andReturn();
         UaaClientDetails updatedClientDetails = JsonUtils.readValue(mvcResult.getResponse().getContentAsString(), UaaClientDetails.class);
-        assertEquals(client.getClientId(), updatedClientDetails.getClientId());
+        assertThat(updatedClientDetails.getClientId()).isEqualTo(client.getClientId());
         assertThat(updatedClientDetails.getAuthorizedGrantTypes(), PredicateMatcher.has(m -> m.equals(GRANT_TYPE_AUTHORIZATION_CODE)));
 
         MockHttpServletRequestBuilder deleteClient = delete("/oauth/clients/" + client.getClientId())
@@ -674,11 +666,11 @@ public class ClientAdminEndpointsMockMvcTests {
                 .accept(APPLICATION_JSON);
         MvcResult deleteResult = mockMvc.perform(deleteClient).andExpect(status().isOk()).andReturn();
         UaaClientDetails deletedClientDetails = JsonUtils.readValue(deleteResult.getResponse().getContentAsString(), UaaClientDetails.class);
-        assertEquals(client.getClientId(), deletedClientDetails.getClientId());
+        assertThat(deletedClientDetails.getClientId()).isEqualTo(client.getClientId());
     }
 
     @Test
-    void test_InZone_ClientRead_Using_ZonesDotClientsDotAdmin() throws Exception {
+    void in_zone_client_read_using_zones_dot_clients_dot_admin() throws Exception {
         String subdomain = generator.generate();
         MockMvcUtils.IdentityZoneCreationResult result = MockMvcUtils.createOtherIdentityZoneAndReturnResult(subdomain, mockMvc, webApplicationContext, null, IdentityZoneHolder.getCurrentZoneId());
         String id = result.getIdentityZone().getId();
@@ -697,7 +689,7 @@ public class ClientAdminEndpointsMockMvcTests {
     }
 
     @Test
-    void test_InZone_ClientRead_Using_ZonesDotClientsDotRead() throws Exception {
+    void in_zone_client_read_using_zones_dot_clients_dot_read() throws Exception {
         String subdomain = generator.generate();
         MockMvcUtils.IdentityZoneCreationResult result = MockMvcUtils.createOtherIdentityZoneAndReturnResult(subdomain, mockMvc, webApplicationContext, null, IdentityZoneHolder.getCurrentZoneId());
         String id = result.getIdentityZone().getId();
@@ -718,7 +710,7 @@ public class ClientAdminEndpointsMockMvcTests {
     }
 
     @Test
-    void testCreateClientsTxClientCredentialsWithoutSecret() throws Exception {
+    void createClientsTxClientCredentialsWithoutSecret() throws Exception {
         UaaClientDetails[] details = createBaseClients(5, null, null);
         details[details.length - 1].setAuthorizedGrantTypes(StringUtils.commaDelimitedListToSet("client_credentials"));
         details[details.length - 1].setClientSecret(null);
@@ -729,13 +721,13 @@ public class ClientAdminEndpointsMockMvcTests {
                 .content(JsonUtils.writeValueAsString(details));
         mockMvc.perform(createClientPost).andExpect(status().isBadRequest());
         for (ClientDetails client : details) {
-            assertNull(getClient(client.getClientId()));
+            assertThat(getClient(client.getClientId())).isNull();
         }
         verify(mockApplicationEventPublisher, times(0)).publishEvent(abstractUaaEventCaptor.capture());
     }
 
     @Test
-    void testUpdateClientsTxSuccess() throws Exception {
+    void updateClientsTxSuccess() throws Exception {
         int count = 5;
         UaaClientDetails[] details = new UaaClientDetails[count];
         for (int i = 0; i < details.length; i++) {
@@ -751,24 +743,24 @@ public class ClientAdminEndpointsMockMvcTests {
         result.andExpect(status().isOk());
         ClientDetails[] clients = clientArrayFromString(result.andReturn().getResponse().getContentAsString());
         for (ClientDetails client : clients) {
-            assertNotNull(getClient(client.getClientId()));
-            assertEquals(Integer.valueOf(120), client.getRefreshTokenValiditySeconds());
+            assertThat(getClient(client.getClientId())).isNotNull();
+            assertThat(client.getRefreshTokenValiditySeconds()).isEqualTo(Integer.valueOf(120));
         }
         //create and then update events
         verify(mockApplicationEventPublisher, times(count * 2)).publishEvent(abstractUaaEventCaptor.capture());
         int index = 0;
         for (AbstractUaaEvent event : abstractUaaEventCaptor.getAllValues()) {
             if (index < count) {
-                assertEquals(AuditEventType.ClientCreateSuccess, event.getAuditEvent().getType());
+                assertThat(event.getAuditEvent().getType()).isEqualTo(AuditEventType.ClientCreateSuccess);
             } else {
-                assertEquals(AuditEventType.ClientUpdateSuccess, event.getAuditEvent().getType());
+                assertThat(event.getAuditEvent().getType()).isEqualTo(AuditEventType.ClientUpdateSuccess);
             }
             index++;
         }
     }
 
     @Test
-    void testUpdateClientsTxInvalidId() throws Exception {
+    void updateClientsTxInvalidId() throws Exception {
         int count = 5;
         UaaClientDetails[] details = new UaaClientDetails[count];
         for (int i = 0; i < details.length; i++) {
@@ -788,16 +780,16 @@ public class ClientAdminEndpointsMockMvcTests {
         details[0].setClientId(firstId);
         for (ClientDetails client : details) {
             ClientDetails c = getClient(client.getClientId());
-            assertNotNull(c);
-            assertNull(c.getClientSecret());
-            assertNull(c.getRefreshTokenValiditySeconds());
+            assertThat(c).isNotNull();
+            assertThat(c.getClientSecret()).isNull();
+            assertThat(c.getRefreshTokenValiditySeconds()).isNull();
         }
         //create and then update events
         verify(mockApplicationEventPublisher, times(count)).publishEvent(abstractUaaEventCaptor.capture());
     }
 
     @Test
-    void testDeleteClientsTxSuccess() throws Exception {
+    void deleteClientsTxSuccess() throws Exception {
         int count = 5;
         UaaClientDetails[] details = new UaaClientDetails[count];
         for (int i = 0; i < details.length; i++) {
@@ -811,23 +803,23 @@ public class ClientAdminEndpointsMockMvcTests {
         ResultActions result = mockMvc.perform(deleteClientsPost);
         result.andExpect(status().isOk());
         for (ClientDetails client : details) {
-            assertNull(getClient(client.getClientId()));
+            assertThat(getClient(client.getClientId())).isNull();
         }
         //create and then update events
         verify(mockApplicationEventPublisher, times(count * 2)).publishEvent(abstractUaaEventCaptor.capture());
         int index = 0;
         for (AbstractUaaEvent event : abstractUaaEventCaptor.getAllValues()) {
             if (index < count) {
-                assertEquals(AuditEventType.ClientCreateSuccess, event.getAuditEvent().getType());
+                assertThat(event.getAuditEvent().getType()).isEqualTo(AuditEventType.ClientCreateSuccess);
             } else {
-                assertEquals(AuditEventType.ClientDeleteSuccess, event.getAuditEvent().getType());
+                assertThat(event.getAuditEvent().getType()).isEqualTo(AuditEventType.ClientDeleteSuccess);
             }
             index++;
         }
     }
 
     @Test
-    void testDeleteClientsTxRollbackInvalidId() throws Exception {
+    void deleteClientsTxRollbackInvalidId() throws Exception {
         int count = 5;
         UaaClientDetails[] details = new UaaClientDetails[count];
         for (int i = 0; i < details.length; i++) {
@@ -846,15 +838,15 @@ public class ClientAdminEndpointsMockMvcTests {
         details[0].setClientId(firstId);
         for (ClientDetails client : details) {
             ClientDetails c = getClient(client.getClientId());
-            assertNotNull(c);
-            assertNull(c.getClientSecret());
-            assertNull(c.getRefreshTokenValiditySeconds());
+            assertThat(c).isNotNull();
+            assertThat(c.getClientSecret()).isNull();
+            assertThat(c.getRefreshTokenValiditySeconds()).isNull();
         }
         verify(mockApplicationEventPublisher, times(count)).publishEvent(abstractUaaEventCaptor.capture());
     }
 
     @Test
-    void testAddUpdateDeleteClientsTxSuccess() throws Exception {
+    void addUpdateDeleteClientsTxSuccess() throws Exception {
         int count = 5;
         ClientDetailsModification[] details = new ClientDetailsModification[count * 3];
         for (int i = 0; i < count; i++) {
@@ -882,18 +874,18 @@ public class ClientAdminEndpointsMockMvcTests {
 
         for (int i = 0; i < count; i++) {
             ClientDetails c = getClient(details[i].getClientId());
-            assertNotNull(c);
-            assertEquals(Integer.valueOf(120), c.getRefreshTokenValiditySeconds());
+            assertThat(c).isNotNull();
+            assertThat(c.getRefreshTokenValiditySeconds()).isEqualTo(Integer.valueOf(120));
 
         }
         for (int i = count; i < (count * 2); i++) {
             ClientDetails c = getClient(details[i].getClientId());
-            assertNull(c);
+            assertThat(c).isNull();
         }
         for (int i = count * 2; i < (count * 3); i++) {
             ClientDetails c = getClient(details[i].getClientId());
-            assertNotNull(c);
-            assertNull(c.getRefreshTokenValiditySeconds());
+            assertThat(c).isNotNull();
+            assertThat(c.getRefreshTokenValiditySeconds()).isNull();
         }
         verify(mockApplicationEventPublisher, times(count * 5)).publishEvent(abstractUaaEventCaptor.capture());
         int index = 0;
@@ -904,23 +896,23 @@ public class ClientAdminEndpointsMockMvcTests {
                 case 1:
                 case 4: {
                     //1-10 and 21-25 events are create
-                    assertEquals(AuditEventType.ClientCreateSuccess, event.getAuditEvent().getType());
-                    assertEquals(ClientCreateEvent.class, event.getClass());
-                    assertEquals(details[index < 10 ? index : (index - count * 2)].getClientId(), event.getAuditEvent().getPrincipalId());
+                    assertThat(event.getAuditEvent().getType()).isEqualTo(AuditEventType.ClientCreateSuccess);
+                    assertThat(event.getClass()).isEqualTo(ClientCreateEvent.class);
+                    assertThat(event.getAuditEvent().getPrincipalId()).isEqualTo(details[index < 10 ? index : (index - count * 2)].getClientId());
                     break;
                 }
                 case 2: {
                     //the 11-15 events are update
-                    assertEquals(AuditEventType.ClientUpdateSuccess, event.getAuditEvent().getType());
-                    assertEquals(ClientUpdateEvent.class, event.getClass());
-                    assertEquals(details[index - (count * 2)].getClientId(), event.getAuditEvent().getPrincipalId());
+                    assertThat(event.getAuditEvent().getType()).isEqualTo(AuditEventType.ClientUpdateSuccess);
+                    assertThat(event.getClass()).isEqualTo(ClientUpdateEvent.class);
+                    assertThat(event.getAuditEvent().getPrincipalId()).isEqualTo(details[index - (count * 2)].getClientId());
                     break;
                 }
                 case 3: {
                     //the 16-20 events are deletes
-                    assertEquals(AuditEventType.ClientDeleteSuccess, event.getAuditEvent().getType());
-                    assertEquals(ClientDeleteEvent.class, event.getClass());
-                    assertEquals(details[index - count * 2].getClientId(), event.getAuditEvent().getPrincipalId());
+                    assertThat(event.getAuditEvent().getType()).isEqualTo(AuditEventType.ClientDeleteSuccess);
+                    assertThat(event.getClass()).isEqualTo(ClientDeleteEvent.class);
+                    assertThat(event.getAuditEvent().getPrincipalId()).isEqualTo(details[index - count * 2].getClientId());
                     break;
                 }
             }
@@ -929,7 +921,7 @@ public class ClientAdminEndpointsMockMvcTests {
     }
 
     @Test
-    void testAddUpdateDeleteClientsTxDeleteUnsuccessfulRollback() throws Exception {
+    void addUpdateDeleteClientsTxDeleteUnsuccessfulRollback() throws Exception {
         ClientDetailsModification[] details = new ClientDetailsModification[15];
         for (int i = 0; i < 5; i++) {
             details[i] = (ClientDetailsModification) createClient(adminToken, null, SECRET,
@@ -954,7 +946,7 @@ public class ClientAdminEndpointsMockMvcTests {
                 "oauth.approvals");
         addApprovals(userToken, details[0].getClientId());
         Approval[] approvals = getApprovals(details[0].getClientId());
-        assertEquals(3, approvals.length);
+        assertThat(approvals.length).isEqualTo(3);
 
 
         String deleteId = details[5].getClientId();
@@ -971,24 +963,24 @@ public class ClientAdminEndpointsMockMvcTests {
 
         for (int i = 0; i < 5; i++) {
             ClientDetails c = getClient(details[i].getClientId());
-            assertNotNull(c);
-            assertNull(c.getRefreshTokenValiditySeconds());
+            assertThat(c).isNotNull();
+            assertThat(c.getRefreshTokenValiditySeconds()).isNull();
 
         }
         for (int i = 5; i < 10; i++) {
             ClientDetails c = getClient(details[i].getClientId());
-            assertNotNull(c);
+            assertThat(c).isNotNull();
         }
         for (int i = 10; i < 15; i++) {
             ClientDetails c = getClient(details[i].getClientId());
-            assertNull(c);
+            assertThat(c).isNull();
         }
         approvals = getApprovals(details[0].getClientId());
-        assertEquals(3, approvals.length);
+        assertThat(approvals.length).isEqualTo(3);
     }
 
     @Test
-    void testApprovalsAreDeleted() throws Exception {
+    void approvalsAreDeleted() throws Exception {
         ClientDetails details = createClient(adminToken, new RandomValueStringGenerator().generate(),
                 SECRET, Collections.singleton("password"));
         String userToken = testClient.getUserOAuthAccessToken(
@@ -998,10 +990,10 @@ public class ClientAdminEndpointsMockMvcTests {
                 testPassword,
                 "oauth.approvals");
         Approval[] approvals = getApprovals(details.getClientId());
-        assertEquals(0, approvals.length);
+        assertThat(approvals.length).isEqualTo(0);
         addApprovals(userToken, details.getClientId());
         approvals = getApprovals(details.getClientId());
-        assertEquals(3, approvals.length);
+        assertThat(approvals.length).isEqualTo(3);
 
         MockHttpServletRequestBuilder deleteClientsPost = post("/oauth/clients/tx/delete")
                 .header("Authorization", "Bearer " + adminToken)
@@ -1013,15 +1005,15 @@ public class ClientAdminEndpointsMockMvcTests {
 
 
         ClientDetailsModification[] deleted = (ClientDetailsModification[]) arrayFromString(result.andReturn().getResponse().getContentAsString(), ClientDetailsModification[].class);
-        assertTrue(deleted[0].isApprovalsDeleted());
+        assertThat(deleted[0].isApprovalsDeleted()).isTrue();
         verify(mockApplicationEventPublisher, times(2)).publishEvent(abstractUaaEventCaptor.capture());
 
         approvals = getApprovals(details.getClientId());
-        assertEquals(0, approvals.length);
+        assertThat(approvals.length).isEqualTo(0);
     }
 
     @Test
-    void testApprovalsAreDeleted2() throws Exception {
+    void approvalsAreDeleted2() throws Exception {
         ClientDetails details = createClient(adminToken, new RandomValueStringGenerator().generate(),
                 SECRET, Collections.singleton("password"));
         String userToken = testClient.getUserOAuthAccessToken(
@@ -1031,10 +1023,10 @@ public class ClientAdminEndpointsMockMvcTests {
                 testPassword,
                 "oauth.approvals");
         Approval[] approvals = getApprovals(details.getClientId());
-        assertEquals(0, approvals.length);
+        assertThat(approvals.length).isEqualTo(0);
         addApprovals(userToken, details.getClientId());
         approvals = getApprovals(details.getClientId());
-        assertEquals(3, approvals.length);
+        assertThat(approvals.length).isEqualTo(3);
 
         MockHttpServletRequestBuilder deleteClientsPost = delete("/oauth/clients/" + details.getClientId())
                 .header("Authorization", "Bearer " + adminToken)
@@ -1051,11 +1043,11 @@ public class ClientAdminEndpointsMockMvcTests {
                 "oauth.approvals");
 
         approvals = getApprovals(details.getClientId());
-        assertEquals(0, approvals.length);
+        assertThat(approvals.length).isEqualTo(0);
     }
 
     @Test
-    void testModifyApprovalsAreDeleted() throws Exception {
+    void modifyApprovalsAreDeleted() throws Exception {
         ClientDetails details = createClient(adminToken, new RandomValueStringGenerator().generate(),
                 SECRET, Collections.singleton("password"));
         ((ClientDetailsModification) details).setAction(ClientDetailsModification.DELETE);
@@ -1066,10 +1058,10 @@ public class ClientAdminEndpointsMockMvcTests {
                 testPassword,
                 "oauth.approvals");
         Approval[] approvals = getApprovals(details.getClientId());
-        assertEquals(0, approvals.length);
+        assertThat(approvals.length).isEqualTo(0);
         addApprovals(userToken, details.getClientId());
         approvals = getApprovals(details.getClientId());
-        assertEquals(3, approvals.length);
+        assertThat(approvals.length).isEqualTo(3);
 
         MockHttpServletRequestBuilder deleteClientsPost = post("/oauth/clients/tx/modify")
                 .header("Authorization", "Bearer " + adminToken)
@@ -1079,7 +1071,7 @@ public class ClientAdminEndpointsMockMvcTests {
         ResultActions result = mockMvc.perform(deleteClientsPost);
         result.andExpect(status().isOk());
         ClientDetailsModification[] deleted = (ClientDetailsModification[]) arrayFromString(result.andReturn().getResponse().getContentAsString(), ClientDetailsModification[].class);
-        assertTrue(deleted[0].isApprovalsDeleted());
+        assertThat(deleted[0].isApprovalsDeleted()).isTrue();
         verify(mockApplicationEventPublisher, times(2)).publishEvent(abstractUaaEventCaptor.capture());
 
         ClientDetails approvalsClient = createApprovalsLoginClient(adminToken);
@@ -1090,11 +1082,11 @@ public class ClientAdminEndpointsMockMvcTests {
                 testPassword,
                 "oauth.approvals");
         approvals = getApprovals(details.getClientId());
-        assertEquals(0, approvals.length);
+        assertThat(approvals.length).isEqualTo(0);
     }
 
     @Test
-    void testSecretChangeTxApprovalsNotDeleted() throws Exception {
+    void secretChangeTxApprovalsNotDeleted() throws Exception {
         int count = 3;
         //create clients
         ClientDetailsModification[] clients = createBaseClients(count, SECRET, Arrays.asList("client_credentials", "password"));
@@ -1128,7 +1120,7 @@ public class ClientAdminEndpointsMockMvcTests {
                     testUser.getUserName(),
                     testPassword,
                     "oauth.approvals");
-            assertEquals(3, getApprovals(c.getClientId()).length);
+            assertThat(getApprovals(c.getClientId()).length).isEqualTo(3);
         }
 
         //change the secret, and we know the old secret
@@ -1159,8 +1151,8 @@ public class ClientAdminEndpointsMockMvcTests {
                     testUser.getUserName(),
                     testPassword,
                     "oauth.approvals");
-            assertEquals(3, getApprovals(c.getClientId()).length);
-            assertFalse(c.isApprovalsDeleted());
+            assertThat(getApprovals(c.getClientId()).length).isEqualTo(3);
+            assertThat(c.isApprovalsDeleted()).isFalse();
         }
 
     }
@@ -1242,7 +1234,7 @@ public class ClientAdminEndpointsMockMvcTests {
     }
 
     @Test
-    void testSecretChangeEvent() throws Exception {
+    void secretChangeEvent() throws Exception {
         String token = testClient.getClientCredentialsOAuthAccessToken(
                 testAccounts.getAdminClientId(),
                 testAccounts.getAdminClientSecret(),
@@ -1258,13 +1250,13 @@ public class ClientAdminEndpointsMockMvcTests {
         mockMvc.perform(modifyClientsPost)
                 .andExpect(status().isOk());
         verify(mockApplicationEventPublisher, times(2)).publishEvent(abstractUaaEventCaptor.capture());
-        assertEquals(SecretChangeEvent.class, abstractUaaEventCaptor.getValue().getClass());
+        assertThat(abstractUaaEventCaptor.getValue().getClass()).isEqualTo(SecretChangeEvent.class);
         SecretChangeEvent event = (SecretChangeEvent) abstractUaaEventCaptor.getValue();
-        assertEquals(id, event.getAuditEvent().getPrincipalId());
+        assertThat(event.getAuditEvent().getPrincipalId()).isEqualTo(id);
     }
 
     @Test
-    void testAddNewClientSecret() throws Exception {
+    void addNewClientSecret() throws Exception {
         String token = testClient.getClientCredentialsOAuthAccessToken(
                 testAccounts.getAdminClientId(),
                 testAccounts.getAdminClientSecret(),
@@ -1283,17 +1275,17 @@ public class ClientAdminEndpointsMockMvcTests {
                 .andReturn().getResponse();
 
         ActionResult actionResult = JsonUtils.readValue(response.getContentAsString(), ActionResult.class);
-        assertEquals("ok", actionResult.getStatus());
-        assertEquals("Secret is added", actionResult.getMessage());
+        assertThat(actionResult.getStatus()).isEqualTo("ok");
+        assertThat(actionResult.getMessage()).isEqualTo("Secret is added");
 
         verify(mockApplicationEventPublisher, times(2)).publishEvent(abstractUaaEventCaptor.capture());
-        assertEquals(SecretChangeEvent.class, abstractUaaEventCaptor.getValue().getClass());
+        assertThat(abstractUaaEventCaptor.getValue().getClass()).isEqualTo(SecretChangeEvent.class);
         SecretChangeEvent event = (SecretChangeEvent) abstractUaaEventCaptor.getValue();
-        assertEquals(id, event.getAuditEvent().getPrincipalId());
+        assertThat(event.getAuditEvent().getPrincipalId()).isEqualTo(id);
     }
 
     @Test
-    void testAddMoreThanTwoClientSecret() throws Exception {
+    void addMoreThanTwoClientSecret() throws Exception {
         String token = testClient.getClientCredentialsOAuthAccessToken(
                 testAccounts.getAdminClientId(),
                 testAccounts.getAdminClientSecret(),
@@ -1320,16 +1312,16 @@ public class ClientAdminEndpointsMockMvcTests {
                 .andReturn().getResponse();
 
         InvalidClientException invalidClientDetailsException = JsonUtils.readValue(response.getContentAsString(), InvalidClientException.class);
-        assertEquals("invalid_client", invalidClientDetailsException.getOAuth2ErrorCode());
-        assertEquals("client secret is either empty or client already has two secrets.", invalidClientDetailsException.getMessage());
+        assertThat(invalidClientDetailsException.getOAuth2ErrorCode()).isEqualTo("invalid_client");
+        assertThat(invalidClientDetailsException.getMessage()).isEqualTo("client secret is either empty or client already has two secrets.");
         verify(mockApplicationEventPublisher, times(3)).publishEvent(abstractUaaEventCaptor.capture());
-        assertEquals(SecretFailureEvent.class, abstractUaaEventCaptor.getValue().getClass());
+        assertThat(abstractUaaEventCaptor.getValue().getClass()).isEqualTo(SecretFailureEvent.class);
         SecretFailureEvent event = (SecretFailureEvent) abstractUaaEventCaptor.getValue();
-        assertEquals(id, event.getAuditEvent().getPrincipalId());
+        assertThat(event.getAuditEvent().getPrincipalId()).isEqualTo(id);
     }
 
     @Test
-    void testDeleteClientSecret() throws Exception {
+    void deleteClientSecret() throws Exception {
         String token = testClient.getClientCredentialsOAuthAccessToken(
                 testAccounts.getAdminClientId(),
                 testAccounts.getAdminClientSecret(),
@@ -1357,18 +1349,18 @@ public class ClientAdminEndpointsMockMvcTests {
                 .andReturn().getResponse();
 
         ActionResult actionResult = JsonUtils.readValue(response.getContentAsString(), ActionResult.class);
-        assertNotNull(actionResult);
-        assertEquals("ok", actionResult.getStatus());
-        assertEquals("Secret is deleted", actionResult.getMessage());
+        assertThat(actionResult).isNotNull();
+        assertThat(actionResult.getStatus()).isEqualTo("ok");
+        assertThat(actionResult.getMessage()).isEqualTo("Secret is deleted");
 
         verify(mockApplicationEventPublisher, times(3)).publishEvent(abstractUaaEventCaptor.capture());
-        assertEquals(SecretChangeEvent.class, abstractUaaEventCaptor.getValue().getClass());
+        assertThat(abstractUaaEventCaptor.getValue().getClass()).isEqualTo(SecretChangeEvent.class);
         SecretChangeEvent event = (SecretChangeEvent) abstractUaaEventCaptor.getValue();
-        assertEquals(id, event.getAuditEvent().getPrincipalId());
+        assertThat(event.getAuditEvent().getPrincipalId()).isEqualTo(id);
     }
 
     @Test
-    void testDeleteClientSecretForClientWithOneSecret() throws Exception {
+    void deleteClientSecretForClientWithOneSecret() throws Exception {
         String token = testClient.getClientCredentialsOAuthAccessToken(
                 testAccounts.getAdminClientId(),
                 testAccounts.getAdminClientSecret(),
@@ -1387,17 +1379,17 @@ public class ClientAdminEndpointsMockMvcTests {
                 .andReturn().getResponse();
 
         InvalidClientException invalidClientDetailsException = JsonUtils.readValue(response.getContentAsString(), InvalidClientException.class);
-        assertEquals("invalid_client", invalidClientDetailsException.getOAuth2ErrorCode());
-        assertEquals("client secret is either empty or client has only one secret.", invalidClientDetailsException.getMessage());
+        assertThat(invalidClientDetailsException.getOAuth2ErrorCode()).isEqualTo("invalid_client");
+        assertThat(invalidClientDetailsException.getMessage()).isEqualTo("client secret is either empty or client has only one secret.");
 
         verify(mockApplicationEventPublisher, times(2)).publishEvent(abstractUaaEventCaptor.capture());
-        assertEquals(SecretFailureEvent.class, abstractUaaEventCaptor.getValue().getClass());
+        assertThat(abstractUaaEventCaptor.getValue().getClass()).isEqualTo(SecretFailureEvent.class);
         SecretFailureEvent event = (SecretFailureEvent) abstractUaaEventCaptor.getValue();
-        assertEquals(id, event.getAuditEvent().getPrincipalId());
+        assertThat(event.getAuditEvent().getPrincipalId()).isEqualTo(id);
     }
 
     @Test
-    void testSecretChange_UsingAdminClientToken() throws Exception {
+    void secretChangeUsingAdminClientToken() throws Exception {
         String adminToken = testClient.getClientCredentialsOAuthAccessToken(
                 testAccounts.getAdminClientId(),
                 testAccounts.getAdminClientSecret(),
@@ -1416,7 +1408,7 @@ public class ClientAdminEndpointsMockMvcTests {
     }
 
     @Test
-    void testSecretChange_UsingClientAdminToken() throws Exception {
+    void secretChangeUsingClientAdminToken() throws Exception {
         String adminToken = testClient.getClientCredentialsOAuthAccessToken(
                 testAccounts.getAdminClientId(),
                 testAccounts.getAdminClientSecret(),
@@ -1435,7 +1427,7 @@ public class ClientAdminEndpointsMockMvcTests {
     }
 
     @Test
-    void testUnsuccessfulSecretChangeEvent() throws Exception {
+    void unsuccessfulSecretChangeEvent() throws Exception {
 
         List<String> scopes = Arrays.asList("oauth.approvals", "clients.secret");
         UaaClientDetails client = createBaseClient(null, SECRET, Arrays.asList("password", "client_credentials"), scopes, scopes);
@@ -1457,13 +1449,13 @@ public class ClientAdminEndpointsMockMvcTests {
         mockMvc.perform(modifyClientsPost)
                 .andExpect(status().isBadRequest());
         verify(mockApplicationEventPublisher, times(2)).publishEvent(abstractUaaEventCaptor.capture());
-        assertEquals(SecretFailureEvent.class, abstractUaaEventCaptor.getValue().getClass());
+        assertThat(abstractUaaEventCaptor.getValue().getClass()).isEqualTo(SecretFailureEvent.class);
         SecretFailureEvent event = (SecretFailureEvent) abstractUaaEventCaptor.getValue();
-        assertEquals(client.getClientId(), event.getAuditEvent().getPrincipalId());
+        assertThat(event.getAuditEvent().getPrincipalId()).isEqualTo(client.getClientId());
     }
 
     @Test
-    void testSecretChangeModifyTxApprovalsDeleted() throws Exception {
+    void secretChangeModifyTxApprovalsDeleted() throws Exception {
         int count = 3;
         //create clients
         ClientDetailsModification[] clients = createBaseClients(count, SECRET, Arrays.asList("client_credentials", "password"));
@@ -1499,7 +1491,7 @@ public class ClientAdminEndpointsMockMvcTests {
                     testUser.getUserName(),
                     testPassword,
                     "oauth.approvals");
-            assertEquals(3, getApprovals(c.getClientId()).length);
+            assertThat(getApprovals(c.getClientId()).length).isEqualTo(3);
         }
 
         //change the secret, and we know don't the old secret
@@ -1524,8 +1516,8 @@ public class ClientAdminEndpointsMockMvcTests {
                     testUser.getUserName(),
                     testPassword,
                     "oauth.approvals");
-            assertEquals(0, getApprovals(c.getClientId()).length);
-            assertTrue(c.isApprovalsDeleted());
+            assertThat(getApprovals(c.getClientId()).length).isEqualTo(0);
+            assertThat(c.isApprovalsDeleted()).isTrue();
         }
 
         //verify(mockApplicationEventPublisher, times(count*3)).publishEvent(abstractUaaEventCaptor.capture());
@@ -1533,16 +1525,16 @@ public class ClientAdminEndpointsMockMvcTests {
         int index = 0;
         for (AbstractUaaEvent event : abstractUaaEventCaptor.getAllValues()) {
             if (index < count) {
-                assertEquals(AuditEventType.ClientCreateSuccess, event.getAuditEvent().getType());
+                assertThat(event.getAuditEvent().getType()).isEqualTo(AuditEventType.ClientCreateSuccess);
             } else {
                 int swit = index % 3;
                 if (swit == 0) {
-                    assertEquals(AuditEventType.ClientUpdateSuccess, event.getAuditEvent().getType());
+                    assertThat(event.getAuditEvent().getType()).isEqualTo(AuditEventType.ClientUpdateSuccess);
                 } else if (swit == 1) {
-                    assertEquals(AuditEventType.SecretChangeSuccess, event.getAuditEvent().getType());
+                    assertThat(event.getAuditEvent().getType()).isEqualTo(AuditEventType.SecretChangeSuccess);
                 } else {
-                    assertEquals(AuditEventType.ClientApprovalsDeleted, event.getAuditEvent().getType());
-                    assertEquals(ClientApprovalsDeletedEvent.class, event.getClass());
+                    assertThat(event.getAuditEvent().getType()).isEqualTo(AuditEventType.ClientApprovalsDeleted);
+                    assertThat(event.getClass()).isEqualTo(ClientApprovalsDeletedEvent.class);
                 }
             }
 
@@ -1551,7 +1543,7 @@ public class ClientAdminEndpointsMockMvcTests {
     }
 
     @Test
-    void testSecretChangeModifyTxApprovalsNotDeleted() throws Exception {
+    void secretChangeModifyTxApprovalsNotDeleted() throws Exception {
         //create clients
         ClientDetailsModification[] clients = createBaseClients(3, SECRET, Arrays.asList("client_credentials", "password"));
         for (ClientDetailsModification c : clients) {
@@ -1586,7 +1578,7 @@ public class ClientAdminEndpointsMockMvcTests {
                     testUser.getUserName(),
                     testPassword,
                     "oauth.approvals");
-            assertEquals(3, getApprovals(c.getClientId()).length);
+            assertThat(getApprovals(c.getClientId()).length).isEqualTo(3);
         }
 
         //change the secret, and we know don't the old secret
@@ -1606,19 +1598,19 @@ public class ClientAdminEndpointsMockMvcTests {
 
         //check that we still have approvals for each client
         for (ClientDetailsModification c : clients) {
-            assertFalse(c.isApprovalsDeleted());
+            assertThat(c.isApprovalsDeleted()).isFalse();
             String userToken = testClient.getUserOAuthAccessToken(
                     c.getClientId(),
                     "secret",
                     testUser.getUserName(),
                     testPassword,
                     "oauth.approvals");
-            assertEquals(3, getApprovals(c.getClientId()).length);
+            assertThat(getApprovals(c.getClientId()).length).isEqualTo(3);
         }
     }
 
     @Test
-    void testClientsAdminPermissions() throws Exception {
+    void clientsAdminPermissions() throws Exception {
         ClientDetails adminsClient = createClientAdminsClient(adminToken);
 
         //create clients
@@ -1643,7 +1635,7 @@ public class ClientAdminEndpointsMockMvcTests {
     }
 
     @Test
-    void testNonClientsAdminPermissions() throws Exception {
+    void nonClientsAdminPermissions() throws Exception {
         ClientDetails adminsClient = createReadWriteClient(adminToken);
 
         //create clients
@@ -1668,7 +1660,7 @@ public class ClientAdminEndpointsMockMvcTests {
     }
 
     @Test
-    void testCreateAsAdminPermissions() throws Exception {
+    void createAsAdminPermissions() throws Exception {
         ClientDetails adminsClient = createClientAdminsClient(adminToken);
 
         //create clients
@@ -1693,7 +1685,7 @@ public class ClientAdminEndpointsMockMvcTests {
     }
 
     @Test
-    void testCreateAsReadPermissions() throws Exception {
+    void createAsReadPermissions() throws Exception {
         ClientDetails adminsClient = createReadWriteClient(adminToken);
 
         //create clients
@@ -1718,7 +1710,7 @@ public class ClientAdminEndpointsMockMvcTests {
     }
 
     @Test
-    void testCreateAsWritePermissions() throws Exception {
+    void createAsWritePermissions() throws Exception {
         ClientDetails adminsClient = createReadWriteClient(adminToken);
 
         //create clients
@@ -1743,7 +1735,7 @@ public class ClientAdminEndpointsMockMvcTests {
     }
 
     @Test
-    void testGetClientDetailsSortedByLastModified() throws Exception {
+    void getClientDetailsSortedByLastModified() throws Exception {
 
         ClientDetails adminsClient = createReadWriteClient(adminToken);
 
@@ -1765,17 +1757,17 @@ public class ClientAdminEndpointsMockMvcTests {
         Collection<UaaClientDetails> clientDetails = JsonUtils.readValue(body, new TypeReference<SearchResults<UaaClientDetails>>() {
         }).getResources();
 
-        assertNotNull(clientDetails);
+        assertThat(clientDetails).isNotNull();
 
         Date lastDate = null;
 
         for (ClientDetails clientDetail : clientDetails) {
-            assertTrue(clientDetail.getAdditionalInformation().containsKey("lastModified"));
+            assertThat(clientDetail.getAdditionalInformation().containsKey("lastModified")).isTrue();
 
             Date currentDate = JsonUtils.convertValue(clientDetail.getAdditionalInformation().get("lastModified"), Date.class);
 
             if (lastDate != null) {
-                assertTrue(currentDate.getTime() <= lastDate.getTime());
+                assertThat(currentDate.getTime() <= lastDate.getTime()).isTrue();
             }
 
             lastDate = currentDate;
@@ -1783,7 +1775,7 @@ public class ClientAdminEndpointsMockMvcTests {
     }
 
     @Test
-    void testGetClientsLargerThanMax_whenCountParamIsProvided() throws Exception {
+    void getClientsLargerThanMaxWhenCountParamIsProvided() throws Exception {
         for (int i = 0; i < 7; i++) {
             clientDetails.add(
                     createClient(
@@ -1814,14 +1806,14 @@ public class ClientAdminEndpointsMockMvcTests {
         SearchResults<UaaClientDetails> clientDetailsSearchResults = JsonUtils.readValue(body, new TypeReference<SearchResults<UaaClientDetails>>() {
         });
 
-        assertThat(clientDetailsSearchResults.getItemsPerPage(), is(clientMaxCount));
-        assertThat(clientDetailsSearchResults.getTotalResults(), greaterThan(6));
-        assertThat(clientDetailsSearchResults.getStartIndex(), is(1));
-        assertThat(clientDetailsSearchResults.getResources(), hasSize(clientMaxCount));
+        assertThat(clientDetailsSearchResults.getItemsPerPage()).isEqualTo(clientMaxCount);
+        assertThat(clientDetailsSearchResults.getTotalResults()).isGreaterThan(6);
+        assertThat(clientDetailsSearchResults.getStartIndex()).isEqualTo(1);
+        assertThat(clientDetailsSearchResults.getResources()).hasSize(clientMaxCount);
     }
 
     @Test
-    void testGetClientsLargerThanMax_whenNoCountParamIsProvided() throws Exception {
+    void getClientsLargerThanMaxWhenNoCountParamIsProvided() throws Exception {
         int numOfClientsCreated = 7;
         for (int i = 0; i < numOfClientsCreated; i++) {
             clientDetails.add(
@@ -1852,22 +1844,22 @@ public class ClientAdminEndpointsMockMvcTests {
         SearchResults<UaaClientDetails> clientDetailsSearchResults = JsonUtils.readValue(body, new TypeReference<SearchResults<UaaClientDetails>>() {
         });
 
-        assertThat(clientDetailsSearchResults.getItemsPerPage(), is(clientMaxCount));
-        assertThat(clientDetailsSearchResults.getTotalResults(), greaterThan(numOfClientsCreated));
-        assertThat(clientDetailsSearchResults.getStartIndex(), is(1));
-        assertThat(clientDetailsSearchResults.getResources(), hasSize(clientMaxCount));
+        assertThat(clientDetailsSearchResults.getItemsPerPage()).isEqualTo(clientMaxCount);
+        assertThat(clientDetailsSearchResults.getTotalResults()).isGreaterThan(numOfClientsCreated);
+        assertThat(clientDetailsSearchResults.getStartIndex()).isEqualTo(1);
+        assertThat(clientDetailsSearchResults.getResources()).hasSize(clientMaxCount);
     }
 
     @Test
-    void testClientWithDotInID() throws Exception {
+    void clientWithDotInID() throws Exception {
         createClient(adminToken, "testclient", SECRET, Collections.singleton("client_credentials"));
         ClientDetails detailsv2 = createClient(adminToken, "testclient.v2", SECRET,
                 Collections.singleton("client_credentials"));
-        assertEquals("testclient.v2", detailsv2.getClientId());
+        assertThat(detailsv2.getClientId()).isEqualTo("testclient.v2");
     }
 
     @Test
-    void testPutClientModifyAuthorities() throws Exception {
+    void putClientModifyAuthorities() throws Exception {
         ClientDetails client = createClient(adminToken, "testClientForModifyAuthorities",
                 SECRET, Collections.singleton("client_credentials"));
 
@@ -1884,11 +1876,11 @@ public class ClientAdminEndpointsMockMvcTests {
         client = getClient(client.getClientId());
         assertThat(client.getAuthorities(), iterableWithSize(1));
         GrantedAuthority authority = Iterables.get(client.getAuthorities(), 0);
-        assertEquals("newAuthority", authority.getAuthority());
+        assertThat(authority.getAuthority()).isEqualTo("newAuthority");
     }
 
     @Test
-    void testPutClientModifyAccessTokenValidity() throws Exception {
+    void putClientModifyAccessTokenValidity() throws Exception {
         ClientDetails client = createClient(adminToken, "testClientForModifyAccessTokenValidity",
                 SECRET, Collections.singleton("client_credentials"));
 
@@ -1903,11 +1895,11 @@ public class ClientAdminEndpointsMockMvcTests {
         mockMvc.perform(put).andExpect(status().isOk()).andReturn();
 
         client = getClient(client.getClientId());
-        assertThat(client.getAccessTokenValiditySeconds(), is(73));
+        assertThat(client.getAccessTokenValiditySeconds()).isEqualTo(73);
     }
 
     @Test
-    void testPutClientModifyName() throws Exception {
+    void putClientModifyName() throws Exception {
         ClientDetails client = createClient(adminToken, "testClientForModifyName",
                 SECRET, Collections.singleton("client_credentials"));
 
@@ -1929,7 +1921,7 @@ public class ClientAdminEndpointsMockMvcTests {
         MockHttpServletResponse response = result11.andReturn().getResponse();
         Map<String, Object> map = JsonUtils.readValue(response.getContentAsString(), new TypeReference<Map<String, Object>>() {
         });
-        assertThat(map, hasEntry(is("name"), PredicateMatcher.is(value -> value.equals("New Client Name"))));
+        assertThat(map).containsEntry("name", "New Client Name");
 
         ClientDetails result;
         int responseCode = response.getStatus();
@@ -1943,11 +1935,11 @@ public class ClientAdminEndpointsMockMvcTests {
             throw new InvalidClientDetailsException(status + " : " + body);
         }
         client = result;
-        assertThat(client.getAdditionalInformation(), hasEntry(is("name"), PredicateMatcher.is(value -> value.equals("New Client Name"))));
+        assertThat(client.getAdditionalInformation()).containsEntry("name", "New Client Name");
     }
 
     @Test
-    void testAddNewClientJwtKeyUri() throws Exception {
+    void addNewClientJwtKeyUri() throws Exception {
         String token = testClient.getClientCredentialsOAuthAccessToken(
                 testAccounts.getAdminClientId(),
                 testAccounts.getAdminClientSecret(),
@@ -1967,17 +1959,17 @@ public class ClientAdminEndpointsMockMvcTests {
                 .andReturn().getResponse();
 
         ActionResult actionResult = JsonUtils.readValue(response.getContentAsString(), ActionResult.class);
-        assertEquals("ok", actionResult.getStatus());
-        assertEquals("Client jwt configuration is added", actionResult.getMessage());
+        assertThat(actionResult.getStatus()).isEqualTo("ok");
+        assertThat(actionResult.getMessage()).isEqualTo("Client jwt configuration is added");
 
         verify(mockApplicationEventPublisher, times(2)).publishEvent(abstractUaaEventCaptor.capture());
-        assertEquals(ClientJwtChangeEvent.class, abstractUaaEventCaptor.getValue().getClass());
+        assertThat(abstractUaaEventCaptor.getValue().getClass()).isEqualTo(ClientJwtChangeEvent.class);
         ClientJwtChangeEvent event = (ClientJwtChangeEvent) abstractUaaEventCaptor.getValue();
-        assertEquals(id, event.getAuditEvent().getPrincipalId());
+        assertThat(event.getAuditEvent().getPrincipalId()).isEqualTo(id);
     }
 
     @Test
-    void testAddNewClientJwtKeyUriButInvalidChange() throws Exception {
+    void addNewClientJwtKeyUriButInvalidChange() throws Exception {
         String token = testClient.getClientCredentialsOAuthAccessToken(
                 testAccounts.getAdminClientId(),
                 testAccounts.getAdminClientSecret(),
@@ -1997,13 +1989,13 @@ public class ClientAdminEndpointsMockMvcTests {
                 .andReturn().getResponse();
 
         ActionResult actionResult = JsonUtils.readValue(response.getContentAsString(), ActionResult.class);
-        assertEquals("ok", actionResult.getStatus());
-        assertEquals("Client jwt configuration is added", actionResult.getMessage());
+        assertThat(actionResult.getStatus()).isEqualTo("ok");
+        assertThat(actionResult.getMessage()).isEqualTo("Client jwt configuration is added");
 
         verify(mockApplicationEventPublisher, times(2)).publishEvent(abstractUaaEventCaptor.capture());
-        assertEquals(ClientJwtChangeEvent.class, abstractUaaEventCaptor.getValue().getClass());
+        assertThat(abstractUaaEventCaptor.getValue().getClass()).isEqualTo(ClientJwtChangeEvent.class);
         ClientJwtChangeEvent event = (ClientJwtChangeEvent) abstractUaaEventCaptor.getValue();
-        assertEquals(id, event.getAuditEvent().getPrincipalId());
+        assertThat(event.getAuditEvent().getPrincipalId()).isEqualTo(id);
 
         request = new ClientJwtChangeRequest("admin", null, "{\"keys\":[{\"kty\":\"RSA\",\"e\":\"AQAB\",\"use\":\"sig\",\"alg\":\"RS256\",\"n\":\"n\"}]}");
         request.setChangeMode(ClientJwtChangeRequest.ChangeMode.UPDATE);
@@ -2016,13 +2008,13 @@ public class ClientAdminEndpointsMockMvcTests {
                 .andReturn().getResponse();
 
         verify(mockApplicationEventPublisher, times(3)).publishEvent(abstractUaaEventCaptor.capture());
-        assertEquals(ClientJwtFailureEvent.class, abstractUaaEventCaptor.getValue().getClass());
+        assertThat(abstractUaaEventCaptor.getValue().getClass()).isEqualTo(ClientJwtFailureEvent.class);
         ClientJwtFailureEvent eventUpdate = (ClientJwtFailureEvent) abstractUaaEventCaptor.getValue();
-        assertEquals(client.getClientId(), eventUpdate.getAuditEvent().getPrincipalId());
+        assertThat(eventUpdate.getAuditEvent().getPrincipalId()).isEqualTo(client.getClientId());
     }
 
     @Test
-    void testInvalidClientJwtKeyUri() throws Exception {
+    void invalidClientJwtKeyUri() throws Exception {
         String token = testClient.getClientCredentialsOAuthAccessToken(
                 testAccounts.getAdminClientId(),
                 testAccounts.getAdminClientSecret(),
@@ -2042,9 +2034,9 @@ public class ClientAdminEndpointsMockMvcTests {
                 .andReturn().getResponse();
 
         verify(mockApplicationEventPublisher, times(2)).publishEvent(abstractUaaEventCaptor.capture());
-        assertEquals(ClientJwtFailureEvent.class, abstractUaaEventCaptor.getValue().getClass());
+        assertThat(abstractUaaEventCaptor.getValue().getClass()).isEqualTo(ClientJwtFailureEvent.class);
         ClientJwtFailureEvent event = (ClientJwtFailureEvent) abstractUaaEventCaptor.getValue();
-        assertEquals(client.getClientId(), event.getAuditEvent().getPrincipalId());
+        assertThat(event.getAuditEvent().getPrincipalId()).isEqualTo(client.getClientId());
     }
 
     private UaaClientDetails createClient(List<String> authorities) throws Exception {

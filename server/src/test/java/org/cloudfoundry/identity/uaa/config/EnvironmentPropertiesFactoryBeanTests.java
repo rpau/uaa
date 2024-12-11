@@ -23,29 +23,29 @@ import org.springframework.util.StringUtils;
 import java.util.Collections;
 import java.util.Properties;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Dave Syer
  */
-public class EnvironmentPropertiesFactoryBeanTests {
+class EnvironmentPropertiesFactoryBeanTests {
 
     @Test
-    public void testDefaultProperties() {
+    void defaultProperties() {
         EnvironmentPropertiesFactoryBean factory = new EnvironmentPropertiesFactoryBean();
         factory.setDefaultProperties(getProperties("foo=foo"));
         Properties properties = factory.getObject();
-        assertEquals("foo", properties.get("foo"));
+        assertThat(properties.get("foo")).isEqualTo("foo");
     }
 
     @Test
-    public void testNullProperties() {
+    void nullProperties() {
         EnvironmentPropertiesFactoryBean factory = new EnvironmentPropertiesFactoryBean();
         StandardEnvironment environment = new StandardEnvironment();
         environment.getPropertySources().addFirst(new MapPropertySource("foo", Collections.singletonMap("foo", null)));
         factory.setEnvironment(environment);
         Properties properties = factory.getObject();
-        assertEquals("", properties.get("foo"));
+        assertThat(properties.get("foo")).isEqualTo("");
     }
 
     private Properties getProperties(String input) {

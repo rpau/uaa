@@ -18,30 +18,28 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Date;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotSame;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
-public class ScimCoreTests {
+class ScimCoreTests {
 
     @Test
-    public void testEquals() {
+    void equals() {
         ScimCore c1 = new ScimUser("c1", "c1", null, null);
         ScimCore c2 = new ScimGroup("c1", null, IdentityZoneHolder.get().getId());
         ScimCore c3 = new ScimUser();
         ScimCore c4 = new ScimGroup();
 
-        assertEquals(c1, c2);
-        assertNotSame(c1, c3);
-        assertNotSame(c2, c4);
-        assertNotSame(c3, c4);
-        assertTrue(c2.equals("c1"));
-        assertFalse(c1.equals("c2"));
+        assertThat(c1).isNotSameAs(c3)
+                .isNotEqualTo("c2");
+
+        assertThat(c2).isNotSameAs(c4)
+                .isEqualTo("c1") //NOSONAR equals takes ScimCore or String to check id equals
+                .isEqualTo(c1);
+        assertThat(c3).isNotSameAs(c4);
     }
 
     @Test
-    public void testPatch() {
+    void patch() {
         ScimCore c1 = new ScimGroup("Test");
         ScimCore c2 = new ScimGroup();
         ScimMeta meta1 = c1.getMeta();
@@ -52,9 +50,9 @@ public class ScimCoreTests {
         meta2.setVersion(1);
         meta2.setAttributes(new String[]{"Description"});
         c2.patch(c1);
-        assertEquals(meta2Timestamp, c2.getMeta().getCreated());
-        assertEquals(1, meta2.getVersion());
-        assertEquals(1, meta2.getAttributes().length);
-        assertEquals("Description", meta2.getAttributes()[0]);
+        assertThat(c2.getMeta().getCreated()).isEqualTo(meta2Timestamp);
+        assertThat(meta2.getVersion()).isOne();
+        assertThat(meta2.getAttributes()).hasSize(1);
+        assertThat(meta2.getAttributes()[0]).isEqualTo("Description");
     }
 }

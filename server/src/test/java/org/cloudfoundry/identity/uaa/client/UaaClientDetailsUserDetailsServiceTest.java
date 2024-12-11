@@ -11,7 +11,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 
 class UaaClientDetailsUserDetailsServiceTest {
     @SuppressWarnings("unchecked")
@@ -23,7 +23,7 @@ class UaaClientDetailsUserDetailsServiceTest {
         ClientDetailsService clientDetailsService = Mockito.mock(ClientDetailsService.class);
         Mockito.when(clientDetailsService.loadClientByClientId("test_user")).thenThrow(NoSuchClientException.class);
         UaaClientDetailsUserDetailsService testee = new UaaClientDetailsUserDetailsService(clientDetailsService);
-        assertThrows(UsernameNotFoundException.class, () -> testee.loadUserByUsername("test_user"));
+        assertThatExceptionOfType(UsernameNotFoundException.class).isThrownBy(() -> testee.loadUserByUsername("test_user"));
     }
 
     @SuppressWarnings("unchecked")
@@ -35,6 +35,6 @@ class UaaClientDetailsUserDetailsServiceTest {
         ClientDetailsService clientDetailsService = Mockito.mock(ClientDetailsService.class);
         Mockito.when(clientDetailsService.loadClientByClientId("test_user")).thenThrow(ClientRegistrationException.class);
         UaaClientDetailsUserDetailsService testee = new UaaClientDetailsUserDetailsService(clientDetailsService);
-        assertThrows(ClientRegistrationException.class, () -> testee.loadUserByUsername("test_user"));
+        assertThatExceptionOfType(ClientRegistrationException.class).isThrownBy(() -> testee.loadUserByUsername("test_user"));
     }
 }

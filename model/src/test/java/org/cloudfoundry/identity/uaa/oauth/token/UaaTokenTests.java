@@ -24,25 +24,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.cloudfoundry.identity.uaa.oauth.common.OAuth2AccessToken.BEARER_TYPE;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class UaaTokenTests {
+class UaaTokenTests {
 
     private CompositeToken persistToken;
     private BaseOAuth2ProtectedResourceDetails resourceDetails;
     private AuthorizationCodeAccessTokenProvider authorizationCodeAccessTokenProvider;
 
     @BeforeEach
-    public void setUp() throws Exception {
+    void setUp() throws Exception {
         persistToken = new CompositeToken("token-value");
         persistToken.setScope(Set.of("admin", "read", "write"));
         persistToken.setTokenType(BEARER_TYPE.toLowerCase());
@@ -55,119 +50,117 @@ public class UaaTokenTests {
     }
 
     @Test
-    public void getIdTokenValue() {
-        assertNull(persistToken.getIdTokenValue());
-        assertNull(resourceDetails.getId());
+    void getIdTokenValue() {
+        assertThat(persistToken.getIdTokenValue()).isNull();
+        assertThat(resourceDetails.getId()).isNull();
     }
 
     @Test
-    public void testHashCode() {
+    void testHashCode() {
         CompositeToken copyToken = new CompositeToken(persistToken);
-        assertEquals(copyToken.hashCode(), persistToken.hashCode());
-        assertEquals(resourceDetails.hashCode(), new BaseOAuth2ProtectedResourceDetails().hashCode());
+        assertThat(persistToken.hashCode()).isEqualTo(copyToken.hashCode());
+        assertThat(new BaseOAuth2ProtectedResourceDetails().hashCode()).isEqualTo(resourceDetails.hashCode());
     }
 
     @Test
-    public void testEquals() {
+    void equals() {
         CompositeToken copyToken = new CompositeToken(persistToken);
-        assertEquals(copyToken, persistToken);
-        assertEquals(resourceDetails, new BaseOAuth2ProtectedResourceDetails());
+        assertThat(persistToken).isEqualTo(copyToken);
+        assertThat(new BaseOAuth2ProtectedResourceDetails()).isEqualTo(resourceDetails);
     }
 
     @Test
-    public void testOAuth2AccessDeniedException() {
+    void oAuth2AccessDeniedException() {
         OAuth2AccessDeniedException oAuth2AccessDeniedException = new OAuth2AccessDeniedException();
-        assertEquals(oAuth2AccessDeniedException.toString(), new OAuth2AccessDeniedException((BaseOAuth2ProtectedResourceDetails) null).toString());
-        assertNotEquals(oAuth2AccessDeniedException.toString(), new OAuth2AccessDeniedException("", resourceDetails).toString());
-        assertEquals("access_denied", oAuth2AccessDeniedException.getOAuth2ErrorCode());
-        assertEquals(403, oAuth2AccessDeniedException.getHttpErrorCode());
+        assertThat(new OAuth2AccessDeniedException((BaseOAuth2ProtectedResourceDetails) null).toString()).isEqualTo(oAuth2AccessDeniedException.toString());
+        assertThat(new OAuth2AccessDeniedException("", resourceDetails).toString()).isNotEqualTo(oAuth2AccessDeniedException.toString());
+        assertThat(oAuth2AccessDeniedException.getOAuth2ErrorCode()).isEqualTo("access_denied");
+        assertThat(oAuth2AccessDeniedException.getHttpErrorCode()).isEqualTo(403);
     }
 
     @Test
-    public void testAccessTokenRequiredException() {
+    void accessTokenRequiredException() {
         AccessTokenRequiredException accessTokenRequiredException = new AccessTokenRequiredException(resourceDetails);
-        assertEquals(accessTokenRequiredException.toString(), new AccessTokenRequiredException(null).toString());
-        assertNotEquals(accessTokenRequiredException.toString(), new AccessTokenRequiredException("", resourceDetails).toString());
-        assertEquals(accessTokenRequiredException.toString(), new AccessTokenRequiredException("OAuth2 access denied.", resourceDetails, null).toString());
-        assertNotNull(accessTokenRequiredException.getResource());
+        assertThat(new AccessTokenRequiredException(null).toString()).isEqualTo(accessTokenRequiredException.toString());
+        assertThat(new AccessTokenRequiredException("", resourceDetails).toString()).isNotEqualTo(accessTokenRequiredException.toString());
+        assertThat(new AccessTokenRequiredException("OAuth2 access denied.", resourceDetails, null).toString()).isEqualTo(accessTokenRequiredException.toString());
+        assertThat(accessTokenRequiredException.getResource()).isNotNull();
     }
 
     @Test
-    public void testAccessTokenProviderChain() {
+    void accessTokenProviderChain() {
         AccessTokenProviderChain accessTokenProviderChain = new AccessTokenProviderChain(Collections.emptyList());
         ClientCredentialsAccessTokenProvider clientCredentialsAccessTokenProvider = new ClientCredentialsAccessTokenProvider();
-        assertFalse(accessTokenProviderChain.supportsResource(resourceDetails));
-        assertFalse(accessTokenProviderChain.supportsRefresh(resourceDetails));
+        assertThat(accessTokenProviderChain.supportsResource(resourceDetails)).isFalse();
+        assertThat(accessTokenProviderChain.supportsRefresh(resourceDetails)).isFalse();
         accessTokenProviderChain = new AccessTokenProviderChain(Arrays.asList(clientCredentialsAccessTokenProvider));
-        assertTrue(accessTokenProviderChain.supportsResource(new ClientCredentialsResourceDetails()));
-        assertFalse(accessTokenProviderChain.supportsRefresh(new ClientCredentialsResourceDetails()));
-        assertTrue(authorizationCodeAccessTokenProvider.supportsRefresh(new AuthorizationCodeResourceDetails()));
+        assertThat(accessTokenProviderChain.supportsResource(new ClientCredentialsResourceDetails())).isTrue();
+        assertThat(accessTokenProviderChain.supportsRefresh(new ClientCredentialsResourceDetails())).isFalse();
+        assertThat(authorizationCodeAccessTokenProvider.supportsRefresh(new AuthorizationCodeResourceDetails())).isTrue();
     }
 
     @Test
-    public void testAccessTokenProviderChainException() {
-        assertThrows(OAuth2AccessDeniedException.class, () -> {
-            ClientCredentialsAccessTokenProvider clientCredentialsAccessTokenProvider = new ClientCredentialsAccessTokenProvider();
-            AccessTokenProviderChain accessTokenProviderChain = new AccessTokenProviderChain(Arrays.asList(clientCredentialsAccessTokenProvider));
-            accessTokenProviderChain.refreshAccessToken(new ClientCredentialsResourceDetails(), new DefaultOAuth2RefreshToken(""), null);
-        });
+    void accessTokenProviderChainException() {
+        ClientCredentialsAccessTokenProvider clientCredentialsAccessTokenProvider = new ClientCredentialsAccessTokenProvider();
+        AccessTokenProviderChain accessTokenProviderChain = new AccessTokenProviderChain(Arrays.asList(clientCredentialsAccessTokenProvider));
+        assertThatExceptionOfType(OAuth2AccessDeniedException.class).isThrownBy(() ->
+                accessTokenProviderChain.refreshAccessToken(new ClientCredentialsResourceDetails(), new DefaultOAuth2RefreshToken(""), null));
     }
 
     @Test
-    public void testDefaultAccessTokenRequest() {
+    void defaultAccessTokenRequest() {
         DefaultAccessTokenRequest accessTokenRequest = new DefaultAccessTokenRequest();
         MultiValueMap parameters = new LinkedMultiValueMap();
         parameters.add("empty", "");
         accessTokenRequest.setCookie("cookie-value");
         accessTokenRequest.setHeaders(null);
         // maintain
-        assertTrue(accessTokenRequest.isEmpty());
+        assertThat(accessTokenRequest.isEmpty()).isTrue();
         accessTokenRequest.set("key", "value");
-        assertFalse(accessTokenRequest.isEmpty());
+        assertThat(accessTokenRequest.isEmpty()).isFalse();
         accessTokenRequest.addAll(parameters);
         accessTokenRequest.clear();
         accessTokenRequest.add("key", "value");
-        assertEquals(Set.of("key"), accessTokenRequest.keySet());
-        assertEquals(List.of(List.of("value")).toString(), accessTokenRequest.values().toString());
+        assertThat(accessTokenRequest.keySet()).isEqualTo(Set.of("key"));
+        assertThat(accessTokenRequest.values().toString()).isEqualTo(List.of(List.of("value")).toString());
 
         // parameters
         accessTokenRequest.clear();
-        assertTrue(accessTokenRequest.isEmpty());
+        assertThat(accessTokenRequest.isEmpty()).isTrue();
         accessTokenRequest.addAll("key", List.of("value"));
         accessTokenRequest.setAll(parameters);
         accessTokenRequest.putAll(parameters);
         accessTokenRequest.put("key", List.of("value"));
-        assertFalse(accessTokenRequest.isEmpty());
+        assertThat(accessTokenRequest.isEmpty()).isFalse();
 
         // object compare
         accessTokenRequest.clear();
         parameters = new LinkedMultiValueMap();
         parameters.addAll("key", List.of("value"));
-        assertEquals(accessTokenRequest, new DefaultAccessTokenRequest(null));
+        assertThat(new DefaultAccessTokenRequest(null)).isEqualTo(accessTokenRequest);
         DefaultAccessTokenRequest newAccessTokenRequest = new DefaultAccessTokenRequest(Map.of("scope", new String[]{"x"}, "client_id", new String[]{"x"}));
-        assertNotEquals(accessTokenRequest, newAccessTokenRequest);
-        assertNotEquals(accessTokenRequest.toString(), newAccessTokenRequest.toString());
-        assertNotEquals(accessTokenRequest.hashCode(), newAccessTokenRequest.hashCode());
+        assertThat(newAccessTokenRequest).isNotEqualTo(accessTokenRequest);
+        assertThat(newAccessTokenRequest.toString()).isNotEqualTo(accessTokenRequest.toString());
+        assertThat(newAccessTokenRequest.hashCode()).isNotEqualTo(accessTokenRequest.hashCode());
         for (Map.Entry<String, List<String>> entry : accessTokenRequest.entrySet()) {
-            assertNotNull(entry.getKey());
+            assertThat(entry.getKey()).isNotNull();
         }
         accessTokenRequest.remove("key");
-        assertNull(accessTokenRequest.get("key"));
-        assertFalse(accessTokenRequest.containsKey("key"));
-        assertFalse(accessTokenRequest.containsValue("value"));
+        assertThat(accessTokenRequest.get("key")).isNull();
+        assertThat(accessTokenRequest.containsKey("key")).isFalse();
+        assertThat(accessTokenRequest.containsValue("value")).isFalse();
     }
 
     @Test
-    public void testAuthorizationCodeAccessTokenProvider() {
-        assertThrows(NullPointerException.class, () -> {
-            ClientHttpRequestFactory clientHttpRequestFactory = mock(ClientHttpRequestFactory.class);
-            AccessTokenRequest request = mock(AccessTokenRequest.class);
-            AuthorizationCodeResourceDetails authorizationCodeResourceDetails = new AuthorizationCodeResourceDetails();
-            authorizationCodeResourceDetails.setScope(List.of("admin"));
-            when(request.getHeaders()).thenReturn(new HashMap<>(Map.of(OAuth2Utils.USER_OAUTH_APPROVAL, List.of("true"))));
-            when(request.containsKey(OAuth2Utils.USER_OAUTH_APPROVAL)).thenReturn(true);
-            authorizationCodeAccessTokenProvider.setRequestFactory(clientHttpRequestFactory);
-            authorizationCodeAccessTokenProvider.obtainAuthorizationCode(authorizationCodeResourceDetails, request);
-        });
+    void authorizationCodeAccessTokenProvider() {
+        ClientHttpRequestFactory clientHttpRequestFactory = mock(ClientHttpRequestFactory.class);
+        AccessTokenRequest request = mock(AccessTokenRequest.class);
+        AuthorizationCodeResourceDetails authorizationCodeResourceDetails = new AuthorizationCodeResourceDetails();
+        authorizationCodeResourceDetails.setScope(List.of("admin"));
+        when(request.getHeaders()).thenReturn(new HashMap<>(Map.of(OAuth2Utils.USER_OAUTH_APPROVAL, List.of("true"))));
+        when(request.containsKey(OAuth2Utils.USER_OAUTH_APPROVAL)).thenReturn(true);
+        authorizationCodeAccessTokenProvider.setRequestFactory(clientHttpRequestFactory);
+        assertThatExceptionOfType(NullPointerException.class).isThrownBy(() ->
+                authorizationCodeAccessTokenProvider.obtainAuthorizationCode(authorizationCodeResourceDetails, request));
     }
 }

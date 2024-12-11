@@ -1,6 +1,5 @@
 package org.cloudfoundry.identity.uaa.login;
 
-import org.assertj.core.api.Assertions;
 import org.assertj.core.api.Condition;
 import org.cloudfoundry.identity.uaa.extensions.PollutionPreventionExtension;
 import org.cloudfoundry.identity.uaa.extensions.SpringProfileCleanupExtension;
@@ -165,7 +164,7 @@ class BootstrapTests {
         context = getServletContext(null, "test/bootstrap/deprecated_properties_still_work.yml");
         ScimGroupProvisioning scimGroupProvisioning = context.getBean("scimGroupProvisioning", ScimGroupProvisioning.class);
         List<ScimGroup> scimGroups = scimGroupProvisioning.retrieveAll(IdentityZoneHolder.get().getId());
-        Assertions.assertThat(scimGroups)
+        assertThat(scimGroups)
                 .haveAtLeastOne(new Condition<>(g -> "pony".equals(g.getDisplayName()) && "The magic of friendship".equals(g.getDescription()), "pony group"))
                 .haveAtLeastOne(new Condition<>(g -> "cat".equals(g.getDisplayName()) && "The cat".equals(g.getDescription()), "cat group"));
 
@@ -203,7 +202,7 @@ class BootstrapTests {
         System.setProperty(LOGIN_IDP_ENTITY_ALIAS, "testIDPData");
         context = getServletContext("default,saml,configMetadata", "uaa.yml");
         List<SamlIdentityProviderDefinition> defs = context.getBean(BootstrapSamlIdentityProviderData.class).getIdentityProviderDefinitions();
-        Assertions.assertThat(providerByAlias(defs, "testIDPData"))
+        assertThat(providerByAlias(defs, "testIDPData"))
                 .isNotNull()
                 .returns(SamlIdentityProviderDefinition.MetadataLocation.DATA, SamlIdentityProviderDefinition::getType);
     }
@@ -220,7 +219,7 @@ class BootstrapTests {
         assertThat(context.getBean(BootstrapSamlIdentityProviderData.class))
                 .returns(false, BootstrapSamlIdentityProviderData::isLegacyMetadataTrustCheck);
         List<SamlIdentityProviderDefinition> defs = context.getBean(BootstrapSamlIdentityProviderData.class).getIdentityProviderDefinitions();
-        Assertions.assertThat(providerByAlias(defs, "testIDPUrl"))
+        assertThat(providerByAlias(defs, "testIDPUrl"))
                 .isNotNull()
                 .returns(null, SamlIdentityProviderDefinition::getSocketFactoryClassName)
                 .returns(SamlIdentityProviderDefinition.MetadataLocation.URL, SamlIdentityProviderDefinition::getType);

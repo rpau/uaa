@@ -19,13 +19,12 @@ import org.junit.jupiter.api.Test;
 
 import javax.mail.internet.MimeMessage;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.assertj.core.api.Assertions.assertThat;
 
-public class FakeJavaMailSenderTest {
+class FakeJavaMailSenderTest {
 
     @Test
-    public void testSendDoesntCreateMemoryLeak() {
+    void sendDoesntCreateMemoryLeak() {
         FakeJavaMailSender sender = new FakeJavaMailSender();
         sender.setMaxMessages(100);
         MimeMessage m = sender.createMimeMessage();
@@ -33,17 +32,17 @@ public class FakeJavaMailSenderTest {
             sender.send(m);
         }
 
-        assertEquals(100, sender.getMaxMessages());
-        assertEquals(100, sender.getSentMessages().size());
+        assertThat(sender.getMaxMessages()).isEqualTo(100);
+        assertThat(sender.getSentMessages().size()).isEqualTo(100);
 
         MimeMessage lastMessage = sender.createMimeMessage();
         sender.send(lastMessage);
-        assertEquals(100, sender.getSentMessages().size());
-        assertSame(lastMessage, sender.getSentMessages().get(99).getMessage());
+        assertThat(sender.getSentMessages().size()).isEqualTo(100);
+        assertThat(sender.getSentMessages().get(99).getMessage()).isSameAs(lastMessage);
     }
 
     @Test
-    public void testDoesntStore0Messages() {
+    void doesntStore0Messages() {
         FakeJavaMailSender sender = new FakeJavaMailSender();
         sender.setMaxMessages(-1);
         MimeMessage m = sender.createMimeMessage();
@@ -51,7 +50,7 @@ public class FakeJavaMailSenderTest {
             sender.send(m);
         }
 
-        assertEquals(0, sender.getMaxMessages());
-        assertEquals(0, sender.getSentMessages().size());
+        assertThat(sender.getMaxMessages()).isEqualTo(0);
+        assertThat(sender.getSentMessages().size()).isEqualTo(0);
     }
 }

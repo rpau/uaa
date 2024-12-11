@@ -2,18 +2,18 @@ package org.cloudfoundry.identity.uaa.oauth.provider.config.xml;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-public class OAuth2SecurityNamespaceHandlerTest {
+class OAuth2SecurityNamespaceHandlerTest {
 
     @Test
-    public void init() {
+    void init() {
         OAuth2SecurityNamespaceHandler oAuth2SecurityNamespaceHandler = new OAuth2SecurityNamespaceHandler();
         oAuth2SecurityNamespaceHandler.init();
-        assertNotNull(oAuth2SecurityNamespaceHandler);
+        assertThat(oAuth2SecurityNamespaceHandler).isNotNull();
     }
 }

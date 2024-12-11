@@ -16,11 +16,8 @@ import javax.servlet.http.Cookie;
 import java.util.List;
 import java.util.UUID;
 
-import static org.cloudfoundry.identity.uaa.util.AssertThrowsWithMessage.assertThrowsWithMessageThat;
-import static org.hamcrest.Matchers.equalTo;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(PollutionPreventionExtension.class)
@@ -42,44 +39,42 @@ class UaaSessionConfigTest {
     void whenDatabaseIsConfigured() {
         when(mockEnvironment.getProperty("servlet.session-store", "memory")).thenReturn("database");
 
-        assertFalse(new UaaMemorySessionConfig.MemoryConfigured().matches(mockConditionContext, null));
-        assertTrue(new UaaJdbcSessionConfig.DatabaseConfigured().matches(mockConditionContext, null));
+        assertThat(new UaaMemorySessionConfig.MemoryConfigured().matches(mockConditionContext, null)).isFalse();
+        assertThat(new UaaJdbcSessionConfig.DatabaseConfigured().matches(mockConditionContext, null)).isTrue();
     }
 
     @Test
     void whenMemoryIsConfigured() {
         when(mockEnvironment.getProperty("servlet.session-store", "memory")).thenReturn("memory");
 
-        assertTrue(new UaaMemorySessionConfig.MemoryConfigured().matches(mockConditionContext, null));
-        assertFalse(new UaaJdbcSessionConfig.DatabaseConfigured().matches(mockConditionContext, null));
+        assertThat(new UaaMemorySessionConfig.MemoryConfigured().matches(mockConditionContext, null)).isTrue();
+        assertThat(new UaaJdbcSessionConfig.DatabaseConfigured().matches(mockConditionContext, null)).isFalse();
     }
 
     @Test
     void whenFoobarIsConfigured() {
         when(mockEnvironment.getProperty("servlet.session-store", "memory")).thenReturn("foobar");
 
-        assertThrowsWithMessageThat(
-                IllegalArgumentException.class,
-                () -> new UaaMemorySessionConfig.MemoryConfigured().matches(mockConditionContext, null),
-                equalTo("foobar is not a valid argument for servlet.session-store. Please choose memory or database."));
-        assertThrowsWithMessageThat(
-                IllegalArgumentException.class,
-                () -> new UaaJdbcSessionConfig.DatabaseConfigured().matches(mockConditionContext, null),
-                equalTo("foobar is not a valid argument for servlet.session-store. Please choose memory or database."));
+        assertThatThrownBy(() -> new UaaMemorySessionConfig.MemoryConfigured().matches(mockConditionContext, null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("foobar is not a valid argument for servlet.session-store. Please choose memory or database.");
+        assertThatThrownBy(() -> new UaaJdbcSessionConfig.DatabaseConfigured().matches(mockConditionContext, null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("foobar is not a valid argument for servlet.session-store. Please choose memory or database.");
     }
 
     @Test
     void whenCookieSeralizeDefault() {
         when(mockEnvironment.getProperty("servlet.session-store", "memory")).thenReturn("database");
-        assertTrue(new UaaJdbcSessionConfig.DatabaseConfigured().matches(mockConditionContext, null));
-        assertEquals(0, runCookieTest(true).size());
+        assertThat(new UaaJdbcSessionConfig.DatabaseConfigured().matches(mockConditionContext, null)).isTrue();
+        assertThat(runCookieTest(true)).isEmpty();
     }
 
     @Test
     void whenCookieSeralizeNoDefault() {
         when(mockEnvironment.getProperty("servlet.session-store", "memory")).thenReturn("database");
-        assertTrue(new UaaJdbcSessionConfig.DatabaseConfigured().matches(mockConditionContext, null));
-        assertEquals(1, runCookieTest(false).size());
+        assertThat(new UaaJdbcSessionConfig.DatabaseConfigured().matches(mockConditionContext, null)).isTrue();
+        assertThat(runCookieTest(false)).hasSize(1);
     }
 
     private static List<String> runCookieTest(boolean defaults) {

@@ -27,10 +27,8 @@ import java.util.List;
 import java.util.Map;
 
 import static java.util.Collections.emptyMap;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class GeneralIdentityZoneConfigurationValidatorTests {
 
@@ -195,7 +193,7 @@ class GeneralIdentityZoneConfigurationValidatorTests {
 
 
     @BeforeAll
-    public static void addBCProvider() {
+    static void addBCProvider() {
         try {
             Security.addProvider(new BouncyCastleFipsProvider());
         } catch (SecurityException e) {
@@ -242,23 +240,22 @@ class GeneralIdentityZoneConfigurationValidatorTests {
     @MethodSource("parameters")
     @ParameterizedTest
     void validate_with_invalid_active_key_id(IdentityZoneValidator.Mode mode) {
-        Throwable exception = assertThrows(InvalidIdentityZoneConfigurationException.class, () -> {
-            initGeneralIdentityZoneConfigurationValidatorTests(mode);
-            samlConfig.setActiveKeyId("wrong");
-            validator.validate(zone, mode);
-        });
-        assertTrue(exception.getMessage().contains("Invalid SAML active key ID: 'wrong'. Couldn't find any matching keys."));
+        initGeneralIdentityZoneConfigurationValidatorTests(mode);
+        samlConfig.setActiveKeyId("wrong");
+        assertThatThrownBy(() ->
+                validator.validate(zone, mode))
+                .isInstanceOf(InvalidIdentityZoneConfigurationException.class)
+                .hasMessageContaining("Invalid SAML active key ID: 'wrong'. Couldn't find any matching keys.");
     }
 
     @MethodSource("parameters")
     @ParameterizedTest
     void validate_with_invalid_consent_link(IdentityZoneValidator.Mode mode) {
-        Throwable exception = assertThrows(InvalidIdentityZoneConfigurationException.class, () -> {
-            initGeneralIdentityZoneConfigurationValidatorTests(mode);
-            zone.getConfig().getBranding().setConsent(new Consent("some text", "some-invalid-link"));
-            validator.validate(zone, mode);
-        });
-        assertTrue(exception.getMessage().contains("Invalid consent link: some-invalid-link. Must be a properly formatted URI beginning with http:// or https://"));
+        initGeneralIdentityZoneConfigurationValidatorTests(mode);
+        zone.getConfig().getBranding().setConsent(new Consent("some text", "some-invalid-link"));
+        assertThatThrownBy(() -> validator.validate(zone, mode))
+                .isInstanceOf(InvalidIdentityZoneConfigurationException.class)
+                .hasMessageContaining("Invalid consent link: some-invalid-link. Must be a properly formatted URI beginning with http:// or https://");
     }
 
     @MethodSource("parameters")
@@ -273,23 +270,21 @@ class GeneralIdentityZoneConfigurationValidatorTests {
     @MethodSource("parameters")
     @ParameterizedTest
     void validateConsent_withNullTextAndNotNullLink(IdentityZoneValidator.Mode mode) {
-        Throwable exception = assertThrows(InvalidIdentityZoneConfigurationException.class, () -> {
-            initGeneralIdentityZoneConfigurationValidatorTests(mode);
-            zone.getConfig().getBranding().setConsent(new Consent(null, "http://example.com"));
-            validator.validate(zone, mode);
-        });
-        assertTrue(exception.getMessage().contains("Consent text must be set if configuring consent"));
+        initGeneralIdentityZoneConfigurationValidatorTests(mode);
+        zone.getConfig().getBranding().setConsent(new Consent(null, "http://example.com"));
+        assertThatThrownBy(() -> validator.validate(zone, mode))
+                .isInstanceOf(InvalidIdentityZoneConfigurationException.class)
+                .hasMessageContaining("Consent text must be set if configuring consent");
     }
 
     @MethodSource("parameters")
     @ParameterizedTest
     void validateConsent_withNullTextAndNullLink(IdentityZoneValidator.Mode mode) {
-        Throwable exception = assertThrows(InvalidIdentityZoneConfigurationException.class, () -> {
-            initGeneralIdentityZoneConfigurationValidatorTests(mode);
-            zone.getConfig().getBranding().setConsent(new Consent());
-            validator.validate(zone, mode);
-        });
-        assertTrue(exception.getMessage().contains("Consent text must be set if configuring consent"));
+        initGeneralIdentityZoneConfigurationValidatorTests(mode);
+        zone.getConfig().getBranding().setConsent(new Consent());
+        assertThatThrownBy(() -> validator.validate(zone, mode))
+                .isInstanceOf(InvalidIdentityZoneConfigurationException.class)
+                .hasMessageContaining("Consent text must be set if configuring consent");
     }
 
     @MethodSource("parameters")
@@ -297,7 +292,7 @@ class GeneralIdentityZoneConfigurationValidatorTests {
     void validate_without_legacy_key(IdentityZoneValidator.Mode mode) throws InvalidIdentityZoneConfigurationException {
         initGeneralIdentityZoneConfigurationValidatorTests(mode);
         samlConfig.setKeys(emptyMap());
-        assertNull(samlConfig.getActiveKeyId());
+        assertThat(samlConfig.getActiveKeyId()).isNull();
         samlConfig.addKey("key-1", new SamlKey(key1, passphrase1, certificate1));
         samlConfig.addAndActivateKey("key-2", new SamlKey(key2, passphrase2, certificate2));
         validator.validate(zone, mode);
@@ -306,15 +301,14 @@ class GeneralIdentityZoneConfigurationValidatorTests {
     @MethodSource("parameters")
     @ParameterizedTest
     void validate_without_legacy_key_and_null_active_key(IdentityZoneValidator.Mode mode) {
-        Throwable exception = assertThrows(InvalidIdentityZoneConfigurationException.class, () -> {
-            initGeneralIdentityZoneConfigurationValidatorTests(mode);
-            samlConfig.setKeys(emptyMap());
-            assertNull(samlConfig.getActiveKeyId());
-            samlConfig.addKey("key-1", new SamlKey(key1, passphrase1, certificate1));
-            samlConfig.addKey("key-2", new SamlKey(key2, passphrase2, certificate2));
-            validator.validate(zone, mode);
-        });
-        assertTrue(exception.getMessage().contains("Invalid SAML active key ID: 'null'. Couldn't find any matching keys."));
+        initGeneralIdentityZoneConfigurationValidatorTests(mode);
+        samlConfig.setKeys(emptyMap());
+        assertThat(samlConfig.getActiveKeyId()).isNull();
+        samlConfig.addKey("key-1", new SamlKey(key1, passphrase1, certificate1));
+        samlConfig.addKey("key-2", new SamlKey(key2, passphrase2, certificate2));
+        assertThatThrownBy(() -> validator.validate(zone, mode))
+                .isInstanceOf(InvalidIdentityZoneConfigurationException.class)
+                .hasMessageContaining("Invalid SAML active key ID: 'null'. Couldn't find any matching keys.");
     }
 
     @MethodSource("parameters")
@@ -322,69 +316,64 @@ class GeneralIdentityZoneConfigurationValidatorTests {
     void validate_no_keys(IdentityZoneValidator.Mode mode) throws Exception {
         initGeneralIdentityZoneConfigurationValidatorTests(mode);
         samlConfig.setKeys(emptyMap());
-        assertNull(samlConfig.getActiveKeyId());
+        assertThat(samlConfig.getActiveKeyId()).isNull();
         validator.validate(zone, mode);
     }
 
     @MethodSource("parameters")
     @ParameterizedTest
     void validate_isser_no_keys(IdentityZoneValidator.Mode mode) {
-        Throwable exception = assertThrows(InvalidIdentityZoneConfigurationException.class, () -> {
-            initGeneralIdentityZoneConfigurationValidatorTests(mode);
-            samlConfig.setKeys(emptyMap());
-            zone.getConfig().setIssuer("http://localhost/new");
-            assertNull(samlConfig.getActiveKeyId());
-            validator.validate(zone, mode);
-        });
-        assertTrue(exception.getMessage().contains("You cannot set issuer value unless you have set your own signing key for this identity zone."));
+        initGeneralIdentityZoneConfigurationValidatorTests(mode);
+        samlConfig.setKeys(emptyMap());
+        zone.getConfig().setIssuer("http://localhost/new");
+        assertThat(samlConfig.getActiveKeyId()).isNull();
+        assertThatThrownBy(() -> validator.validate(zone, mode))
+                .isInstanceOf(InvalidIdentityZoneConfigurationException.class)
+                .hasMessageContaining("You cannot set issuer value unless you have set your own signing key for this identity zone.");
     }
 
     @MethodSource("parameters")
     @ParameterizedTest
     void validate_invalid_corsPolicy_xhrConfiguration_allowedUris(IdentityZoneValidator.Mode mode) {
-        Throwable exception = assertThrows(InvalidIdentityZoneConfigurationException.class, () -> {
-            initGeneralIdentityZoneConfigurationValidatorTests(mode);
-            List<String> invalidAllowedUris = List.of("https://google.com", "https://*.example.com", "^/uaa/userinfo(", "^/uaa/logout.do$");
-            zone.getConfig().getCorsPolicy().getXhrConfiguration().setAllowedUris(invalidAllowedUris);
-            validator.validate(zone, mode);
-        });
-        assertTrue(exception.getMessage().contains("Invalid value in config.corsPolicy.xhrConfiguration.allowedUris: '^/uaa/userinfo('"));
+        initGeneralIdentityZoneConfigurationValidatorTests(mode);
+        List<String> invalidAllowedUris = List.of("https://google.com", "https://*.example.com", "^/uaa/userinfo(", "^/uaa/logout.do$");
+        zone.getConfig().getCorsPolicy().getXhrConfiguration().setAllowedUris(invalidAllowedUris);
+        assertThatThrownBy(() -> validator.validate(zone, mode))
+                .isInstanceOf(InvalidIdentityZoneConfigurationException.class)
+                .hasMessageContaining("Invalid value in config.corsPolicy.xhrConfiguration.allowedUris: '^/uaa/userinfo('");
     }
 
     @MethodSource("parameters")
     @ParameterizedTest
     void validate_invalid_corsPolicy_xhrConfiguration_allowedOrigins(IdentityZoneValidator.Mode mode) {
-        Throwable exception = assertThrows(InvalidIdentityZoneConfigurationException.class, () -> {
-            initGeneralIdentityZoneConfigurationValidatorTests(mode);
-            List<String> invalidOrigins = List.of("https://google.com", "https://*.example.com", "^/uaa/userinfo(", "^/uaa/logout.do$");
-            zone.getConfig().getCorsPolicy().getXhrConfiguration().setAllowedOrigins(invalidOrigins);
-            validator.validate(zone, mode);
-        });
-        assertTrue(exception.getMessage().contains("Invalid value in config.corsPolicy.xhrConfiguration.allowedOrigins: '^/uaa/userinfo('"));
+        initGeneralIdentityZoneConfigurationValidatorTests(mode);
+        List<String> invalidOrigins = List.of("https://google.com", "https://*.example.com", "^/uaa/userinfo(", "^/uaa/logout.do$");
+        zone.getConfig().getCorsPolicy().getXhrConfiguration().setAllowedOrigins(invalidOrigins);
+        assertThatThrownBy(() -> validator.validate(zone, mode))
+                .isInstanceOf(InvalidIdentityZoneConfigurationException.class)
+                .hasMessageContaining("Invalid value in config.corsPolicy.xhrConfiguration.allowedOrigins: '^/uaa/userinfo('");
     }
 
     @MethodSource("parameters")
     @ParameterizedTest
     void validate_invalid_corsPolicy_defaultConfiguration_allowedUris(IdentityZoneValidator.Mode mode) {
-        Throwable exception = assertThrows(InvalidIdentityZoneConfigurationException.class, () -> {
-            initGeneralIdentityZoneConfigurationValidatorTests(mode);
-            List<String> invalidAllowedUris = List.of("https://google.com", "https://*.example.com", "^/uaa/userinfo(", "^/uaa/logout.do$");
-            zone.getConfig().getCorsPolicy().getDefaultConfiguration().setAllowedUris(invalidAllowedUris);
-            validator.validate(zone, mode);
-        });
-        assertTrue(exception.getMessage().contains("Invalid value in config.corsPolicy.defaultConfiguration.allowedUris: '^/uaa/userinfo('"));
+        initGeneralIdentityZoneConfigurationValidatorTests(mode);
+        List<String> invalidAllowedUris = List.of("https://google.com", "https://*.example.com", "^/uaa/userinfo(", "^/uaa/logout.do$");
+        zone.getConfig().getCorsPolicy().getDefaultConfiguration().setAllowedUris(invalidAllowedUris);
+        assertThatThrownBy(() -> validator.validate(zone, mode))
+                .isInstanceOf(InvalidIdentityZoneConfigurationException.class)
+                .hasMessageContaining("Invalid value in config.corsPolicy.defaultConfiguration.allowedUris: '^/uaa/userinfo('");
     }
 
     @MethodSource("parameters")
     @ParameterizedTest
     void validate_invalid_corsPolicy_defaultConfiguration_allowedOrigins(IdentityZoneValidator.Mode mode) {
-        Throwable exception = assertThrows(InvalidIdentityZoneConfigurationException.class, () -> {
-            initGeneralIdentityZoneConfigurationValidatorTests(mode);
-            List<String> invalidOrigins = List.of("https://google.com", "https://*.example.com", "^/uaa/userinfo(", "^/uaa/logout.do$");
-            zone.getConfig().getCorsPolicy().getDefaultConfiguration().setAllowedOrigins(invalidOrigins);
-            validator.validate(zone, mode);
-        });
-        assertTrue(exception.getMessage().contains("Invalid value in config.corsPolicy.defaultConfiguration.allowedOrigins: '^/uaa/userinfo('"));
+        initGeneralIdentityZoneConfigurationValidatorTests(mode);
+        List<String> invalidOrigins = List.of("https://google.com", "https://*.example.com", "^/uaa/userinfo(", "^/uaa/logout.do$");
+        zone.getConfig().getCorsPolicy().getDefaultConfiguration().setAllowedOrigins(invalidOrigins);
+        assertThatThrownBy(() -> validator.validate(zone, mode))
+                .isInstanceOf(InvalidIdentityZoneConfigurationException.class)
+                .hasMessageContaining("Invalid value in config.corsPolicy.defaultConfiguration.allowedOrigins: '^/uaa/userinfo('");
     }
 
     @MethodSource("parameters")
@@ -395,9 +384,9 @@ class GeneralIdentityZoneConfigurationValidatorTests {
 
         IdentityZoneConfiguration identityZoneConfiguration = validator.validate(zone, mode);
         Map<String, TokenPolicy.KeyInformation> keys = identityZoneConfiguration.getTokenPolicy().getKeys();
-        assertEquals(legacyKey, keys.get("id-1").getSigningKey());
-        assertEquals(legacyCertificate, keys.get("id-1").getSigningCert());
-        assertEquals("RS256", keys.get("id-1").getSigningAlg());
+        assertThat(keys.get("id-1").getSigningKey()).isEqualTo(legacyKey);
+        assertThat(keys.get("id-1").getSigningCert()).isEqualTo(legacyCertificate);
+        assertThat(keys.get("id-1").getSigningAlg()).isEqualTo("RS256");
     }
 
     @MethodSource("parameters")
@@ -408,9 +397,9 @@ class GeneralIdentityZoneConfigurationValidatorTests {
 
         IdentityZoneConfiguration identityZoneConfiguration = validator.validate(zone, mode);
         Map<String, TokenPolicy.KeyInformation> keys = identityZoneConfiguration.getTokenPolicy().getKeys();
-        assertEquals("secretkey", keys.get("id-1").getSigningKey());
-        assertNull(keys.get("id-1").getSigningCert());
-        assertEquals("HS512", keys.get("id-1").getSigningAlg());
+        assertThat(keys.get("id-1").getSigningKey()).isEqualTo("secretkey");
+        assertThat(keys.get("id-1").getSigningCert()).isNull();
+        assertThat(keys.get("id-1").getSigningAlg()).isEqualTo("HS512");
     }
 
     private void setupTokenPolicyWithCertificate(String privateKey, String certificate, String alg) {

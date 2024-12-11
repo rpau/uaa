@@ -31,6 +31,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ContextConfiguration;
@@ -45,15 +46,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.cloudfoundry.identity.uaa.codestore.ExpiringCodeType.REGISTRATION;
-import static org.cloudfoundry.identity.uaa.util.AssertThrowsWithMessage.assertThrowsWithMessageThat;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.not;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.anyInt;
 import static org.mockito.Mockito.anyString;
@@ -62,7 +58,6 @@ import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 @ExtendWith(SpringExtension.class)
 @ExtendWith(PollutionPreventionExtension.class)
@@ -149,8 +144,8 @@ class EmailAccountCreationServiceTests {
 
         String emailBody = captorEmailBody("Activate your account");
 
-        assertThat(emailBody, containsString("an account"));
-        assertThat(emailBody, containsString("<a href=\"http://uaa.example.com/verify_user?code=the_secret_code\">Activate your account</a>"));
+        assertThat(emailBody).contains("an account")
+                .contains("<a href=\"http://uaa.example.com/verify_user?code=the_secret_code\">Activate your account</a>");
         verify(mockIdentityZoneManager).getCurrentIdentityZone();
     }
 
@@ -179,10 +174,10 @@ class EmailAccountCreationServiceTests {
         emailAccountCreationService.beginActivation("user@example.com", "password", "login", redirectUri);
 
         String emailBody = captorEmailBody("Activate your account");
-        assertThat(emailBody, containsString("A request has been made to activate an account for:"));
-        assertThat(emailBody, containsString("<a href=\"http://test.uaa.example.com/verify_user?code=the_secret_code\">Activate your account</a>"));
-        assertThat(emailBody, containsString("Thank you,<br />\n    " + zoneName));
-        assertThat(emailBody, not(containsString("Cloud Foundry")));
+        assertThat(emailBody).contains("A request has been made to activate an account for:")
+                .contains("<a href=\"http://test.uaa.example.com/verify_user?code=the_secret_code\">Activate your account</a>")
+                .contains("Thank you,<br />\n    " + zoneName)
+                .doesNotContain("Cloud Foundry");
     }
 
     @Test
@@ -207,8 +202,7 @@ class EmailAccountCreationServiceTests {
         ).thenReturn(Collections.singletonList(user));
         when(mockScimUserProvisioning.createUser(any(ScimUser.class), anyString(), eq(currentIdentityZoneId))).thenThrow(new ScimResourceAlreadyExistsException("duplicate"));
 
-        assertThrows(UaaException.class,
-                () -> emailAccountCreationService.beginActivation("user@example.com", "password", "login", null));
+        assertThatExceptionOfType(UaaException.class).isThrownBy(() -> emailAccountCreationService.beginActivation("user@example.com", "password", "login", null));
     }
 
     @Test
@@ -260,10 +254,10 @@ class EmailAccountCreationServiceTests {
 
         AccountCreationService.AccountCreationResponse accountCreation = emailAccountCreationService.completeActivation("the_secret_code");
 
-        assertEquals("user@example.com", accountCreation.getUsername());
-        assertEquals("newly-created-user-id", accountCreation.getUserId());
+        assertThat(accountCreation.getUsername()).isEqualTo("user@example.com");
+        assertThat(accountCreation.getUserId()).isEqualTo("newly-created-user-id");
 
-        assertNotNull(accountCreation.getUserId());
+        assertThat(accountCreation.getUserId()).isNotNull();
     }
 
     @Test
@@ -279,7 +273,7 @@ class EmailAccountCreationServiceTests {
         when(client.getRegisteredRedirectUri()).thenReturn(Collections.singleton("http://redirect.uri/*"));
 
         AccountCreationService.AccountCreationResponse accountCreation = emailAccountCreationService.completeActivation("the_secret_code");
-        assertThat(accountCreation.getRedirectLocation(), equalTo("http://redirect.uri/"));
+        assertThat(accountCreation.getRedirectLocation()).isEqualTo("http://redirect.uri/");
     }
 
     @Test
@@ -292,7 +286,7 @@ class EmailAccountCreationServiceTests {
         doThrow(new NoSuchClientException("Client not found")).when(mockClientDetailsService).loadClientByClientId(anyString(), anyString());
 
         AccountCreationService.AccountCreationResponse accountCreation = emailAccountCreationService.completeActivation("the_secret_code");
-        assertEquals("home", accountCreation.getRedirectLocation());
+        assertThat(accountCreation.getRedirectLocation()).isEqualTo("home");
     }
 
     @Test
@@ -306,9 +300,9 @@ class EmailAccountCreationServiceTests {
 
         AccountCreationService.AccountCreationResponse accountCreation = emailAccountCreationService.completeActivation("the_secret_code");
 
-        assertEquals("user@example.com", accountCreation.getUsername());
-        assertEquals("newly-created-user-id", accountCreation.getUserId());
-        assertEquals("home", accountCreation.getRedirectLocation());
+        assertThat(accountCreation.getUsername()).isEqualTo("user@example.com");
+        assertThat(accountCreation.getUserId()).isEqualTo("newly-created-user-id");
+        assertThat(accountCreation.getRedirectLocation()).isEqualTo("home");
     }
 
     @Test
@@ -322,25 +316,23 @@ class EmailAccountCreationServiceTests {
 
         AccountCreationService.AccountCreationResponse accountCreation = emailAccountCreationService.completeActivation("the_secret_code");
 
-        assertEquals("http://example.com/redirect", accountCreation.getRedirectLocation());
+        assertThat(accountCreation.getRedirectLocation()).isEqualTo("http://example.com/redirect");
     }
 
     @Test
     void completeActivationWithExpiredCode() {
         when(mockCodeStore.retrieveCode(eq("expiring_code"), anyString())).thenReturn(null);
 
-        HttpClientErrorException httpClientErrorException = assertThrows(HttpClientErrorException.class,
-                () -> emailAccountCreationService.completeActivation("expiring_code"));
-
-        assertThat(httpClientErrorException.getStatusCode(), equalTo(BAD_REQUEST));
+        assertThatThrownBy(() -> emailAccountCreationService.completeActivation("expiring_code"))
+                .isInstanceOf(HttpClientErrorException.class)
+                .satisfies(e -> assertThat(((HttpClientErrorException) e).getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST));
     }
 
     @Test
     void beginActivation_throwsException_ifPasswordViolatesPolicy() {
         doThrow(new InvalidPasswordException("Oh hell no")).when(mockPasswordValidator).validate(anyString());
 
-        assertThrows(InvalidPasswordException.class,
-                () -> emailAccountCreationService.beginActivation("user@example.com", "some password", null, null));
+        assertThatExceptionOfType(InvalidPasswordException.class).isThrownBy(() -> emailAccountCreationService.beginActivation("user@example.com", "some password", null, null));
 
         verify(mockPasswordValidator).validate("some password");
     }
@@ -357,8 +349,9 @@ class EmailAccountCreationServiceTests {
 
         when(mockCodeStore.retrieveCode(eq("the_secret_code"), anyString())).thenReturn(code);
 
-        assertThrowsWithMessageThat(HttpClientErrorException.class,
-                () -> emailAccountCreationService.completeActivation("the_secret_code"), containsString("400 BAD_REQUEST"));
+        assertThatThrownBy(() -> emailAccountCreationService.completeActivation("the_secret_code"))
+                .isInstanceOf(HttpClientErrorException.class)
+                .hasMessageContaining("400 BAD_REQUEST");
     }
 
     private String setUpForSuccess(String redirectUri) {
@@ -429,8 +422,8 @@ class EmailAccountCreationServiceTests {
 
         String emailBody = captorEmailBody("Activate your " + companyName + " account");
 
-        assertThat(emailBody, containsString(companyName + " account"));
-        assertThat(emailBody, containsString("<a href=\"http://uaa.example.com/verify_user?code=the_secret_code\">Activate your account</a>"));
+        assertThat(emailBody).contains(companyName + " account");
+        assertThat(emailBody).contains("<a href=\"http://uaa.example.com/verify_user?code=the_secret_code\">Activate your account</a>");
     }
 
 }

@@ -33,7 +33,7 @@ class SamlRelyingPartyRegistrationRepositoryConfigTest {
     SamlIdentityProviderConfigurator samlIdentityProviderConfigurator;
 
     @BeforeAll
-    public static void beforeAll() {
+    static void beforeAll() {
         Security.addProvider(new BouncyCastleFipsProvider());
         samlConfigProps = Saml2TestUtils.createTestSamlProperties();
     }

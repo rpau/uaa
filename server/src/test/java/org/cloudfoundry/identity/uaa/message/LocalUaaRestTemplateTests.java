@@ -26,9 +26,8 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.HashSet;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_CLIENT_CREDENTIALS;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -73,7 +72,7 @@ class LocalUaaRestTemplateTests {
 
         OAuth2AccessToken actualResult = localUaaRestTemplate.acquireAccessToken(mockOAuth2ClientContext);
 
-        assertThat(actualResult, is(mockOAuth2AccessToken));
+        assertThat(actualResult).isEqualTo(mockOAuth2AccessToken);
 
         ImmutableMap<String, String> requestParameters = ImmutableMap.<String, String>builder()
                 .put(OAuth2Utils.CLIENT_ID, "login")

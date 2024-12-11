@@ -23,10 +23,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.not;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -48,16 +48,16 @@ class AccessControllerTests {
     }
 
     @Test
-    void testSunnyDay() {
+    void sunnyDay() {
         Authentication auth = UaaAuthenticationTestFactory.getAuthentication("foo@bar.com", "Foo Bar", "foo@bar.com");
         String result = controller.confirm(new ModelMap(), new MockHttpServletRequest(), auth,
                 new SimpleSessionStatus());
-        assertEquals("access_confirmation", result);
+        assertThat(result).isEqualTo("access_confirmation");
     }
 
     @SuppressWarnings("unchecked")
     @Test
-    void testSchemePreserved() {
+    void schemePreserved() {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setScheme("https");
         request.addHeader("Host", "foo");
@@ -66,12 +66,12 @@ class AccessControllerTests {
         Authentication auth = UaaAuthenticationTestFactory.getAuthentication("foo@bar.com", "Foo Bar", "foo@bar.com");
         controller.confirm(model, request, auth, new SimpleSessionStatus());
         Map<String, Object> options = (Map<String, Object>) ((Map<String, Object>) model.get("options")).get("confirm");
-        assertEquals("https://foo/oauth/authorize", options.get("location"));
-        assertEquals("/oauth/authorize", options.get("path"));
+        assertThat(options.get("location")).isEqualTo("https://foo/oauth/authorize");
+        assertThat(options.get("path")).isEqualTo("/oauth/authorize");
     }
 
     @Test
-    void testClientDisplayName() {
+    void clientDisplayName() {
         client.addAdditionalInformation(ClientConstants.CLIENT_NAME, "The Client Name");
 
 
@@ -82,7 +82,7 @@ class AccessControllerTests {
 
         controller.confirm(model, new MockHttpServletRequest(), auth, new SimpleSessionStatus());
 
-        assertEquals("The Client Name", model.get("client_display_name"));
+        assertThat(model.get("client_display_name")).isEqualTo("The Client Name");
     }
 
     @Test

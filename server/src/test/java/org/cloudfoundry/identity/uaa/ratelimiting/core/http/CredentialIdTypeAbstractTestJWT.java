@@ -1,16 +1,16 @@
 package org.cloudfoundry.identity.uaa.ratelimiting.core.http;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Function;
-
 import com.nimbusds.jose.util.Base64URL;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.ratelimiting.core.http.CredentialIdTypeJWT.JWTparts;
 import static org.cloudfoundry.identity.uaa.ratelimiting.core.http.CredentialIdTypeJWT.decodeSection;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
 public abstract class CredentialIdTypeAbstractTestJWT<CitJWT extends CredentialIdTypeAbstractJWT> {
@@ -47,7 +47,7 @@ public abstract class CredentialIdTypeAbstractTestJWT<CitJWT extends CredentialI
     protected final CitJWT credentialIdType;
 
     public CredentialIdTypeAbstractTestJWT(String emailFromClaims,
-            Function<AuthorizationCredentialIdExtractorErrorLogger, CitJWT> function) {
+                                           Function<AuthorizationCredentialIdExtractorErrorLogger, CitJWT> function) {
         this.emailFromClaims = emailFromClaims;
         credentialIdType = function.apply(exceptionCollector::add);
     }
@@ -59,34 +59,34 @@ public abstract class CredentialIdTypeAbstractTestJWT<CitJWT extends CredentialI
         String signature = decodeSection(b64section_SIGNATURE, "signature");
         String fourth = decodeSection(b64section_4th_SECTION, "fourth");
 
-        assertEquals(JSON_HEADER, header);
-        assertEquals(JSON_CLAIMS, claims);
-        assertEquals(RAW_SIGNATURE, signature);
-        assertEquals(RAW_4th_SECTION, fourth);
+        assertThat(header).isEqualTo(JSON_HEADER);
+        assertThat(claims).isEqualTo(JSON_CLAIMS);
+        assertThat(signature).isEqualTo(RAW_SIGNATURE);
+        assertThat(fourth).isEqualTo(RAW_4th_SECTION);
     }
 
     @Test
     public void checkJWTparts() {
-        assertNull(JWTparts.from((RequestInfo) null));
-        assertNull(JWTparts.from((String) null));
-        assertNull(JWTparts.from("!" + AUTH_HEADER_VALUE_PREFIX_UC + JWT), "Not 'Bearer '");
-        assertNull(JWTparts.from(AUTH_HEADER_VALUE_PREFIX_UC + b64section_HEADER), "Only 1 section");
-        assertNull(JWTparts.from(AUTH_HEADER_VALUE_PREFIX_UC + JWT2), "Only 2 sections");
-        assertNull(JWTparts.from(AUTH_HEADER_VALUE_PREFIX_UC + JWT2 + " ." + b64section_SIGNATURE), "space next to dot");
+        assertThat(JWTparts.from((RequestInfo) null)).isNull();
+        assertThat(JWTparts.from((String) null)).isNull();
+        assertThat(JWTparts.from("!" + AUTH_HEADER_VALUE_PREFIX_UC + JWT)).as("Not 'Bearer '").isNull();
+        assertThat(JWTparts.from(AUTH_HEADER_VALUE_PREFIX_UC + b64section_HEADER)).as("Only 1 section").isNull();
+        assertThat(JWTparts.from(AUTH_HEADER_VALUE_PREFIX_UC + JWT2)).as("Only 2 sections").isNull();
+        assertThat(JWTparts.from(AUTH_HEADER_VALUE_PREFIX_UC + JWT2 + " ." + b64section_SIGNATURE)).as("space next to dot").isNull();
         checkJWTparts(AUTH_HEADER_VALUE_PREFIX_UC);
         checkJWTparts(AUTH_HEADER_VALUE_PREFIX_LC);
     }
 
     private void checkJWTparts(String authHeaderValuePrefix) {
         JWTparts parts = JWTparts.from(authHeaderValuePrefix + JWT);
-        assertNotNull(parts, authHeaderValuePrefix + "JWTparts");
-        assertEquals(JWT, parts.token, authHeaderValuePrefix + "JWTparts.token");
+        assertThat(parts).as(authHeaderValuePrefix + "JWTparts").isNotNull();
+        assertThat(parts.token).as(authHeaderValuePrefix + "JWTparts.token").isEqualTo(JWT);
         String[] sections = parts.parts;
-        assertNotNull(sections, "JWTparts.parts.sections");
-        assertEquals(3, sections.length, authHeaderValuePrefix + "JWTparts.sections");
-        assertEquals(b64section_HEADER, sections[0], authHeaderValuePrefix + "JWTparts.header");
-        assertEquals(b64section_CLAIMS, sections[1], authHeaderValuePrefix + "JWTpart.claims");
-        assertEquals(b64section_SIGNATURE, sections[2], authHeaderValuePrefix + "JWTpart.signature");
+        assertThat(sections).as("JWTparts.parts.sections").isNotNull();
+        assertThat(sections.length).as(authHeaderValuePrefix + "JWTparts.sections").isEqualTo(3);
+        assertThat(sections[0]).as(authHeaderValuePrefix + "JWTparts.header").isEqualTo(b64section_HEADER);
+        assertThat(sections[1]).as(authHeaderValuePrefix + "JWTpart.claims").isEqualTo(b64section_CLAIMS);
+        assertThat(sections[2]).as(authHeaderValuePrefix + "JWTpart.signature").isEqualTo(b64section_SIGNATURE);
     }
 
     @Test
@@ -102,17 +102,17 @@ public abstract class CredentialIdTypeAbstractTestJWT<CitJWT extends CredentialI
                         "5NjMiLCJpYXQiOjE2NTI5OTA1OTgsImV4cCI6MTY1MzAzMzc5OCwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4MDgwL3VhYS9vYXV0aC90b2tlbiIsInppZCI6InVhYSIsImF1ZCI6WyJjZiIsInVhYSJdfQ" +
                         ".Z6v-yGQ9BLS67H8KBnZ31sAHCXFs2O5A7zgNrNErPiU");
         String id = factory.mapAuthorizationToCredentialsID(requestInfo);
-        assertEquals("|" + "marissa@test.org" + "|", id, "Id mis-match from sample");
+        assertThat(id).as("Id mis-match from sample").isEqualTo("|" + "marissa@test.org" + "|");
 
         when(requestInfo.getAuthorizationHeader()).thenReturn(AUTH_HEADER_VALUE_PREFIX_LC + JWT4);
         id = factory.mapAuthorizationToCredentialsID(requestInfo);
-        assertEquals("|" + EMAIL_DEVIN + "|", id, "Id mis-match from default 3 dot JWT");
+        assertThat(id).as("Id mis-match from default 3 dot JWT").isEqualTo("|" + EMAIL_DEVIN + "|");
 
         for (String email : SAMPLE_EMAILS) {
             String jwt = "bad." + encodeSection(SIMPLE_CLAIMS_EMAIL_PREFIX + email + SIMPLE_CLAIMS_EMAIL_SUFFIX) + ".bad-bad";
             when(requestInfo.getAuthorizationHeader()).thenReturn(AUTH_HEADER_VALUE_PREFIX_UC + jwt);
             id = factory.mapAuthorizationToCredentialsID(requestInfo);
-            assertEquals("|" + email + "|", id);
+            assertThat(id).isEqualTo("|" + email + "|");
             System.out.println(email + " -> " + jwt);
         }
     }
@@ -120,10 +120,10 @@ public abstract class CredentialIdTypeAbstractTestJWT<CitJWT extends CredentialI
     protected void checkFlavor(String postKeyConfig, Class<?> credentialIdExtractorClass, String extractedCredential) {
         AuthorizationCredentialIdExtractor factory = credentialIdType.factory(postKeyConfig);
 
-        assertSame(credentialIdExtractorClass, factory.getClass());
+        assertThat(factory.getClass()).isSameAs(credentialIdExtractorClass);
         when(requestInfo.getAuthorizationHeader()).thenReturn(AUTH_HEADER_VALUE_PREFIX_UC + JWT);
         String id = factory.mapAuthorizationToCredentialsID(requestInfo);
-        assertEquals(extractedCredential, id, "Id mis-match from: " + postKeyConfig);
+        assertThat(id).as("Id mis-match from: " + postKeyConfig).isEqualTo(extractedCredential);
     }
 
     // Pulled out so could Suppress "deprecation" Warnings

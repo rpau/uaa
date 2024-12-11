@@ -13,10 +13,19 @@ import javax.management.NotificationBroadcasterSupport;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.AdditionalMatchers.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.AdditionalMatchers.and;
+import static org.mockito.AdditionalMatchers.geq;
+import static org.mockito.AdditionalMatchers.gt;
+import static org.mockito.AdditionalMatchers.leq;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyLong;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.when;
 
 class UaaMetricsEmitterTest {
 
@@ -134,9 +143,9 @@ class UaaMetricsEmitterTest {
     @Test
     void getMetricDelta() {
         String name = "metric.name";
-        assertEquals(5L, uaaMetricsEmitter.getMetricDelta(name, 5L));
-        assertEquals(0L, uaaMetricsEmitter.getMetricDelta(name, 5L));
-        assertEquals(3L, uaaMetricsEmitter.getMetricDelta(name, 8L));
+        assertThat(uaaMetricsEmitter.getMetricDelta(name, 5L)).isEqualTo(5L);
+        assertThat(uaaMetricsEmitter.getMetricDelta(name, 5L)).isEqualTo(0L);
+        assertThat(uaaMetricsEmitter.getMetricDelta(name, 8L)).isEqualTo(3L);
     }
 
     @Test

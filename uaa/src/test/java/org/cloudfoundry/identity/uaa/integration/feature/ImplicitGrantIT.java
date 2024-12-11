@@ -18,9 +18,7 @@ import org.cloudfoundry.identity.uaa.oauth.client.test.TestAccounts;
 import org.cloudfoundry.identity.uaa.oauth.jwt.Jwt;
 import org.cloudfoundry.identity.uaa.oauth.jwt.JwtHelper;
 import org.cloudfoundry.identity.uaa.util.JsonUtils;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -46,12 +44,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.isEmptyOrNullString;
-import static org.hamcrest.Matchers.not;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringJUnitConfig(classes = DefaultIntegrationTestConfig.class)
 public class ImplicitGrantIT {
@@ -80,7 +73,7 @@ public class ImplicitGrantIT {
 
     @BeforeEach
     @AfterEach
-    public void logout_and_clear_cookies() {
+    void logout_and_clear_cookies() {
         try {
             webDriver.get(baseUrl + "/logout.do");
         } catch (org.openqa.selenium.TimeoutException x) {
@@ -92,7 +85,7 @@ public class ImplicitGrantIT {
     }
 
     @Test
-    public void testDefaultScopes() {
+    void defaultScopes() {
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 
@@ -109,46 +102,38 @@ public class ImplicitGrantIT {
                 new HttpEntity<>(postBody, headers),
                 Void.class);
 
-        Assertions.assertEquals(HttpStatus.FOUND, responseEntity.getStatusCode());
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.FOUND);
 
         UriComponents locationComponents = UriComponentsBuilder.fromUri(responseEntity.getHeaders().getLocation()).build();
-        Assertions.assertEquals("localhost", locationComponents.getHost());
-        Assertions.assertEquals("/redirect/cf", locationComponents.getPath());
+        assertThat(locationComponents.getHost()).isEqualTo("localhost");
+        assertThat(locationComponents.getPath()).isEqualTo("/redirect/cf");
 
         MultiValueMap<String, String> params = parseFragmentParams(locationComponents);
 
-        assertThat(params.get("jti"), not(empty()));
-        Assertions.assertEquals("bearer", params.getFirst("token_type"));
-        assertThat(Integer.parseInt(params.getFirst("expires_in")), Matchers.greaterThan(40000));
+        assertThat(params.get("jti")).isNotEmpty();
+        assertThat(params.getFirst("token_type")).isEqualTo("bearer");
+        assertThat(Integer.parseInt(params.getFirst("expires_in"))).isGreaterThan(40000);
 
         String[] scopes = UriUtils.decode(params.getFirst("scope"), "UTF-8").split(" ");
-        assertThat(Arrays.asList(scopes), containsInAnyOrder(
-                "scim.userids",
-                "password.write",
-                "cloud_controller.write",
-                "openid",
-                "cloud_controller.read",
-                "uaa.user"
-        ));
+        assertThat(Arrays.asList(scopes)).containsExactlyInAnyOrder("scim.userids", "password.write", "cloud_controller.write", "openid", "cloud_controller.read", "uaa.user");
 
         Jwt accessToken = JwtHelper.decode(params.getFirst("access_token"));
 
         Map<String, Object> claims = JsonUtils.readValue(accessToken.getClaims(), new TypeReference<Map<String, Object>>() {
         });
 
-        assertThat(claims.get("jti"), is(params.getFirst("jti")));
-        assertThat(claims.get("client_id"), is("cf"));
-        assertThat(claims.get("cid"), is("cf"));
-        assertThat(claims.get("user_name"), is(testAccounts.getUserName()));
+        assertThat(claims.get("jti")).isEqualTo(params.getFirst("jti"));
+        assertThat(claims.get("client_id")).isEqualTo("cf");
+        assertThat(claims.get("cid")).isEqualTo("cf");
+        assertThat(claims.get("user_name")).isEqualTo(testAccounts.getUserName());
 
-        assertThat(((List<String>) claims.get("scope")), containsInAnyOrder(scopes));
+        assertThat(((List<String>) claims.get("scope"))).containsExactlyInAnyOrder(scopes);
 
-        assertThat(((List<String>) claims.get("aud")), containsInAnyOrder(
-                "scim", "openid", "cloud_controller", "password", "cf", "uaa"));
+        assertThat(((List<String>) claims.get("aud"))).containsExactlyInAnyOrder("scim", "openid", "cloud_controller", "password", "cf", "uaa");
     }
 
     @Test
-    public void testInvalidScopes() {
+    void invalidScopes() {
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 
@@ -166,19 +151,19 @@ public class ImplicitGrantIT {
                 new HttpEntity<>(postBody, headers),
                 Void.class);
 
-        Assertions.assertEquals(HttpStatus.FOUND, responseEntity.getStatusCode());
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.FOUND);
 
         System.out.println("responseEntity.getHeaders().getLocation() = " + responseEntity.getHeaders().getLocation());
 
         UriComponents locationComponents = UriComponentsBuilder.fromUri(responseEntity.getHeaders().getLocation()).build();
-        Assertions.assertEquals("localhost", locationComponents.getHost());
-        Assertions.assertEquals("/redirect/cf", locationComponents.getPath());
+        assertThat(locationComponents.getHost()).isEqualTo("localhost");
+        assertThat(locationComponents.getPath()).isEqualTo("/redirect/cf");
 
         MultiValueMap<String, String> params = parseFragmentParams(locationComponents);
 
-        assertThat(params.getFirst("error"), is("invalid_scope"));
-        assertThat(params.getFirst("access_token"), isEmptyOrNullString());
-        assertThat(params.getFirst("credentials"), isEmptyOrNullString());
+        assertThat(params.getFirst("error")).isEqualTo("invalid_scope");
+        assertThat(params.getFirst("access_token")).isNullOrEmpty();
+        assertThat(params.getFirst("credentials")).isNullOrEmpty();
     }
 
     private MultiValueMap<String, String> parseFragmentParams(UriComponents locationComponents) {

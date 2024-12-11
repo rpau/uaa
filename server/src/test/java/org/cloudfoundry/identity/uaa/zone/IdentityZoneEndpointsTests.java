@@ -23,13 +23,8 @@ import org.springframework.validation.BindingResult;
 
 import java.util.List;
 
-import static org.cloudfoundry.identity.uaa.util.AssertThrowsWithMessage.assertThrowsWithMessageThat;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.is;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.same;
@@ -87,14 +82,10 @@ class IdentityZoneEndpointsTests {
         ArgumentCaptor<ScimGroup> captor = ArgumentCaptor.forClass(ScimGroup.class);
         List<String> defaultGroups = identityZone.getConfig().getUserConfig().getDefaultGroups();
         verify(mockScimGroupProvisioning, times(defaultGroups.size())).createOrGet(captor.capture(), eq(identityZone.getId()));
-        assertEquals(defaultGroups.size(), captor.getAllValues().size());
-        assertThat(defaultGroups,
-                containsInAnyOrder(
-                        captor.getAllValues().stream().map(
-                                ScimGroup::getDisplayName
-                        ).toArray(String[]::new)
-                )
-        );
+        assertThat(captor.getAllValues()).hasSameSizeAs(defaultGroups);
+        assertThat(defaultGroups).containsExactlyInAnyOrder(captor.getAllValues().stream().map(
+                ScimGroup::getDisplayName
+        ).toArray(String[]::new));
     }
 
     @Test
@@ -126,11 +117,11 @@ class IdentityZoneEndpointsTests {
 
         endpoints.removeKeys(identityZone);
 
-        assertNull(identityZone.getConfig().getSamlConfig().getPrivateKey());
-        assertNull(identityZone.getConfig().getSamlConfig().getPrivateKeyPassword());
+        assertThat(identityZone.getConfig().getSamlConfig().getPrivateKey()).isNull();
+        assertThat(identityZone.getConfig().getSamlConfig().getPrivateKeyPassword()).isNull();
         identityZone.getConfig().getSamlConfig().getKeys().forEach((key, value) -> {
-            assertNull(value.getKey());
-            assertNull(value.getPassphrase());
+            assertThat(value.getKey()).isNull();
+            assertThat(value.getPassphrase()).isNull();
         });
     }
 
@@ -141,11 +132,11 @@ class IdentityZoneEndpointsTests {
         endpoints.restoreSecretProperties(original, identityZone);
 
 
-        assertNotNull(identityZone.getConfig().getSamlConfig().getPrivateKey());
-        assertNotNull(identityZone.getConfig().getSamlConfig().getPrivateKeyPassword());
+        assertThat(identityZone.getConfig().getSamlConfig().getPrivateKey()).isNotNull();
+        assertThat(identityZone.getConfig().getSamlConfig().getPrivateKeyPassword()).isNotNull();
         identityZone.getConfig().getSamlConfig().getKeys().forEach((key, value) -> {
-            assertNotNull(value.getKey());
-            assertNotNull(value.getPassphrase());
+            assertThat(value.getKey()).isNotNull();
+            assertThat(value.getPassphrase()).isNotNull();
         });
 
     }
@@ -180,8 +171,9 @@ class IdentityZoneEndpointsTests {
                 .map(e -> new ScimGroup(e, e, identityZone.getId()))
                 .toList();
         when(mockScimGroupProvisioning.retrieveAll(identityZone.getId())).thenReturn(existingScimGroups);
-        assertThrowsWithMessageThat(UaaException.class, () -> endpoints.updateIdentityZone(identityZone, identityZone.getId()),
-                is("The identity zone user configuration contains not-allowed groups."));
+        assertThatThrownBy(() -> endpoints.updateIdentityZone(identityZone, identityZone.getId()))
+                .isInstanceOf(UaaException.class)
+                .hasMessage("The identity zone user configuration contains not-allowed groups.");
     }
 
     @Test
@@ -197,8 +189,8 @@ class IdentityZoneEndpointsTests {
         when(mockIdentityProviderProvisioning.idpWithAliasExistsInZone(idzId)).thenReturn(true);
 
         final ResponseEntity<IdentityZone> response = endpoints.deleteIdentityZone(idzId);
-        assertNotNull(response);
-        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
+        assertThat(response).isNotNull();
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
     }
 
     @Test
@@ -214,29 +206,29 @@ class IdentityZoneEndpointsTests {
         when(mockIdentityProviderProvisioning.idpWithAliasExistsInZone(idzId)).thenReturn(false);
 
         final ResponseEntity<IdentityZone> response = endpoints.deleteIdentityZone(idzId);
-        assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertThat(response).isNotNull();
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 
         final ArgumentCaptor<EntityDeletedEvent<IdentityZone>> eventArgument = ArgumentCaptor.forClass(EntityDeletedEvent.class);
         verify(mockApplicationEventPublisher).publishEvent(eventArgument.capture());
         final var capturedEvent = eventArgument.getValue();
-        assertEquals(idz, capturedEvent.getDeleted());
+        assertThat(capturedEvent.getDeleted()).isEqualTo(idz);
     }
 
     private static IdentityZone createZone() {
         IdentityZone zone = MultitenancyFixture.identityZone("id", "subdomain");
         IdentityZoneConfiguration config = zone.getConfig();
-        assertNotNull(config);
+        assertThat(config).isNotNull();
         zone.getConfig().getSamlConfig().setPrivateKey("private");
         zone.getConfig().getSamlConfig().setPrivateKeyPassword("passphrase");
         zone.getConfig().getSamlConfig().setCertificate("certificate");
         zone.getConfig().getSamlConfig().addAndActivateKey("active", new SamlKey("private1", "passphrase1", "certificate1"));
 
-        assertNotNull(zone.getConfig().getSamlConfig().getPrivateKey());
-        assertNotNull(zone.getConfig().getSamlConfig().getPrivateKeyPassword());
+        assertThat(zone.getConfig().getSamlConfig().getPrivateKey()).isNotNull();
+        assertThat(zone.getConfig().getSamlConfig().getPrivateKeyPassword()).isNotNull();
         zone.getConfig().getSamlConfig().getKeys().forEach((key, value) -> {
-            assertNotNull(value.getKey());
-            assertNotNull(value.getPassphrase());
+            assertThat(value.getKey()).isNotNull();
+            assertThat(value.getPassphrase()).isNotNull();
         });
         return zone;
     }

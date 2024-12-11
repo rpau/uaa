@@ -91,7 +91,7 @@ class PasscodeMockMvcTests {
     }
 
     @Test
-    void testLoginUsingPasscodeWithSamlToken() throws Exception {
+    void loginUsingPasscodeWithSamlToken() throws Exception {
         UaaAuthenticationDetails details = new UaaAuthenticationDetails(new MockHttpServletRequest());
         UaaAuthentication uaaAuthentication = new UaaAuthentication(marissa, new ArrayList<>(), details);
         final MockSecurityContext mockSecurityContext = new MockSecurityContext(uaaAuthentication);
@@ -148,7 +148,7 @@ class PasscodeMockMvcTests {
     }
 
     @Test
-    void testLoginUsingPasscodeWithUaaToken() throws Exception {
+    void loginUsingPasscodeWithUaaToken() throws Exception {
         UaaAuthenticationDetails details = new UaaAuthenticationDetails(new MockHttpServletRequest());
         UaaAuthentication uaaAuthentication = new UaaAuthentication(marissa, new ArrayList<>(), details);
         final MockSecurityContext mockSecurityContext = new MockSecurityContext(uaaAuthentication);
@@ -206,7 +206,7 @@ class PasscodeMockMvcTests {
     }
 
     @Test
-    void testLoginUsingPasscodeWithUnknownToken() throws Exception {
+    void loginUsingPasscodeWithUnknownToken() throws Exception {
         RemoteUserAuthentication userAuthentication = new RemoteUserAuthentication(
                 marissa.getId(),
                 marissa.getName(),
@@ -232,7 +232,7 @@ class PasscodeMockMvcTests {
     }
 
     @Test
-    void testLoginUsingOldPasscode() throws Exception {
+    void loginUsingOldPasscode() throws Exception {
         UaaAuthenticationDetails details = new UaaAuthenticationDetails(new MockHttpServletRequest());
         UaaAuthentication uaaAuthentication = new UaaAuthentication(marissa, new ArrayList<>(), details);
         final MockSecurityContext mockSecurityContext = new MockSecurityContext(uaaAuthentication);
@@ -315,7 +315,7 @@ class PasscodeMockMvcTests {
     }
 
     @Test
-    void testPasscodeReturnSpecialCharacters() {
+    void passcodeReturnSpecialCharacters() {
         // NOTE: This test is flaky but passes on retry
         UaaAuthenticationDetails details = new UaaAuthenticationDetails(new MockHttpServletRequest());
         UaaAuthentication uaaAuthentication = new UaaAuthentication(marissa, new ArrayList<>(), details);

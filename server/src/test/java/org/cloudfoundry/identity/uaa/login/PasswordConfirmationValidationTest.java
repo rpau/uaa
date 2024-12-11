@@ -14,26 +14,27 @@
 package org.cloudfoundry.identity.uaa.login;
 
 import org.cloudfoundry.identity.uaa.account.PasswordConfirmationValidation;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-public class PasswordConfirmationValidationTest {
+import static org.assertj.core.api.Assertions.assertThat;
+
+class PasswordConfirmationValidationTest {
 
     @Test
-    public void testValidWithMatchingPasswords() {
+    void validWithMatchingPasswords() {
         PasswordConfirmationValidation validation = new PasswordConfirmationValidation("secret", "secret");
-        Assertions.assertTrue(validation.valid());
+        assertThat(validation.valid()).isTrue();
     }
 
     @Test
-    public void testInvalidWithMismatchedPasswords() {
+    void invalidWithMismatchedPasswords() {
         PasswordConfirmationValidation validation = new PasswordConfirmationValidation("secret", "mecret");
-        Assertions.assertFalse(validation.valid());
+        assertThat(validation.valid()).isFalse();
     }
 
     @Test
-    public void testInvalidWithEmptyPassword() {
+    void invalidWithEmptyPassword() {
         PasswordConfirmationValidation validation = new PasswordConfirmationValidation("", "");
-        Assertions.assertFalse(validation.valid());
+        assertThat(validation.valid()).isFalse();
     }
 }

@@ -32,20 +32,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.cloudfoundry.identity.uaa.constants.OriginKeys.LDAP;
 import static org.cloudfoundry.identity.uaa.provider.LdapIdentityProviderDefinition.LDAP_PROPERTY_TYPES;
 import static org.cloudfoundry.identity.uaa.provider.LdapIdentityProviderDefinition.LDAP_SSL_TLS;
 import static org.cloudfoundry.identity.uaa.provider.LdapIdentityProviderDefinition.LDAP_TLS_EXTERNAL;
 import static org.cloudfoundry.identity.uaa.provider.LdapIdentityProviderDefinition.LDAP_TLS_NONE;
 import static org.cloudfoundry.identity.uaa.provider.LdapIdentityProviderDefinition.LDAP_TLS_SIMPLE;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 class LdapIdentityProviderDefinitionTest {
 
@@ -57,43 +52,43 @@ class LdapIdentityProviderDefinitionTest {
     }
 
     @Test
-    void test_property_types() {
-        assertEquals(String.class, LDAP_PROPERTY_TYPES.get(LDAP_SSL_TLS));
+    void property_types() {
+        assertThat(LDAP_PROPERTY_TYPES).containsEntry(LDAP_SSL_TLS, String.class);
     }
 
     @Test
-    void test_default_tls_is_none() {
-        assertEquals(LDAP_TLS_NONE, new LdapIdentityProviderDefinition().getTlsConfiguration());
+    void default_tls_is_none() {
+        assertThat(new LdapIdentityProviderDefinition().getTlsConfiguration()).isEqualTo(LDAP_TLS_NONE);
     }
 
     @Test
-    void testEquals() {
+    void equals() {
         LdapIdentityProviderDefinition ldapIdentityProviderDefinition1 = new LdapIdentityProviderDefinition();
         ldapIdentityProviderDefinition1.setAddShadowUserOnLogin(true);
         LdapIdentityProviderDefinition ldapIdentityProviderDefinition2 = new LdapIdentityProviderDefinition();
         ldapIdentityProviderDefinition2.setAddShadowUserOnLogin(false);
-        assertNotEquals(ldapIdentityProviderDefinition1, ldapIdentityProviderDefinition2);
+        assertThat(ldapIdentityProviderDefinition2).isNotEqualTo(ldapIdentityProviderDefinition1);
 
         ldapIdentityProviderDefinition2.setAddShadowUserOnLogin(true);
-        assertEquals(ldapIdentityProviderDefinition1, ldapIdentityProviderDefinition2);
+        assertThat(ldapIdentityProviderDefinition2).isEqualTo(ldapIdentityProviderDefinition1);
     }
 
     @Test
     void noPasswordCastException() {
         LdapIdentityProviderDefinition definition = new LdapIdentityProviderDefinition();
-        assertNull(definition.getBindPassword());
+        assertThat(definition.getBindPassword()).isNull();
         definition.setBindPassword("value");
-        assertEquals("value", definition.getBindPassword());
+        assertThat(definition.getBindPassword()).isEqualTo("value");
     }
 
     @Test
-    void test_tls_options() {
+    void tls_options() {
         ldapIdentityProviderDefinition = new LdapIdentityProviderDefinition();
         ldapIdentityProviderDefinition.setTlsConfiguration(LDAP_TLS_NONE);
         ldapIdentityProviderDefinition.setTlsConfiguration(LDAP_TLS_EXTERNAL);
         ldapIdentityProviderDefinition.setTlsConfiguration(LDAP_TLS_SIMPLE);
         ldapIdentityProviderDefinition.setTlsConfiguration(null);
-        assertEquals(LDAP_TLS_NONE, ldapIdentityProviderDefinition.getTlsConfiguration());
+        assertThat(ldapIdentityProviderDefinition.getTlsConfiguration()).isEqualTo(LDAP_TLS_NONE);
         try {
             String tlsConfiguration = "other string";
             ldapIdentityProviderDefinition.setTlsConfiguration(tlsConfiguration);
@@ -103,7 +98,7 @@ class LdapIdentityProviderDefinitionTest {
     }
 
     @Test
-    void test_serialization_of_tls_attribute() {
+    void serialization_of_tls_attribute() {
         ldapIdentityProviderDefinition = LdapIdentityProviderDefinition.searchAndBindMapGroupToScopes(
                 "ldap://localhost:389/",
                 "cn=admin,ou=Users,dc=test,dc=com",
@@ -122,14 +117,14 @@ class LdapIdentityProviderDefinitionTest {
         ldapIdentityProviderDefinition.setTlsConfiguration(LDAP_TLS_SIMPLE);
         String config = JsonUtils.writeValueAsString(ldapIdentityProviderDefinition);
         LdapIdentityProviderDefinition deserialized = JsonUtils.readValue(config, LdapIdentityProviderDefinition.class);
-        assertEquals(LDAP_TLS_SIMPLE, deserialized.getTlsConfiguration());
+        assertThat(deserialized.getTlsConfiguration()).isEqualTo(LDAP_TLS_SIMPLE);
         config = config.replace(",\"tlsConfiguration\":\"simple\"", "");
         deserialized = JsonUtils.readValue(config, LdapIdentityProviderDefinition.class);
-        assertEquals(LDAP_TLS_NONE, deserialized.getTlsConfiguration());
+        assertThat(deserialized.getTlsConfiguration()).isEqualTo(LDAP_TLS_NONE);
     }
 
     @Test
-    void testSearchAndBindConfiguration() {
+    void searchAndBindConfiguration() {
         ldapIdentityProviderDefinition = LdapIdentityProviderDefinition.searchAndBindMapGroupToScopes(
                 "ldap://localhost:389/",
                 "cn=admin,ou=Users,dc=test,dc=com",
@@ -148,42 +143,42 @@ class LdapIdentityProviderDefinitionTest {
 
         String config = JsonUtils.writeValueAsString(ldapIdentityProviderDefinition);
         LdapIdentityProviderDefinition deserialized = JsonUtils.readValue(config, LdapIdentityProviderDefinition.class);
-        assertEquals(ldapIdentityProviderDefinition, deserialized);
-        assertEquals("ldap/ldap-search-and-bind.xml", deserialized.getLdapProfileFile());
-        assertEquals("ldap/ldap-groups-map-to-scopes.xml", deserialized.getLdapGroupFile());
+        assertThat(deserialized).isEqualTo(ldapIdentityProviderDefinition);
+        assertThat(deserialized.getLdapProfileFile()).isEqualTo("ldap/ldap-search-and-bind.xml");
+        assertThat(deserialized.getLdapGroupFile()).isEqualTo("ldap/ldap-groups-map-to-scopes.xml");
 
         ConfigurableEnvironment environment = LdapUtils.getLdapConfigurationEnvironment(deserialized);
         //mail attribute
-        assertNotNull(environment.getProperty("ldap.base.mailAttributeName"));
-        assertEquals("mail", environment.getProperty("ldap.base.mailAttributeName"));
+        assertThat(environment.getProperty("ldap.base.mailAttributeName")).isNotNull()
+                .isEqualTo("mail");
 
         //url attribute
-        assertNotNull(environment.getProperty("ldap.base.url"));
-        assertEquals("ldap://localhost:389/", environment.getProperty("ldap.base.url"));
+        assertThat(environment.getProperty("ldap.base.url")).isNotNull()
+                .isEqualTo("ldap://localhost:389/");
 
         //profile file
-        assertNotNull(environment.getProperty("ldap.profile.file"));
-        assertEquals("ldap/ldap-search-and-bind.xml", environment.getProperty("ldap.profile.file"));
+        assertThat(environment.getProperty("ldap.profile.file")).isNotNull()
+                .isEqualTo("ldap/ldap-search-and-bind.xml");
 
         //group file
-        assertNotNull(environment.getProperty("ldap.groups.file"));
-        assertEquals("ldap/ldap-groups-map-to-scopes.xml", environment.getProperty("ldap.groups.file"));
+        assertThat(environment.getProperty("ldap.groups.file")).isNotNull()
+                .isEqualTo("ldap/ldap-groups-map-to-scopes.xml");
 
         //search sub tree for group
-        assertNotNull(environment.getProperty("ldap.groups.searchSubtree"));
-        assertEquals(Boolean.TRUE.toString(), environment.getProperty("ldap.groups.searchSubtree"));
+        assertThat(environment.getProperty("ldap.groups.searchSubtree")).isNotNull()
+                .isEqualTo(Boolean.TRUE.toString());
 
         //max search depth for groups
-        assertNotNull(environment.getProperty("ldap.groups.maxSearchDepth"));
-        assertEquals("100", environment.getProperty("ldap.groups.maxSearchDepth"));
+        assertThat(environment.getProperty("ldap.groups.maxSearchDepth")).isNotNull()
+                .isEqualTo("100");
 
         //skip ssl verification
-        assertNotNull(environment.getProperty("ldap.ssl.skipverification"));
-        assertEquals("true", environment.getProperty("ldap.ssl.skipverification"));
+        assertThat(environment.getProperty("ldap.ssl.skipverification")).isNotNull()
+                .isEqualTo("true");
 
         //tls configuration
-        assertNotNull(environment.getProperty("ldap.ssl.tls"));
-        assertEquals(LDAP_TLS_NONE, environment.getProperty("ldap.ssl.tls"));
+        assertThat(environment.getProperty("ldap.ssl.tls")).isNotNull()
+                .isEqualTo(LDAP_TLS_NONE);
 
         ldapIdentityProviderDefinition = LdapIdentityProviderDefinition.searchAndBindMapGroupToScopes(
                 "ldap://localhost:389/",
@@ -203,9 +198,9 @@ class LdapIdentityProviderDefinitionTest {
 
         config = JsonUtils.writeValueAsString(ldapIdentityProviderDefinition);
         LdapIdentityProviderDefinition deserialized2 = JsonUtils.readValue(config, LdapIdentityProviderDefinition.class);
-        assertEquals(true, deserialized2.isMailSubstituteOverridesLdap());
-        assertEquals("{0}sub", deserialized2.getMailSubstitute());
-        assertNotEquals(deserialized, deserialized2);
+        assertThat(deserialized2.isMailSubstituteOverridesLdap()).isTrue();
+        assertThat(deserialized2.getMailSubstitute()).isEqualTo("{0}sub");
+        assertThat(deserialized2).isNotEqualTo(deserialized);
     }
 
     public Map<String, Object> getLdapConfig(String config) {
@@ -219,7 +214,7 @@ class LdapIdentityProviderDefinitionTest {
     }
 
     @Test
-    void test_Simple_Bind_Config() throws Exception {
+    void simple_bind_config() throws Exception {
         String config = """
                 ldap:
                   profile:
@@ -230,30 +225,30 @@ class LdapIdentityProviderDefinitionTest {
                     userDnPattern: 'cn={0},ou=Users,dc=test,dc=com;cn={0},ou=OtherUsers,dc=example,dc=com'""";
         LdapIdentityProviderDefinition def = LdapUtils.fromConfig(getLdapConfig(config));
 
-        assertEquals("ldap://localhost:10389/", def.getBaseUrl());
-        assertEquals("ldap/ldap-simple-bind.xml", def.getLdapProfileFile());
-        assertEquals("cn={0},ou=Users,dc=test,dc=com;cn={0},ou=OtherUsers,dc=example,dc=com", def.getUserDNPattern());
-        assertNull(def.getBindPassword());
-        assertNull(def.getBindUserDn());
-        assertNull(def.getUserSearchBase());
-        assertNull(def.getUserSearchFilter());
-        assertEquals("mail", def.getMailAttributeName());
-        assertNull(def.getMailSubstitute());
-        assertFalse(def.isMailSubstituteOverridesLdap());
-        assertFalse(def.isSkipSSLVerification());
-        assertNull(def.getPasswordAttributeName());
-        assertNull(def.getPasswordEncoder());
-        assertNull(def.getGroupSearchBase());
-        assertNull(def.getGroupSearchFilter());
-        assertNull(def.getLdapGroupFile());
-        assertTrue(def.isGroupSearchSubTree());
-        assertEquals(10, def.getMaxGroupSearchDepth());
-        assertTrue(def.isAutoAddGroups());
-        assertNull(def.getGroupRoleAttribute());
+        assertThat(def.getBaseUrl()).isEqualTo("ldap://localhost:10389/");
+        assertThat(def.getLdapProfileFile()).isEqualTo("ldap/ldap-simple-bind.xml");
+        assertThat(def.getUserDNPattern()).isEqualTo("cn={0},ou=Users,dc=test,dc=com;cn={0},ou=OtherUsers,dc=example,dc=com");
+        assertThat(def.getBindPassword()).isNull();
+        assertThat(def.getBindUserDn()).isNull();
+        assertThat(def.getUserSearchBase()).isNull();
+        assertThat(def.getUserSearchFilter()).isNull();
+        assertThat(def.getMailAttributeName()).isEqualTo("mail");
+        assertThat(def.getMailSubstitute()).isNull();
+        assertThat(def.isMailSubstituteOverridesLdap()).isFalse();
+        assertThat(def.isSkipSSLVerification()).isFalse();
+        assertThat(def.getPasswordAttributeName()).isNull();
+        assertThat(def.getPasswordEncoder()).isNull();
+        assertThat(def.getGroupSearchBase()).isNull();
+        assertThat(def.getGroupSearchFilter()).isNull();
+        assertThat(def.getLdapGroupFile()).isNull();
+        assertThat(def.isGroupSearchSubTree()).isTrue();
+        assertThat(def.getMaxGroupSearchDepth()).isEqualTo(10);
+        assertThat(def.isAutoAddGroups()).isTrue();
+        assertThat(def.getGroupRoleAttribute()).isNull();
     }
 
     @Test
-    void test_Search_and_Bind_Config() throws Exception {
+    void search_and_bind_config() throws Exception {
         String config = """
                 ldap:
                   profile:
@@ -267,30 +262,30 @@ class LdapIdentityProviderDefinitionTest {
                     searchFilter: 'cn={0}'""";
         LdapIdentityProviderDefinition def = LdapUtils.fromConfig(getLdapConfig(config));
 
-        assertEquals("ldap://localhost:10389/", def.getBaseUrl());
-        assertEquals("ldap/ldap-search-and-bind.xml", def.getLdapProfileFile());
-        assertNull(def.getUserDNPattern());
-        assertEquals("password", def.getBindPassword());
-        assertEquals("cn=admin,ou=Users,dc=test,dc=com", def.getBindUserDn());
-        assertEquals("", def.getUserSearchBase());
-        assertEquals("cn={0}", def.getUserSearchFilter());
-        assertEquals("mail", def.getMailAttributeName());
-        assertNull(def.getMailSubstitute());
-        assertFalse(def.isMailSubstituteOverridesLdap());
-        assertFalse(def.isSkipSSLVerification());
-        assertNull(def.getPasswordAttributeName());
-        assertNull(def.getPasswordEncoder());
-        assertNull(def.getGroupSearchBase());
-        assertNull(def.getGroupSearchFilter());
-        assertNull(def.getLdapGroupFile());
-        assertTrue(def.isGroupSearchSubTree());
-        assertEquals(10, def.getMaxGroupSearchDepth());
-        assertTrue(def.isAutoAddGroups());
-        assertNull(def.getGroupRoleAttribute());
+        assertThat(def.getBaseUrl()).isEqualTo("ldap://localhost:10389/");
+        assertThat(def.getLdapProfileFile()).isEqualTo("ldap/ldap-search-and-bind.xml");
+        assertThat(def.getUserDNPattern()).isNull();
+        assertThat(def.getBindPassword()).isEqualTo("password");
+        assertThat(def.getBindUserDn()).isEqualTo("cn=admin,ou=Users,dc=test,dc=com");
+        assertThat(def.getUserSearchBase()).isEmpty();
+        assertThat(def.getUserSearchFilter()).isEqualTo("cn={0}");
+        assertThat(def.getMailAttributeName()).isEqualTo("mail");
+        assertThat(def.getMailSubstitute()).isNull();
+        assertThat(def.isMailSubstituteOverridesLdap()).isFalse();
+        assertThat(def.isSkipSSLVerification()).isFalse();
+        assertThat(def.getPasswordAttributeName()).isNull();
+        assertThat(def.getPasswordEncoder()).isNull();
+        assertThat(def.getGroupSearchBase()).isNull();
+        assertThat(def.getGroupSearchFilter()).isNull();
+        assertThat(def.getLdapGroupFile()).isNull();
+        assertThat(def.isGroupSearchSubTree()).isTrue();
+        assertThat(def.getMaxGroupSearchDepth()).isEqualTo(10);
+        assertThat(def.isAutoAddGroups()).isTrue();
+        assertThat(def.getGroupRoleAttribute()).isNull();
     }
 
     @Test
-    void test_Search_and_Bind_With_Groups_Config() throws Exception {
+    void search_and_bind_with_groups_config() throws Exception {
         String config = """
                 ldap:
                   profile:
@@ -311,32 +306,32 @@ class LdapIdentityProviderDefinitionTest {
                     autoAdd: true""";
         LdapIdentityProviderDefinition def = LdapUtils.fromConfig(getLdapConfig(config));
 
-        assertEquals("ldap://localhost:10389/", def.getBaseUrl());
-        assertEquals("ldap/ldap-search-and-bind.xml", def.getLdapProfileFile());
-        assertNull(def.getUserDNPattern());
-        assertEquals("password", def.getBindPassword());
-        assertEquals("cn=admin,ou=Users,dc=test,dc=com", def.getBindUserDn());
-        assertEquals("", def.getUserSearchBase());
-        assertEquals("cn={0}", def.getUserSearchFilter());
-        assertEquals("mail", def.getMailAttributeName());
-        assertNull(def.getMailSubstitute());
-        assertFalse(def.isMailSubstituteOverridesLdap());
-        assertFalse(def.isSkipSSLVerification());
-        assertNull(def.getPasswordAttributeName());
-        assertNull(def.getPasswordEncoder());
-        assertEquals("ou=scopes,dc=test,dc=com", def.getGroupSearchBase());
-        assertEquals("member={0}", def.getGroupSearchFilter());
-        assertEquals("ldap/ldap-groups-map-to-scopes.xml", def.getLdapGroupFile());
-        assertTrue(def.isGroupSearchSubTree());
-        assertEquals(30, def.getMaxGroupSearchDepth());
-        assertTrue(def.isAutoAddGroups());
-        assertNull(def.getGroupRoleAttribute());
+        assertThat(def.getBaseUrl()).isEqualTo("ldap://localhost:10389/");
+        assertThat(def.getLdapProfileFile()).isEqualTo("ldap/ldap-search-and-bind.xml");
+        assertThat(def.getUserDNPattern()).isNull();
+        assertThat(def.getBindPassword()).isEqualTo("password");
+        assertThat(def.getBindUserDn()).isEqualTo("cn=admin,ou=Users,dc=test,dc=com");
+        assertThat(def.getUserSearchBase()).isEmpty();
+        assertThat(def.getUserSearchFilter()).isEqualTo("cn={0}");
+        assertThat(def.getMailAttributeName()).isEqualTo("mail");
+        assertThat(def.getMailSubstitute()).isNull();
+        assertThat(def.isMailSubstituteOverridesLdap()).isFalse();
+        assertThat(def.isSkipSSLVerification()).isFalse();
+        assertThat(def.getPasswordAttributeName()).isNull();
+        assertThat(def.getPasswordEncoder()).isNull();
+        assertThat(def.getGroupSearchBase()).isEqualTo("ou=scopes,dc=test,dc=com");
+        assertThat(def.getGroupSearchFilter()).isEqualTo("member={0}");
+        assertThat(def.getLdapGroupFile()).isEqualTo("ldap/ldap-groups-map-to-scopes.xml");
+        assertThat(def.isGroupSearchSubTree()).isTrue();
+        assertThat(def.getMaxGroupSearchDepth()).isEqualTo(30);
+        assertThat(def.isAutoAddGroups()).isTrue();
+        assertThat(def.getGroupRoleAttribute()).isNull();
 
     }
 
 
     @Test
-    void test_Search_and_Compare_Config() throws Exception {
+    void search_and_compare_config() throws Exception {
         String config = """
                 ldap:
                   profile:
@@ -358,30 +353,30 @@ class LdapIdentityProviderDefinitionTest {
 
         LdapIdentityProviderDefinition def = LdapUtils.fromConfig(getLdapConfig(config));
 
-        assertEquals("ldap://localhost:10389/", def.getBaseUrl());
-        assertEquals("ldap/ldap-search-and-compare.xml", def.getLdapProfileFile());
-        assertNull(def.getUserDNPattern());
-        assertEquals("password", def.getBindPassword());
-        assertEquals("cn=admin,ou=Users,dc=test,dc=com", def.getBindUserDn());
-        assertEquals("", def.getUserSearchBase());
-        assertEquals("cn={0}", def.getUserSearchFilter());
-        assertEquals("mail", def.getMailAttributeName());
-        assertEquals("generated-{0}@company.example.com", def.getMailSubstitute());
-        assertTrue(def.isMailSubstituteOverridesLdap());
-        assertTrue(def.isSkipSSLVerification());
-        assertEquals("userPassword", def.getPasswordAttributeName());
-        assertEquals("org.cloudfoundry.identity.uaa.provider.ldap.DynamicPasswordComparator", def.getPasswordEncoder());
-        assertNull(def.getGroupSearchBase());
-        assertNull(def.getGroupSearchFilter());
-        assertNull(def.getLdapGroupFile());
-        assertTrue(def.isGroupSearchSubTree());
-        assertEquals(10, def.getMaxGroupSearchDepth());
-        assertTrue(def.isAutoAddGroups());
-        assertNull(def.getGroupRoleAttribute());
+        assertThat(def.getBaseUrl()).isEqualTo("ldap://localhost:10389/");
+        assertThat(def.getLdapProfileFile()).isEqualTo("ldap/ldap-search-and-compare.xml");
+        assertThat(def.getUserDNPattern()).isNull();
+        assertThat(def.getBindPassword()).isEqualTo("password");
+        assertThat(def.getBindUserDn()).isEqualTo("cn=admin,ou=Users,dc=test,dc=com");
+        assertThat(def.getUserSearchBase()).isEmpty();
+        assertThat(def.getUserSearchFilter()).isEqualTo("cn={0}");
+        assertThat(def.getMailAttributeName()).isEqualTo("mail");
+        assertThat(def.getMailSubstitute()).isEqualTo("generated-{0}@company.example.com");
+        assertThat(def.isMailSubstituteOverridesLdap()).isTrue();
+        assertThat(def.isSkipSSLVerification()).isTrue();
+        assertThat(def.getPasswordAttributeName()).isEqualTo("userPassword");
+        assertThat(def.getPasswordEncoder()).isEqualTo("org.cloudfoundry.identity.uaa.provider.ldap.DynamicPasswordComparator");
+        assertThat(def.getGroupSearchBase()).isNull();
+        assertThat(def.getGroupSearchFilter()).isNull();
+        assertThat(def.getLdapGroupFile()).isNull();
+        assertThat(def.isGroupSearchSubTree()).isTrue();
+        assertThat(def.getMaxGroupSearchDepth()).isEqualTo(10);
+        assertThat(def.isAutoAddGroups()).isTrue();
+        assertThat(def.getGroupRoleAttribute()).isNull();
     }
 
     @Test
-    void test_Search_and_Compare_With_Groups_1_Config_And_Custom_Attributes() throws Exception {
+    void search_and_compare_with_groups_1_config_and_custom_attributes() throws Exception {
         String config = """
                 ldap:
                   profile:
@@ -415,39 +410,39 @@ class LdapIdentityProviderDefinitionTest {
 
         LdapIdentityProviderDefinition def = LdapUtils.fromConfig(getLdapConfig(config));
 
-        assertEquals("ldap://localhost:10389/", def.getBaseUrl());
-        assertEquals("ldap/ldap-search-and-compare.xml", def.getLdapProfileFile());
-        assertNull(def.getUserDNPattern());
-        assertEquals("password", def.getBindPassword());
-        assertEquals("cn=admin,ou=Users,dc=test,dc=com", def.getBindUserDn());
-        assertEquals("", def.getUserSearchBase());
-        assertEquals("cn={0}", def.getUserSearchFilter());
-        assertEquals("mail", def.getMailAttributeName());
-        assertEquals("generated-{0}@company.example.com", def.getMailSubstitute());
-        assertTrue(def.isMailSubstituteOverridesLdap());
-        assertTrue(def.isSkipSSLVerification());
-        assertEquals("userPassword", def.getPasswordAttributeName());
-        assertEquals("org.cloudfoundry.identity.uaa.provider.ldap.DynamicPasswordComparator", def.getPasswordEncoder());
-        assertEquals("ou=scopes,dc=test,dc=com", def.getGroupSearchBase());
-        assertEquals("member={0}", def.getGroupSearchFilter());
-        assertEquals("ldap/ldap-groups-as-scopes.xml", def.getLdapGroupFile());
-        assertFalse(def.isGroupSearchSubTree());
-        assertEquals(20, def.getMaxGroupSearchDepth());
-        assertFalse(def.isAutoAddGroups());
-        assertEquals("scopenames", def.getGroupRoleAttribute());
+        assertThat(def.getBaseUrl()).isEqualTo("ldap://localhost:10389/");
+        assertThat(def.getLdapProfileFile()).isEqualTo("ldap/ldap-search-and-compare.xml");
+        assertThat(def.getUserDNPattern()).isNull();
+        assertThat(def.getBindPassword()).isEqualTo("password");
+        assertThat(def.getBindUserDn()).isEqualTo("cn=admin,ou=Users,dc=test,dc=com");
+        assertThat(def.getUserSearchBase()).isEmpty();
+        assertThat(def.getUserSearchFilter()).isEqualTo("cn={0}");
+        assertThat(def.getMailAttributeName()).isEqualTo("mail");
+        assertThat(def.getMailSubstitute()).isEqualTo("generated-{0}@company.example.com");
+        assertThat(def.isMailSubstituteOverridesLdap()).isTrue();
+        assertThat(def.isSkipSSLVerification()).isTrue();
+        assertThat(def.getPasswordAttributeName()).isEqualTo("userPassword");
+        assertThat(def.getPasswordEncoder()).isEqualTo("org.cloudfoundry.identity.uaa.provider.ldap.DynamicPasswordComparator");
+        assertThat(def.getGroupSearchBase()).isEqualTo("ou=scopes,dc=test,dc=com");
+        assertThat(def.getGroupSearchFilter()).isEqualTo("member={0}");
+        assertThat(def.getLdapGroupFile()).isEqualTo("ldap/ldap-groups-as-scopes.xml");
+        assertThat(def.isGroupSearchSubTree()).isFalse();
+        assertThat(def.getMaxGroupSearchDepth()).isEqualTo(20);
+        assertThat(def.isAutoAddGroups()).isFalse();
+        assertThat(def.getGroupRoleAttribute()).isEqualTo("scopenames");
 
-        assertEquals(2, def.getAttributeMappings().size());
-        assertEquals("costCenter", def.getAttributeMappings().get("user.attribute.employeeCostCenter"));
-        assertEquals("manager", def.getAttributeMappings().get("user.attribute.terribleBosses"));
+        assertThat(def.getAttributeMappings()).hasSize(2)
+                .containsEntry("user.attribute.employeeCostCenter", "costCenter")
+                .containsEntry("user.attribute.terribleBosses", "manager");
     }
 
     @Test
-    void testSetEmailDomain() {
+    void setEmailDomain() {
         LdapIdentityProviderDefinition def = new LdapIdentityProviderDefinition();
         def.setEmailDomain(Collections.singletonList("test.com"));
-        assertEquals("test.com", def.getEmailDomain().get(0));
+        assertThat(def.getEmailDomain().get(0)).isEqualTo("test.com");
         def = JsonUtils.readValue(JsonUtils.writeValueAsString(def), LdapIdentityProviderDefinition.class);
-        assertEquals("test.com", def.getEmailDomain().get(0));
+        assertThat(def.getEmailDomain().get(0)).isEqualTo("test.com");
     }
 
     @Test
@@ -456,9 +451,9 @@ class LdapIdentityProviderDefinitionTest {
         List<String> externalGroupsWhitelist = new ArrayList<>();
         externalGroupsWhitelist.add("value");
         def.setExternalGroupsWhitelist(externalGroupsWhitelist);
-        assertEquals(Collections.singletonList("value"), def.getExternalGroupsWhitelist());
+        assertThat(def.getExternalGroupsWhitelist()).isEqualTo(Collections.singletonList("value"));
         def = JsonUtils.readValue(JsonUtils.writeValueAsString(def), LdapIdentityProviderDefinition.class);
-        assertEquals(Collections.singletonList("value"), def.getExternalGroupsWhitelist());
+        assertThat(def.getExternalGroupsWhitelist()).isEqualTo(Collections.singletonList("value"));
     }
 
     @Test
@@ -467,9 +462,9 @@ class LdapIdentityProviderDefinitionTest {
         Map<String, Object> attributeMappings = new HashMap<>();
         attributeMappings.put("given_name", "first_name");
         def.setAttributeMappings(attributeMappings);
-        assertEquals("first_name", def.getAttributeMappings().get("given_name"));
+        assertThat(def.getAttributeMappings()).containsEntry("given_name", "first_name");
         def = JsonUtils.readValue(JsonUtils.writeValueAsString(def), LdapIdentityProviderDefinition.class);
-        assertEquals("first_name", def.getAttributeMappings().get("given_name"));
+        assertThat(def.getAttributeMappings()).containsEntry("given_name", "first_name");
     }
 
     @Test
@@ -485,78 +480,74 @@ class LdapIdentityProviderDefinitionTest {
 
     @Test
     void set_unknown_profile_file_throws_error() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            ldapIdentityProviderDefinition = new LdapIdentityProviderDefinition();
-            ldapIdentityProviderDefinition.setLdapProfileFile("some.other.file");
-        });
+        ldapIdentityProviderDefinition = new LdapIdentityProviderDefinition();
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() ->
+                ldapIdentityProviderDefinition.setLdapProfileFile("some.other.file"));
     }
 
     @Test
     void set_unknown_group_file_throws_error() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            ldapIdentityProviderDefinition = new LdapIdentityProviderDefinition();
-            ldapIdentityProviderDefinition.setLdapGroupFile("some.other.file");
-        });
+        ldapIdentityProviderDefinition = new LdapIdentityProviderDefinition();
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() ->
+                ldapIdentityProviderDefinition.setLdapGroupFile("some.other.file"));
     }
 
     @Test
     void deserialize_unknown_profile_file_throws_error() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            String config = """
-                    ldap:
-                      profile:
-                        file: ldap/ldap-1search-and-compare.xml
-                      base:
-                        url: 'ldap://localhost:10389/'
-                        mailAttributeName: mail
-                        userDn: 'cn=admin,ou=Users,dc=test,dc=com'
-                        password: 'password'
-                        searchBase: ''
-                        searchFilter: 'cn={0}'
-                        passwordAttributeName: userPassword
-                        passwordEncoder: org.cloudfoundry.identity.uaa.provider.ldap.DynamicPasswordComparator
-                        localPasswordCompare: true
-                        mailSubstitute: 'generated-{0}@company.example.com'
-                        mailSubstituteOverridesLdap: true
-                      ssl:
-                        skipverification: true""";
+        String config = """
+                ldap:
+                  profile:
+                    file: ldap/ldap-1search-and-compare.xml
+                  base:
+                    url: 'ldap://localhost:10389/'
+                    mailAttributeName: mail
+                    userDn: 'cn=admin,ou=Users,dc=test,dc=com'
+                    password: 'password'
+                    searchBase: ''
+                    searchFilter: 'cn={0}'
+                    passwordAttributeName: userPassword
+                    passwordEncoder: org.cloudfoundry.identity.uaa.provider.ldap.DynamicPasswordComparator
+                    localPasswordCompare: true
+                    mailSubstitute: 'generated-{0}@company.example.com'
+                    mailSubstituteOverridesLdap: true
+                  ssl:
+                    skipverification: true""";
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() ->
 
-            LdapUtils.fromConfig(getLdapConfig(config));
-        });
+                LdapUtils.fromConfig(getLdapConfig(config)));
     }
 
     @Test
     void deserialize_unknown_group_file_throws_error() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            String config = """
-                    ldap:
-                      profile:
-                        file: ldap/ldap-search-and-compare.xml
-                      base:
-                        url: 'ldap://localhost:10389/'
-                        mailAttributeName: mail
-                        userDn: 'cn=admin,ou=Users,dc=test,dc=com'
-                        password: 'password'
-                        searchBase: ''
-                        searchFilter: 'cn={0}'
-                        passwordAttributeName: userPassword
-                        passwordEncoder: org.cloudfoundry.identity.uaa.provider.ldap.DynamicPasswordComparator
-                        localPasswordCompare: true
-                        mailSubstitute: 'generated-{0}@company.example.com'
-                        mailSubstituteOverridesLdap: true
-                      groups:
-                        file: ldap/ldap-groups1-as-scopes.xml
-                        searchBase: ou=scopes,dc=test,dc=com
-                        groupRoleAttribute: scopenames
-                        searchSubtree: false
-                        groupSearchFilter: member={0}
-                        maxSearchDepth: 20
-                        autoAdd: false
-                      ssl:
-                        skipverification: true""";
+        String config = """
+                ldap:
+                  profile:
+                    file: ldap/ldap-search-and-compare.xml
+                  base:
+                    url: 'ldap://localhost:10389/'
+                    mailAttributeName: mail
+                    userDn: 'cn=admin,ou=Users,dc=test,dc=com'
+                    password: 'password'
+                    searchBase: ''
+                    searchFilter: 'cn={0}'
+                    passwordAttributeName: userPassword
+                    passwordEncoder: org.cloudfoundry.identity.uaa.provider.ldap.DynamicPasswordComparator
+                    localPasswordCompare: true
+                    mailSubstitute: 'generated-{0}@company.example.com'
+                    mailSubstituteOverridesLdap: true
+                  groups:
+                    file: ldap/ldap-groups1-as-scopes.xml
+                    searchBase: ou=scopes,dc=test,dc=com
+                    groupRoleAttribute: scopenames
+                    searchSubtree: false
+                    groupSearchFilter: member={0}
+                    maxSearchDepth: 20
+                    autoAdd: false
+                  ssl:
+                    skipverification: true""";
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() ->
 
-            LdapUtils.fromConfig(getLdapConfig(config));
-        });
+                LdapUtils.fromConfig(getLdapConfig(config)));
     }
 
     @Test
@@ -567,35 +558,33 @@ class LdapIdentityProviderDefinitionTest {
 
     @Test
     void set_wrong_password_compare_complains() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            ldapIdentityProviderDefinition = new LdapIdentityProviderDefinition();
-            ldapIdentityProviderDefinition.setPasswordEncoder("some.other.encoder");
-        });
+        ldapIdentityProviderDefinition = new LdapIdentityProviderDefinition();
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() ->
+                ldapIdentityProviderDefinition.setPasswordEncoder("some.other.encoder"));
     }
 
     @Test
     void deserialize_unknown_comparator_throws_error() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            String config = """
-                    ldap:
-                      profile:
-                        file: ldap/ldap-search-and-compare.xml
-                      base:
-                        url: 'ldap://localhost:10389/'
-                        mailAttributeName: mail
-                        userDn: 'cn=admin,ou=Users,dc=test,dc=com'
-                        password: 'password'
-                        searchBase: ''
-                        searchFilter: 'cn={0}'
-                        passwordAttributeName: userPassword
-                        passwordEncoder: org.cloudfoundry.identity.uaa.provider.ldap.DynamicPasswordComparator1
-                        localPasswordCompare: true
-                        mailSubstitute: 'generated-{0}@company.example.com'
-                        mailSubstituteOverridesLdap: true
-                    """;
+        String config = """
+                ldap:
+                  profile:
+                    file: ldap/ldap-search-and-compare.xml
+                  base:
+                    url: 'ldap://localhost:10389/'
+                    mailAttributeName: mail
+                    userDn: 'cn=admin,ou=Users,dc=test,dc=com'
+                    password: 'password'
+                    searchBase: ''
+                    searchFilter: 'cn={0}'
+                    passwordAttributeName: userPassword
+                    passwordEncoder: org.cloudfoundry.identity.uaa.provider.ldap.DynamicPasswordComparator1
+                    localPasswordCompare: true
+                    mailSubstitute: 'generated-{0}@company.example.com'
+                    mailSubstituteOverridesLdap: true
+                """;
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() ->
 
-            LdapUtils.fromConfig(getLdapConfig(config));
-        });
+                LdapUtils.fromConfig(getLdapConfig(config)));
     }
 
     @Test

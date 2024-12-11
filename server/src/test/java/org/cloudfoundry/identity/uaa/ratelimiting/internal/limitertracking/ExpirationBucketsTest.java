@@ -1,5 +1,9 @@
 package org.cloudfoundry.identity.uaa.ratelimiting.internal.limitertracking;
 
+import org.cloudfoundry.identity.uaa.ratelimiting.core.CompoundKey;
+import org.cloudfoundry.identity.uaa.ratelimiting.util.NanoTimeSupplier;
+import org.junit.jupiter.api.Test;
+
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -7,14 +11,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import org.cloudfoundry.identity.uaa.ratelimiting.core.CompoundKey;
-import org.cloudfoundry.identity.uaa.ratelimiting.util.NanoTimeSupplier;
-import org.junit.jupiter.api.Test;
-
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.cloudfoundry.identity.uaa.ratelimiting.internal.limitertracking.ExpirationBuckets.BucketRingBoundsException;
 import static org.cloudfoundry.identity.uaa.ratelimiting.internal.limitertracking.ExpirationBuckets.ExpirationBucketMapping;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
 
 class ExpirationBucketsTest {
     NanoTimeSupplier.Mock mockCurrentTimeSupplier = new NanoTimeSupplier.Mock();
@@ -44,21 +44,21 @@ class ExpirationBucketsTest {
 
         private void check(long expirationSecond) {
             if ((this.expirationSecond != null) && (this.expirationSecond != expirationSecond)) {
-                throw new IllegalStateException( "Expected expirationSecond '" + Instant.ofEpochSecond(expirationSecond)
-                        + "', but found: " + Instant.ofEpochSecond(this.expirationSecond) );
+                throw new IllegalStateException("Expected expirationSecond '" + Instant.ofEpochSecond(expirationSecond)
+                        + "', but found: " + Instant.ofEpochSecond(this.expirationSecond));
             }
         }
     }
 
     MockCompoundKeyPurger removedKeyTracker = new MockCompoundKeyPurger();
 
-    ExpirationBuckets buckets = new ExpirationBuckets( mockCurrentTimeSupplier,
-            removedKeyTracker, 17 );
+    ExpirationBuckets buckets = new ExpirationBuckets(mockCurrentTimeSupplier,
+            removedKeyTracker, 17);
 
     private void assertBucketMappings(int offset, long second) {
         ExpirationBucketMapping mapping = buckets.getExpirationBucketMapping();
-        assertEquals(offset, mapping.getCurrentRingBucketBaseOffset());
-        assertEquals(second, mapping.getCurrentRingBucketBaseSecond());
+        assertThat(mapping.getCurrentRingBucketBaseOffset()).isEqualTo(offset);
+        assertThat(mapping.getCurrentRingBucketBaseSecond()).isEqualTo(second);
     }
 
     private void assertBadBucketSecondRequest(long second) {
@@ -66,8 +66,7 @@ class ExpirationBucketsTest {
 
         try {
             bucket = buckets.getBucket(second);
-        }
-        catch (BucketRingBoundsException expected) {
+        } catch (BucketRingBoundsException expected) {
             // Ignore
             return;
         }
@@ -77,9 +76,9 @@ class ExpirationBucketsTest {
     @Test
     void generalAssumptionsTest() {
         // 17 + 2 -> 32 buckets (next power of 2 above 19) -> masking mass of 32-1 -> 5 bits
-        assertEquals(31, buckets.getWrapAroundMask());
+        assertThat(buckets.getWrapAroundMask()).isEqualTo(31);
 
-        assertEquals(CURRENT_SECOND, buckets.currentSecondNow());
+        assertThat(buckets.currentSecondNow()).isEqualTo(CURRENT_SECOND);
 
         long bucketBaseSecond = buckets.currentSecondNow() - 2;
         assertBucketMappings(0, bucketBaseSecond);

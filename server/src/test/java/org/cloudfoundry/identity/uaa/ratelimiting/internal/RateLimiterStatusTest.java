@@ -1,9 +1,5 @@
 package org.cloudfoundry.identity.uaa.ratelimiting.internal;
 
-import java.time.Instant;
-import java.util.LinkedHashMap;
-import javax.validation.constraints.NotNull;
-
 import org.cloudfoundry.identity.uaa.ratelimiting.core.CompoundKey;
 import org.cloudfoundry.identity.uaa.ratelimiting.core.LoggingOption;
 import org.cloudfoundry.identity.uaa.ratelimiting.core.http.RequestInfo;
@@ -11,8 +7,11 @@ import org.cloudfoundry.identity.uaa.ratelimiting.internal.common.InternalLimite
 import org.cloudfoundry.identity.uaa.ratelimiting.internal.common.InternalLimiterFactory;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import javax.validation.constraints.NotNull;
+import java.time.Instant;
+import java.util.LinkedHashMap;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SuppressWarnings({"SameParameterValue", "UnnecessaryLocalVariable"})
 class RateLimiterStatusTest {
@@ -211,7 +210,7 @@ class RateLimiterStatusTest {
         InternalLimiterFactoriesSupplier mockSupplier = new InternalLimiterFactoriesSupplier() {
             @Override
             public LinkedHashMap<CompoundKey, InternalLimiterFactory> factoryMapFor(RequestInfo info) {
-                throw new IllegalStateException( "Not Implemented" );
+                throw new IllegalStateException("Not Implemented");
             }
 
             @Override
@@ -264,11 +263,11 @@ class RateLimiterStatusTest {
     @Test
     void check_toISO8601ZtoSec_Truncation() {
         String now = RateLimiterStatus.toISO8601ZtoSec(System.currentTimeMillis());
-        assertEquals(20, now.length(), now);
+        assertThat(now.length()).as(now).isEqualTo(20);
     }
 
     private void check(RateLimiterStatus status, String... expected) {
-        assertTrue(status.hasCurrentSection());
+        assertThat(status.hasCurrentSection()).isTrue();
         check(status.toString(), expected);
     }
 
@@ -281,7 +280,7 @@ class RateLimiterStatusTest {
             sb.append(str);
         }
         String expectedStr = sb.toString().replace('\'', '"');
-        assertEquals(expectedStr, actualStr);
+        assertThat(actualStr).isEqualTo(expectedStr);
     }
 
     private static String toISO(long time) {

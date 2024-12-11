@@ -33,7 +33,6 @@ import org.cloudfoundry.identity.uaa.scim.ScimUser;
 import org.cloudfoundry.identity.uaa.security.web.CookieBasedCsrfTokenRepository;
 import org.cloudfoundry.identity.uaa.test.TestAccountExtension;
 import org.cloudfoundry.identity.uaa.test.UaaTestAccounts;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -57,23 +56,19 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils.extractCookieCsrf;
 import static org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils.getHeaders;
 import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.USER_OAUTH_APPROVAL;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_AUTHORIZATION_CODE;
 import static org.cloudfoundry.identity.uaa.security.web.CookieBasedCsrfTokenRepository.DEFAULT_CSRF_COOKIE_NAME;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Luke Taylor
  * @author Dave Syer
  */
 @OAuth2ContextConfiguration(OAuth2ContextConfiguration.ClientCredentials.class)
-public class OpenIdTokenAuthorizationWithApprovalIntegrationTests {
+class OpenIdTokenAuthorizationWithApprovalIntegrationTests {
 
     @RegisterExtension
     private static final ServerRunningExtension serverRunning = ServerRunningExtension.connect();
@@ -93,7 +88,7 @@ public class OpenIdTokenAuthorizationWithApprovalIntegrationTests {
     private ScimUser user;
 
     @BeforeEach
-    public void createRestTemplate() {
+    void createRestTemplate() {
 
         ClientCredentialsResourceDetails clientCredentials =
                 getClientCredentialsResource(new String[]{"oauth.login"}, "login", "loginsecret");
@@ -127,7 +122,7 @@ public class OpenIdTokenAuthorizationWithApprovalIntegrationTests {
     }
 
     @Test
-    public void testOpenIdTokenUsingLoginClientOauthTokenEndpoint() {
+    void openIdTokenUsingLoginClientOauthTokenEndpoint() {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
@@ -148,26 +143,20 @@ public class OpenIdTokenAuthorizationWithApprovalIntegrationTests {
                 new HttpEntity<>(postBody, headers),
                 Map.class);
 
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
 
         Map<String, Object> params = responseEntity.getBody();
 
-        assertNotNull(params.get("jti"));
-        assertEquals("bearer", params.get("token_type"));
-        assertThat((Integer) params.get("expires_in"), Matchers.greaterThan(40000));
+        assertThat(params.get("jti")).isNotNull();
+        assertThat(params.get("token_type")).isEqualTo("bearer");
+        assertThat((Integer) params.get("expires_in")).isGreaterThan(40000);
 
         String[] scopes = UriUtils.decode((String) params.get("scope"), "UTF-8").split(" ");
-        assertThat(Arrays.asList(scopes), containsInAnyOrder(
-                "scim.userids",
-                "password.write",
-                "cloud_controller.write",
-                "openid",
-                "cloud_controller.read"
-        ));
+        assertThat(Arrays.asList(scopes)).containsExactlyInAnyOrder("scim.userids", "password.write", "cloud_controller.write", "openid", "cloud_controller.read");
     }
 
     @Test
-    public void testOpenIdHybridFlowIdTokenAndCode() {
+    void openIdHybridFlowIdTokenAndCode() {
         //non approved
         doOpenIdHybridFlowIdTokenAndReturnCode(new HashSet<>(Arrays.asList("token", "code")), ".+access_token=.+code=.+");
         //approved
@@ -177,7 +166,7 @@ public class OpenIdTokenAuthorizationWithApprovalIntegrationTests {
     }
 
     @Test
-    public void testOpenIdHybridFlowIdTokenAndTokenAndCode() {
+    void openIdHybridFlowIdTokenAndTokenAndCode() {
         //non approved
         doOpenIdHybridFlowIdTokenAndReturnCode(new HashSet<>(Arrays.asList("token", "id_token", "code")), ".+access_token=.+id_token=.+code=.+");
         //approved
@@ -187,7 +176,7 @@ public class OpenIdTokenAuthorizationWithApprovalIntegrationTests {
     }
 
     @Test
-    public void testOpenIdHybridFlowIdTokenAndToken() {
+    void openIdHybridFlowIdTokenAndToken() {
         //non approved
         doOpenIdHybridFlowIdTokenAndReturnCode(new HashSet<>(Arrays.asList("id_token", "code")), ".+id_token=.+code=.+");
         //approved
@@ -197,7 +186,7 @@ public class OpenIdTokenAuthorizationWithApprovalIntegrationTests {
     }
 
     @Test
-    public void testOpenIdHybridFlowZoneDoesNotExist() {
+    void openIdHybridFlowZoneDoesNotExist() {
         AuthorizationCodeResourceDetails resource = testAccounts.getDefaultAuthorizationCodeResource();
 
         String responseType = "id_token code";
@@ -216,11 +205,11 @@ public class OpenIdTokenAuthorizationWithApprovalIntegrationTests {
                 state,
                 clientId,
                 redirectUri);
-        assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
+        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 
     @Test
-    public void testOpenIdHybridFlowZoneInactive() {
+    void openIdHybridFlowZoneInactive() {
         RestTemplate identityClient = IntegrationTestUtils
                 .getClientCredentialsTemplate(IntegrationTestUtils.getClientCredentialsResource(serverRunning.getBaseUrl(),
                         new String[]{"zones.write", "zones.read", "scim.zones"}, "identity", "identitysecret"));
@@ -244,7 +233,7 @@ public class OpenIdTokenAuthorizationWithApprovalIntegrationTests {
                 state,
                 clientId,
                 redirectUri);
-        assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
+        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 
     private String doOpenIdHybridFlowIdTokenAndReturnCode(Set<String> responseTypes, String responseTypeMatcher) {
@@ -279,7 +268,7 @@ public class OpenIdTokenAuthorizationWithApprovalIntegrationTests {
                 clientId,
                 redirectUri);
 
-        assertEquals(HttpStatus.FOUND, result.getStatusCode());
+        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.FOUND);
         String location = UriUtils.decode(result.getHeaders().getLocation().toString(), "UTF-8");
 
         if (result.getHeaders().containsKey("Set-Cookie")) {
@@ -297,9 +286,9 @@ public class OpenIdTokenAuthorizationWithApprovalIntegrationTests {
             }
         }
         // should be directed to the login screen...
-        assertTrue(response.getBody().contains("/login.do"));
-        assertTrue(response.getBody().contains("username"));
-        assertTrue(response.getBody().contains("password"));
+        assertThat(response.getBody().contains("/login.do")).isTrue();
+        assertThat(response.getBody().contains("username")).isTrue();
+        assertThat(response.getBody().contains("password")).isTrue();
 
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("username", user.getUserName());
@@ -308,7 +297,7 @@ public class OpenIdTokenAuthorizationWithApprovalIntegrationTests {
 
         // Should be redirected to the original URL, but now authenticated
         result = serverRunning.postForResponse("/login.do", getHeaders(cookies), formData);
-        assertEquals(HttpStatus.FOUND, result.getStatusCode());
+        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.FOUND);
 
         cookies.clear();
         if (result.getHeaders().containsKey("Set-Cookie")) {
@@ -332,21 +321,20 @@ public class OpenIdTokenAuthorizationWithApprovalIntegrationTests {
         }
         if (response.getStatusCode() == HttpStatus.OK) {
             // The grant access page should be returned
-            assertTrue(response.getBody().contains("Application Authorization</h1>"));
+            assertThat(response.getBody().contains("Application Authorization</h1>")).isTrue();
 
             formData.clear();
             formData.add(USER_OAUTH_APPROVAL, "true");
             formData.add(DEFAULT_CSRF_COOKIE_NAME, extractCookieCsrf(response.getBody()));
             result = serverRunning.postForResponse("/oauth/authorize", getHeaders(cookies), formData);
-            assertEquals(HttpStatus.FOUND, result.getStatusCode());
+            assertThat(result.getStatusCode()).isEqualTo(HttpStatus.FOUND);
             location = UriUtils.decode(result.getHeaders().getLocation().toString(), "UTF-8");
         } else {
             // Token cached so no need for second approval
-            assertEquals(HttpStatus.FOUND, response.getStatusCode());
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FOUND);
             location = UriUtils.decode(response.getHeaders().getLocation().toString(), "UTF-8");
         }
-        assertTrue(location.matches(resource.getPreEstablishedRedirectUri() + responseTypeMatcher),
-                "Wrong location: " + location);
+        assertThat(location.matches(resource.getPreEstablishedRedirectUri() + responseTypeMatcher)).as("Wrong location: " + location).isTrue();
 
         String code = location.split("code=")[1].split("&")[0];
         exchangeCodeForToken(clientId, redirectUri, clientSecret, code, formData);
@@ -389,10 +377,9 @@ public class OpenIdTokenAuthorizationWithApprovalIntegrationTests {
                 redirectUri,
                 user.getId());
 
-        assertEquals(HttpStatus.FOUND, result.getStatusCode());
+        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.FOUND);
         String location = UriUtils.decode(result.getHeaders().getLocation().toString(), "UTF-8");
-        assertTrue(location.matches(resource.getPreEstablishedRedirectUri() + responseTypeMatcher),
-                "Wrong location: " + location);
+        assertThat(location.matches(resource.getPreEstablishedRedirectUri() + responseTypeMatcher)).as("Wrong location: " + location).isTrue();
 
 
     }
@@ -408,12 +395,12 @@ public class OpenIdTokenAuthorizationWithApprovalIntegrationTests {
                 testAccounts.getAuthorizationHeader(clientId, clientSecret));
         @SuppressWarnings("rawtypes")
         ResponseEntity<Map> tokenResponse = serverRunning.postForMap("/oauth/token", formData, tokenHeaders);
-        assertEquals(HttpStatus.OK, tokenResponse.getStatusCode());
+        assertThat(tokenResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
         @SuppressWarnings("unchecked")
         Map<String, String> body = tokenResponse.getBody();
         Jwt token = JwtHelper.decode(body.get("access_token"));
-        assertTrue(token.getClaims().contains("\"aud\""), "Wrong claims: " + token.getClaims());
-        assertTrue(token.getClaims().contains("\"user_id\""), "Wrong claims: " + token.getClaims());
+        assertThat(token.getClaims().contains("\"aud\"")).as("Wrong claims: " + token.getClaims()).isTrue();
+        assertThat(token.getClaims().contains("\"user_id\"")).as("Wrong claims: " + token.getClaims()).isTrue();
     }
 
     private ResponseEntity<ScimUser> createUser(String username, String firstName, String lastName,

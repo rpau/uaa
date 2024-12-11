@@ -26,60 +26,58 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
-public class OIDCIdentityProviderDefinitionTests {
+class OIDCIdentityProviderDefinitionTests {
 
     private final String defaultJson = "{\"emailDomain\":null,\"additionalConfiguration\":null,\"providerDescription\":null,\"externalGroupsWhitelist\":[],\"attributeMappings\":{},\"addShadowUserOnLogin\":true,\"storeCustomAttributes\":false,\"authUrl\":null,\"tokenUrl\":null,\"tokenKeyUrl\":null,\"tokenKey\":null,\"linkText\":null,\"showLinkText\":true,\"skipSslValidation\":false,\"relyingPartyId\":null,\"relyingPartySecret\":null,\"scopes\":null,\"issuer\":null,\"responseType\":\"code\",\"userInfoUrl\":null,\"jwtClientAuthentication\":false,\"additionalAuthzParameters\":{\"token_format\":\"jwt\"}}";
     String url = "https://accounts.google.com/.well-known/openid-configuration";
 
     @Test
-    public void serialize_discovery_url() throws MalformedURLException {
+    void serialize_discovery_url() throws MalformedURLException {
         OIDCIdentityProviderDefinition def = JsonUtils.readValue(defaultJson, OIDCIdentityProviderDefinition.class);
-        assertNull(def.getDiscoveryUrl());
+        assertThat(def.getDiscoveryUrl()).isNull();
         def.setDiscoveryUrl(new URL(url));
-        assertEquals(url, def.getDiscoveryUrl().toString());
+        assertThat(def.getDiscoveryUrl().toString()).isEqualTo(url);
         String json = JsonUtils.writeValueAsString(def);
         def = JsonUtils.readValue(json, OIDCIdentityProviderDefinition.class);
-        assertEquals(url, def.getDiscoveryUrl().toString());
-        assertEquals("jwt", def.getAdditionalAuthzParameters().get("token_format"));
+        assertThat(def.getDiscoveryUrl().toString()).isEqualTo(url);
+        assertThat(def.getAdditionalAuthzParameters().get("token_format")).isEqualTo("jwt");
     }
 
     @Test
-    public void testSerializableObjectCalls() throws CloneNotSupportedException {
+    void serializableObjectCalls() throws CloneNotSupportedException {
         OIDCIdentityProviderDefinition def = JsonUtils.readValue(defaultJson, OIDCIdentityProviderDefinition.class);
         OIDCIdentityProviderDefinition def2 = (OIDCIdentityProviderDefinition) def.clone();
-        assertTrue(def.equals(def2));
-        assertEquals(def.hashCode(), def2.hashCode());
-        assertEquals(1, def2.getAdditionalAuthzParameters().size());
-        assertEquals("jwt", def2.getAdditionalAuthzParameters().get("token_format"));
+        assertThat(def2).isEqualTo(def);
+        assertThat(def2.hashCode()).isEqualTo(def.hashCode());
+        assertThat(def2.getAdditionalAuthzParameters().size()).isEqualTo(1);
+        assertThat(def2.getAdditionalAuthzParameters().get("token_format")).isEqualTo("jwt");
     }
 
     @Test
-    public void serialize_prompts() {
+    void serialize_prompts() {
         OIDCIdentityProviderDefinition def = JsonUtils.readValue(defaultJson, OIDCIdentityProviderDefinition.class);
-        assertNull(def.getPrompts());
+        assertThat(def.getPrompts()).isNull();
         List<Prompt> prompts = Arrays.asList(new Prompt("username", "text", "Email"),
                 new Prompt("password", "password", "Password"),
                 new Prompt("passcode", "password", "Temporary Authentication Code (Get on at /passcode)"));
         def.setPrompts(prompts);
         String json = JsonUtils.writeValueAsString(def);
         def = JsonUtils.readValue(json, OIDCIdentityProviderDefinition.class);
-        assertEquals(prompts, def.getPrompts());
+        assertThat(def.getPrompts()).isEqualTo(prompts);
     }
 
     @Test
-    public void serialize_jwtClientAuthentication() {
+    void serialize_jwtClientAuthentication() {
         OIDCIdentityProviderDefinition def = JsonUtils.readValue(defaultJson, OIDCIdentityProviderDefinition.class);
-        assertNull(def.getPrompts());
+        assertThat(def.getPrompts()).isNull();
         Map<String, String> settings = new HashMap<>();
         settings.put("iss", "issuer");
         def.setJwtClientAuthentication(settings);
         String json = JsonUtils.writeValueAsString(def);
         def = JsonUtils.readValue(json, OIDCIdentityProviderDefinition.class);
-        assertEquals(settings, def.getJwtClientAuthentication());
-        assertNull(def.getAuthMethod());
+        assertThat(def.getJwtClientAuthentication()).isEqualTo(settings);
+        assertThat(def.getAuthMethod()).isNull();
     }
 }

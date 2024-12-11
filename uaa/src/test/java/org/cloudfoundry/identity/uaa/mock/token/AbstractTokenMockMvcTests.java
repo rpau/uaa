@@ -45,9 +45,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils.getClientCredentialsOAuthAccessToken;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_IMPLICIT;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.util.StringUtils.hasText;
 
 @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
@@ -133,8 +133,8 @@ public abstract class AbstractTokenMockMvcTests {
         String userScopes = "uaa.user";
         ScimUser user = setUpUser(jdbcScimUserProvisioning, jdbcScimGroupMembershipManager, jdbcScimGroupProvisioning, username, userScopes, OriginKeys.UAA, IdentityZone.getUaaZoneId());
         ScimUser scimUser = jdbcScimUserProvisioning.retrieve(user.getId(), IdentityZone.getUaaZoneId());
-        assertNull(scimUser.getLastLogonTime());
-        assertNull(scimUser.getPreviousLogonTime());
+        assertThat(scimUser.getLastLogonTime()).isNull();
+        assertThat(scimUser.getPreviousLogonTime()).isNull();
         return username;
     }
 

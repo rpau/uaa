@@ -22,8 +22,8 @@ import org.cloudfoundry.identity.uaa.oauth.common.AuthenticationScheme;
 import org.cloudfoundry.identity.uaa.oauth.common.DefaultOAuth2AccessToken;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assume.assumeNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assumptions.assumeThat;
 
 /**
  * Tests some real internet-based OAuth2 user info providers. To run these tests
@@ -40,34 +40,34 @@ class OAuth2ClientAuthenticationFilterTests {
 
     private void setUpContext(String tokenName) {
         String accessToken = System.getProperty(tokenName);
-        assumeNotNull(accessToken);
+        assumeThat(accessToken).isNotNull();
         context.setAccessToken(new DefaultOAuth2AccessToken(accessToken));
     }
 
     @Test
-    void testCloudFoundryAuthentication() {
+    void cloudFoundryAuthentication() {
         OAuth2RestTemplate restTemplate = new OAuth2RestTemplate(new AuthorizationCodeResourceDetails(), context);
         setUpContext("cf.token");
         filter.setRestTemplate(restTemplate);
         filter.setUserInfoUrl("https://uaa.cloudfoundry.com/userinfo");
         filter.afterPropertiesSet();
         SocialClientUserDetails user = (SocialClientUserDetails) filter.getPrincipal();
-        assertTrue(!user.getAuthorities().isEmpty());
+        assertThat(user.getAuthorities().isEmpty()).isFalse();
     }
 
     @Test
-    void testGithubAuthentication() {
+    void githubAuthentication() {
         OAuth2RestTemplate restTemplate = new OAuth2RestTemplate(new AuthorizationCodeResourceDetails(), context);
         setUpContext("github.token");
         filter.setRestTemplate(restTemplate);
         filter.setUserInfoUrl("https://api.github.com/user");
         filter.afterPropertiesSet();
         SocialClientUserDetails user = (SocialClientUserDetails) filter.getPrincipal();
-        assertTrue(!user.getAuthorities().isEmpty());
+        assertThat(user.getAuthorities().isEmpty()).isFalse();
     }
 
     @Test
-    void testFacebookAuthentication() {
+    void facebookAuthentication() {
         AuthorizationCodeResourceDetails resource = new AuthorizationCodeResourceDetails();
         resource.setAuthenticationScheme(AuthenticationScheme.query);
         OAuth2RestTemplate restTemplate = new OAuth2RestTemplate(resource, context);
@@ -76,6 +76,6 @@ class OAuth2ClientAuthenticationFilterTests {
         filter.setUserInfoUrl("https://graph.facebook.com/me");
         filter.afterPropertiesSet();
         SocialClientUserDetails user = (SocialClientUserDetails) filter.getPrincipal();
-        assertTrue(!user.getAuthorities().isEmpty());
+        assertThat(user.getAuthorities().isEmpty()).isFalse();
     }
 }

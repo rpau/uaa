@@ -7,13 +7,9 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.cloudfoundry.identity.uaa.test.ModelTestUtils.getResourceAsString;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class JwtHelperX5tTest {
     public static final String SIGNING_KEY_1 = getResourceAsString(JwtHelperX5tTest.class, "privatekey.pem");
@@ -24,68 +20,67 @@ public class JwtHelperX5tTest {
     private KeyInfo keyInfo;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         keyInfo = KeyInfoBuilder.build("testKid", SIGNING_KEY_1, "http://localhost/uaa", "RS256", CERTIFICATE_1);
     }
 
     @Test
-    public void jwtHeaderShouldContainX5tInTheHeader() {
+    void jwtHeaderShouldContainX5tInTheHeader() {
         Jwt jwt = JwtHelper.encodePlusX5t(Map.of("sub", "testJwtContent"), keyInfo, keyInfo.verifierCertificate().orElse(null));
-        assertThat(THUMBPRINT, is(jwt.getHeader().getX5t()));
+        assertThat(THUMBPRINT).isEqualTo(jwt.getHeader().getX5t());
     }
 
     @Test
-    public void jwtHeaderMustNotContainJkuInTheHeader() {
+    void jwtHeaderMustNotContainJkuInTheHeader() {
         Jwt jwt = JwtHelper.encodePlusX5t(Map.of("sub", "testJwtContent"), keyInfo, keyInfo.verifierCertificate().orElse(null));
-        assertThat(jwt.getHeader().getX5t(), is(THUMBPRINT));
-        assertNull(jwt.getHeader().getJku());
+        assertThat(jwt.getHeader().getX5t()).isEqualTo(THUMBPRINT);
+        assertThat(jwt.getHeader().getJku()).isNull();
     }
 
     @Test
-    public void jwtKeysMustNotContainX5t() {
+    void jwtKeysMustNotContainX5t() {
         Map<String, Object> tokenKey = KeyInfoBuilder.build("testKid", SIGNING_KEY_1, "http://localhost/uaa", "RS256", "test")
                 .getJwkMap();
         validateThatNoX509InformationInMap(tokenKey);
     }
 
     @Test
-    public void jwtKeysShouldContainX5t() {
+    void jwtKeysShouldContainX5t() {
         Map<String, Object> keys = keyInfo.getJwkMap();
-        assertThat(keys.get("x5t"), is(THUMBPRINT));
+        assertThat(keys.get("x5t")).isEqualTo(THUMBPRINT);
     }
 
     @Test
-    public void jwtHeaderShouldFailWithInvalidCert() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            KeyInfo keyInfo1 = KeyInfoBuilder.build("testKid", SIGNING_KEY_1, "http://localhost/uaa", "RS256", "X");
-            JwtHelper.encodePlusX5t(Map.of("key", new Object()), keyInfo1, keyInfo1.verifierCertificate().orElse(null));
-        });
+    void jwtHeaderShouldFailWithInvalidCert() {
+        KeyInfo keyInfo1 = KeyInfoBuilder.build("testKid", SIGNING_KEY_1, "http://localhost/uaa", "RS256", "X");
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() ->
+                JwtHelper.encodePlusX5t(Map.of("key", new Object()), keyInfo1, keyInfo1.verifierCertificate().orElse(null)));
     }
 
     @Test
-    public void getX509CertThumbprintInvalidAlg() {
-        assertThrows(IllegalArgumentException.class, () ->
+    void getX509CertThumbprintInvalidAlg() {
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() ->
                 JwtHelper.getX509CertThumbprint("test".getBytes(), "unknown"));
     }
 
     @Test
-    public void jwtKeysShouldIgnoreExpiredCertificatesAndNotContainX5t() {
+    void jwtKeysShouldIgnoreExpiredCertificatesAndNotContainX5t() {
         Map<String, Object> tokenKey = KeyInfoBuilder.build("testKid", SIGNING_KEY_1, "http://localhost/uaa", "RS256",
                 EXPIRED_CERTIFICATE_1).getJwkMap();
         validateThatNoX509InformationInMap(tokenKey);
     }
 
     @Test
-    public void jwtKeysShouldIgnoreNullCertificatesAndNotContainX5t() {
+    void jwtKeysShouldIgnoreNullCertificatesAndNotContainX5t() {
         Map<String, Object> tokenKey = KeyInfoBuilder.build("testKid", SIGNING_KEY_1, "http://localhost/uaa", "RS256", null).getJwkMap();
         validateThatNoX509InformationInMap(tokenKey);
     }
 
     private static void validateThatNoX509InformationInMap(Map<String, Object> tokenKey) {
-        assertNull(tokenKey.get("x5t"));
-        assertNull(tokenKey.get("x5c"));
-        assertNotNull(tokenKey.get("value"));
-        assertEquals("testKid", tokenKey.get("kid"));
-        assertEquals("RS256", tokenKey.get("alg"));
+        assertThat(tokenKey.get("x5t")).isNull();
+        assertThat(tokenKey.get("x5c")).isNull();
+        assertThat(tokenKey.get("value")).isNotNull();
+        assertThat(tokenKey.get("kid")).isEqualTo("testKid");
+        assertThat(tokenKey.get("alg")).isEqualTo("RS256");
     }
 }

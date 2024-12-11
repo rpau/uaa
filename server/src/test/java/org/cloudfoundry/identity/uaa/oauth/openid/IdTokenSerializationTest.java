@@ -17,14 +17,14 @@ import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasNoJsonPath;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.IsCollectionContaining.hasItems;
+import static org.hamcrest.Matchers.hasItems;
 
-public class IdTokenSerializationTest {
+class IdTokenSerializationTest {
 
     private IdToken idToken;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         Set<String> amr = new HashSet<>();
         amr.add("amr1");
         amr.add("amr2");
@@ -64,12 +64,12 @@ public class IdTokenSerializationTest {
     }
 
     @AfterEach
-    public void teardown() {
+    void teardown() {
         DateTimeUtils.setCurrentMillisSystem();
     }
 
     @Test
-    public void testSerializingIdToken() {
+    void serializingIdToken() {
         String idTokenJsonString = JsonUtils.writeValueAsString(idToken);
         assertThat(idTokenJsonString, hasJsonPath("acr.values", hasItems("acr1", "acr2")));
         assertThat(idTokenJsonString, hasJsonPath("amr", hasItems("amr1", "amr2")));
@@ -99,7 +99,7 @@ public class IdTokenSerializationTest {
     }
 
     @Test
-    public void testSerializingIdToken_omitNullValues() {
+    void serializingIdTokenOmitNullValues() {
         idToken = new IdToken(
                 "sub",
                 newArrayList("aud"),

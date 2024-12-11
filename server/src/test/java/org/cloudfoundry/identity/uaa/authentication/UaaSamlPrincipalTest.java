@@ -8,7 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class UaaSamlPrincipalTest {
     @Test
-    void testUaaSamlPrincipal() {
+    void uaaSamlPrincipal() {
         UaaSamlPrincipal uaaSamlPrincipal = new UaaSamlPrincipal("id", "name", "email", "origin", List.of("sessionIndexes"), "externalId", "zoneId");
         assertThat(uaaSamlPrincipal).returns("id", UaaSamlPrincipal::getId)
                 .returns("name", UaaSamlPrincipal::getName)

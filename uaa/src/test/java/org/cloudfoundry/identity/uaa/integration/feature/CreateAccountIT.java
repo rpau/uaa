@@ -15,7 +15,6 @@ package org.cloudfoundry.identity.uaa.integration.feature;
 
 import com.dumbster.smtp.SimpleSmtpServer;
 import com.dumbster.smtp.SmtpMessage;
-import org.assertj.core.api.Assertions;
 import org.cloudfoundry.identity.uaa.constants.OriginKeys;
 import org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils;
 import org.cloudfoundry.identity.uaa.oauth.client.test.TestAccounts;
@@ -115,7 +114,7 @@ class CreateAccountIT {
         String userEmail = "user" + new SecureRandom().nextInt() + "@example.com";
         webDriver.get(baseUrl + "/create_account?client_id=app");
 
-        Assertions.assertThat(webDriver.findElement(By.tagName("h1")).getText()).isEqualTo("Create your account");
+        assertThat(webDriver.findElement(By.tagName("h1")).getText()).isEqualTo("Create your account");
 
         int receivedEmailSize = simpleSmtpServer.getReceivedEmailSize();
 
@@ -131,7 +130,7 @@ class CreateAccountIT {
         assertThat(message.getHeaderValue("To")).isEqualTo(userEmail);
         assertThat(message.getBody()).contains("Activate your account");
 
-        Assertions.assertThat(webDriver.findElement(By.cssSelector(".instructions-sent")).getText()).isEqualTo("Please check email for an activation link.");
+        assertThat(webDriver.findElement(By.cssSelector(".instructions-sent")).getText()).isEqualTo("Please check email for an activation link.");
 
         String link = testClient.extractLink(message.getBody());
         assertThat(link).isNotEmpty();

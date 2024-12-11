@@ -23,11 +23,11 @@ import org.cloudfoundry.identity.uaa.provider.LdapIdentityProviderDefinition;
 import org.cloudfoundry.identity.uaa.util.JsonUtils;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
-public class LdapProviderDefinitionDeserializeTests {
+class LdapProviderDefinitionDeserializeTests {
     @Test
-    public void type_should_be_ldap() {
+    void type_should_be_ldap() {
         String json = """
                 {
                   "active": true,
@@ -45,12 +45,12 @@ public class LdapProviderDefinitionDeserializeTests {
                 """;
         IdentityProvider<LdapIdentityProviderDefinition> def = JsonUtils.readValue(json, new TypeReference<IdentityProvider<LdapIdentityProviderDefinition>>() {
         });
-        assertEquals(OriginKeys.LDAP, def.getType());
-        assertEquals("ldap://test-identity-provider-9bmlg.url", def.getConfig().getBaseUrl());
+        assertThat(def.getType()).isEqualTo(OriginKeys.LDAP);
+        assertThat(def.getConfig().getBaseUrl()).isEqualTo("ldap://test-identity-provider-9bmlg.url");
     }
 
     @Test
-    public void old_style_type_should_be_ldap() {
+    void old_style_type_should_be_ldap() {
         String json = """
                 {
                 	"active": true,
@@ -62,8 +62,8 @@ public class LdapProviderDefinitionDeserializeTests {
                 """;
         IdentityProvider<LdapIdentityProviderDefinition> def = JsonUtils.readValue(json, new TypeReference<IdentityProvider<LdapIdentityProviderDefinition>>() {
         });
-        assertEquals(OriginKeys.LDAP, def.getType());
-        assertEquals("ldap://test-identity-provider-9bmlg.url", def.getConfig().getBaseUrl());
+        assertThat(def.getType()).isEqualTo(OriginKeys.LDAP);
+        assertThat(def.getConfig().getBaseUrl()).isEqualTo("ldap://test-identity-provider-9bmlg.url");
     }
 
 }

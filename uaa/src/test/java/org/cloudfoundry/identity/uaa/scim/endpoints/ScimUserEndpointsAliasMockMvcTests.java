@@ -53,7 +53,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @DefaultTestContext
-public class ScimUserEndpointsAliasMockMvcTests extends AliasMockMvcTestBase {
+class ScimUserEndpointsAliasMockMvcTests extends AliasMockMvcTestBase {
 
     // There is a race conditions where multiple users with the same name are created between tests
     // We ensure that the tests are independent by having a custom username per test, that we clean
@@ -790,13 +790,13 @@ public class ScimUserEndpointsAliasMockMvcTests extends AliasMockMvcTestBase {
 
                 @ParameterizedTest
                 @EnumSource(value = HttpMethod.class, names = {"PUT", "PATCH"})
-                void testVersionHandling_UaaToCustomZone(final HttpMethod method) throws Throwable {
+                void versionHandlingUaaToCustomZone(final HttpMethod method) throws Throwable {
                     testVersionHandling(method, uaaZone, customZone);
                 }
 
                 @ParameterizedTest
                 @EnumSource(value = HttpMethod.class, names = {"PUT", "PATCH"})
-                void testVersionHandling_CustomToUaaZone(final HttpMethod method) throws Throwable {
+                void versionHandlingCustomToUaaZone(final HttpMethod method) throws Throwable {
                     testVersionHandling(method, customZone, uaaZone);
                 }
 
@@ -1580,7 +1580,7 @@ public class ScimUserEndpointsAliasMockMvcTests extends AliasMockMvcTestBase {
                 .map(UserConfig::getDefaultGroups);
         assertThat(defaultGroupNamesAliasZoneOpt).isPresent();
         final List<String> defaultGroupNamesAliasZone = defaultGroupNamesAliasZoneOpt.get();
-        assertThat(aliasUser.getGroups()).isNotNull().hasSize(defaultGroupNamesAliasZone.size());
+        assertThat(aliasUser.getGroups()).hasSize(defaultGroupNamesAliasZone.size());
         final List<String> directGroupNamesAliasUser = aliasUser.getGroups().stream()
                 .filter(group -> group.getType() == DIRECT)
                 .map(ScimUser.Group::getDisplay)
@@ -1711,7 +1711,7 @@ public class ScimUserEndpointsAliasMockMvcTests extends AliasMockMvcTestBase {
         final JdbcScimUserProvisioning scimUserProvisioning = webApplicationContext
                 .getBean(JdbcScimUserProvisioning.class);
         final int rowsDeleted = scimUserProvisioning.deleteByUser(id, zoneId);
-        assertThat(rowsDeleted).isEqualTo(1);
+        assertThat(rowsDeleted).isOne();
     }
 
     @Override

@@ -39,7 +39,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringJUnitConfig(classes = DefaultIntegrationTestConfig.class)
 @UnlessProfileActive(values = "saml")
-public class ResetPasswordIT {
+class ResetPasswordIT {
 
     @Autowired
     @RegisterExtension
@@ -68,7 +68,7 @@ public class ResetPasswordIT {
 
     @BeforeEach
     @AfterEach
-    public void logoutAndClearCookies() {
+    void logoutAndClearCookies() {
         try {
             webDriver.get(baseUrl + "/logout.do");
         } catch (org.openqa.selenium.TimeoutException x) {
@@ -79,7 +79,7 @@ public class ResetPasswordIT {
     }
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         SecureRandom secureRandom = new SecureRandom();
 
         scimClientId = "scim" + secureRandom.nextInt();
@@ -98,18 +98,18 @@ public class ResetPasswordIT {
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         webDriver.get(baseUrl + "/logout.do");
     }
 
     @Test
-    public void resettingAPasswordWithUsername() {
+    void resettingAPasswordWithUsername() {
         beginPasswordReset(username);
         finishPasswordReset(username, email);
     }
 
     @Test
-    public void resettingAPasswordWithPrimaryEmail() {
+    void resettingAPasswordWithPrimaryEmail() {
         int receivedEmailSize = simpleSmtpServer.getReceivedEmailSize();
 
         beginPasswordReset(email);
@@ -118,7 +118,7 @@ public class ResetPasswordIT {
     }
 
     @Test
-    public void resetPassword_with_clientRedirect() {
+    void resetPassword_with_clientRedirect() {
         webDriver.get(baseUrl + "/forgot_password?client_id=" + scimClientId + "&redirect_uri=http://example.redirect.com");
         assertThat(webDriver.findElement(By.tagName("h1")).getText()).isEqualTo("Reset Password");
 
@@ -151,7 +151,7 @@ public class ResetPasswordIT {
     }
 
     @Test
-    public void testNotAutoLoginAfterResetPassword() {
+    void notAutoLoginAfterResetPassword() {
         webDriver.get(baseUrl + "/oauth/authorize?client_id=" + authCodeClientId + "&redirect_uri=http://example.redirect.com&grant_type=authorization_code&response_type=code");
         webDriver.findElement(By.linkText("Reset password")).click();
         assertThat(webDriver.findElement(By.tagName("h1")).getText()).isEqualTo("Reset Password");
@@ -191,7 +191,7 @@ public class ResetPasswordIT {
     }
 
     @Test
-    public void resettingAPasswordForANonExistentUser() {
+    void resettingAPasswordForANonExistentUser() {
         int receivedEmailSize = simpleSmtpServer.getReceivedEmailSize();
 
         beginPasswordReset("nonexistent_user");
@@ -200,7 +200,7 @@ public class ResetPasswordIT {
     }
 
     @Test
-    public void resettingAPasswordWithInvalidPassword() {
+    void resettingAPasswordWithInvalidPassword() {
         // Go to Forgot Password page
         beginPasswordReset(username);
         String link = getPasswordResetLink(email);
@@ -214,7 +214,7 @@ public class ResetPasswordIT {
     }
 
     @Test
-    public void codesCanOnlyBeUsedOnce() {
+    void codesCanOnlyBeUsedOnce() {
         // Go to Forgot Password page
         beginPasswordReset(username);
         String link = getPasswordResetLink(email);
@@ -227,7 +227,7 @@ public class ResetPasswordIT {
     }
 
     @Test
-    public void resetPassword_displaysErrorMessage_WhenPasswordIsInvalid() {
+    void resetPassword_displaysErrorMessage_WhenPasswordIsInvalid() {
         String newPassword = new RandomValueStringGenerator(260).generate();
         beginPasswordReset(username);
 
@@ -241,7 +241,7 @@ public class ResetPasswordIT {
     }
 
     @Test
-    public void resetPassword_displaysErrorMessage_NewPasswordSameAsOld() {
+    void resetPassword_displaysErrorMessage_NewPasswordSameAsOld() {
         beginPasswordReset(username);
         String link = getPasswordResetLink(email);
         webDriver.get(link);

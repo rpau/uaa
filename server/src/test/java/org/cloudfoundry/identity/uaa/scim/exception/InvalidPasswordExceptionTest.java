@@ -4,13 +4,13 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
-public class InvalidPasswordExceptionTest {
+class InvalidPasswordExceptionTest {
 
     @Test
-    public void errorMessagesEmitInSortedOrder() {
+    void errorMessagesEmitInSortedOrder() {
         InvalidPasswordException exception = new InvalidPasswordException(Arrays.asList("a2", "b1", "a1"));
-        assertEquals("a1 a2 b1", exception.getMessagesAsOneString());
+        assertThat(exception.getMessagesAsOneString()).isEqualTo("a1 a2 b1");
     }
 }

@@ -35,9 +35,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import static java.util.Collections.emptyList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils.getClientCredentialsOAuthAccessToken;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -116,7 +115,7 @@ class ListUserTokenMockMvcTests extends AbstractTokenMockMvcTests {
 
     void validateTokens(List<String> actual, List<String> expected) {
         for (String t : expected) {
-            assertTrue(actual.contains(t), "Expecting token:" + t + " to be present in list.");
+            assertThat(actual.contains(t)).as("Expecting token:" + t + " to be present in list.").isTrue();
         }
     }
 
@@ -215,7 +214,7 @@ class ListUserTokenMockMvcTests extends AbstractTokenMockMvcTests {
             String response = result.getResponse().getContentAsString();
             List<RevocableToken> tokenList = JsonUtils.readValue(response, new TypeReference<List<RevocableToken>>() {
             });
-            tokenList.forEach(t -> assertNull(t.getValue()));
+            tokenList.forEach(t -> assertThat(t.getValue()).isNull());
             return tokenList;
         } else {
             return emptyList();

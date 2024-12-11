@@ -6,18 +6,17 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Date;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class TokenValidityResolverTest {
+class TokenValidityResolverTest {
 
     private TokenValidityResolver resolver;
     private ClientTokenValidity clientTokenValidity;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         int globalAccessTokenValiditySeconds = 120;
 
         clientTokenValidity = mock(ClientTokenValidity.class);
@@ -29,31 +28,31 @@ public class TokenValidityResolverTest {
     }
 
     @Test
-    public void whenClientValidityConfigured() {
+    void whenClientValidityConfigured() {
         Date validity = resolver.resolve("clientId");
 
-        assertThat(validity.getTime(), is(101_000l));
+        assertThat(validity.getTime()).isEqualTo(101_000l);
     }
 
 
     @Test
-    public void whenClientValidityNotConfigured_fallsBackToZoneConfiguration() {
+    void whenClientValidityNotConfigured_fallsBackToZoneConfiguration() {
         when(clientTokenValidity.getZoneValiditySeconds()).thenReturn(50);
         when(clientTokenValidity.getValiditySeconds("clientId")).thenReturn(null);
 
         Date validity = resolver.resolve("clientId");
 
-        assertThat(validity.getTime(), is(51_000l));
+        assertThat(validity.getTime()).isEqualTo(51_000l);
     }
 
     @Test
-    public void whenZoneValidityNotConfigured_fallsBackToGlobalPolicy() {
+    void whenZoneValidityNotConfigured_fallsBackToGlobalPolicy() {
         when(clientTokenValidity.getZoneValiditySeconds()).thenReturn(-1);
         when(clientTokenValidity.getValiditySeconds("clientId")).thenReturn(null);
 
         Date validity = resolver.resolve("clientId");
 
-        assertThat(validity.getTime(), is(121_000l));
+        assertThat(validity.getTime()).isEqualTo(121_000l);
     }
 
 }

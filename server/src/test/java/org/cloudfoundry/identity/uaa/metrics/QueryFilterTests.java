@@ -19,61 +19,58 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
-public class QueryFilterTests {
+class QueryFilterTests {
 
     private RequestMetric metric;
     private QueryFilter filter;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         metric = new RequestMetric();
         MetricsAccessor.setCurrent(metric);
         filter = new QueryFilter();
     }
 
     @AfterEach
-    public void clear() {
+    void clear() {
         MetricsAccessor.clear();
     }
 
 
     @Test
-    public void reportUnsuccessfulQuery() {
+    void reportUnsuccessfulQuery() {
         long start = System.currentTimeMillis();
         filter.reportFailedQuery("query", null, "name", start, null);
-        assertNotNull(metric.getQueries());
-        assertEquals(1, metric.getQueries().size());
-        assertEquals("query", metric.getQueries().get(0).getQuery());
-        assertEquals(start, metric.getQueries().get(0).getRequestStartTime());
-        assertFalse(metric.getQueries().get(0).isIntolerable());
+        assertThat(metric.getQueries()).isNotNull();
+        assertThat(metric.getQueries().size()).isEqualTo(1);
+        assertThat(metric.getQueries().get(0).getQuery()).isEqualTo("query");
+        assertThat(metric.getQueries().get(0).getRequestStartTime()).isEqualTo(start);
+        assertThat(metric.getQueries().get(0).isIntolerable()).isFalse();
     }
 
     @Test
-    public void reportQuery() {
+    void reportQuery() {
         filter.reportQuery("query", null, "name", 0, 1);
-        assertNotNull(metric.getQueries());
-        assertEquals(1, metric.getQueries().size());
-        assertEquals("query", metric.getQueries().get(0).getQuery());
-        assertEquals(0, metric.getQueries().get(0).getRequestStartTime());
-        assertEquals(1, metric.getQueries().get(0).getRequestCompleteTime());
-        assertFalse(metric.getQueries().get(0).isIntolerable());
+        assertThat(metric.getQueries()).isNotNull();
+        assertThat(metric.getQueries().size()).isEqualTo(1);
+        assertThat(metric.getQueries().get(0).getQuery()).isEqualTo("query");
+        assertThat(metric.getQueries().get(0).getRequestStartTime()).isEqualTo(0);
+        assertThat(metric.getQueries().get(0).getRequestCompleteTime()).isEqualTo(1);
+        assertThat(metric.getQueries().get(0).isIntolerable()).isFalse();
     }
 
     @Test
-    public void reportSlowQuery() {
+    void reportSlowQuery() {
         long delta = filter.getThreshold() + 10;
         filter.reportSlowQuery("query", null, "name", 0, delta);
-        assertNotNull(metric.getQueries());
-        assertEquals(1, metric.getQueries().size());
-        assertEquals("query", metric.getQueries().get(0).getQuery());
-        assertEquals(0, metric.getQueries().get(0).getRequestStartTime());
-        assertEquals(delta, metric.getQueries().get(0).getRequestCompleteTime());
-        assertTrue(metric.getQueries().get(0).isIntolerable());
+        assertThat(metric.getQueries()).isNotNull();
+        assertThat(metric.getQueries().size()).isEqualTo(1);
+        assertThat(metric.getQueries().get(0).getQuery()).isEqualTo("query");
+        assertThat(metric.getQueries().get(0).getRequestStartTime()).isEqualTo(0);
+        assertThat(metric.getQueries().get(0).getRequestCompleteTime()).isEqualTo(delta);
+        assertThat(metric.getQueries().get(0).isIntolerable()).isTrue();
     }
 
 }

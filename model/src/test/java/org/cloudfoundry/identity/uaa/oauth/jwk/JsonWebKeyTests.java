@@ -7,9 +7,9 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.cloudfoundry.identity.uaa.test.ModelTestUtils.getResourceAsString;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class JsonWebKeyTests {
 
@@ -18,23 +18,23 @@ class JsonWebKeyTests {
     });
 
     @Test
-    void testWebKeyPublic() {
+    void webKeyPublic() {
         // given
         Map<String, Object> jsonMap = Map.of("kid", "uaa-key", "kty", "RSA");
         JsonWebKey jsonWebKey = new JsonWebKey(jsonMap);
         jsonWebKey.setKid(samlKeySet.getKeys().get(0).getKid());
         jsonWebKey.setX5t(samlKeySet.getKeys().get(0).getX5t());
         // then
-        assertEquals(samlKeySet.getKeys().get(0).getKid(), jsonWebKey.getKid());
-        assertEquals(samlKeySet.getKeys().get(0).getX5t(), jsonWebKey.getX5t());
-        assertEquals(3, ((ArrayList) samlKeySet.getKeySetMap().get("keys")).size());
+        assertThat(jsonWebKey.getKid()).isEqualTo(samlKeySet.getKeys().get(0).getKid());
+        assertThat(jsonWebKey.getX5t()).isEqualTo(samlKeySet.getKeys().get(0).getX5t());
+        assertThat(((ArrayList) samlKeySet.getKeySetMap().get("keys")).size()).isEqualTo(3);
     }
 
     @Test
-    void testWebKeyPublicNoTypeException() {
+    void webKeyPublicNoTypeException() {
         // given
         Map<String, Object> jsonMap = Map.of("kid", "uaa-key");
-        assertThrows(IllegalArgumentException.class, () -> new JsonWebKey(jsonMap));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> new JsonWebKey(jsonMap));
     }
 
 }

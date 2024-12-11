@@ -16,137 +16,136 @@ import org.cloudfoundry.identity.uaa.oauth.common.exceptions.UserDeniedAuthoriza
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-public class OAuth2ExceptionDeserializerTests {
+class OAuth2ExceptionDeserializerTests {
     private static final String DETAILS = "some detail";
     private static ObjectMapper mapper;
 
     @BeforeAll
-    public static void setUpClass() {
+    static void setUpClass() {
         mapper = new ObjectMapper();
     }
 
     @Test
-    public void readValueInvalidGrant() throws Exception {
+    void readValueInvalidGrant() throws Exception {
         String accessToken = createResponse(OAuth2Exception.INVALID_GRANT);
         InvalidGrantException result = (InvalidGrantException) mapper.readValue(accessToken, OAuth2Exception.class);
-        assertEquals(DETAILS, result.getMessage());
-        assertEquals(null, result.getAdditionalInformation());
+        assertThat(result.getMessage()).isEqualTo(DETAILS);
+        assertThat(result.getAdditionalInformation()).isNull();
     }
 
     @Test
-    public void readValueInvalidRequest() throws Exception {
+    void readValueInvalidRequest() throws Exception {
         String accessToken = createResponse(OAuth2Exception.INVALID_REQUEST);
         InvalidRequestException result = (InvalidRequestException) mapper.readValue(accessToken, OAuth2Exception.class);
-        assertEquals(DETAILS, result.getMessage());
-        assertEquals(null, result.getAdditionalInformation());
+        assertThat(result.getMessage()).isEqualTo(DETAILS);
+        assertThat(result.getAdditionalInformation()).isNull();
     }
 
     @Test
-    public void readValueInvalidScope() throws Exception {
+    void readValueInvalidScope() throws Exception {
         String accessToken = createResponse(OAuth2Exception.INVALID_SCOPE);
         InvalidScopeException result = (InvalidScopeException) mapper.readValue(accessToken, OAuth2Exception.class);
-        assertEquals(DETAILS, result.getMessage());
-        assertEquals(null, result.getAdditionalInformation());
+        assertThat(result.getMessage()).isEqualTo(DETAILS);
+        assertThat(result.getAdditionalInformation()).isNull();
     }
 
     @Test
-    public void readValueIsufficientScope() throws Exception {
+    void readValueIsufficientScope() throws Exception {
         String accessToken = "{\"error\": \"insufficient_scope\", \"error_description\": \"insufficient scope\", \"scope\": \"bar foo\"}";
         InsufficientScopeException result = (InsufficientScopeException) mapper.readValue(accessToken, OAuth2Exception.class);
-        assertEquals("insufficient scope", result.getMessage());
-        assertEquals("bar foo", result.getAdditionalInformation().get("scope"));
+        assertThat(result.getMessage()).isEqualTo("insufficient scope");
+        assertThat(result.getAdditionalInformation().get("scope")).isEqualTo("bar foo");
     }
 
     @Test
-    public void readValueUnsupportedGrantType() throws Exception {
+    void readValueUnsupportedGrantType() throws Exception {
         String accessToken = createResponse(OAuth2Exception.UNSUPPORTED_GRANT_TYPE);
         UnsupportedGrantTypeException result = (UnsupportedGrantTypeException) mapper.readValue(accessToken,
                 OAuth2Exception.class);
-        assertEquals(DETAILS, result.getMessage());
-        assertEquals(null, result.getAdditionalInformation());
+        assertThat(result.getMessage()).isEqualTo(DETAILS);
+        assertThat(result.getAdditionalInformation()).isNull();
     }
 
     @Test
-    public void readValueUnauthorizedClient() throws Exception {
+    void readValueUnauthorizedClient() throws Exception {
         String accessToken = createResponse(OAuth2Exception.UNAUTHORIZED_CLIENT);
         UnauthorizedClientException result = (UnauthorizedClientException) mapper.readValue(accessToken,
                 OAuth2Exception.class);
-        assertEquals(DETAILS, result.getMessage());
-        assertEquals(null, result.getAdditionalInformation());
+        assertThat(result.getMessage()).isEqualTo(DETAILS);
+        assertThat(result.getAdditionalInformation()).isNull();
     }
 
     @Test
-    public void readValueAccessDenied() throws Exception {
+    void readValueAccessDenied() throws Exception {
         String accessToken = createResponse(OAuth2Exception.ACCESS_DENIED);
         UserDeniedAuthorizationException result = (UserDeniedAuthorizationException) mapper.readValue(accessToken,
                 OAuth2Exception.class);
-        assertEquals(DETAILS, result.getMessage());
-        assertEquals(null, result.getAdditionalInformation());
+        assertThat(result.getMessage()).isEqualTo(DETAILS);
+        assertThat(result.getAdditionalInformation()).isNull();
     }
 
     @Test
-    public void readValueRedirectUriMismatch() throws Exception {
+    void readValueRedirectUriMismatch() throws Exception {
         String accessToken = createResponse(OAuth2Exception.INVALID_GRANT, "Redirect URI mismatch.");
         RedirectMismatchException result = (RedirectMismatchException) mapper.readValue(accessToken,
                 OAuth2Exception.class);
-        assertEquals("Redirect URI mismatch.", result.getMessage());
-        assertEquals(null, result.getAdditionalInformation());
+        assertThat(result.getMessage()).isEqualTo("Redirect URI mismatch.");
+        assertThat(result.getAdditionalInformation()).isNull();
     }
 
     @Test
-    public void readValueInvalidToken() throws Exception {
+    void readValueInvalidToken() throws Exception {
         String accessToken = createResponse(OAuth2Exception.INVALID_TOKEN);
         InvalidTokenException result = (InvalidTokenException) mapper.readValue(accessToken, OAuth2Exception.class);
-        assertEquals(DETAILS, result.getMessage());
-        assertEquals(null, result.getAdditionalInformation());
+        assertThat(result.getMessage()).isEqualTo(DETAILS);
+        assertThat(result.getAdditionalInformation()).isNull();
     }
 
     @Test
-    public void readValueUndefinedException() throws Exception {
+    void readValueUndefinedException() throws Exception {
         String accessToken = createResponse("notdefinedcode");
         OAuth2Exception result = mapper.readValue(accessToken, OAuth2Exception.class);
-        assertEquals(DETAILS, result.getMessage());
-        assertEquals(null, result.getAdditionalInformation());
+        assertThat(result.getMessage()).isEqualTo(DETAILS);
+        assertThat(result.getAdditionalInformation()).isNull();
     }
 
     @Test
-    public void readValueInvalidClient() throws Exception {
+    void readValueInvalidClient() throws Exception {
         String accessToken = createResponse(OAuth2Exception.INVALID_CLIENT);
         InvalidClientException result = (InvalidClientException) mapper.readValue(accessToken, OAuth2Exception.class);
-        assertEquals(DETAILS, result.getMessage());
-        assertEquals(null, result.getAdditionalInformation());
+        assertThat(result.getMessage()).isEqualTo(DETAILS);
+        assertThat(result.getAdditionalInformation()).isNull();
     }
 
     @Test
-    public void readValueWithAdditionalDetails() throws Exception {
+    void readValueWithAdditionalDetails() throws Exception {
         String accessToken = "{\"error\": \"invalid_client\", \"error_description\": \"some detail\", \"foo\": \"bar\"}";
         InvalidClientException result = (InvalidClientException) mapper.readValue(accessToken, OAuth2Exception.class);
-        assertEquals(DETAILS, result.getMessage());
-        assertEquals("{foo=bar}", result.getAdditionalInformation().toString());
+        assertThat(result.getMessage()).isEqualTo(DETAILS);
+        assertThat(result.getAdditionalInformation().toString()).isEqualTo("{foo=bar}");
     }
 
     @Test
-    public void readValueWithObjects() throws Exception {
+    void readValueWithObjects() throws Exception {
         String accessToken = "{\"error\": [\"invalid\",\"client\"], \"error_description\": {\"some\":\"detail\"}, \"foo\": [\"bar\"]}";
         OAuth2Exception result = mapper.readValue(accessToken, OAuth2Exception.class);
-        assertEquals("{some=detail}", result.getMessage());
-        assertEquals("{foo=[bar]}", result.getAdditionalInformation().toString());
+        assertThat(result.getMessage()).isEqualTo("{some=detail}");
+        assertThat(result.getAdditionalInformation().toString()).isEqualTo("{foo=[bar]}");
     }
 
     @Test
-    public void readValueBadCredentials() throws Exception {
+    void readValueBadCredentials() throws Exception {
         String accessToken = createResponse(OAuth2Exception.INVALID_CLIENT);
         OAuth2Exception result = mapper.readValue(accessToken,
                 BadClientCredentialsException.class);
-        assertEquals(DETAILS, result.getMessage());
-        assertNull(result.getAdditionalInformation());
+        assertThat(result.getMessage()).isEqualTo(DETAILS);
+        assertThat(result.getAdditionalInformation()).isNull();
     }
 
     private String createResponse(String error, String message) {

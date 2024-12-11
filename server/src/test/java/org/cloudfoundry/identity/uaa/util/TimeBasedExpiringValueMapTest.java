@@ -21,13 +21,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.concurrent.ConcurrentMap;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThan;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.same;
@@ -47,64 +41,64 @@ public class TimeBasedExpiringValueMapTest {
     private final Object value2 = new Object();
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         map = new TimeBasedExpiringValueMap<>(timeService, TIMEOUT);
     }
 
     @Test
-    public void no_value() {
-        assertNull(map.get(generator.generate()));
+    void no_value() {
+        assertThat(map.get(generator.generate())).isNull();
     }
 
     @Test
-    public void put_then_get() {
+    void put_then_get() {
         map.put(key1, value1);
-        assertSame(value1, map.get(key1));
+        assertThat(map.get(key1)).isSameAs(value1);
     }
 
     @Test
-    public void clear() {
+    void clear() {
         map.put(key1, value1);
-        assertNotNull(map.get(key1));
-        assertEquals(1, map.size());
+        assertThat(map.get(key1)).isNotNull();
+        assertThat(map.size()).isEqualTo(1);
         map.clear();
-        assertNull(map.get(key1));
-        assertEquals(0, map.size());
+        assertThat(map.get(key1)).isNull();
+        assertThat(map.size()).isEqualTo(0);
     }
 
     @Test
-    public void expire_on_get() {
+    void expire_on_get() {
         map.put(key1, value1);
         timeService.addAndGet(TIMEOUT * 2);
-        assertEquals(1, map.size());
-        assertSame(value1, map.get(key1));
-        assertEquals(0, map.size());
-        assertNull(map.get(key1));
+        assertThat(map.size()).isEqualTo(1);
+        assertThat(map.get(key1)).isSameAs(value1);
+        assertThat(map.size()).isEqualTo(0);
+        assertThat(map.get(key1)).isNull();
     }
 
     @Test
-    public void expire_on_put() {
+    void expire_on_put() {
         map.put(key1, value1);
-        assertEquals(1, map.size());
+        assertThat(map.size()).isEqualTo(1);
         timeService.addAndGet(TIMEOUT * 2);
         map.put(key2, value2);
-        assertEquals(1, map.size());
+        assertThat(map.size()).isEqualTo(1);
     }
 
     @Test
-    public void remove() {
+    void remove() {
         map.put(key1, value1);
-        assertSame(value1, map.remove(key1));
-        assertEquals(0, map.size());
+        assertThat(map.remove(key1)).isSameAs(value1);
+        assertThat(map.size()).isEqualTo(0);
     }
 
     @Test
-    public void non_existent_remove() {
-        assertNull(map.remove("does-not-exist"));
+    void non_existent_remove() {
+        assertThat(map.remove("does-not-exist")).isNull();
     }
 
     @Test
-    public void concurrency_test() throws Exception {
+    void concurrency_test() throws Exception {
         TimeServiceImpl timeService = mock(TimeServiceImpl.class);
         when(timeService.getCurrentTimeMillis()).thenReturn(1L);
 
@@ -117,7 +111,7 @@ public class TimeBasedExpiringValueMapTest {
                 String key = randomValueStringGenerator.generate().toLowerCase();
                 Object value = new Object();
                 map.put(key, value);
-                assertNotNull(map.get(key));
+                assertThat(map.get(key)).isNotNull();
             });
         }
         for (Thread thread : threads) {
@@ -126,23 +120,23 @@ public class TimeBasedExpiringValueMapTest {
         for (Thread thread : threads) {
             thread.join();
         }
-        assertThat(map.size(), greaterThan(0));
+        assertThat(map.size()).isGreaterThan(0);
 
         when(timeService.getCurrentTimeMillis()).thenReturn(Long.MAX_VALUE);
         map.get("random-key");
-        assertEquals(0, map.size());
+        assertThat(map.size()).isEqualTo(0);
     }
 
     @Test
-    public void avoid_npe_during_remove() {
+    void avoid_npe_during_remove() {
         map = new TimeBasedExpiringValueMap<>(new TimeServiceImpl(), TIMEOUT);
         ConcurrentMap internalMap = mock(ConcurrentMap.class);
         TimedKeyValue<String, Object> value = new TimedKeyValue<>(0, "test", new Object());
         when(internalMap.remove(any())).thenReturn(null);
         ReflectionTestUtils.setField(map, "map", internalMap);
-        assertFalse(map.removeExpired(value));
+        assertThat(map.removeExpired(value)).isFalse();
         verify(internalMap, times(1)).putIfAbsent(same(value.key), same(value));
-        assertFalse(map.removeExpired(null));
+        assertThat(map.removeExpired(null)).isFalse();
     }
 
 }

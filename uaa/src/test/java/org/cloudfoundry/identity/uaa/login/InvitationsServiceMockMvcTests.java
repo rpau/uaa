@@ -14,7 +14,6 @@
 
 package org.cloudfoundry.identity.uaa.login;
 
-import org.assertj.core.api.Assertions;
 import org.cloudfoundry.identity.uaa.DefaultTestContext;
 import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
 import org.cloudfoundry.identity.uaa.constants.OriginKeys;
@@ -123,18 +122,18 @@ public class InvitationsServiceMockMvcTests {
     }
 
     @Test
-    void testAuthorizeWithInvitationLogin() throws Exception {
+    void authorizeWithInvitationLogin() throws Exception {
         String email = new AlphanumericRandomValueStringGenerator().generate().toLowerCase() + "@test.org";
         URL inviteLink = inviteUser(webApplicationContext, mockMvc, email, userInviteToken, null, clientId, OriginKeys.UAA);
         assertThat(jdbcTemplate.queryForObject("SELECT origin FROM users WHERE username=?", new Object[]{email}, String.class)).isEqualTo(OriginKeys.UAA);
 
         String code = extractInvitationCode(inviteLink.toString());
         MvcResult result = mockMvc.perform(
-                get("/invitations/accept")
-                        .param("code", code)
-                        .accept(MediaType.TEXT_HTML)
-        )
-        .andExpect(status().isOk())
+                        get("/invitations/accept")
+                                .param("code", code)
+                                .accept(MediaType.TEXT_HTML)
+                )
+                .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Email: " + email)))
                 .andReturn();
         MockHttpSession inviteSession = (MockHttpSession) result.getRequest().getSession(false);
@@ -173,20 +172,20 @@ public class InvitationsServiceMockMvcTests {
 
         String code = extractInvitationCode(inviteLink.toString());
         MvcResult result = mockMvc.perform(get("/invitations/accept")
-                .param("code", code)
-                .accept(MediaType.TEXT_HTML)
-        )
-        .andExpect(status().isOk())
+                        .param("code", code)
+                        .accept(MediaType.TEXT_HTML)
+                )
+                .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Email: " + email)))
                 .andReturn();
 
         MockHttpSession session = (MockHttpSession) result.getRequest().getSession(false);
         mockMvc.perform(
-                get("/profile")
-                        .session(session)
-                        .accept(MediaType.TEXT_HTML)
-        )
-        .andExpect(status().isFound())
+                        get("/profile")
+                                .session(session)
+                                .accept(MediaType.TEXT_HTML)
+                )
+                .andExpect(status().isFound())
                 .andExpect(redirectedUrlPattern("**/login"));
     }
 
@@ -201,11 +200,11 @@ public class InvitationsServiceMockMvcTests {
 
         String code = extractInvitationCode(inviteLink.toString());
         mockMvc.perform(
-                get("/invitations/accept")
-                        .param("code", code)
-                        .accept(MediaType.TEXT_HTML)
-        )
-        .andExpect(status().isFound())
+                        get("/invitations/accept")
+                                .param("code", code)
+                                .accept(MediaType.TEXT_HTML)
+                )
+                .andExpect(status().isFound())
                 .andExpect(redirectedUrl(REDIRECT_URI));
     }
 
@@ -241,23 +240,23 @@ public class InvitationsServiceMockMvcTests {
         String invalidCode = extractInvitationCode(invalidLink.toString());
 
         MvcResult result = mockMvc.perform(get("/invitations/accept")
-                .param("code", code)
-                .accept(MediaType.TEXT_HTML)
-        )
-        .andExpect(status().isOk())
+                        .param("code", code)
+                        .accept(MediaType.TEXT_HTML)
+                )
+                .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Email: " + email)))
                 .andReturn();
 
         MockHttpSession session = (MockHttpSession) result.getRequest().getSession(false);
         result = mockMvc.perform(
-                post("/invitations/accept.do")
-                        .session(session)
-                        .param("password", "s3cret")
-                        .param("password_confirmation", "s3cret")
-                        .param("code", invalidCode)
-                        .with(cookieCsrf())
-        )
-        .andExpect(status().isUnprocessableEntity())
+                        post("/invitations/accept.do")
+                                .session(session)
+                                .param("password", "s3cret")
+                                .param("password_confirmation", "s3cret")
+                                .param("code", invalidCode)
+                                .with(cookieCsrf())
+                )
+                .andExpect(status().isUnprocessableEntity())
                 .andExpect(model().attribute("error_message_code", "code_expired"))
                 .andExpect(view().name("invitations/accept_invite"))
                 .andReturn();
@@ -268,11 +267,11 @@ public class InvitationsServiceMockMvcTests {
         session = (MockHttpSession) result.getRequest().getSession(false);
         //not logged in anymore
         mockMvc.perform(
-                get("/profile")
-                        .session(session)
-                        .accept(MediaType.TEXT_HTML)
-        )
-        .andExpect(status().isFound())
+                        get("/profile")
+                                .session(session)
+                                .accept(MediaType.TEXT_HTML)
+                )
+                .andExpect(status().isFound())
                 .andExpect(redirectedUrl("http://localhost/login"));
     }
 
@@ -286,24 +285,24 @@ public class InvitationsServiceMockMvcTests {
 
         String code = extractInvitationCode(inviteLink.toString());
         MvcResult result = mockMvc.perform(get("/invitations/accept")
-                .param("code", code)
-                .accept(MediaType.TEXT_HTML)
-        )
-        .andExpect(status().isOk())
+                        .param("code", code)
+                        .accept(MediaType.TEXT_HTML)
+                )
+                .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Email: " + email)))
                 .andReturn();
 
         code = jdbcTemplate.queryForObject("SELECT code FROM expiring_code_store", String.class);
         MockHttpSession session = (MockHttpSession) result.getRequest().getSession(false);
         result = mockMvc.perform(
-                post("/invitations/accept.do")
-                        .session(session)
-                        .param("password", "s3cret")
-                        .param("password_confirmation", "s3cret")
-                        .param("code", code)
-                        .with(cookieCsrf())
-        )
-        .andExpect(status().isFound())
+                        post("/invitations/accept.do")
+                                .session(session)
+                                .param("password", "s3cret")
+                                .param("password_confirmation", "s3cret")
+                                .param("code", code)
+                                .with(cookieCsrf())
+                )
+                .andExpect(status().isFound())
                 .andExpect(redirectedUrl("/login?success=invite_accepted&form_redirect_uri=" + REDIRECT_URI))
                 .andReturn();
 
@@ -311,11 +310,11 @@ public class InvitationsServiceMockMvcTests {
 
         session = (MockHttpSession) result.getRequest().getSession(false);
         mockMvc.perform(
-                get("/profile")
-                        .session(session)
-                        .accept(MediaType.TEXT_HTML)
-        )
-        .andExpect(status().isFound())
+                        get("/profile")
+                                .session(session)
+                                .accept(MediaType.TEXT_HTML)
+                )
+                .andExpect(status().isFound())
                 .andExpect(redirectedUrlPattern("**/login"));
     }
 
@@ -366,15 +365,15 @@ public class InvitationsServiceMockMvcTests {
 
         //should redirect to saml provider
         mockMvc.perform(
-                get("/invitations/accept")
-                        .param("code", code)
-                        .accept(MediaType.TEXT_HTML)
-                        .header("Host", zone.getZone().getIdentityZone().getSubdomain() + ".localhost")
-        )
-        .andExpect(status().is3xxRedirection())
+                        get("/invitations/accept")
+                                .param("code", code)
+                                .accept(MediaType.TEXT_HTML)
+                                .header("Host", zone.getZone().getIdentityZone().getSubdomain() + ".localhost")
+                )
+                .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/saml2/authenticate/%s".formatted(originKey)));
 
-        Assertions.assertThat(queryUserForField(jdbcTemplate, email, OriginKeys.ORIGIN, String.class)).isEqualTo(provider.getOriginKey());
+        assertThat(queryUserForField(jdbcTemplate, email, OriginKeys.ORIGIN, String.class)).isEqualTo(provider.getOriginKey());
         assertThat(queryUserForField(jdbcTemplate, email, "verified", Boolean.class)).as("Saml user should not yet be verified after clicking on the accept link").isFalse();
     }
 

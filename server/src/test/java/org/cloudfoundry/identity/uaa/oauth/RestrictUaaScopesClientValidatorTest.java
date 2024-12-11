@@ -27,20 +27,20 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.fail;
 import static org.cloudfoundry.identity.uaa.client.ClientDetailsValidator.Mode.CREATE;
 import static org.cloudfoundry.identity.uaa.client.ClientDetailsValidator.Mode.DELETE;
 import static org.cloudfoundry.identity.uaa.client.ClientDetailsValidator.Mode.MODIFY;
-import static org.junit.jupiter.api.Assertions.fail;
 
 
-public class RestrictUaaScopesClientValidatorTest {
+class RestrictUaaScopesClientValidatorTest {
 
     List<String> goodScopes = Arrays.asList("openid", "uaa.resource", "uaa.none");
     List<String> badScopes = new UaaScopes().getUaaScopes();
     RestrictUaaScopesClientValidator validator = new RestrictUaaScopesClientValidator(new UaaScopes());
 
     @Test
-    public void testValidate() {
+    void validate() {
         List<ClientDetailsValidator.Mode> restrictModes = Arrays.asList(CREATE, MODIFY);
         List<ClientDetailsValidator.Mode> nonRestrictModes = Collections.singletonList(DELETE);
         UaaClientDetails client = new UaaClientDetails("clientId", "", "", "client_credentials,password", "");

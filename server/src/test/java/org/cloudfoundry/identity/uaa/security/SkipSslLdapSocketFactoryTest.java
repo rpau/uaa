@@ -2,16 +2,15 @@ package org.cloudfoundry.identity.uaa.security;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class SkipSslLdapSocketFactoryTest {
 
     @Test
-    void testDefaultInstanceIsSkipSslLdapSocketFactory() {
+    void defaultInstanceIsSkipSslLdapSocketFactory() {
         Object ldapFactory = SkipSslLdapSocketFactory.getDefault();
-        assertNotNull(ldapFactory);
-        assertTrue(ldapFactory instanceof  SkipSslLdapSocketFactory);
-        assertTrue(SkipSslLdapSocketFactory.getDefault() instanceof  SkipSslLdapSocketFactory);
+        assertThat(ldapFactory).isNotNull();
+        assertThat(ldapFactory instanceof SkipSslLdapSocketFactory).isTrue();
+        assertThat(SkipSslLdapSocketFactory.getDefault() instanceof SkipSslLdapSocketFactory).isTrue();
     }
 }

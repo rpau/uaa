@@ -18,12 +18,9 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
-public class ClientCredentialsAccessTokenProviderTest {
+class ClientCredentialsAccessTokenProviderTest {
 
     private final MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
 
@@ -37,30 +34,30 @@ public class ClientCredentialsAccessTokenProviderTest {
     };
 
     @BeforeEach
-    public void setUp() throws Exception {
+    void setUp() throws Exception {
     }
 
     @Test
-    public void supportsResource() {
-        assertTrue(provider.supportsResource(new ClientCredentialsResourceDetails()));
+    void supportsResource() {
+        assertThat(provider.supportsResource(new ClientCredentialsResourceDetails())).isTrue();
     }
 
     @Test
-    public void supportsRefresh() {
-        assertFalse(provider.supportsRefresh(new ClientCredentialsResourceDetails()));
+    void supportsRefresh() {
+        assertThat(provider.supportsRefresh(new ClientCredentialsResourceDetails())).isFalse();
     }
 
     @Test
-    public void refreshAccessToken() {
-        assertNull(provider.refreshAccessToken(new ClientCredentialsResourceDetails(), new DefaultOAuth2RefreshToken(""), new DefaultAccessTokenRequest(
-                Collections.emptyMap())));
+    void refreshAccessToken() {
+        assertThat(provider.refreshAccessToken(new ClientCredentialsResourceDetails(), new DefaultOAuth2RefreshToken(""), new DefaultAccessTokenRequest(
+                Collections.emptyMap()))).isNull();
     }
 
     @Test
-    public void obtainAccessToken() {
+    void obtainAccessToken() {
         ClientCredentialsResourceDetails details = new ClientCredentialsResourceDetails();
         details.setScope(Set.of("openid").stream().toList());
-        assertTrue(details.isClientOnly());
-        assertNotNull(provider.obtainAccessToken(details, new DefaultAccessTokenRequest(Map.of("scope", new String[]{"x"}))));
+        assertThat(details.isClientOnly()).isTrue();
+        assertThat(provider.obtainAccessToken(details, new DefaultAccessTokenRequest(Map.of("scope", new String[]{"x"})))).isNotNull();
     }
 }

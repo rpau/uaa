@@ -1,13 +1,13 @@
 package org.cloudfoundry.identity.uaa.ratelimiting.internal.common;
 
-import java.time.Instant;
-import java.util.List;
-
 import org.cloudfoundry.identity.uaa.ratelimiting.core.CompoundKey;
 import org.cloudfoundry.identity.uaa.ratelimiting.core.LoggingOption;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import java.time.Instant;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class LimiterImplTest {
 
@@ -44,13 +44,13 @@ class LimiterImplTest {
 
     private InternalLimiter iLimiterNew(String compoundKeyMiddle, int limit) {
         CompoundKey compoundKey = CompoundKey.from("", compoundKeyMiddle, "");
-        return new InternalLimiter( compoundKey, limit, Instant.now() );
+        return new InternalLimiter(compoundKey, limit, Instant.now());
     }
 
     private void check(String callID, List<InternalLimiter> iLimiters, boolean shouldLimitExpected, String... toStringLines) {
         LimiterImpl limiter = LimiterImpl.from(iLimiters, LoggingOption.AllCallsWithDetails);
-        assertEquals(shouldLimitExpected, limiter.shouldLimit(), callID);
+        assertThat(limiter.shouldLimit()).as(callID).isEqualTo(shouldLimitExpected);
         String expected = String.join("\n", toStringLines);
-        assertEquals(expected, limiter.toString(), callID);
+        assertThat(limiter.toString()).as(callID).isEqualTo(expected);
     }
 }

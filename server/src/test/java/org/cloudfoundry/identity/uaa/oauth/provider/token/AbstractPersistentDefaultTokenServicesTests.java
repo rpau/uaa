@@ -13,9 +13,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Collections;
 import java.util.Date;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
@@ -24,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public abstract class AbstractPersistentDefaultTokenServicesTests extends AbstractDefaultTokenServicesTests {
 
     @Test
-    public void testTokenEnhancerUpdatesStoredTokens() {
+    public void tokenEnhancerUpdatesStoredTokens() {
         final ExpiringOAuth2RefreshToken refreshToken = new DefaultExpiringOAuth2RefreshToken("testToken", new Date(
                 System.currentTimeMillis() + 100000));
         getTokenServices().setTokenEnhancer((accessToken, authentication) -> {
@@ -34,15 +32,15 @@ public abstract class AbstractPersistentDefaultTokenServicesTests extends Abstra
         });
         OAuth2Authentication authentication = createAuthentication();
         OAuth2AccessToken original = getTokenServices().createAccessToken(authentication);
-        assertTrue(original.getRefreshToken().equals(refreshToken));
+        assertThat(refreshToken).isEqualTo(original.getRefreshToken());
         OAuth2AccessToken result = getTokenStore().getAccessToken(authentication);
-        assertEquals(original, result);
-        assertEquals(refreshToken, result.getRefreshToken());
-        assertEquals(refreshToken, getTokenStore().readRefreshToken(refreshToken.getValue()));
+        assertThat(result).isEqualTo(original);
+        assertThat(result.getRefreshToken()).isEqualTo(refreshToken);
+        assertThat(getTokenStore().readRefreshToken(refreshToken.getValue())).isEqualTo(refreshToken);
     }
 
     @Test
-    public void testRefreshedTokenIsEnhanced() {
+    public void refreshedTokenIsEnhanced() {
         getTokenServices().setTokenEnhancer((accessToken, authentication) -> {
             DefaultOAuth2AccessToken result = new DefaultOAuth2AccessToken(accessToken);
             result.setValue("I'mEnhanced");
@@ -50,55 +48,55 @@ public abstract class AbstractPersistentDefaultTokenServicesTests extends Abstra
         });
 
         OAuth2AccessToken accessToken = getTokenServices().createAccessToken(createAuthentication());
-        assertTrue(accessToken.getValue().startsWith("I'mEnhanced"));
+        assertThat(accessToken.getValue().startsWith("I'mEnhanced")).isTrue();
         TokenRequest tokenRequest = new TokenRequest(Collections.singletonMap("client_id", "id"), "id", null, null);
         OAuth2AccessToken refreshedAccessToken = getTokenServices().refreshAccessToken(
                 accessToken.getRefreshToken().getValue(), tokenRequest);
-        assertTrue(refreshedAccessToken.getValue().startsWith("I'mEnhanced"));
+        assertThat(refreshedAccessToken.getValue().startsWith("I'mEnhanced")).isTrue();
     }
 
     @Test
-    public void testOneAccessTokenPerAuthentication() {
+    public void oneAccessTokenPerAuthentication() {
         OAuth2Authentication authentication = createAuthentication();
         OAuth2AccessToken first = getTokenServices().createAccessToken(authentication);
-        assertEquals(1, getAccessTokenCount());
-        assertEquals(1, getRefreshTokenCount());
+        assertThat(getAccessTokenCount()).isEqualTo(1);
+        assertThat(getRefreshTokenCount()).isEqualTo(1);
         OAuth2AccessToken second = getTokenServices().createAccessToken(authentication);
-        assertEquals(first, second);
-        assertEquals(1, getAccessTokenCount());
-        assertEquals(1, getRefreshTokenCount());
+        assertThat(second).isEqualTo(first);
+        assertThat(getAccessTokenCount()).isEqualTo(1);
+        assertThat(getRefreshTokenCount()).isEqualTo(1);
     }
 
     @Test
-    public void testOneAccessTokenPerUniqueAuthentication() {
+    public void oneAccessTokenPerUniqueAuthentication() {
         getTokenServices()
                 .createAccessToken(
                         new OAuth2Authentication(RequestTokenFactory.createOAuth2Request("id", false,
                                 Collections.singleton("read")), new TestAuthentication("test2",
                                 false)));
-        assertEquals(1, getAccessTokenCount());
+        assertThat(getAccessTokenCount()).isEqualTo(1);
         getTokenServices()
                 .createAccessToken(
                         new OAuth2Authentication(RequestTokenFactory.createOAuth2Request("id", false,
                                 Collections.singleton("write")), new TestAuthentication(
                                 "test2", false)));
-        assertEquals(1, getAccessTokenCount());
+        assertThat(getAccessTokenCount()).isEqualTo(1);
     }
 
     @Test
-    public void testRefreshTokenMaintainsState() {
+    public void refreshTokenMaintainsState() {
         getTokenServices().setSupportRefreshToken(true);
         OAuth2AccessToken accessToken = getTokenServices().createAccessToken(createAuthentication());
         OAuth2RefreshToken expectedExpiringRefreshToken = accessToken.getRefreshToken();
         TokenRequest tokenRequest = new TokenRequest(Collections.singletonMap("client_id", "id"), "id", null, null);
         OAuth2AccessToken refreshedAccessToken = getTokenServices().refreshAccessToken(
                 expectedExpiringRefreshToken.getValue(), tokenRequest);
-        assertNotNull(refreshedAccessToken);
-        assertEquals(1, getAccessTokenCount());
+        assertThat(refreshedAccessToken).isNotNull();
+        assertThat(getAccessTokenCount()).isEqualTo(1);
     }
 
     @Test
-    public void testNotReuseRefreshTokenMaintainsState() {
+    public void notReuseRefreshTokenMaintainsState() {
         getTokenServices().setSupportRefreshToken(true);
         getTokenServices().setReuseRefreshToken(false);
         OAuth2AccessToken accessToken = getTokenServices().createAccessToken(createAuthentication());
@@ -106,8 +104,8 @@ public abstract class AbstractPersistentDefaultTokenServicesTests extends Abstra
         TokenRequest tokenRequest = new TokenRequest(Collections.singletonMap("client_id", "id"), "id", null, null);
         OAuth2AccessToken refreshedAccessToken = getTokenServices().refreshAccessToken(
                 expectedExpiringRefreshToken.getValue(), tokenRequest);
-        assertNotNull(refreshedAccessToken);
-        assertEquals(1, getRefreshTokenCount());
+        assertThat(refreshedAccessToken).isNotNull();
+        assertThat(getRefreshTokenCount()).isEqualTo(1);
     }
 
     protected abstract int getAccessTokenCount();

@@ -282,7 +282,7 @@ public class IdentityZoneConfigurationBootstrapTests {
     }
 
     @Test
-    void testPrompts() throws Exception {
+    void prompts() throws Exception {
         List<Prompt> prompts = Arrays.asList(
                 new Prompt("name1", "type1", "text1"),
                 new Prompt("name2", "type2", "text2")

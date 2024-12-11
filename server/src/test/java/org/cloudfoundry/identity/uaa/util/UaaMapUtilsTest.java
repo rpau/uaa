@@ -23,12 +23,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.util.UaaMapUtils.prettyPrintYaml;
 import static org.cloudfoundry.identity.uaa.util.UaaMapUtils.redactValues;
 import static org.cloudfoundry.identity.uaa.util.UaaMapUtils.sortByKeys;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
 
 
 public class UaaMapUtilsTest {
@@ -42,7 +40,7 @@ public class UaaMapUtilsTest {
     private Map<String, Object> emptyMap;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         top = new HashMap<>();
         secondA = new HashMap<>();
         secondB = new HashMap<>();
@@ -69,11 +67,11 @@ public class UaaMapUtilsTest {
     }
 
     @Test
-    public void testFlatten() {
+    void flatten() {
         Map<String, Object> flat = UaaMapUtils.flatten(top);
-        assertSame(emptyMap, flat.get("secondB.thirdC.emptyMap"));
-        assertSame(secondA, flat.get("secondA"));
-        assertEquals("valueC", flat.get("secondB.thirdC.keyC"));
+        assertThat(flat.get("secondB.thirdC.emptyMap")).isSameAs(emptyMap);
+        assertThat(flat.get("secondA")).isSameAs(secondA);
+        assertThat(flat.get("secondB.thirdC.keyC")).isEqualTo("valueC");
     }
 
     public void internal_visit_all_keys(Map<String, Object> map, List<String> keys) {
@@ -92,7 +90,7 @@ public class UaaMapUtilsTest {
     }
 
     @Test
-    public void sort_nested_map() {
+    void sort_nested_map() {
         List<String> expectedOrder = Arrays.asList(
                 "secondA",
                 "thirdA",
@@ -108,12 +106,12 @@ public class UaaMapUtilsTest {
                 "keyC",
                 "nullValue"
         );
-        assertNotEquals(expectedOrder, visit_all_keys(top));
-        assertEquals(expectedOrder, visit_all_keys(sortByKeys(top)));
+        assertThat(visit_all_keys(top)).isNotEqualTo(expectedOrder);
+        assertThat(visit_all_keys(sortByKeys(top))).isEqualTo(expectedOrder);
     }
 
     @Test
-    public void print_sorted_yaml() {
+    void print_sorted_yaml() {
         String expected = """
                 ---
                 secondA:
@@ -131,11 +129,11 @@ public class UaaMapUtilsTest {
                     keyC: valueC
                     nullValue: null
                 """;
-        assertEquals(expected, prettyPrintYaml(top));
+        assertThat(prettyPrintYaml(top)).isEqualTo(expected);
     }
 
     @Test
-    public void testHideConfigValues() {
+    void hideConfigValues() {
         String expected = """
                 ---
                 secondA:
@@ -153,7 +151,7 @@ public class UaaMapUtilsTest {
                     keyC: <redacted>
                     nullValue: null
                 """;
-        assertEquals(expected, prettyPrintYaml(redactValues(top)));
+        assertThat(prettyPrintYaml(redactValues(top))).isEqualTo(expected);
     }
 
     private void checkRedacted(Map<String, ?> map) {
@@ -162,7 +160,7 @@ public class UaaMapUtilsTest {
             if (value instanceof Map map1) {
                 checkRedacted(map1);
             } else {
-                assertEquals("<redacted>", value);
+                assertThat(value).isEqualTo("<redacted>");
             }
         }
     }

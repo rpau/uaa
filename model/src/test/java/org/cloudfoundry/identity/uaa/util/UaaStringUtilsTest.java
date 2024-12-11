@@ -1,6 +1,5 @@
 package org.cloudfoundry.identity.uaa.util;
 
-import org.assertj.core.api.Assertions;
 import org.cloudfoundry.identity.uaa.test.ModelTestUtils;
 import org.cloudfoundry.identity.uaa.zone.IdentityZone;
 import org.junit.jupiter.api.BeforeEach;
@@ -341,7 +340,7 @@ class UaaStringUtilsTest {
     }
 
     @Test
-    void testGetAuthoritiesFromStrings() {
+    void getAuthoritiesFromStrings() {
         List<? extends GrantedAuthority> authorities = UaaStringUtils.getAuthoritiesFromStrings(null);
         assertThat(authorities).isEqualTo(Collections.emptyList());
         assertThat(UaaStringUtils.getStringsFromAuthorities(null)).isEmpty();
@@ -370,19 +369,19 @@ class UaaStringUtilsTest {
     @ParameterizedTest
     @NullAndEmptySource
     void isNullOrEmpty_ShouldReturnTrue(final String input) {
-        Assertions.assertThat(UaaStringUtils.isNullOrEmpty(input)).isTrue();
+        assertThat(UaaStringUtils.isNullOrEmpty(input)).isTrue();
     }
 
     @ParameterizedTest
     @NullAndEmptySource
     void isNotEmpty_ShouldReturnFalse(final String input) {
-        Assertions.assertThat(UaaStringUtils.isNotEmpty(input)).isFalse();
+        assertThat(UaaStringUtils.isNotEmpty(input)).isFalse();
     }
 
     @ParameterizedTest
     @ValueSource(strings = {" ", "  ", "\t", "\n", "abc"})
     void isNullOrEmpty_ShouldReturnFalse(final String input) {
-        Assertions.assertThat(UaaStringUtils.isNullOrEmpty(input)).isFalse();
+        assertThat(UaaStringUtils.isNullOrEmpty(input)).isFalse();
     }
 
     @Test

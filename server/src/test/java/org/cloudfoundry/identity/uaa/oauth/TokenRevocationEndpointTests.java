@@ -6,6 +6,7 @@ import org.cloudfoundry.identity.uaa.authentication.UaaAuthenticationDetails;
 import org.cloudfoundry.identity.uaa.authentication.UaaPrincipal;
 import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
 import org.cloudfoundry.identity.uaa.constants.OriginKeys;
+import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetails;
 import org.cloudfoundry.identity.uaa.oauth.provider.OAuth2Request;
 import org.cloudfoundry.identity.uaa.oauth.token.JdbcRevocableTokenProvisioning;
 import org.cloudfoundry.identity.uaa.oauth.token.RevocableToken;
@@ -31,13 +32,11 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetails;
 
 import java.util.Collections;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.oauth.client.ClientConstants.TOKEN_SALT;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
@@ -117,11 +116,11 @@ public class TokenRevocationEndpointTests {
 
     @Test
     void revokeTokensForClient() {
-        assertEquals("pre-salt", getClient().getAdditionalInformation().get(TOKEN_SALT));
-        assertEquals(1, clientTokenCount());
+        assertThat(getClient().getAdditionalInformation().get(TOKEN_SALT)).isEqualTo("pre-salt");
+        assertThat(clientTokenCount()).isEqualTo(1);
         endpoint.revokeTokensForClient(client.getClientId());
-        assertNotEquals("pre-salt", getClient().getAdditionalInformation().get(TOKEN_SALT));
-        assertEquals(0, clientTokenCount());
+        assertThat(getClient().getAdditionalInformation().get(TOKEN_SALT)).isNotEqualTo("pre-salt");
+        assertThat(clientTokenCount()).isEqualTo(0);
     }
 
     public ClientDetails getClient() {

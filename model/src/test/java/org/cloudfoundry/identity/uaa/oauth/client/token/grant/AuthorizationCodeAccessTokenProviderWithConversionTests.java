@@ -29,14 +29,14 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-public class AuthorizationCodeAccessTokenProviderWithConversionTests {
+class AuthorizationCodeAccessTokenProviderWithConversionTests {
 
     private static class StubClientHttpRequest implements ClientHttpRequest {
 
@@ -134,7 +134,7 @@ public class AuthorizationCodeAccessTokenProviderWithConversionTests {
     }
 
     @Test
-    public void testGetAccessTokenFromJson() throws Exception {
+    void getAccessTokenFromJson() throws Exception {
         final OAuth2AccessToken token = new DefaultOAuth2AccessToken("FOO");
         requestFactory = new ClientHttpRequestFactory() {
             public ClientHttpRequest createRequest(URI uri, HttpMethod httpMethod) throws IOException {
@@ -146,11 +146,11 @@ public class AuthorizationCodeAccessTokenProviderWithConversionTests {
         resource.setAccessTokenUri("http://localhost/oauth/token");
         request.setPreservedState(new Object());
         setUpRestTemplate();
-        assertEquals(token, provider.obtainAccessToken(resource, request));
+        assertThat(provider.obtainAccessToken(resource, request)).isEqualTo(token);
     }
 
     @Test
-    public void testGetErrorFromJson() throws Exception {
+    void getErrorFromJson() throws Exception {
         final InvalidClientException exception = new InvalidClientException("FOO");
         requestFactory = new ClientHttpRequestFactory() {
             public ClientHttpRequest createRequest(URI uri, HttpMethod httpMethod) throws IOException {
@@ -169,7 +169,7 @@ public class AuthorizationCodeAccessTokenProviderWithConversionTests {
     }
 
     @Test
-    public void testGetAccessTokenFromForm() throws Exception {
+    void getAccessTokenFromForm() throws Exception {
         final OAuth2AccessToken token = new DefaultOAuth2AccessToken("FOO");
         final HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -183,11 +183,11 @@ public class AuthorizationCodeAccessTokenProviderWithConversionTests {
         request.setPreservedState(new Object());
         resource.setAccessTokenUri("http://localhost/oauth/token");
         setUpRestTemplate();
-        assertEquals(token, provider.obtainAccessToken(resource, request));
+        assertThat(provider.obtainAccessToken(resource, request)).isEqualTo(token);
     }
 
     @Test
-    public void testGetErrorFromForm() throws Exception {
+    void getErrorFromForm() throws Exception {
         final HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
         requestFactory = new ClientHttpRequestFactory() {

@@ -37,14 +37,8 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Enumeration;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.impl.config.YamlServletProfileInitializer.YML_ENV_VAR_NAME;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.is;
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
@@ -103,8 +97,8 @@ class YamlServletProfileInitializerTest {
 
         initializer.initialize(context);
 
-        assertEquals("bar", environment.getProperty("foo"));
-        assertEquals("baz", environment.getProperty("spam.foo"));
+        assertThat(environment.getProperty("foo")).isEqualTo("bar");
+        assertThat(environment.getProperty("spam.foo")).isEqualTo("baz");
     }
 
     @Test
@@ -116,7 +110,7 @@ class YamlServletProfileInitializerTest {
 
         ArgumentCaptor<HttpSessionEventPublisher> httpSessionEventPublisherArgumentCaptor = ArgumentCaptor.forClass(HttpSessionEventPublisher.class);
         verify(servletContext, atLeastOnce()).addListener(httpSessionEventPublisherArgumentCaptor.capture());
-        assertNotNull(httpSessionEventPublisherArgumentCaptor.getValue());
+        assertThat(httpSessionEventPublisherArgumentCaptor.getValue()).isNotNull();
     }
 
     @Test
@@ -156,8 +150,8 @@ class YamlServletProfileInitializerTest {
 
         initializer.initialize(context);
 
-        assertEquals("bar", environment.getProperty("foo"));
-        assertEquals("baz", environment.getProperty("spam.foo"));
+        assertThat(environment.getProperty("foo")).isEqualTo("bar");
+        assertThat(environment.getProperty("spam.foo")).isEqualTo("baz");
     }
 
     @Test
@@ -168,8 +162,8 @@ class YamlServletProfileInitializerTest {
 
         initializer.initialize(context);
 
-        assertEquals("bar", environment.getProperty("foo"));
-        assertEquals("baz-from-config", environment.getProperty("spam.foo"));
+        assertThat(environment.getProperty("foo")).isEqualTo("bar");
+        assertThat(environment.getProperty("spam.foo")).isEqualTo("baz-from-config");
     }
 
     @Test
@@ -180,8 +174,8 @@ class YamlServletProfileInitializerTest {
 
         initializer.initialize(context);
 
-        assertEquals("bar", environment.getProperty("foo"));
-        assertEquals("baz-from-context", environment.getProperty("spam.foo"));
+        assertThat(environment.getProperty("foo")).isEqualTo("bar");
+        assertThat(environment.getProperty("spam.foo")).isEqualTo("baz-from-context");
     }
 
     @Test
@@ -193,8 +187,8 @@ class YamlServletProfileInitializerTest {
 
         initializer.initialize(context);
 
-        assertEquals("bar", environment.getProperty("foo"));
-        assertEquals("baz", environment.getProperty("spam.foo"));
+        assertThat(environment.getProperty("foo")).isEqualTo("bar");
+        assertThat(environment.getProperty("spam.foo")).isEqualTo("baz");
     }
 
     @Test
@@ -206,8 +200,8 @@ class YamlServletProfileInitializerTest {
 
         initializer.initialize(context);
 
-        assertEquals("bar", environment.getProperty("foo"));
-        assertEquals("baz", environment.getProperty("spam.foo"));
+        assertThat(environment.getProperty("foo")).isEqualTo("bar");
+        assertThat(environment.getProperty("spam.foo")).isEqualTo("baz");
     }
 
     @Test
@@ -216,9 +210,9 @@ class YamlServletProfileInitializerTest {
         when(context.getResource(eq("file:somewhere/uaa.yml"))).thenReturn(
                 new ByteArrayResource("logging:\n  config: /some/path".getBytes()));
         initializer.initialize(context);
-        assertEquals("/some/path", environment.getProperty("logging.config"));
-        assertNull(environment.getProperty("smtp.host"));
-        assertNull(environment.getProperty("smtp.port"));
+        assertThat(environment.getProperty("logging.config")).isEqualTo("/some/path");
+        assertThat(environment.getProperty("smtp.host")).isNull();
+        assertThat(environment.getProperty("smtp.port")).isNull();
     }
 
     @Test
@@ -227,8 +221,8 @@ class YamlServletProfileInitializerTest {
         when(context.getResource(eq("file:somewhere/uaa.yml"))).thenReturn(
                 new ByteArrayResource("smtp:\n  user: marissa\n  password: koala".getBytes()));
         initializer.initialize(context);
-        assertEquals("marissa", environment.getProperty("smtp.user"));
-        assertEquals("koala", environment.getProperty("smtp.password"));
+        assertThat(environment.getProperty("smtp.user")).isEqualTo("marissa");
+        assertThat(environment.getProperty("smtp.password")).isEqualTo("koala");
     }
 
     @Test
@@ -242,8 +236,8 @@ class YamlServletProfileInitializerTest {
                 new ByteArrayResource("smtp:\n  user: donkey\n  password: kong".getBytes()));
         initializer.initialize(context);
 
-        assertEquals("donkey", environment.getProperty("smtp.user"));
-        assertEquals("kong", environment.getProperty("smtp.password"));
+        assertThat(environment.getProperty("smtp.user")).isEqualTo("donkey");
+        assertThat(environment.getProperty("smtp.password")).isEqualTo("kong");
     }
 
     @Test
@@ -257,10 +251,10 @@ class YamlServletProfileInitializerTest {
                 new ByteArrayResource("smtp:\n  host:\n    baz: foobar".getBytes()));
         initializer.initialize(context);
 
-        assertEquals("marissa", environment.getProperty("smtp.user"));
-        assertEquals("koala", environment.getProperty("smtp.password"));
-        assertEquals("bar", environment.getProperty("smtp.host.foo"));
-        assertEquals("foobar", environment.getProperty("smtp.host.baz"));
+        assertThat(environment.getProperty("smtp.user")).isEqualTo("marissa");
+        assertThat(environment.getProperty("smtp.password")).isEqualTo("koala");
+        assertThat(environment.getProperty("smtp.host.foo")).isEqualTo("bar");
+        assertThat(environment.getProperty("smtp.host.baz")).isEqualTo("foobar");
     }
 
     @Test
@@ -281,10 +275,10 @@ class YamlServletProfileInitializerTest {
         };
         initializer.setEnvironmentAccessor(env);
         initializer.initialize(context);
-        assertEquals("mail.server.host", environment.getProperty("smtp.host"));
-        assertEquals("3535", environment.getProperty("smtp.port"));
-        assertEquals("http://uaa.test.url/", environment.getProperty("uaa.url"));
-        assertEquals("http://login.test.url/", environment.getProperty("login.url"));
+        assertThat(environment.getProperty("smtp.host")).isEqualTo("mail.server.host");
+        assertThat(environment.getProperty("smtp.port")).isEqualTo("3535");
+        assertThat(environment.getProperty("uaa.url")).isEqualTo("http://uaa.test.url/");
+        assertThat(environment.getProperty("login.url")).isEqualTo("http://login.test.url/");
     }
 
     @Nested
@@ -332,7 +326,7 @@ class YamlServletProfileInitializerTest {
                 }
             });
             initializer.initialize(context);
-            assertEquals("-Djava.util.logging.config=/some/path/logging.properties", environment.getProperty("logging.config"));
+            assertThat(environment.getProperty("logging.config")).isEqualTo("-Djava.util.logging.config=/some/path/logging.properties");
 
             verify(mockPrintStream, description("Expected to find a log entry indicating that the LOGGING_CONFIG variable was found."))
                     .println("Ignoring Log Config Location: -Djava.util.logging.config=/some/path/logging.properties. Location is suspect to be a Tomcat startup script environment variable");
@@ -370,14 +364,14 @@ class YamlServletProfileInitializerTest {
         void tokenizeToStringArray_RemovesSpaces() {
             String profileString = "    database    ,  ldap ";
             String[] profiles = StringUtils.tokenizeToStringArray(profileString, ",", true, true);
-            assertThat(profiles.length, is(2));
-            assertThat(profiles[0], is("database"));
-            assertThat(profiles[1], is("ldap"));
+            assertThat(profiles.length).isEqualTo(2);
+            assertThat(profiles[0]).isEqualTo("database");
+            assertThat(profiles[1]).isEqualTo("ldap");
             // And show what's wrong with commaDelimitedListToStringArray
             profiles = StringUtils.commaDelimitedListToStringArray(profileString);
-            assertThat(profiles.length, is(2));
-            assertThat(profiles[0], is("    database    "));
-            assertThat(profiles[1], is("  ldap "));
+            assertThat(profiles.length).isEqualTo(2);
+            assertThat(profiles[0]).isEqualTo("    database    ");
+            assertThat(profiles[1]).isEqualTo("  ldap ");
         }
 
         @Test
@@ -399,7 +393,7 @@ class YamlServletProfileInitializerTest {
             System.setProperty("spring.profiles.active", "hsqldb");
             initializer.applySpringProfiles(environment);
             assertActiveProfilesAre(environment, "hsqldb");
-            assertArrayEquals(new String[0], environment.getDefaultProfiles());
+            assertThat(environment.getDefaultProfiles()).containsExactly(new String[0]);
         }
 
         @Test
@@ -428,7 +422,7 @@ class YamlServletProfileInitializerTest {
 
         URI expectedUrl = ResourceUtils.toURI("file:" + tempFile.getAbsolutePath());
 
-        assertThat(loggerContext.getConfigLocation(), is(expectedUrl));
+        assertThat(loggerContext.getConfigLocation()).isEqualTo(expectedUrl);
 
         tempFile.delete();
     }
@@ -450,8 +444,8 @@ class YamlServletProfileInitializerTest {
                     .thenReturn(byteArrayResource);
 
             initializer.initialize(context);
-            assertEquals("focus", environment.getProperty("hocus.pocus"));
-            assertEquals("bar", environment.getProperty("hocus.foo"));
+            assertThat(environment.getProperty("hocus.pocus")).isEqualTo("focus");
+            assertThat(environment.getProperty("hocus.foo")).isEqualTo("bar");
         }
 
         @Test
@@ -475,9 +469,9 @@ class YamlServletProfileInitializerTest {
                     .thenReturn(databaseCredentialsYml);
 
             initializer.initialize(context);
-            assertEquals("donkey", environment.getProperty("database.username"));
-            assertEquals("kong", environment.getProperty("database.password"));
-            assertEquals("jdbc://hostname", environment.getProperty("database.url"));
+            assertThat(environment.getProperty("database.username")).isEqualTo("donkey");
+            assertThat(environment.getProperty("database.password")).isEqualTo("kong");
+            assertThat(environment.getProperty("database.url")).isEqualTo("jdbc://hostname");
         }
 
         @Test
@@ -489,8 +483,8 @@ class YamlServletProfileInitializerTest {
             when(context.getResource("file:" + inValidFileName)).thenReturn(new ByteArrayResource("isNotValid: true".getBytes()));
 
             initializer.initialize(context);
-            assertEquals("true", environment.getProperty("isValid"));
-            assertNull(environment.getProperty("isNotValid"));
+            assertThat(environment.getProperty("isValid")).isEqualTo("true");
+            assertThat(environment.getProperty("isNotValid")).isNull();
         }
     }
 
@@ -514,8 +508,7 @@ class YamlServletProfileInitializerTest {
             final AbstractEnvironment environment,
             final String... profiles
     ) {
-        assertThat(Arrays.asList(environment.getActiveProfiles()),
-                containsInAnyOrder(profiles));
+        assertThat(Arrays.asList(environment.getActiveProfiles())).containsExactlyInAnyOrder(profiles);
     }
 
 }

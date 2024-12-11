@@ -11,8 +11,7 @@ import java.sql.ResultSet;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @WithDatabaseContext
 class ExpiringCodeTableTest {
@@ -52,14 +51,14 @@ class ExpiringCodeTableTest {
                 int actualColumnSize = rs.getInt("COLUMN_SIZE");
                 if (tableName.equalsIgnoreCase(rstableName)) {
                     String actualColumnType = rs.getString("TYPE_NAME");
-                    assertTrue(testColumn(rscolumnName, actualColumnType, actualColumnSize), "Testing column:" + rscolumnName);
+                    assertThat(testColumn(rscolumnName, actualColumnType, actualColumnSize)).as("Testing column:" + rscolumnName).isTrue();
                     foundTable = true;
                     foundColumn++;
                 }
             }
             rs.close();
-            assertTrue(foundTable, "Table " + tableName + " not found!");
-            assertEquals(testColumns.size(), foundColumn, "Table " + tableName + " is missing columns!");
+            assertThat(foundTable).as("Table " + tableName + " not found!").isTrue();
+            assertThat(foundColumn).as("Table " + tableName + " is missing columns!").isEqualTo(testColumns.size());
         }
     }
 

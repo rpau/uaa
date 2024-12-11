@@ -9,14 +9,13 @@ import org.springframework.security.authentication.BadCredentialsException;
 
 import javax.servlet.http.HttpServletResponse;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-public class OAuth2AuthenticationEntryPointTests {
+class OAuth2AuthenticationEntryPointTests {
 
     private final OAuth2AuthenticationEntryPoint entryPoint = new OAuth2AuthenticationEntryPoint();
 
@@ -29,66 +28,65 @@ public class OAuth2AuthenticationEntryPointTests {
     }
 
     @Test
-    public void testCommenceWithJson() throws Exception {
+    void commenceWithJson() throws Exception {
         request.addHeader("Accept", MediaType.APPLICATION_JSON_VALUE);
         entryPoint.commence(request, response, new BadCredentialsException("Bad"));
-        assertEquals(HttpServletResponse.SC_UNAUTHORIZED, response.getStatus());
-        assertEquals("{\"error\":\"unauthorized\",\"error_description\":\"Bad\"}", response.getContentAsString());
-        assertTrue(response.getContentType().contains(MediaType.APPLICATION_JSON_VALUE));
-        assertEquals(null, response.getErrorMessage());
+        assertThat(response.getStatus()).isEqualTo(HttpServletResponse.SC_UNAUTHORIZED);
+        assertThat(response.getContentAsString()).isEqualTo("{\"error\":\"unauthorized\",\"error_description\":\"Bad\"}");
+        assertThat(response.getContentType()).contains(MediaType.APPLICATION_JSON_VALUE);
+        assertThat(response.getErrorMessage()).isNull();
     }
 
     @Test
-    public void testCommenceWithOAuth2Exception() throws Exception {
+    void commenceWithOAuth2Exception() throws Exception {
         request.addHeader("Accept", MediaType.APPLICATION_JSON_VALUE);
         entryPoint.commence(request, response, new BadCredentialsException("Bad", new InvalidClientException(
                 "Bad client")));
-        assertEquals(HttpServletResponse.SC_UNAUTHORIZED, response.getStatus());
-        assertEquals("{\"error\":\"invalid_client\",\"error_description\":\"Bad client\"}", response.getContentAsString());
-        assertTrue(response.getContentType().contains(MediaType.APPLICATION_JSON_VALUE));
-        assertEquals(null, response.getErrorMessage());
+        assertThat(response.getStatus()).isEqualTo(HttpServletResponse.SC_UNAUTHORIZED);
+        assertThat(response.getContentAsString()).isEqualTo("{\"error\":\"invalid_client\",\"error_description\":\"Bad client\"}");
+        assertThat(response.getContentType()).contains(MediaType.APPLICATION_JSON_VALUE);
+        assertThat(response.getErrorMessage()).isNull();
     }
 
     @Test
-    public void testCommenceWithXml() throws Exception {
+    void commenceWithXml() throws Exception {
         request.addHeader("Accept", MediaType.APPLICATION_XML_VALUE);
         entryPoint.commence(request, response, new BadCredentialsException("Bad"));
-        assertEquals(null, response.getErrorMessage());
+        assertThat(response.getErrorMessage()).isNull();
     }
 
     @Test
-    public void testTypeName() throws Exception {
+    void typeName() throws Exception {
         entryPoint.setTypeName("Foo");
         entryPoint.commence(request, response, new BadCredentialsException("Bad"));
-        assertEquals("Foo realm=\"foo\", error=\"unauthorized\", error_description=\"Bad\"",
-                response.getHeader("WWW-Authenticate"));
+        assertThat(response.getHeader("WWW-Authenticate")).isEqualTo("Foo realm=\"foo\", error=\"unauthorized\", error_description=\"Bad\"");
     }
 
     @Test
-    public void testCommenceWithEmptyAccept() throws Exception {
+    void commenceWithEmptyAccept() throws Exception {
         entryPoint.commence(request, response, new BadCredentialsException("Bad"));
-        assertEquals(HttpServletResponse.SC_UNAUTHORIZED, response.getStatus());
-        assertEquals("{\"error\":\"unauthorized\",\"error_description\":\"Bad\"}", response.getContentAsString());
-        assertTrue(MediaType.APPLICATION_JSON.isCompatibleWith(MediaType.valueOf(response.getContentType())));
-        assertEquals(null, response.getErrorMessage());
+        assertThat(response.getStatus()).isEqualTo(HttpServletResponse.SC_UNAUTHORIZED);
+        assertThat(response.getContentAsString()).isEqualTo("{\"error\":\"unauthorized\",\"error_description\":\"Bad\"}");
+        assertThat(MediaType.APPLICATION_JSON.isCompatibleWith(MediaType.valueOf(response.getContentType()))).isTrue();
+        assertThat(response.getErrorMessage()).isNull();
     }
 
     @Test
-    public void testCommenceWithHtmlAccept() throws Exception {
+    void commenceWithHtmlAccept() throws Exception {
         request.addHeader("Accept", MediaType.TEXT_HTML_VALUE);
         entryPoint.commence(request, response, new BadCredentialsException("Bad"));
         // TODO: maybe use forward / redirect for HTML content?
-        assertEquals(HttpServletResponse.SC_NOT_ACCEPTABLE, response.getStatus());
-        assertEquals("", response.getContentAsString());
-        assertEquals(null, response.getErrorMessage());
+        assertThat(response.getStatus()).isEqualTo(HttpServletResponse.SC_NOT_ACCEPTABLE);
+        assertThat(response.getContentAsString()).isEmpty();
+        assertThat(response.getErrorMessage()).isNull();
     }
 
     @Test
-    public void testCommenceWithHtmlAndJsonAccept() throws Exception {
+    void commenceWithHtmlAndJsonAccept() throws Exception {
         request.addHeader("Accept", "%s,%s".formatted(MediaType.TEXT_HTML_VALUE, MediaType.APPLICATION_JSON));
         entryPoint.commence(request, response, new BadCredentialsException("Bad"));
-        assertEquals(HttpServletResponse.SC_UNAUTHORIZED, response.getStatus());
-        assertEquals(null, response.getErrorMessage());
+        assertThat(response.getStatus()).isEqualTo(HttpServletResponse.SC_UNAUTHORIZED);
+        assertThat(response.getErrorMessage()).isNull();
     }
 
 }

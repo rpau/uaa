@@ -2,21 +2,19 @@ package org.cloudfoundry.identity.uaa.authentication;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
-public class UaaLoginHintTest {
+class UaaLoginHintTest {
 
     @Test
-    public void testParseHintNull() {
-        assertNull(UaaLoginHint.parseRequestParameter(null));
+    void parseHintNull() {
+        assertThat(UaaLoginHint.parseRequestParameter(null)).isNull();
     }
 
     @Test
-    public void testParseHintOrigin() {
+    void parseHintOrigin() {
         UaaLoginHint hint = UaaLoginHint.parseRequestParameter("{\"origin\":\"ldap\"}");
-        assertNotNull(hint);
-        assertEquals("ldap", hint.getOrigin());
+        assertThat(hint).isNotNull();
+        assertThat(hint.getOrigin()).isEqualTo("ldap");
     }
 }

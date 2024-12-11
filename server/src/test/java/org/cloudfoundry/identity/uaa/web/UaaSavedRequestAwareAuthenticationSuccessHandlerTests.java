@@ -27,7 +27,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 
-import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.web.UaaSavedRequestAwareAuthenticationSuccessHandler.FORM_REDIRECT_PARAMETER;
 import static org.cloudfoundry.identity.uaa.web.UaaSavedRequestAwareAuthenticationSuccessHandler.URI_OVERRIDE_ATTRIBUTE;
 import static org.mockito.Mockito.mock;
@@ -41,7 +41,7 @@ class UaaSavedRequestAwareAuthenticationSuccessHandlerTests {
     UaaSavedRequestAwareAuthenticationSuccessHandler handler;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         request = new MockHttpServletRequest();
         handler = new UaaSavedRequestAwareAuthenticationSuccessHandler();
     }

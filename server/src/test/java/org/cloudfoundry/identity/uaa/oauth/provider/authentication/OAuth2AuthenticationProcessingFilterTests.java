@@ -21,15 +21,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import javax.servlet.FilterChain;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-public class OAuth2AuthenticationProcessingFilterTests {
+class OAuth2AuthenticationProcessingFilterTests {
 
     private final OAuth2AuthenticationProcessingFilter filter = new OAuth2AuthenticationProcessingFilter();
 
@@ -58,68 +56,68 @@ public class OAuth2AuthenticationProcessingFilterTests {
     }
 
     @AfterEach
-    public void clear() {
+    void clear() {
         SecurityContextHolder.clearContext();
     }
 
     @Test
-    public void testDetailsAdded() throws Exception {
+    void detailsAdded() throws Exception {
         request.addHeader("Authorization", "Bearer FOO");
         filter.doFilter(request, null, chain);
-        assertNotNull(request.getAttribute(OAuth2AuthenticationDetails.ACCESS_TOKEN_VALUE));
-        assertEquals("Bearer", request.getAttribute(OAuth2AuthenticationDetails.ACCESS_TOKEN_TYPE));
+        assertThat(request.getAttribute(OAuth2AuthenticationDetails.ACCESS_TOKEN_VALUE)).isNotNull();
+        assertThat(request.getAttribute(OAuth2AuthenticationDetails.ACCESS_TOKEN_TYPE)).isEqualTo("Bearer");
         Authentication result = SecurityContextHolder.getContext().getAuthentication();
-        assertEquals(authentication, result);
-        assertNotNull(result.getDetails());
+        assertThat(result).isEqualTo(authentication);
+        assertThat(result.getDetails()).isNotNull();
     }
 
     @Test
-    public void testDetailsSetter() throws Exception {
+    void detailsSetter() throws Exception {
         filter.setAuthenticationEntryPoint(new OAuth2AuthenticationEntryPoint());
         filter.setAuthenticationDetailsSource(new OAuth2AuthenticationDetailsSource());
         filter.setTokenExtractor(new BearerTokenExtractor());
         filter.afterPropertiesSet();
-        assertNotNull(filter.getClass());
+        assertThat(filter.getClass()).isNotNull();
     }
 
     @Test
-    public void testDetailsAddedWithForm() throws Exception {
+    void detailsAddedWithForm() throws Exception {
         request.addParameter("access_token", "FOO");
         filter.doFilter(request, null, chain);
-        assertNotNull(request.getAttribute(OAuth2AuthenticationDetails.ACCESS_TOKEN_VALUE));
-        assertEquals(OAuth2AccessToken.BEARER_TYPE, request.getAttribute(OAuth2AuthenticationDetails.ACCESS_TOKEN_TYPE));
+        assertThat(request.getAttribute(OAuth2AuthenticationDetails.ACCESS_TOKEN_VALUE)).isNotNull();
+        assertThat(request.getAttribute(OAuth2AuthenticationDetails.ACCESS_TOKEN_TYPE)).isEqualTo(OAuth2AccessToken.BEARER_TYPE);
         Authentication result = SecurityContextHolder.getContext().getAuthentication();
-        assertEquals(authentication, result);
-        assertNotNull(result.getDetails());
+        assertThat(result).isEqualTo(authentication);
+        assertThat(result.getDetails()).isNotNull();
     }
 
     @Test
-    public void testStateless() throws Exception {
+    void stateless() throws Exception {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("FOO", "foo", AuthorityUtils.createAuthorityList("ROLE_ANONYMOUS")));
         filter.doFilter(request, null, chain);
-        assertNull(SecurityContextHolder.getContext().getAuthentication());
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
     }
 
     @Test
-    public void testStatelessPreservesAnonymous() throws Exception {
+    void statelessPreservesAnonymous() throws Exception {
         SecurityContextHolder.getContext().setAuthentication(
                 new AnonymousAuthenticationToken("FOO", "foo", AuthorityUtils.createAuthorityList("ROLE_ANONYMOUS")));
         filter.doFilter(request, null, chain);
-        assertNotNull(SecurityContextHolder.getContext().getAuthentication());
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNotNull();
     }
 
     @Test
-    public void testStateful() throws Exception {
+    void stateful() throws Exception {
         filter.setStateless(false);
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("FOO", "foo", AuthorityUtils.createAuthorityList("ROLE_ANONYMOUS")));
         filter.doFilter(request, null, chain);
-        assertNotNull(SecurityContextHolder.getContext().getAuthentication());
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNotNull();
     }
 
     @Test
-    public void testNoEventsPublishedWithNoToken() throws Exception {
+    void noEventsPublishedWithNoToken() throws Exception {
         AuthenticationEventPublisher eventPublisher = Mockito.mock(AuthenticationEventPublisher.class);
         filter.setAuthenticationEventPublisher(eventPublisher);
         filter.doFilter(request, null, chain);
@@ -128,7 +126,7 @@ public class OAuth2AuthenticationProcessingFilterTests {
     }
 
     @Test
-    public void testSuccessEventsPublishedWithToken() throws Exception {
+    void successEventsPublishedWithToken() throws Exception {
         request.addHeader("Authorization", "Bearer FOO");
         AuthenticationEventPublisher eventPublisher = Mockito.mock(AuthenticationEventPublisher.class);
         filter.setAuthenticationEventPublisher(eventPublisher);
@@ -138,7 +136,7 @@ public class OAuth2AuthenticationProcessingFilterTests {
     }
 
     @Test
-    public void testFailureEventsPublishedWithBadToken() throws Exception {
+    void failureEventsPublishedWithBadToken() throws Exception {
         request.addHeader("Authorization", "Bearer BAD");
         filter.doFilter(request, response, chain);
         AuthenticationEventPublisher eventPublisher = Mockito.mock(AuthenticationEventPublisher.class);

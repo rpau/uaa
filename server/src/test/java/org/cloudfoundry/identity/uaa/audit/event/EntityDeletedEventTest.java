@@ -15,6 +15,7 @@
 
 package org.cloudfoundry.identity.uaa.audit.event;
 
+import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
 import org.cloudfoundry.identity.uaa.provider.IdentityProvider;
 import org.cloudfoundry.identity.uaa.scim.ScimUser;
 import org.cloudfoundry.identity.uaa.user.UaaUser;
@@ -23,9 +24,8 @@ import org.cloudfoundry.identity.uaa.zone.IdentityZone;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.Authentication;
-import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -83,9 +83,7 @@ class EntityDeletedEventTest {
                 deleted,
                 mock(Authentication.class),
                 null);
-        assertEquals(
-                "Class:" + clazz.getName() + "; ID:" + id,
-                event.getAuditEvent().getData());
+        assertThat(event.getAuditEvent().getData()).isEqualTo("Class:" + clazz.getName() + "; ID:" + id);
     }
 
 }

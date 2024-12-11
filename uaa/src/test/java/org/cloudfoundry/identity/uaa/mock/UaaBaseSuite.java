@@ -34,12 +34,12 @@ public class UaaBaseSuite {
     }
 
     @BeforeAll
-    public static void suiteIsActive() {
+    static void suiteIsActive() {
         suiteActive = true;
     }
 
     @AfterAll
-    public static void suiteIsNotActive() {
+    static void suiteIsNotActive() {
         suiteActive = false;
     }
 

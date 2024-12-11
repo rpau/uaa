@@ -124,7 +124,7 @@ class InvitationsControllerTest {
     ExternalOAuthProviderConfigurator externalOAuthProviderConfigurator;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         IdentityZoneHolder.clear();
         SecurityContextHolder.clearContext();
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
@@ -132,12 +132,12 @@ class InvitationsControllerTest {
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         SecurityContextHolder.clearContext();
     }
 
     @Test
-    void testAcceptInvitationsPage() throws Exception {
+    void acceptInvitationsPage() throws Exception {
         String zoneId = IdentityZoneHolder.get().getId();
         Map<String, String> codeData = new HashMap<>();
         codeData.put("user_id", "user-id-001");
@@ -301,10 +301,10 @@ class InvitationsControllerTest {
         when(expiringCodeStore.generateCode(anyString(), any(), eq(null), eq(zoneId))).thenReturn(new ExpiringCode("code", new Timestamp(System.currentTimeMillis()), JsonUtils.writeValueAsString(codeData), null));
 
         mockMvc.perform(post("/invitations/accept_enterprise.do")
-                .param("enterprise_username", "test-ldap-user")
-                .param("enterprise_password", "password")
-                .param("enterprise_email", "email")
-                .param("code", "the_secret_code"))
+                        .param("enterprise_username", "test-ldap-user")
+                        .param("enterprise_password", "password")
+                        .param("enterprise_email", "email")
+                        .param("code", "the_secret_code"))
                 .andExpect(redirectedUrl("/login?success=invite_accepted&form_redirect_uri=blah.test.com"))
                 .andReturn();
 
@@ -334,10 +334,10 @@ class InvitationsControllerTest {
         when(ldapActual.authenticate(any())).thenThrow(new BadCredentialsException("bad creds"));
 
         mockMvc.perform(post("/invitations/accept_enterprise.do")
-                .param("enterprise_username", "test-ldap-user")
-                .param("enterprise_password", "password")
-                .param("enterprise_email", "email")
-                .param("code", "the_secret_code"))
+                        .param("enterprise_username", "test-ldap-user")
+                        .param("enterprise_password", "password")
+                        .param("enterprise_email", "email")
+                        .param("code", "the_secret_code"))
                 .andExpect(model().attribute("ldap", true))
                 .andExpect(model().attribute("email", "email"))
                 .andExpect(model().attribute("error_message", "bad_credentials"))
@@ -367,10 +367,10 @@ class InvitationsControllerTest {
         when(expiringCodeStore.generateCode(anyString(), any(), eq(null), eq(zoneId))).thenReturn(new ExpiringCode("code", new Timestamp(System.currentTimeMillis()), JsonUtils.writeValueAsString(codeData), null));
 
         mockMvc.perform(post("/invitations/accept_enterprise.do")
-                .param("enterprise_username", "test-ldap-user")
-                .param("enterprise_password", "password")
-                .param("enterprise_email", "email")
-                .param("code", "the_secret_code"))
+                        .param("enterprise_username", "test-ldap-user")
+                        .param("enterprise_password", "password")
+                        .param("enterprise_email", "email")
+                        .param("code", "the_secret_code"))
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(view().name("invitations/accept_invite"))
                 .andExpect(content().string(containsString("Email: " + "user@example.com")))
@@ -433,7 +433,7 @@ class InvitationsControllerTest {
     }
 
     @Test
-    void testAcceptInvitePageWithExpiredCode() throws Exception {
+    void acceptInvitePageWithExpiredCode() throws Exception {
         String zoneId = IdentityZoneHolder.get().getId();
         when(expiringCodeStore.retrieveCode(anyString(), eq(zoneId))).thenReturn(null);
         MockHttpServletRequestBuilder get = get("/invitations/accept").param("code", "the_secret_code");
@@ -488,7 +488,7 @@ class InvitationsControllerTest {
     }
 
     @Test
-    void testAcceptInviteWithContraveningPassword() throws Exception {
+    void acceptInviteWithContraveningPassword() throws Exception {
         doThrow(new InvalidPasswordException(Arrays.asList("Msg 2c", "Msg 1c"))).when(passwordValidator).validate("a");
         MockHttpServletRequestBuilder post = startAcceptInviteFlow("a", "a");
 
@@ -516,7 +516,7 @@ class InvitationsControllerTest {
     }
 
     @Test
-    void testAcceptInvite() throws Exception {
+    void acceptInvite() throws Exception {
         ScimUser user = new ScimUser("user-id-001", "user@example.com", "fname", "lname");
         user.setPrimaryEmail(user.getUserName());
         MockHttpServletRequestBuilder post = startAcceptInviteFlow("passw0rd", "passw0rd");
@@ -633,7 +633,7 @@ class InvitationsControllerTest {
     }
 
     @Test
-    void testAcceptInviteWithoutMatchingPasswords() throws Exception {
+    void acceptInviteWithoutMatchingPasswords() throws Exception {
         MockHttpServletRequestBuilder post = startAcceptInviteFlow("a", "b");
 
         String zoneId = IdentityZoneHolder.get().getId();
@@ -660,7 +660,7 @@ class InvitationsControllerTest {
     }
 
     @Test
-    void testAcceptInvite_displaysConsentText() throws Exception {
+    void acceptInviteDisplaysConsentText() throws Exception {
         IdentityZone defaultZone = IdentityZoneHolder.get();
         String zoneId = IdentityZoneHolder.get().getId();
         BrandingInformation branding = new BrandingInformation();
@@ -678,7 +678,7 @@ class InvitationsControllerTest {
                 .thenReturn(expiringCode, null);
 
         mockMvc.perform(get("/invitations/accept")
-                .param("code", "thecode"))
+                        .param("code", "thecode"))
                 .andExpect(content().string(containsString("Jaskanwal")));
 
         // cleanup changes to default zone
@@ -686,7 +686,7 @@ class InvitationsControllerTest {
     }
 
     @Test
-    void testAcceptInvite_doesNotDisplayConsentCheckboxWhenNotConfiguredForZone() throws Exception {
+    void acceptInviteDoesNotDisplayConsentCheckboxWhenNotConfiguredForZone() throws Exception {
         IdentityProvider identityProvider = new IdentityProvider<>();
         identityProvider.setType(OriginKeys.UAA);
         when(providerProvisioning.retrieveByOrigin(anyString(), anyString())).thenReturn(identityProvider);
@@ -701,12 +701,12 @@ class InvitationsControllerTest {
                 .thenReturn(expiringCode);
 
         mockMvc.perform(get("/invitations/accept")
-                .param("code", "thecode"))
+                        .param("code", "thecode"))
                 .andExpect(content().string(not(containsString("I agree"))));
     }
 
     @Test
-    void testAcceptInvite_displaysErrorMessageIfConsentNotChecked() throws Exception {
+    void acceptInviteDisplaysErrorMessageIfConsentNotChecked() throws Exception {
         IdentityZone defaultZone = IdentityZoneHolder.get();
         String zoneId = IdentityZoneHolder.get().getId();
         BrandingInformation branding = new BrandingInformation();
@@ -738,7 +738,7 @@ class InvitationsControllerTest {
     }
 
     @Test
-    void testAcceptInvite_worksWithConsentProvided() throws Exception {
+    void acceptInviteWorksWithConsentProvided() throws Exception {
         IdentityZone defaultZone = IdentityZoneHolder.get();
         String zoneId = IdentityZoneHolder.get().getId();
         BrandingInformation branding = new BrandingInformation();
@@ -761,7 +761,7 @@ class InvitationsControllerTest {
                 .thenReturn(new AcceptedInvitation(codeData.get("redirect_uri"), null));
 
         MvcResult mvcResult = mockMvc.perform(startAcceptInviteFlow("password", "password")
-                .param("does_user_consent", "true"))
+                        .param("does_user_consent", "true"))
                 .andReturn();
         assertThat(mvcResult.getResponse().getHeader("Location")).contains(codeData.get("redirect_uri"));
 
@@ -816,13 +816,13 @@ class InvitationsControllerTest {
 
         @Bean
         InvitationsController invitationsController(final InvitationsService invitationsService,
-                final ExpiringCodeStore codeStore,
-                final PasswordValidator passwordPolicyValidator,
-                final IdentityProviderProvisioning providerProvisioning,
-                final UaaUserDatabase userDatabase,
-                final ScimUserProvisioning provisioning,
-                final DynamicZoneAwareAuthenticationManager zoneAwareAuthenticationManager,
-                final ExternalOAuthProviderConfigurator externalOAuthProviderConfigurator) {
+                                                    final ExpiringCodeStore codeStore,
+                                                    final PasswordValidator passwordPolicyValidator,
+                                                    final IdentityProviderProvisioning providerProvisioning,
+                                                    final UaaUserDatabase userDatabase,
+                                                    final ScimUserProvisioning provisioning,
+                                                    final DynamicZoneAwareAuthenticationManager zoneAwareAuthenticationManager,
+                                                    final ExternalOAuthProviderConfigurator externalOAuthProviderConfigurator) {
             return new InvitationsController(
                     invitationsService,
                     codeStore,

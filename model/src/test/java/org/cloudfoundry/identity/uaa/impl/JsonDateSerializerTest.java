@@ -2,7 +2,6 @@ package org.cloudfoundry.identity.uaa.impl;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
@@ -10,23 +9,24 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class JsonDateSerializerTest {
+import static org.assertj.core.api.Assertions.assertThat;
+
+class JsonDateSerializerTest {
 
     Exception exceptionOccured;
 
     @Test
-    public void testFormatting() throws IOException {
+    void formatting() throws IOException {
         Date now = new Date();
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         JsonGenerator gen = new JsonFactory().createGenerator(bos);
         new JsonDateSerializer().serialize(now, gen, null);
         gen.close();
-        Assertions.assertEquals("\"%s\"".formatted(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").format(now)),
-                bos.toString());
+        assertThat(bos.toString()).isEqualTo("\"%s\"".formatted(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").format(now)));
     }
 
     @Test
-    public void testFormattingParallel() throws InterruptedException {
+    void formattingParallel() throws InterruptedException {
         Thread[] threadArray = new Thread[1000];
         for (int i = 0; i < 1000; i++) {
 
@@ -55,7 +55,7 @@ public class JsonDateSerializerTest {
         for (int i = 0; i < 1000; i++) {
             threadArray[i].join();
         }
-        Assertions.assertNull(exceptionOccured);
+        assertThat(exceptionOccured).isNull();
     }
 
 }

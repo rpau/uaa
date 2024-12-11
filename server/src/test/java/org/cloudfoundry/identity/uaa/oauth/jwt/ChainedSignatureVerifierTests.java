@@ -35,14 +35,12 @@ import java.util.List;
 import java.util.Map;
 
 import static java.util.Collections.singletonMap;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.cloudfoundry.identity.uaa.oauth.jwk.JsonWebKey.KeyType.MAC;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
-public class ChainedSignatureVerifierTests {
+class ChainedSignatureVerifierTests {
     private Signer signer;
 
     private Jwt signedValidContent;
@@ -52,7 +50,7 @@ public class ChainedSignatureVerifierTests {
     private ChainedSignatureVerifier verifier;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         String rsaSigningKey = """
                 -----BEGIN RSA PRIVATE KEY-----
                 MIIBOQIBAAJAcjAgsHEfrUxeTFwQPb17AkZ2Im4SfZdpY8Ada9pZfxXz1PZSqv9T
@@ -87,41 +85,39 @@ public class ChainedSignatureVerifierTests {
     }
 
     @Test
-    public void test_single_key_valid() {
+    void single_key_valid() {
         verifier = new ChainedSignatureVerifier(new JsonWebKeySet<>(Collections.singletonList(validKey)));
         JwtHelper.decode(signedValidContent.getEncoded()).verifySignature(verifier);
     }
 
     @Test
-    public void test_single_key_invalid() {
-        assertThrows(InvalidSignatureException.class, () -> {
-            verifier = new ChainedSignatureVerifier(new JsonWebKeySet<>(Collections.singletonList(invalidKey)));
-            JwtHelper.decode(signedValidContent.getEncoded()).verifySignature(verifier);
-        });
+    void single_key_invalid() {
+        verifier = new ChainedSignatureVerifier(new JsonWebKeySet<>(Collections.singletonList(invalidKey)));
+        assertThatExceptionOfType(InvalidSignatureException.class).isThrownBy(() ->
+                JwtHelper.decode(signedValidContent.getEncoded()).verifySignature(verifier));
     }
 
     @Test
-    public void test_multi_key_first_valid() {
+    void multi_key_first_valid() {
         verifier = new ChainedSignatureVerifier(new JsonWebKeySet<>(Arrays.asList(validKey, invalidKey)));
         JwtHelper.decode(signedValidContent.getEncoded()).verifySignature(verifier);
     }
 
     @Test
-    public void test_multi_key_last_valid() {
+    void multi_key_last_valid() {
         verifier = new ChainedSignatureVerifier(new JsonWebKeySet<>(Arrays.asList(invalidKey, validKey)));
         JwtHelper.decode(signedValidContent.getEncoded()).verifySignature(verifier);
     }
 
     @Test
-    public void test_multi_key_invalid() {
-        assertThrows(InvalidSignatureException.class, () -> {
-            verifier = new ChainedSignatureVerifier(new JsonWebKeySet<>(Arrays.asList(invalidKey, invalidKey)));
-            JwtHelper.decode(signedValidContent.getEncoded()).verifySignature(verifier);
-        });
+    void multi_key_invalid() {
+        verifier = new ChainedSignatureVerifier(new JsonWebKeySet<>(Arrays.asList(invalidKey, invalidKey)));
+        assertThatExceptionOfType(InvalidSignatureException.class).isThrownBy(() ->
+                JwtHelper.decode(signedValidContent.getEncoded()).verifySignature(verifier));
     }
 
     @Test
-    public void check_that_we_use_common_signer() {
+    void check_that_we_use_common_signer() {
         Map<String, Object> p = new HashMap<>();
         p.put("kty", MAC.name());
         p.put("kid", "macid");
@@ -129,16 +125,16 @@ public class ChainedSignatureVerifierTests {
         JsonWebKey macKey = new JsonWebKey(p);
         verifier = new ChainedSignatureVerifier(new JsonWebKeySet<>(Arrays.asList(validKey, invalidKey, macKey)));
         List<SignatureVerifier> delegates = new ArrayList((List<SignatureVerifier>) ReflectionTestUtils.getField(verifier, verifier.getClass(), "delegates"));
-        assertNotNull(delegates);
-        assertEquals(3, delegates.size());
+        assertThat(delegates).isNotNull();
+        assertThat(delegates.size()).isEqualTo(3);
         int pos = 0;
         for (SignatureVerifier v : delegates) {
-            assertTrue(v instanceof SignatureVerifier, "Checking " + (pos++));
+            assertThat(v instanceof SignatureVerifier).as("Checking " + (pos++)).isTrue();
         }
     }
 
     @Test
-    public void unsupported_key_types_are_ignored() {
+    void unsupported_key_types_are_ignored() {
         Map<String, Object> p = new HashMap<>();
         p.put("kty", "ES");
         p.put("kid", "ecid");
@@ -152,34 +148,34 @@ public class ChainedSignatureVerifierTests {
         JsonWebKeySet keySet = JsonUtils.convertValue(singletonMap("keys", Arrays.asList(validKey, p, q)), JsonWebKeySet.class);
         verifier = new ChainedSignatureVerifier(keySet);
         List<SignatureVerifier> delegates = new ArrayList((List<SignatureVerifier>) ReflectionTestUtils.getField(verifier, verifier.getClass(), "delegates"));
-        assertNotNull(delegates);
-        assertEquals(1, delegates.size());
+        assertThat(delegates).isNotNull();
+        assertThat(delegates.size()).isEqualTo(1);
         int pos = 0;
         for (SignatureVerifier v : delegates) {
-            assertTrue(v instanceof SignatureVerifier, "Checking " + (pos++));
+            assertThat(v instanceof SignatureVerifier).as("Checking " + (pos++)).isTrue();
         }
     }
 
     @Test
-    public void no_supported_key_types_causes_error() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            Map<String, Object> p = new HashMap<>();
-            p.put("kty", "EC");
-            p.put("kid", "ecid");
-            p.put("x", "test-ec-key-x");
-            p.put("y", "test-ec-key-y");
-            p.put("use", "sig");
-            p.put("crv", "test-crv");
-            Map<String, Object> q = new HashMap<>();
-            q.put("kty", "oct");
-            q.put("k", "octkeyvalue");
-            JsonWebKeySet keySet = JsonUtils.convertValue(singletonMap("keys", Arrays.asList(p, q)), JsonWebKeySet.class);
+    void no_supported_key_types_causes_error() {
+        Map<String, Object> p = new HashMap<>();
+        p.put("kty", "EC");
+        p.put("kid", "ecid");
+        p.put("x", "test-ec-key-x");
+        p.put("y", "test-ec-key-y");
+        p.put("use", "sig");
+        p.put("crv", "test-crv");
+        Map<String, Object> q = new HashMap<>();
+        q.put("kty", "oct");
+        q.put("k", "octkeyvalue");
+        JsonWebKeySet keySet = JsonUtils.convertValue(singletonMap("keys", Arrays.asList(p, q)), JsonWebKeySet.class);
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> {
             verifier = new ChainedSignatureVerifier(keySet);
         });
     }
 
     @Test
-    public void test_single_hmackey_valid() {
+    void single_hmackey_valid() {
         Map<String, Object> q = new HashMap<>();
         q.put("kid", "test");
         q.put("kty", "oct");
@@ -187,13 +183,13 @@ public class ChainedSignatureVerifierTests {
         JsonWebKeySet keySet = JsonUtils.convertValue(singletonMap("keys", Arrays.asList(q)), JsonWebKeySet.class);
         verifier = new ChainedSignatureVerifier(keySet);
         List<SignatureVerifier> delegates = new ArrayList((List<SignatureVerifier>) ReflectionTestUtils.getField(verifier, verifier.getClass(), "delegates"));
-        assertNotNull(delegates);
-        assertEquals(1, delegates.size());
-        assertEquals("HS256", delegates.get(0).algorithm());
+        assertThat(delegates).isNotNull();
+        assertThat(delegates.size()).isEqualTo(1);
+        assertThat(delegates.get(0).algorithm()).isEqualTo("HS256");
     }
 
     @Test
-    public void test_single_eckey_valid() {
+    void single_eckey_valid() {
         Map<String, Object> q = new HashMap<>();
         q.put("kid", "ec-key");
         q.put("kty", "EC");
@@ -203,14 +199,14 @@ public class ChainedSignatureVerifierTests {
         JsonWebKeySet keySet = JsonUtils.convertValue(singletonMap("keys", Arrays.asList(q)), JsonWebKeySet.class);
         verifier = new ChainedSignatureVerifier(keySet);
         List<SignatureVerifier> delegates = new ArrayList((List<SignatureVerifier>) ReflectionTestUtils.getField(verifier, verifier.getClass(), "delegates"));
-        assertNotNull(delegates);
-        assertEquals(1, delegates.size());
-        assertNotNull(delegates.get(0));
-        assertEquals("ES256", delegates.get(0).algorithm());
+        assertThat(delegates).isNotNull();
+        assertThat(delegates.size()).isEqualTo(1);
+        assertThat(delegates.get(0)).isNotNull();
+        assertThat(delegates.get(0).algorithm()).isEqualTo("ES256");
     }
 
     @Test
-    public void test_multi_key_both_valid() {
+    void multi_key_both_valid() {
         Map<String, Object> p = new HashMap<>();
         p.put("kty", MAC.name());
         p.put("value", "mac-content");
@@ -219,9 +215,9 @@ public class ChainedSignatureVerifierTests {
         verifier = new ChainedSignatureVerifier(new JsonWebKeySet<>(Arrays.asList(validKey, jsonWebKey)));
         JwtHelper.decode(signedValidContent.getEncoded()).verifySignature(verifier);
         List<SignatureVerifier> delegates = new ArrayList((List<SignatureVerifier>) ReflectionTestUtils.getField(verifier, verifier.getClass(), "delegates"));
-        assertNotNull(delegates);
-        assertEquals(2, delegates.size());
-        assertEquals("HS256", delegates.get(1).algorithm());
+        assertThat(delegates).isNotNull();
+        assertThat(delegates.size()).isEqualTo(2);
+        assertThat(delegates.get(1).algorithm()).isEqualTo("HS256");
 
         //ensure the second signer never gets invoked upon success
         delegates.remove(1);

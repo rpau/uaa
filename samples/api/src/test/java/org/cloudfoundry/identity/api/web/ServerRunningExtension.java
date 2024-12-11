@@ -34,7 +34,7 @@ import org.springframework.web.util.UriTemplate;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.fail;
 
 /**
  * <p>

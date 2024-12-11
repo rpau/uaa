@@ -88,7 +88,6 @@ public class DbUtils {
             s_logger.error("Failed to extract DatabaseMetaData, aborting");
             throw new UaaDBException("Failed to extract DatabaseMetaData", ex);
         }
-
     }
 
     private static char getIdentifierQuoteChar(DatabaseMetaData metaData) throws SQLException {

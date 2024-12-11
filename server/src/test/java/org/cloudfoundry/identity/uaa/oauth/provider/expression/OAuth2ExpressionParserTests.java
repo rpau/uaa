@@ -8,7 +8,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.ParserContext;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.mockito.Mockito.verify;
 
 /**
@@ -16,7 +16,7 @@ import static org.mockito.Mockito.verify;
  * Scope: Test class
  */
 @ExtendWith(MockitoExtension.class)
-public class OAuth2ExpressionParserTests {
+class OAuth2ExpressionParserTests {
     @Mock
     private ExpressionParser delegate;
     @Mock
@@ -29,25 +29,25 @@ public class OAuth2ExpressionParserTests {
     private OAuth2ExpressionParser parser;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         parser = new OAuth2ExpressionParser(delegate);
     }
 
     @Test
-    public void constructorNull() {
-        assertThrows(IllegalArgumentException.class, () -> {
+    void constructorNull() {
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> {
             new OAuth2ExpressionParser(null);
         });
     }
 
     @Test
-    public void parseExpression() {
+    void parseExpression() {
         parser.parseExpression(expressionString);
         verify(delegate).parseExpression(wrappedExpression);
     }
 
     @Test
-    public void parseExpressionWithContext() {
+    void parseExpressionWithContext() {
         parser.parseExpression(expressionString, parserContext);
         verify(delegate).parseExpression(wrappedExpression, parserContext);
     }

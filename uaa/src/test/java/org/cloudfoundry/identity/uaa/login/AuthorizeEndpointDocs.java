@@ -26,6 +26,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.CLIENT_ID;
 import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.REDIRECT_URI;
 import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.RESPONSE_TYPE;
@@ -34,8 +35,6 @@ import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.STATE;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.ID_TOKEN_HINT_PROMPT;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.ID_TOKEN_HINT_PROMPT_NONE;
 import static org.cloudfoundry.identity.uaa.test.SnippetUtils.parameterWithName;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
 import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED;
 import static org.springframework.restdocs.headers.HeaderDocumentation.headerWithName;
 import static org.springframework.restdocs.headers.HeaderDocumentation.requestHeaders;
@@ -176,7 +175,7 @@ class AuthorizeEndpointDocs extends EndpointDocs {
                         responseHeaders,
                         requestParameters)).andReturn();
         String location = mvcResult.getResponse().getHeader("Location");
-        assertThat(location, containsString("access_token="));
+        assertThat(location).contains("access_token=");
     }
 
     @Test
@@ -241,7 +240,7 @@ class AuthorizeEndpointDocs extends EndpointDocs {
                         responseHeaders,
                         requestParameters)).andReturn();
         String location = mvcResult.getResponse().getHeader("Location");
-        assertThat(location, containsString("id_token="));
+        assertThat(location).contains("id_token=");
     }
 
     @Test
@@ -278,8 +277,8 @@ class AuthorizeEndpointDocs extends EndpointDocs {
                         responseHeaders,
                         requestParameters)).andReturn();
         String location = mvcResult.getResponse().getHeader("Location");
-        assertThat(location, containsString("id_token="));
-        assertThat(location, containsString("access_token="));
+        assertThat(location).contains("id_token=");
+        assertThat(location).contains("access_token=");
     }
 
     @Test
@@ -316,8 +315,8 @@ class AuthorizeEndpointDocs extends EndpointDocs {
                         responseHeaders,
                         requestParameters)).andReturn();
         String location = mvcResult.getResponse().getHeader("Location");
-        assertThat(location, containsString("id_token="));
-        assertThat(location, containsString("code="));
+        assertThat(location).contains("id_token=");
+        assertThat(location).contains("code=");
     }
 
     private static void resetMarissaPassword(ScimUserProvisioning scimUserProvisioning) {

@@ -2,29 +2,29 @@ package org.cloudfoundry.identity.uaa.ratelimiting.config;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class BindYamlTest {
 
     @Test
     void removeLeadingEmptyDocuments() {
-        assertNull(BindYaml.removeLeadingEmptyDocuments(null));
-        assertEquals("", BindYaml.removeLeadingEmptyDocuments(""));
-        assertEquals("", BindYaml.removeLeadingEmptyDocuments("\n--- \n--- {} \n---\n{}"));
-        assertEquals("name: Fred", BindYaml.removeLeadingEmptyDocuments("--- \nname: Fred"));
+        assertThat(BindYaml.removeLeadingEmptyDocuments(null)).isNull();
+        assertThat(BindYaml.removeLeadingEmptyDocuments("")).isEmpty();
+        assertThat(BindYaml.removeLeadingEmptyDocuments("\n--- \n--- {} \n---\n{}")).isEmpty();
+        assertThat(BindYaml.removeLeadingEmptyDocuments("--- \nname: Fred")).isEqualTo("name: Fred");
     }
 
     @Test
     void bind() {
-        BindYaml<Point> binder = new BindYaml<>( Point.class, "test" );
-        assertNull(binder.bind(""));
-        assertEquals("(1,0)", binder.bind("x : 1").toString());
-        assertEquals("(0,2)", binder.bind("y : 2").toString());
-        assertEquals("(0,0,3)", binder.bind("z : 3").toString());
-        assertEquals("(1,2,3)", binder.bind("""
+        BindYaml<Point> binder = new BindYaml<>(Point.class, "test");
+        assertThat(binder.bind("")).isNull();
+        assertThat(binder.bind("x : 1")).hasToString("(1,0)");
+        assertThat(binder.bind("y : 2")).hasToString("(0,2)");
+        assertThat(binder.bind("z : 3")).hasToString("(0,0,3)");
+        assertThat(binder.bind("""
                 x : 1
                 y : 2
-                z : 3""").toString());
+                z : 3""")).hasToString("(1,2,3)");
     }
 
     public static class Point {

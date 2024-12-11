@@ -21,11 +21,8 @@ import org.springframework.web.servlet.ModelAndView;
 import java.util.Collections;
 import java.util.stream.Stream;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_AUTHORIZATION_CODE;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -94,45 +91,45 @@ public class UaaAuthorizationEndpointParamaterizedTest {
 
     @MethodSource("parameters")
     @ParameterizedTest(name = "{index}: {0}")
-    public void test_missing_redirect_uri(String responseType) throws Exception {
+    void missing_redirect_uri(String responseType) throws Exception {
         initUaaAuthorizationEndpointParamaterizedTest(responseType);
         client.setRegisteredRedirectUri(Collections.emptySet());
         uaaAuthorizationEndpoint.commence(request, response, authException);
-        assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatus());
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
     }
 
     @MethodSource("parameters")
     @ParameterizedTest(name = "{index}: {0}")
-    public void test_client_not_found(String responseType) throws Exception {
+    void client_not_found(String responseType) throws Exception {
         initUaaAuthorizationEndpointParamaterizedTest(responseType);
         reset(clientDetailsService);
         when(clientDetailsService.loadClientByClientId(anyString(), anyString())).thenThrow(new NoSuchClientException("not found"));
         uaaAuthorizationEndpoint.commence(request, response, authException);
-        assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatus());
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
     }
 
     @MethodSource("parameters")
     @ParameterizedTest(name = "{index}: {0}")
-    public void test_redirect_mismatch(String responseType) throws Exception {
+    void redirect_mismatch(String responseType) throws Exception {
         initUaaAuthorizationEndpointParamaterizedTest(responseType);
         request.setParameter(OAuth2Utils.REDIRECT_URI, HTTP_SOME_OTHER_SITE_CALLBACK);
         uaaAuthorizationEndpoint.commence(request, response, authException);
-        assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatus());
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
     }
 
     @MethodSource("parameters")
     @ParameterizedTest(name = "{index}: {0}")
-    public void test_redirect_contains_error(String responseType) throws Exception {
+    void redirect_contains_error(String responseType) throws Exception {
         initUaaAuthorizationEndpointParamaterizedTest(responseType);
         request.setParameter(OAuth2Utils.REDIRECT_URI, redirectUrl);
         uaaAuthorizationEndpoint.commence(request, response, authException);
-        assertEquals(HttpStatus.FOUND.value(), response.getStatus());
-        assertTrue(response.getHeader("Location").contains("error=login_required"));
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.FOUND.value());
+        assertThat(response.getHeader("Location").contains("error=login_required")).isTrue();
     }
 
     @MethodSource("parameters")
     @ParameterizedTest(name = "{index}: {0}")
-    public void test_redirect_honors_ant_matcher(String responseType) throws Exception {
+    void redirect_honors_ant_matcher(String responseType) throws Exception {
         initUaaAuthorizationEndpointParamaterizedTest(responseType);
         UaaClientDetails client = new UaaClientDetails("ant", "", "openid", "implicit", "", "http://example.com/**");
         request.setParameter(OAuth2Utils.REDIRECT_URI, "http://example.com/some/path");
@@ -147,15 +144,15 @@ public class UaaAuthorizationEndpointParamaterizedTest {
 
     @MethodSource("parameters")
     @ParameterizedTest(name = "{index}: {0}")
-    public void test_authorization_exception(String responseType) throws Exception {
+    void authorization_exception(String responseType) throws Exception {
         initUaaAuthorizationEndpointParamaterizedTest(responseType);
         RedirectMismatchException redirectMismatchException = new RedirectMismatchException("error");
         ServletWebRequest servletWebRequest = mock(ServletWebRequest.class);
         MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
         when(servletWebRequest.getResponse()).thenReturn(mockHttpServletResponse);
         ModelAndView modelAndView = uaaAuthorizationEndpoint.handleOAuth2Exception(redirectMismatchException, servletWebRequest);
-        assertNotNull(modelAndView);
-        assertFalse(modelAndView.getModelMap().isEmpty());
-        assertEquals("forward:/oauth/error", modelAndView.getViewName());
+        assertThat(modelAndView).isNotNull();
+        assertThat(modelAndView.getModelMap().isEmpty()).isFalse();
+        assertThat(modelAndView.getViewName()).isEqualTo("forward:/oauth/error");
     }
 }

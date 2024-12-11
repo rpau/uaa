@@ -30,9 +30,7 @@ import org.springframework.util.MultiValueMap;
 
 import java.util.Collections;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Dave Syer
@@ -49,7 +47,7 @@ class CfAuthenticationTests {
     private HttpHeaders headers;
 
     @BeforeEach
-    public void init() {
+    void init() {
         ImplicitResourceDetails resource = testAccounts.getDefaultImplicitResource();
         params = new LinkedMultiValueMap<>();
         params.set("client_id", resource.getClientId());
@@ -60,20 +58,20 @@ class CfAuthenticationTests {
     }
 
     @Test
-    void testDefaultScopes() {
+    void defaultScopes() {
         params.set(
                 "credentials",
                 "{\"username\":\"%s\",\"password\":\"%s\"}".formatted(testAccounts.getUserName(),
                         testAccounts.getPassword()));
         ResponseEntity<Void> response = serverRunning.postForResponse(serverRunning.getAuthorizationUri(), headers,
                 params);
-        assertEquals(HttpStatus.FOUND, response.getStatusCode());
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FOUND);
         String location = response.getHeaders().getLocation().toString();
-        assertTrue(location.contains("access_token"), "Not authenticated (no access token): " + location);
+        assertThat(location.contains("access_token")).as("Not authenticated (no access token): " + location).isTrue();
     }
 
     @Test
-    void testInvalidScopes() {
+    void invalidScopes() {
         params.set(
                 "credentials",
                 "{\"username\":\"%s\",\"password\":\"%s\"}".formatted(testAccounts.getUserName(),
@@ -81,10 +79,10 @@ class CfAuthenticationTests {
         params.set("scope", "read");
         ResponseEntity<Void> response = serverRunning.postForResponse(serverRunning.getAuthorizationUri(), headers,
                 params);
-        assertEquals(HttpStatus.FOUND, response.getStatusCode());
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FOUND);
         String location = response.getHeaders().getLocation().toString();
-        assertTrue(location.startsWith(params.getFirst("redirect_uri")));
-        assertTrue(location.contains("error=invalid_scope"));
-        assertFalse(location.contains("credentials="));
+        assertThat(location.startsWith(params.getFirst("redirect_uri"))).isTrue();
+        assertThat(location.contains("error=invalid_scope")).isTrue();
+        assertThat(location.contains("credentials=")).isFalse();
     }
 }

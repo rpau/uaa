@@ -14,7 +14,6 @@
 package org.cloudfoundry.identity.uaa.integration.feature;
 
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -24,8 +23,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 @SpringJUnitConfig(classes = DefaultIntegrationTestConfig.class)
-public class HealthzIT {
+class HealthzIT {
 
     @Autowired
     @RegisterExtension
@@ -39,7 +40,7 @@ public class HealthzIT {
 
     @BeforeEach
     @AfterEach
-    public void logout_and_clear_cookies() {
+    void logout_and_clear_cookies() {
         try {
             webDriver.get(baseUrl + "/logout.do");
         } catch (org.openqa.selenium.TimeoutException x) {
@@ -50,8 +51,8 @@ public class HealthzIT {
     }
 
     @Test
-    public void testHealthz() {
+    void healthz() {
         webDriver.get(baseUrl + "/healthz");
-        Assertions.assertEquals("ok", webDriver.findElement(By.tagName("body")).getText());
+        assertThat(webDriver.findElement(By.tagName("body")).getText()).isEqualTo("ok");
     }
 }

@@ -22,10 +22,7 @@ import org.cloudfoundry.identity.uaa.scim.ScimGroup;
 import org.cloudfoundry.identity.uaa.scim.ScimUser;
 import org.cloudfoundry.identity.uaa.test.TestAccountExtension;
 import org.cloudfoundry.identity.uaa.test.UaaTestAccounts;
-import org.hamcrest.MatcherAssert;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -41,6 +38,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.web.client.RestOperations;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils.createUnapprovedUser;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -76,7 +74,7 @@ class AppApprovalIT {
 
     @BeforeEach
     @AfterEach
-    public void logout_and_clear_cookies() {
+    void logout_and_clear_cookies() {
         restTemplate = serverRunning.getRestTemplate();
 
         try {
@@ -90,7 +88,7 @@ class AppApprovalIT {
     }
 
     @Test
-    public void testApprovingAnApp() {
+    void approvingAnApp() {
         ResponseEntity<SearchResults<ScimGroup>> getGroups = restTemplate.exchange(baseUrl + "/Groups?filter=displayName eq '{displayName}'",
                 HttpMethod.GET,
                 null,
@@ -116,7 +114,7 @@ class AppApprovalIT {
         webDriver.findElement(By.xpath("//input[@value='Sign in']")).click();
 
         // Authorize the app for some scopes
-        Assertions.assertEquals("Application Authorization", webDriver.findElement(By.cssSelector("h1")).getText());
+        assertThat(webDriver.findElement(By.cssSelector("h1")).getText()).isEqualTo("Application Authorization");
 
         webDriver.findElement(By.xpath("//label[text()='Change your password']/preceding-sibling::input")).click();
         webDriver.findElement(By.xpath("//label[text()='Read user IDs and retrieve users by ID']/preceding-sibling::input")).click();
@@ -124,15 +122,15 @@ class AppApprovalIT {
 
         webDriver.findElement(By.xpath("//button[text()='Authorize']")).click();
 
-        Assertions.assertEquals("Sample Home Page", webDriver.findElement(By.cssSelector("h1")).getText());
+        assertThat(webDriver.findElement(By.cssSelector("h1")).getText()).isEqualTo("Sample Home Page");
 
         // View profile on the login server
         webDriver.get(baseUrl + "/profile");
 
-        Assertions.assertFalse(webDriver.findElement(By.xpath("//input[@value='app-password.write']")).isSelected());
-        Assertions.assertFalse(webDriver.findElement(By.xpath("//input[@value='app-scim.userids']")).isSelected());
-        Assertions.assertTrue(webDriver.findElement(By.xpath("//input[@value='app-cloud_controller.read']")).isSelected());
-        Assertions.assertTrue(webDriver.findElement(By.xpath("//input[@value='app-cloud_controller.write']")).isSelected());
+        assertThat(webDriver.findElement(By.xpath("//input[@value='app-password.write']")).isSelected()).isFalse();
+        assertThat(webDriver.findElement(By.xpath("//input[@value='app-scim.userids']")).isSelected()).isFalse();
+        assertThat(webDriver.findElement(By.xpath("//input[@value='app-cloud_controller.read']")).isSelected()).isTrue();
+        assertThat(webDriver.findElement(By.xpath("//input[@value='app-cloud_controller.write']")).isSelected()).isTrue();
 
         // Add approvals
         webDriver.findElement(By.xpath("//input[@value='app-password.write']")).click();
@@ -140,15 +138,15 @@ class AppApprovalIT {
 
         webDriver.findElement(By.xpath("//button[text()='Update']")).click();
 
-        Assertions.assertTrue(webDriver.findElement(By.xpath("//input[@value='app-password.write']")).isSelected());
-        Assertions.assertTrue(webDriver.findElement(By.xpath("//input[@value='app-scim.userids']")).isSelected());
-        Assertions.assertTrue(webDriver.findElement(By.xpath("//input[@value='app-cloud_controller.read']")).isSelected());
-        Assertions.assertTrue(webDriver.findElement(By.xpath("//input[@value='app-cloud_controller.write']")).isSelected());
+        assertThat(webDriver.findElement(By.xpath("//input[@value='app-password.write']")).isSelected()).isTrue();
+        assertThat(webDriver.findElement(By.xpath("//input[@value='app-scim.userids']")).isSelected()).isTrue();
+        assertThat(webDriver.findElement(By.xpath("//input[@value='app-cloud_controller.read']")).isSelected()).isTrue();
+        assertThat(webDriver.findElement(By.xpath("//input[@value='app-cloud_controller.write']")).isSelected()).isTrue();
 
         // Revoke app
         webDriver.findElement(By.linkText("Revoke Access")).click();
 
-        Assertions.assertEquals("Are you sure you want to revoke access to The Ultimate Oauth App?", webDriver.findElement(By.cssSelector(".revocation-modal p")).getText());
+        assertThat(webDriver.findElement(By.cssSelector(".revocation-modal p")).getText()).isEqualTo("Are you sure you want to revoke access to The Ultimate Oauth App?");
 
         // click cancel
         webDriver.findElement(By.cssSelector("#app-form .revocation-cancel")).click();
@@ -158,11 +156,11 @@ class AppApprovalIT {
         // click confirm
         webDriver.findElement(By.cssSelector("#app-form .revocation-confirm")).click();
 
-        MatcherAssert.assertThat(webDriver.findElements(By.xpath("//input[@value='app-password.write']")), Matchers.empty());
+        assertThat(webDriver.findElements(By.xpath("//input[@value='app-password.write']"))).isEmpty();
     }
 
     @Test
-    public void testScopeDescriptions() {
+    void scopeDescriptions() {
         ResponseEntity<SearchResults<ScimGroup>> getGroups = restTemplate.exchange(baseUrl + "/Groups?filter=displayName eq '{displayName}'",
                 HttpMethod.GET,
                 null,
@@ -188,13 +186,13 @@ class AppApprovalIT {
         webDriver.findElement(By.xpath("//input[@value='Sign in']")).click();
 
         // Authorize the app for some scopes
-        Assertions.assertEquals("Application Authorization", webDriver.findElement(By.cssSelector("h1")).getText());
+        assertThat(webDriver.findElement(By.cssSelector("h1")).getText()).isEqualTo("Application Authorization");
 
         webDriver.findElement(By.xpath("//label[text()='Read about <b>your</b> clouds.']/preceding-sibling::input"));
     }
 
     @Test
-    public void testInvalidAppRedirectDisplaysError() {
+    void invalidAppRedirectDisplaysError() {
         ScimUser user = createUnapprovedUser(serverRunning);
 
         // given we vist the app (specifying an invalid redirect - incorrect protocol https)

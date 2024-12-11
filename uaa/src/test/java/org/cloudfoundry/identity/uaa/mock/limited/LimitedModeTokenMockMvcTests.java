@@ -28,17 +28,17 @@ import org.springframework.security.crypto.codec.Base64;
 
 import java.io.File;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils.getLimitedModeStatusFile;
 import static org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils.resetLimitedModeStatusFile;
 import static org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils.setLimitedModeStatusFile;
 import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-public class LimitedModeTokenMockMvcTests extends TokenMvcMockTests {
+class LimitedModeTokenMockMvcTests extends TokenMvcMockTests {
 
     private File existingStatusFile;
 
@@ -52,7 +52,7 @@ public class LimitedModeTokenMockMvcTests extends TokenMvcMockTests {
         existingStatusFile = getLimitedModeStatusFile(webApplicationContext);
         setLimitedModeStatusFile(webApplicationContext);
 
-        assertTrue(isLimitedMode());
+        assertThat(isLimitedMode()).isTrue();
     }
 
     @AfterEach

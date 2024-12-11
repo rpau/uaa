@@ -12,7 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringJUnitConfig(classes = DefaultIntegrationTestConfig.class)
 class SessionControllerIntegrationTests {
@@ -27,7 +27,7 @@ class SessionControllerIntegrationTests {
 
     @BeforeEach
     @AfterEach
-    public void logout_and_clear_cookies() {
+    void logout_and_clear_cookies() {
         try {
             webDriver.get(baseUrl + "/logout.do");
         } catch (org.openqa.selenium.TimeoutException x) {
@@ -44,7 +44,7 @@ class SessionControllerIntegrationTests {
 
         Object r = ((JavascriptExecutor) webDriver).executeScript(
                 "return typeof(handleMessage);");
-        assertEquals("function", r.toString());
+        assertThat(r.toString()).isEqualTo("function");
     }
 
     @Test
@@ -54,10 +54,10 @@ class SessionControllerIntegrationTests {
 
         Object clientId = ((JavascriptExecutor) webDriver).executeScript(
                 "return clientId;");
-        assertEquals("admin", clientId.toString());
+        assertThat(clientId.toString()).isEqualTo("admin");
 
         Object origin = ((JavascriptExecutor) webDriver).executeScript(
                 "return messageOrigin;");
-        assertEquals("http://localhost:8080", origin.toString());
+        assertThat(origin.toString()).isEqualTo("http://localhost:8080");
     }
 }

@@ -20,13 +20,12 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Dave Syer
  */
-public class HealthzEndpointIntegrationTests {
+class HealthzEndpointIntegrationTests {
 
     @RegisterExtension
     private static final ServerRunningExtension serverRunning = ServerRunningExtension.connect();
@@ -35,14 +34,14 @@ public class HealthzEndpointIntegrationTests {
      * tests a happy-day flow of the <code>/healthz</code> endpoint
      */
     @Test
-    public void testHappyDay() {
+    void happyDay() {
 
         HttpHeaders headers = new HttpHeaders();
         ResponseEntity<String> response = serverRunning.getForString("/healthz/", headers);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 
         String body = response.getBody();
-        assertTrue(body.contains("ok"));
+        assertThat(body.contains("ok")).isTrue();
     }
 
 }

@@ -1,22 +1,21 @@
 package org.cloudfoundry.identity.uaa.zone;
 
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 
-public class BannerValidatorTest {
+class BannerValidatorTest {
 
     @BeforeEach
-    public void setup() {
+    void setup() {
 
     }
 
     @Test
-    public void validatesUrls() throws InvalidIdentityZoneConfigurationException {
+    void validatesUrls() throws InvalidIdentityZoneConfigurationException {
         String[] validUrls = {
                 "https://example.com",
                 "https://example.com/",
@@ -65,13 +64,13 @@ public class BannerValidatorTest {
                 BannerValidator.validate(testBanner);
                 fail("Didn't throw error on " + url);
             } catch (InvalidIdentityZoneConfigurationException e) {
-                assertThat(e.getMessage(), Matchers.containsString("Invalid banner link: " + url + ". Must be a properly formatted URI beginning with http:// or https://"));
+                assertThat(e.getMessage()).contains("Invalid banner link: " + url + ". Must be a properly formatted URI beginning with http:// or https://");
             }
         }
     }
 
     @Test
-    public void testValidateColor() throws InvalidIdentityZoneConfigurationException {
+    void validateColor() throws InvalidIdentityZoneConfigurationException {
         String[] validColors = {
                 "#123456",
                 "#000",
@@ -101,7 +100,7 @@ public class BannerValidatorTest {
                 BannerValidator.validate(testBanner);
                 fail("Didn't throw error on " + color);
             } catch (InvalidIdentityZoneConfigurationException e) {
-                assertThat(e.getMessage(), Matchers.containsString("Invalid banner text color: " + color + ". Must be a properly formatted hexadecimal color code."));
+                assertThat(e.getMessage()).contains("Invalid banner text color: " + color + ". Must be a properly formatted hexadecimal color code.");
             }
         }
         for (String color : invalidColors) {
@@ -111,13 +110,13 @@ public class BannerValidatorTest {
                 BannerValidator.validate(testBanner);
                 fail("Didn't throw error on " + color);
             } catch (InvalidIdentityZoneConfigurationException e) {
-                assertThat(e.getMessage(), Matchers.containsString("Invalid banner background color: " + color + ". Must be a properly formatted hexadecimal color code."));
+                assertThat(e.getMessage()).contains("Invalid banner background color: " + color + ". Must be a properly formatted hexadecimal color code.");
             }
         }
     }
 
     @Test
-    public void testBase64Logo() throws InvalidIdentityZoneConfigurationException {
+    void base64Logo() throws InvalidIdentityZoneConfigurationException {
         String[] validBase64 = {
                 "BIPUQGEWGPIUB64",
                 ""
@@ -140,7 +139,7 @@ public class BannerValidatorTest {
                 BannerValidator.validate(testBanner);
                 fail("Didn't throw error on " + base64);
             } catch (InvalidIdentityZoneConfigurationException e) {
-                assertThat(e.getMessage(), Matchers.containsString("Invalid banner logo. Must be in BASE64 format."));
+                assertThat(e.getMessage()).contains("Invalid banner logo. Must be in BASE64 format.");
             }
         }
     }

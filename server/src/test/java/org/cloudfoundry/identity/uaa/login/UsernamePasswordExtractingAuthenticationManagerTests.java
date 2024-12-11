@@ -27,12 +27,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Dave Syer
  */
-public class UsernamePasswordExtractingAuthenticationManagerTests {
+class UsernamePasswordExtractingAuthenticationManagerTests {
 
     private final AuthenticationManager delegate = Mockito.mock(AuthenticationManager.class);
 
@@ -40,33 +40,33 @@ public class UsernamePasswordExtractingAuthenticationManagerTests {
             delegate);
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         SecurityContextHolder.clearContext();
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         SecurityContextHolder.clearContext();
     }
 
     @Test
-    public void testAuthenticate() {
+    void authenticate() {
         Authentication expected = new TestingAuthenticationToken("bar", "foo",
                 AuthorityUtils.commaSeparatedStringToAuthorityList("USER"));
         Mockito.when(delegate.authenticate(ArgumentMatchers.any(UsernamePasswordAuthenticationToken.class)))
                 .thenReturn(expected);
         Authentication output = manager.authenticate(new TestingAuthenticationToken("foo", "bar"));
-        assertSame(expected, output);
+        assertThat(output).isSameAs(expected);
     }
 
     @Test
-    public void testUsernamePassword() {
+    void usernamePassword() {
         Authentication expected = new UsernamePasswordAuthenticationToken("bar", "foo",
                 AuthorityUtils.commaSeparatedStringToAuthorityList("USER"));
         Mockito.when(delegate.authenticate(ArgumentMatchers.any(UsernamePasswordAuthenticationToken.class)))
                 .thenReturn(expected);
         Authentication output = manager.authenticate(expected);
-        assertSame(expected, output);
+        assertThat(output).isSameAs(expected);
     }
 
 }

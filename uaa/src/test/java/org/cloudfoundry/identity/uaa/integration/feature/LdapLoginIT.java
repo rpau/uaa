@@ -12,7 +12,6 @@ import org.cloudfoundry.identity.uaa.test.InMemoryLdapServer;
 import org.cloudfoundry.identity.uaa.test.UaaTestAccounts;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneConfiguration;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneHolder;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -33,16 +32,15 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.constants.OriginKeys.LDAP;
 import static org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils.doesSupportZoneDNS;
 import static org.cloudfoundry.identity.uaa.provider.LdapIdentityProviderDefinition.LDAP_TLS_NONE;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpMethod.POST;
 
 @SpringJUnitConfig(classes = DefaultIntegrationTestConfig.class)
-public class LdapLoginIT {
+class LdapLoginIT {
 
     @Autowired
     @RegisterExtension
@@ -76,14 +74,14 @@ public class LdapLoginIT {
     }
 
     @AfterAll
-    public static void stopLocalLdap() {
+    static void stopLocalLdap() {
         server.stop();
     }
 
     @BeforeEach
-    public void clearWebDriverOfCookies() {
+    void clearWebDriverOfCookies() {
         //ensure we are able to resolve DNS for hostname testzone2.localhost
-        assertTrue(doesSupportZoneDNS(), "Expected testzone1/2/3/4.localhost to resolve to 127.0.0.1");
+        assertThat(doesSupportZoneDNS()).as("Expected testzone1/2/3/4.localhost to resolve to 127.0.0.1").isTrue();
 
         screenshotExtension.setWebDriver(webDriver);
         for (String domain : Arrays.asList("localhost", "testzone1.localhost", "testzone2.localhost", "testzone3.localhost", "testzone4.localhost")) {
@@ -98,7 +96,7 @@ public class LdapLoginIT {
     }
 
     @AfterEach
-    public void cleanup() {
+    void cleanup() {
         String token = IntegrationTestUtils.getClientCredentialsToken(baseUrl, "admin", "adminsecret");
         String groupId = IntegrationTestUtils.getGroup(token, "", baseUrl, "zones.testzone2.admin").getId();
         IntegrationTestUtils.deleteGroup(token, "", baseUrl, groupId);
@@ -109,20 +107,20 @@ public class LdapLoginIT {
     }
 
     @Test
-    public void ldapLogin_with_StartTLS() throws Exception {
+    void ldapLogin_with_StartTLS() throws Exception {
         Long beforeTest = System.currentTimeMillis();
         performLdapLogin("testzone2", server.getUrl(), "marissa4", "ldap4");
         Long afterTest = System.currentTimeMillis();
-        assertThat(webDriver.findElement(By.cssSelector("h1")).getText(), Matchers.containsString("Where to?"));
+        assertThat(webDriver.findElement(By.cssSelector("h1")).getText()).contains("Where to?");
         ScimUser user = IntegrationTestUtils.getUserByZone(zoneAdminToken, baseUrl, "testzone2", "marissa4");
         IntegrationTestUtils.validateUserLastLogon(user, beforeTest, afterTest);
         IntegrationTestUtils.validateAccountChooserCookie(baseUrl.replace("localhost", "testzone2.localhost"), webDriver, IdentityZoneHolder.get());
     }
 
     @Test
-    public void ldap_login_using_utf8_characters() throws Exception {
+    void ldap_login_using_utf8_characters() throws Exception {
         performLdapLogin("testzone2", server.getUrl(), "\u7433\u8D3A", "koala");
-        assertThat(webDriver.findElement(By.cssSelector("h1")).getText(), Matchers.containsString("Where to?"));
+        assertThat(webDriver.findElement(By.cssSelector("h1")).getText()).contains("Where to?");
     }
 
     private void performLdapLogin(String subdomain, String ldapUrl, String username, String password) {

@@ -22,8 +22,7 @@ import org.springframework.web.context.WebApplicationContext;
 
 import java.util.Collections;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -63,7 +62,7 @@ class ZonesWriteScopeMockMvcTest {
     }
 
     @Test
-    void testGetZoneByIdWithZonesWriteScope() throws Exception {
+    void getZoneByIdWithZonesWriteScope() throws Exception {
         IdentityZone zone2 = createZoneWithClient(generator.generate().toLowerCase());
         createUserWithZonesWriteScope(zoneAdminToken);
 
@@ -79,7 +78,7 @@ class ZonesWriteScopeMockMvcTest {
 
         String jsonResponse = result.getResponse().getContentAsString();
         JsonNode responseNode = JsonUtils.readTree(jsonResponse);
-        assertEquals(zone.getId(), responseNode.get("id").asText());
+        assertThat(responseNode.get("id").asText()).isEqualTo(zone.getId());
 
         mockMvc.perform(
                         get("/identity-zones/" + zone2.getId())
@@ -96,7 +95,7 @@ class ZonesWriteScopeMockMvcTest {
     }
 
     @Test
-    void testGetZonesWithZonesWriteScope() throws Exception {
+    void getZonesWithZonesWriteScope() throws Exception {
         createZoneWithClient(generator.generate().toLowerCase());
 
         createUserWithZonesWriteScope(zoneAdminToken);
@@ -113,12 +112,12 @@ class ZonesWriteScopeMockMvcTest {
 
         String jsonResponse = result.getResponse().getContentAsString();
         JsonNode responseNode = JsonUtils.readTree(jsonResponse);
-        assertEquals(zone.getId(), responseNode.get(0).get("id").asText());
-        assertNull(responseNode.get(1));
+        assertThat(responseNode.get(0).get("id").asText()).isEqualTo(zone.getId());
+        assertThat(responseNode.get(1)).isNull();
     }
 
     @Test
-    void testPutZonesWithZonesWriteScope() throws Exception {
+    void putZonesWithZonesWriteScope() throws Exception {
         createZoneWithClient(generator.generate().toLowerCase());
 
         createUserWithZonesWriteScope(zoneAdminToken);
@@ -145,7 +144,7 @@ class ZonesWriteScopeMockMvcTest {
     }
 
     @Test
-    void testPostZonesWithZonesWriteScope_shouldFail() throws Exception {
+    void postZonesWithZonesWriteScopeShouldFail() throws Exception {
         IdentityZone zone2 = MultitenancyFixture.identityZone(subdomain, subdomain);
 
         createUserWithZonesWriteScope(zoneAdminToken);
@@ -169,7 +168,7 @@ class ZonesWriteScopeMockMvcTest {
     }
 
     @Test
-    void testDeleteZonesWithZonesWriteScope_shouldFail() throws Exception {
+    void deleteZonesWithZonesWriteScopeShouldFail() throws Exception {
         IdentityZone zone2 = createZoneWithClient(generator.generate().toLowerCase());
 
         createUserWithZonesWriteScope(zoneAdminToken);

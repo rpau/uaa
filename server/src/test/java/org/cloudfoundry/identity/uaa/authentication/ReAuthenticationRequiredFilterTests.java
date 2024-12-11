@@ -33,7 +33,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class ReAuthenticationRequiredFilterTests {
+class ReAuthenticationRequiredFilterTests {
 
     private ReAuthenticationRequiredFilter filter;
     private UaaAuthentication authentication;
@@ -42,7 +42,7 @@ public class ReAuthenticationRequiredFilterTests {
     private FilterChain chain;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         filter = new ReAuthenticationRequiredFilter("cloudfoundry-login");
         authentication = mock(UaaAuthentication.class);
         request = new MockHttpServletRequest();
@@ -52,12 +52,12 @@ public class ReAuthenticationRequiredFilterTests {
     }
 
     @AfterEach
-    public void clear() {
+    void clear() {
         SecurityContextHolder.clearContext();
     }
 
     @Test
-    public void request_with_prompt_login() throws Exception {
+    void request_with_prompt_login() throws Exception {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         request.setParameter("client_id", "testclient");
         request.setParameter("prompt", "login");
@@ -69,7 +69,7 @@ public class ReAuthenticationRequiredFilterTests {
     }
 
     @Test
-    public void request_with_prompt_none() throws Exception {
+    void request_with_prompt_none() throws Exception {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         request.setParameter("prompt", "none");
         filter.doFilterInternal(request, response, chain);
@@ -78,7 +78,7 @@ public class ReAuthenticationRequiredFilterTests {
     }
 
     @Test
-    public void request_with_max_age_redirect_expected() throws Exception {
+    void request_with_max_age_redirect_expected() throws Exception {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         when(authentication.getAuthenticatedTime()).thenReturn(System.currentTimeMillis() - 2000);
         request.setParameter("client_id", "testclient");
@@ -91,7 +91,7 @@ public class ReAuthenticationRequiredFilterTests {
     }
 
     @Test
-    public void request_with_max_age_redirect_not_expected() throws Exception {
+    void request_with_max_age_redirect_not_expected() throws Exception {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         when(authentication.getAuthenticatedTime()).thenReturn(System.currentTimeMillis());
         request.setParameter("client_id", "testclient");
@@ -103,7 +103,7 @@ public class ReAuthenticationRequiredFilterTests {
     }
 
     @Test
-    public void request_without_prompt_and_max_age() throws Exception {
+    void request_without_prompt_and_max_age() throws Exception {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         request.setServletPath("/saml/SingleLogout/alias/cloudfoundry-login");
         request.setParameter("client_id", "testclient");

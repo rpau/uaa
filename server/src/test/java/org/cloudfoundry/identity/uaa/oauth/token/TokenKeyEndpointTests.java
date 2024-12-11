@@ -38,15 +38,11 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.cloudfoundry.identity.uaa.oauth.jwt.JwtHelperX5tTest.CERTIFICATE_1;
 import static org.cloudfoundry.identity.uaa.oauth.jwt.JwtHelperX5tTest.SIGNING_KEY_1;
 import static org.cloudfoundry.identity.uaa.util.UaaStringUtils.DEFAULT_UAA_URL;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -90,18 +86,18 @@ class TokenKeyEndpointTests {
     void sharedSecretIsReturnedFromTokenKeyEndpoint() {
         configureKeysForDefaultZone(Collections.singletonMap("someKeyId", "someKey"));
         VerificationKeyResponse response = tokenKeyEndpoint.getKey(validUaaResource);
-        assertEquals("HS256", response.getAlgorithm());
-        assertEquals("someKey", response.getKey());
-        assertEquals("someKeyId", response.getId());
-        assertEquals("MAC", response.getType());
-        assertEquals("sig", response.getUse().name());
+        assertThat(response.getAlgorithm()).isEqualTo("HS256");
+        assertThat(response.getKey()).isEqualTo("someKey");
+        assertThat(response.getId()).isEqualTo("someKeyId");
+        assertThat(response.getType()).isEqualTo("MAC");
+        assertThat(response.getUse().name()).isEqualTo("sig");
     }
 
     @Test
     void sharedSecretCannotBeAnonymouslyRetrievedFromTokenKeyEndpoint() {
         configureKeysForDefaultZone(Collections.singletonMap("anotherKeyId", "someKey"));
 
-        assertThrows(AccessDeniedException.class, () -> tokenKeyEndpoint.getKey(
+        assertThatExceptionOfType(AccessDeniedException.class).isThrownBy(() -> tokenKeyEndpoint.getKey(
                 new AnonymousAuthenticationToken("anon", "anonymousUser", AuthorityUtils.createAuthorityList("ROLE_ANONYMOUS"))
         ));
     }
@@ -114,10 +110,10 @@ class TokenKeyEndpointTests {
         String serialized = JsonUtils.writeValueAsString(response);
 
         Map<String, String> deserializedMap = JsonUtils.readValue(serialized, Map.class);
-        assertEquals("HS256", deserializedMap.get("alg"));
-        assertEquals("someKey", deserializedMap.get("value"));
-        assertEquals("MAC", deserializedMap.get("kty"));
-        assertEquals("sig", deserializedMap.get("use"));
+        assertThat(deserializedMap.get("alg")).isEqualTo("HS256");
+        assertThat(deserializedMap.get("value")).isEqualTo("someKey");
+        assertThat(deserializedMap.get("kty")).isEqualTo("MAC");
+        assertThat(deserializedMap.get("use")).isEqualTo("sig");
     }
 
     @Test
@@ -128,14 +124,14 @@ class TokenKeyEndpointTests {
         Base64.Encoder encoder = Base64.getUrlEncoder().withoutPadding();
         Base64.Decoder decoder = Base64.getUrlDecoder();
 
-        assertEquals(response.getModulus(), encoder.encodeToString(decoder.decode(response.getModulus())));
-        assertEquals(response.getExponent(), encoder.encodeToString(decoder.decode((response.getExponent()))));
+        assertThat(encoder.encodeToString(decoder.decode(response.getModulus()))).isEqualTo(response.getModulus());
+        assertThat(encoder.encodeToString(decoder.decode((response.getExponent())))).isEqualTo(response.getExponent());
 
-        assertEquals("RS256", response.getAlgorithm());
-        assertEquals("key1", response.getId());
-        assertEquals("RSA", response.getType());
-        assertEquals("sig", response.getUse().name());
-        assertEquals("RkckJulawIoaTm0iaziJBwFh7Nc", response.getX5t());
+        assertThat(response.getAlgorithm()).isEqualTo("RS256");
+        assertThat(response.getId()).isEqualTo("key1");
+        assertThat(response.getType()).isEqualTo("RSA");
+        assertThat(response.getUse().name()).isEqualTo("sig");
+        assertThat(response.getX5t()).isEqualTo("RkckJulawIoaTm0iaziJBwFh7Nc");
     }
 
     @Test
@@ -145,11 +141,11 @@ class TokenKeyEndpointTests {
 
         VerificationKeyResponse response = tokenKeyEndpoint.getKey(validUaaResource);
 
-        assertEquals("HS256", response.getAlgorithm());
-        assertEquals("someKey", response.getKey());
-        assertEquals("someKeyId", response.getId());
-        assertEquals("MAC", response.getType());
-        assertEquals("sig", response.getUse().name());
+        assertThat(response.getAlgorithm()).isEqualTo("HS256");
+        assertThat(response.getKey()).isEqualTo("someKey");
+        assertThat(response.getId()).isEqualTo("someKeyId");
+        assertThat(response.getType()).isEqualTo("MAC");
+        assertThat(response.getUse().name()).isEqualTo("sig");
     }
 
     @Test
@@ -164,7 +160,7 @@ class TokenKeyEndpointTests {
         VerificationKeysListResponse keysResponse = tokenKeyEndpoint.getKeys(null);
         List<VerificationKeyResponse> keys = keysResponse.getKeys();
         List<String> keyIds = keys.stream().map(VerificationKeyResponse::getId).toList();
-        assertThat(keyIds, containsInAnyOrder("RsaKey1", "RsaKey2", "RsaKey3"));
+        assertThat(keyIds).containsExactlyInAnyOrder("RsaKey1", "RsaKey2", "RsaKey3");
 
         HashMap<String, VerificationKeyResponse> keysMap = keys.stream().collect(new MapCollector<>(VerificationKeyResponse::getId, k -> k));
         VerificationKeyResponse key1Response = keysMap.get("RsaKey1");
@@ -184,9 +180,8 @@ class TokenKeyEndpointTests {
         //ensure that none of the keys are padded
         keys.forEach(
                 key ->
-                        assertFalse(key.getExponent().endsWith("=") ||
-                                        key.getModulus().endsWith("="),
-                                "Invalid padding for key:" + key.getKid())
+                        assertThat(key.getExponent().endsWith("=") ||
+                                key.getModulus().endsWith("=")).as("Invalid padding for key:" + key.getKid()).isFalse()
         );
     }
 
@@ -202,10 +197,10 @@ class TokenKeyEndpointTests {
         VerificationKeysListResponse keysResponse = tokenKeyEndpoint.getKeys(validUaaResource);
         List<VerificationKeyResponse> keys = keysResponse.getKeys();
         List<String> keyIds = keys.stream().map(VerificationKeyResponse::getId).toList();
-        assertThat(keyIds, containsInAnyOrder("RsaKey1", "RsaKey2", "RsaKey3", "SymmetricKey"));
+        assertThat(keyIds).containsExactlyInAnyOrder("RsaKey1", "RsaKey2", "RsaKey3", "SymmetricKey");
 
         VerificationKeyResponse symKeyResponse = keys.stream().filter(k -> "SymmetricKey".equals(k.getId())).findAny().get();
-        assertEquals("ItHasSomeTextThatIsNotPEM", symKeyResponse.getKey());
+        assertThat(symKeyResponse.getKey()).isEqualTo("ItHasSomeTextThatIsNotPEM");
     }
 
     @Test
@@ -218,7 +213,7 @@ class TokenKeyEndpointTests {
         VerificationKeysListResponse keysResponse = tokenKeyEndpoint.getKeys(mock(Principal.class));
         List<VerificationKeyResponse> keysForZone = keysResponse.getKeys();
         List<String> keyIds = keysForZone.stream().map(VerificationKeyResponse::getId).toList();
-        assertThat(keyIds, containsInAnyOrder("key1", "key2"));
+        assertThat(keyIds).containsExactlyInAnyOrder("key1", "key2");
     }
 
     @Test
@@ -227,11 +222,11 @@ class TokenKeyEndpointTests {
 
         ResponseEntity<VerificationKeyResponse> keyResponse = tokenKeyEndpoint.getKey(mock(Principal.class), "NaN");
         HttpHeaders headers = keyResponse.getHeaders();
-        assertNotNull(headers.get("ETag"));
+        assertThat(headers.get("ETag")).isNotNull();
 
         ResponseEntity<VerificationKeysListResponse> keysResponse = tokenKeyEndpoint.getKeys(mock(Principal.class), "NaN");
         headers = keysResponse.getHeaders();
-        assertNotNull(headers.get("ETag"));
+        assertThat(headers.get("ETag")).isNotNull();
     }
 
     @Test
@@ -241,10 +236,10 @@ class TokenKeyEndpointTests {
         String lastModified = String.valueOf(zone.getLastModified().getTime());
 
         ResponseEntity<VerificationKeyResponse> keyResponse = tokenKeyEndpoint.getKey(mock(Principal.class), lastModified);
-        assertEquals(keyResponse.getStatusCode(), HttpStatus.NOT_MODIFIED);
+        assertThat(keyResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_MODIFIED);
 
         ResponseEntity<VerificationKeysListResponse> keysResponse = tokenKeyEndpoint.getKeys(mock(Principal.class), lastModified);
-        assertEquals(keysResponse.getStatusCode(), HttpStatus.NOT_MODIFIED);
+        assertThat(keysResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_MODIFIED);
     }
 
     private IdentityZone createAndSetTestZoneWithKeys(Map<String, String> keys) {

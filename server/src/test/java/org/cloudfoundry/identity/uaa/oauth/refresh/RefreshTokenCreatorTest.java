@@ -25,6 +25,8 @@ import java.util.Map;
 import java.util.Set;
 
 import static com.jayway.jsonassert.impl.matcher.IsMapContainingKey.hasKey;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.cloudfoundry.identity.uaa.oauth.token.ClaimConstants.ACR;
 import static org.cloudfoundry.identity.uaa.oauth.token.ClaimConstants.AMR;
 import static org.cloudfoundry.identity.uaa.oauth.token.ClaimConstants.AUTH_TIME;
@@ -35,22 +37,16 @@ import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYP
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_REFRESH_TOKEN;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_SAML2_BEARER;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_USER_TOKEN;
-import static org.hamcrest.CoreMatchers.hasItem;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class RefreshTokenCreatorTest {
+class RefreshTokenCreatorTest {
     private RefreshTokenCreator refreshTokenCreator;
     private TokenValidityResolver validityResolver;
 
     @BeforeEach
-    public void setup() throws Exception {
+    void setup() throws Exception {
         validityResolver = mock(TokenValidityResolver.class);
         when(validityResolver.resolve("someclient")).thenReturn(new Date());
         TokenEndpointBuilder tokenEndpointBuilder = new TokenEndpointBuilder("http://localhost");
@@ -60,23 +56,21 @@ public class RefreshTokenCreatorTest {
     }
 
     @Test
-    public void whenRefreshGrantRestricted_throwsExceptionIfOfflineScopeMissing() {
-        Throwable exception = assertThrows(InsufficientScopeException.class, () -> {
-
-            refreshTokenCreator.setRestrictRefreshGrant(true);
-            refreshTokenCreator.ensureRefreshTokenCreationNotRestricted(Lists.newArrayList("openid"));
-        });
-        assertTrue(exception.getMessage().contains("Expected scope uaa.offline_token is missing"));
+    void whenRefreshGrantRestricted_throwsExceptionIfOfflineScopeMissing() {
+        refreshTokenCreator.setRestrictRefreshGrant(true);
+        assertThatThrownBy(() -> refreshTokenCreator.ensureRefreshTokenCreationNotRestricted(Lists.newArrayList("openid")))
+                .isInstanceOf(InsufficientScopeException.class)
+                .hasMessageContaining("Expected scope uaa.offline_token is missing");
     }
 
     @Test
-    public void whenRefreshGrantRestricted_requiresOfflineScope() {
+    void whenRefreshGrantRestricted_requiresOfflineScope() {
         refreshTokenCreator.setRestrictRefreshGrant(true);
         refreshTokenCreator.ensureRefreshTokenCreationNotRestricted(Lists.newArrayList("openid", "uaa.offline_token"));
     }
 
     @Test
-    public void refreshToken_includesClaimsNeededToBuildIdTokens() {
+    void refreshToken_includesClaimsNeededToBuildIdTokens() {
         UaaUser user = new UaaUser(new UaaUserPrototype()
                 .withId("id")
                 .withEmail("spongebob@krustykrab.com")
@@ -100,14 +94,14 @@ public class RefreshTokenCreatorTest {
         ExpiringOAuth2RefreshToken refreshToken = refreshTokenCreator.createRefreshToken(user, refreshTokenRequestData, "abcdef");
 
         Map<String, Object> refreshClaims = UaaTokenUtils.getClaims(refreshToken.getValue(), Map.class);
-        assertThat(refreshClaims.get(AUTH_TIME), is(1L));
-        assertThat((List<String>) refreshClaims.get(AMR), hasItem("pwd"));
+        assertThat(refreshClaims).containsEntry(AUTH_TIME, 1L);
+        assertThat((List<String>) refreshClaims.get(AMR)).contains("pwd");
         assertThat((Map<String, List<String>>) refreshClaims.get(ACR), hasKey("values"));
-        assertThat(((Map<String, List<String>>) refreshClaims.get(ACR)).get("values"), hasItem("urn:oasis:names:tc:SAML:2.0:ac:classes:Password"));
+        assertThat(((Map<String, List<String>>) refreshClaims.get(ACR)).get("values")).contains("urn:oasis:names:tc:SAML:2.0:ac:classes:Password");
     }
 
     @Test
-    public void refreshToken_ifIdTokenClaimsAreUnknown_omitsThem() {
+    void refreshToken_ifIdTokenClaimsAreUnknown_omitsThem() {
         // This is a backwards compatibility case when trying to construct a new refresh token from an old refresh
         // token issued before auth_time, amr, etc were included in the token claims. We can't show a value for the auth_time
         // because we don't know when the user authenticated.
@@ -135,13 +129,13 @@ public class RefreshTokenCreatorTest {
         ExpiringOAuth2RefreshToken refreshToken = refreshTokenCreator.createRefreshToken(user, refreshTokenRequestData, "abcdef");
 
         Map<String, Object> refreshClaims = UaaTokenUtils.getClaims(refreshToken.getValue(), Map.class);
-        assertFalse(refreshClaims.containsKey(AUTH_TIME));
-        assertFalse(refreshClaims.containsKey(AMR));
-        assertFalse(refreshClaims.containsKey(ACR));
+        assertThat(refreshClaims.containsKey(AUTH_TIME)).isFalse();
+        assertThat(refreshClaims.containsKey(AMR)).isFalse();
+        assertThat(refreshClaims.containsKey(ACR)).isFalse();
     }
 
     @Test
-    public void createRefreshToken_whenRefreshRestricted_requiresOfflineScope() {
+    void createRefreshToken_whenRefreshRestricted_requiresOfflineScope() {
         UaaUser user = new UaaUser(new UaaUserPrototype()
                 .withId("id")
                 .withEmail("spongebob@krustykrab.com")
@@ -164,25 +158,25 @@ public class RefreshTokenCreatorTest {
         refreshTokenCreator.setRestrictRefreshGrant(true);
         ExpiringOAuth2RefreshToken refreshToken = refreshTokenCreator.createRefreshToken(user, refreshTokenRequestData, "abcdef");
 
-        assertThat(refreshToken, is(nullValue()));
+        assertThat(refreshToken).isNull();
     }
 
     @Test
-    public void isRefreshTokenSupported() {
+    void isRefreshTokenSupported() {
         Set<String> scope = Set.of("openid");
-        assertTrue(refreshTokenCreator.isRefreshTokenSupported(
-                GRANT_TYPE_AUTHORIZATION_CODE, scope));
-        assertTrue(refreshTokenCreator.isRefreshTokenSupported(
-                GRANT_TYPE_PASSWORD, scope));
-        assertTrue(refreshTokenCreator.isRefreshTokenSupported(
-                GRANT_TYPE_USER_TOKEN, scope));
-        assertTrue(refreshTokenCreator.isRefreshTokenSupported(
-                GRANT_TYPE_REFRESH_TOKEN, scope));
-        assertTrue(refreshTokenCreator.isRefreshTokenSupported(
-                GRANT_TYPE_SAML2_BEARER, scope));
-        assertTrue(refreshTokenCreator.isRefreshTokenSupported(
-                GRANT_TYPE_JWT_BEARER, scope));
-        assertFalse(refreshTokenCreator.isRefreshTokenSupported(
-                GRANT_TYPE_CLIENT_CREDENTIALS, scope));
+        assertThat(refreshTokenCreator.isRefreshTokenSupported(
+                GRANT_TYPE_AUTHORIZATION_CODE, scope)).isTrue();
+        assertThat(refreshTokenCreator.isRefreshTokenSupported(
+                GRANT_TYPE_PASSWORD, scope)).isTrue();
+        assertThat(refreshTokenCreator.isRefreshTokenSupported(
+                GRANT_TYPE_USER_TOKEN, scope)).isTrue();
+        assertThat(refreshTokenCreator.isRefreshTokenSupported(
+                GRANT_TYPE_REFRESH_TOKEN, scope)).isTrue();
+        assertThat(refreshTokenCreator.isRefreshTokenSupported(
+                GRANT_TYPE_SAML2_BEARER, scope)).isTrue();
+        assertThat(refreshTokenCreator.isRefreshTokenSupported(
+                GRANT_TYPE_JWT_BEARER, scope)).isTrue();
+        assertThat(refreshTokenCreator.isRefreshTokenSupported(
+                GRANT_TYPE_CLIENT_CREDENTIALS, scope)).isFalse();
     }
 }

@@ -61,7 +61,7 @@ class LdapIntegrationTests {
     }
 
     @Test
-    void test_LDAP_Custom_User_Attributes_In_ID_Token() {
+    void ldap_custom_user_attributes_in_id_token() {
         assertThat(doesSupportZoneDNS()).as("Expected testzone1.localhost and testzone2.localhost to resolve to 127.0.0.1").isTrue();
 
         final String costCenter = "costCenter";

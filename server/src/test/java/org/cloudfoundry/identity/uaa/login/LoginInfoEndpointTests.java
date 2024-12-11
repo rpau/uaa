@@ -1078,7 +1078,7 @@ class LoginInfoEndpointTests {
     }
 
     @Test
-    void testNoLoginHintAccountChooser() throws Exception {
+    void noLoginHintAccountChooser() throws Exception {
         MockHttpServletRequest mockHttpServletRequest = getMockHttpServletRequest();
         SavedAccountOption savedAccount = new SavedAccountOption();
 
@@ -1176,7 +1176,7 @@ class LoginInfoEndpointTests {
     }
 
     @Test
-    void testInvalidLoginHintLoginPageReturnsList() throws Exception {
+    void invalidLoginHintLoginPageReturnsList() throws Exception {
         MockHttpServletRequest mockHttpServletRequest = getMockHttpServletRequest();
 
         UaaClientDetails clientDetails = new UaaClientDetails();

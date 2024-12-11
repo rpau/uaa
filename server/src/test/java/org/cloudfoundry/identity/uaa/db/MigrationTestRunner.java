@@ -7,11 +7,8 @@ import org.flywaydb.core.api.callback.Event;
 import org.flywaydb.core.api.configuration.ClassicConfiguration;
 import org.junit.jupiter.api.Assertions;
 
-import java.sql.SQLException;
-
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.flywaydb.core.api.callback.Event.AFTER_EACH_MIGRATE;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
 
 public class MigrationTestRunner {
     private final Flyway flyway;
@@ -28,22 +25,18 @@ public class MigrationTestRunner {
             @Override
             public void handle(Event event, Context context) {
                 if (AFTER_EACH_MIGRATE == event) {
-                    try {
+                    Assertions.assertDoesNotThrow(() -> {
                         if (!context.getConnection().getAutoCommit()) {
                             context.getConnection().commit();
                         }
-                    } catch (SQLException e) {
-                        Assertions.fail(e.getMessage());
-                    }
+                    });
 
                     for (MigrationTest test : tests) {
                         if (test.getTargetMigration().equals(
                                 context.getMigrationInfo().getVersion().getVersion())) {
-                            try {
+                            Assertions.assertDoesNotThrow(() -> {
                                 test.runAssertions();
-                            } catch (Exception e) {
-                                Assertions.fail(e.getMessage());
-                            }
+                            });
                             assertionsRan[0]++;
                         }
                     }
@@ -58,7 +51,7 @@ public class MigrationTestRunner {
 
         try {
             afterEachMigrateCallbackFlyway.migrate();
-            assertThat("Not every db migration ran", assertionsRan[0], is(tests.length));
+            assertThat(assertionsRan[0]).as("Not every db migration ran").isEqualTo(tests.length);
         } finally {
             afterEachMigrateCallbackFlyway.clean();
             afterEachMigrateCallbackFlyway.migrate();

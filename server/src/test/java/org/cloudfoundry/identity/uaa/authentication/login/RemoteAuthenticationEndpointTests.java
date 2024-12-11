@@ -16,7 +16,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -44,7 +44,7 @@ class RemoteAuthenticationEndpointTests {
         when(am.authenticate(any(Authentication.class))).thenReturn(success);
         @SuppressWarnings("rawtypes")
         ResponseEntity response = (ResponseEntity) endpoint.authenticate(new MockHttpServletRequest(), "joe", "joespassword");
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 
     @Test
@@ -52,7 +52,7 @@ class RemoteAuthenticationEndpointTests {
         when(am.authenticate(any(Authentication.class))).thenThrow(new AccountNotVerifiedException("failed"));
         @SuppressWarnings("rawtypes")
         ResponseEntity response = (ResponseEntity) endpoint.authenticate(new MockHttpServletRequest(), "joe", "joespassword");
-        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
     }
 
     @Test
@@ -60,7 +60,7 @@ class RemoteAuthenticationEndpointTests {
         when(am.authenticate(any(Authentication.class))).thenThrow(new BadCredentialsException("failed"));
         @SuppressWarnings("rawtypes")
         ResponseEntity response = (ResponseEntity) endpoint.authenticate(new MockHttpServletRequest(), "joe", "joespassword");
-        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
     }
 
     @Test
@@ -68,7 +68,7 @@ class RemoteAuthenticationEndpointTests {
         when(am.authenticate(any(Authentication.class))).thenThrow(new RuntimeException("error"));
         @SuppressWarnings("rawtypes")
         ResponseEntity response = (ResponseEntity) endpoint.authenticate(new MockHttpServletRequest(), "joe", "joespassword");
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @Test
@@ -79,7 +79,7 @@ class RemoteAuthenticationEndpointTests {
         when(loginAuthentication.isClientOnly()).thenReturn(Boolean.TRUE);
         @SuppressWarnings("rawtypes")
         ResponseEntity response = (ResponseEntity) endpoint.authenticate(new MockHttpServletRequest(), "joe", "origin", null);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 
 }

@@ -2,82 +2,80 @@ package org.cloudfoundry.identity.uaa.constants;
 
 import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.constants.ClientAuthentication.CLIENT_SECRET_BASIC;
 import static org.cloudfoundry.identity.uaa.constants.ClientAuthentication.CLIENT_SECRET_POST;
 import static org.cloudfoundry.identity.uaa.constants.ClientAuthentication.NONE;
 import static org.cloudfoundry.identity.uaa.constants.ClientAuthentication.PRIVATE_KEY_JWT;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ClientAuthenticationTest {
 
     @Test
     void secretNeeded() {
-        assertTrue(ClientAuthentication.secretNeeded(CLIENT_SECRET_POST));
-        assertTrue(ClientAuthentication.secretNeeded(CLIENT_SECRET_BASIC));
-        assertFalse(ClientAuthentication.secretNeeded(NONE));
-        assertFalse(ClientAuthentication.secretNeeded(PRIVATE_KEY_JWT));
+        assertThat(ClientAuthentication.secretNeeded(CLIENT_SECRET_POST)).isTrue();
+        assertThat(ClientAuthentication.secretNeeded(CLIENT_SECRET_BASIC)).isTrue();
+        assertThat(ClientAuthentication.secretNeeded(NONE)).isFalse();
+        assertThat(ClientAuthentication.secretNeeded(PRIVATE_KEY_JWT)).isFalse();
     }
 
     @Test
     void isMethodSupported() {
-        assertTrue(ClientAuthentication.isMethodSupported(CLIENT_SECRET_POST));
-        assertFalse(ClientAuthentication.isMethodSupported("foo"));
+        assertThat(ClientAuthentication.isMethodSupported(CLIENT_SECRET_POST)).isTrue();
+        assertThat(ClientAuthentication.isMethodSupported("foo")).isFalse();
     }
 
     @Test
     void isValidMethodTrue() {
-        assertTrue(ClientAuthentication.isValidMethod(NONE, false, false));
-        assertTrue(ClientAuthentication.isValidMethod(PRIVATE_KEY_JWT, false, true));
-        assertTrue(ClientAuthentication.isValidMethod(CLIENT_SECRET_POST, true, false));
-        assertTrue(ClientAuthentication.isValidMethod(CLIENT_SECRET_BASIC, true, false));
+        assertThat(ClientAuthentication.isValidMethod(NONE, false, false)).isTrue();
+        assertThat(ClientAuthentication.isValidMethod(PRIVATE_KEY_JWT, false, true)).isTrue();
+        assertThat(ClientAuthentication.isValidMethod(CLIENT_SECRET_POST, true, false)).isTrue();
+        assertThat(ClientAuthentication.isValidMethod(CLIENT_SECRET_BASIC, true, false)).isTrue();
         // legacy checks, no method passed
-        assertTrue(ClientAuthentication.isValidMethod(null, false, false));
-        assertTrue(ClientAuthentication.isValidMethod(null, true, false));
-        assertTrue(ClientAuthentication.isValidMethod(null, false, true));
+        assertThat(ClientAuthentication.isValidMethod(null, false, false)).isTrue();
+        assertThat(ClientAuthentication.isValidMethod(null, true, false)).isTrue();
+        assertThat(ClientAuthentication.isValidMethod(null, false, true)).isTrue();
 
     }
 
     @Test
     void isValidMethodFalse() {
-        assertFalse(ClientAuthentication.isValidMethod(CLIENT_SECRET_BASIC, false, false));
-        assertFalse(ClientAuthentication.isValidMethod(CLIENT_SECRET_POST, false, false));
-        assertFalse(ClientAuthentication.isValidMethod(NONE, true, false));
-        assertFalse(ClientAuthentication.isValidMethod(PRIVATE_KEY_JWT, true, true));
-        assertFalse(ClientAuthentication.isValidMethod(CLIENT_SECRET_BASIC, true, true));
+        assertThat(ClientAuthentication.isValidMethod(CLIENT_SECRET_BASIC, false, false)).isFalse();
+        assertThat(ClientAuthentication.isValidMethod(CLIENT_SECRET_POST, false, false)).isFalse();
+        assertThat(ClientAuthentication.isValidMethod(NONE, true, false)).isFalse();
+        assertThat(ClientAuthentication.isValidMethod(PRIVATE_KEY_JWT, true, true)).isFalse();
+        assertThat(ClientAuthentication.isValidMethod(CLIENT_SECRET_BASIC, true, true)).isFalse();
         // legacy checks, no method passed
-        assertFalse(ClientAuthentication.isValidMethod(null, true, true));
+        assertThat(ClientAuthentication.isValidMethod(null, true, true)).isFalse();
     }
 
     @Test
     void getCalculatedMethod() {
-        assertEquals(NONE, ClientAuthentication.getCalculatedMethod(NONE, false, false));
-        assertEquals(NONE, ClientAuthentication.getCalculatedMethod(null, false, false));
-        assertEquals(PRIVATE_KEY_JWT, ClientAuthentication.getCalculatedMethod(PRIVATE_KEY_JWT, false, true));
-        assertEquals(PRIVATE_KEY_JWT, ClientAuthentication.getCalculatedMethod(null, false, true));
-        assertEquals(CLIENT_SECRET_BASIC, ClientAuthentication.getCalculatedMethod(CLIENT_SECRET_BASIC, true, false));
-        assertEquals(CLIENT_SECRET_BASIC, ClientAuthentication.getCalculatedMethod(null, true, false));
+        assertThat(ClientAuthentication.getCalculatedMethod(NONE, false, false)).isEqualTo(NONE);
+        assertThat(ClientAuthentication.getCalculatedMethod(null, false, false)).isEqualTo(NONE);
+        assertThat(ClientAuthentication.getCalculatedMethod(PRIVATE_KEY_JWT, false, true)).isEqualTo(PRIVATE_KEY_JWT);
+        assertThat(ClientAuthentication.getCalculatedMethod(null, false, true)).isEqualTo(PRIVATE_KEY_JWT);
+        assertThat(ClientAuthentication.getCalculatedMethod(CLIENT_SECRET_BASIC, true, false)).isEqualTo(CLIENT_SECRET_BASIC);
+        assertThat(ClientAuthentication.getCalculatedMethod(null, true, false)).isEqualTo(CLIENT_SECRET_BASIC);
     }
 
     @Test
     void isAuthMethodEqualTrue() {
-        assertTrue(ClientAuthentication.isAuthMethodEqual(NONE, NONE));
-        assertTrue(ClientAuthentication.isAuthMethodEqual(CLIENT_SECRET_BASIC, CLIENT_SECRET_POST));
-        assertTrue(ClientAuthentication.isAuthMethodEqual(CLIENT_SECRET_POST, CLIENT_SECRET_BASIC));
-        assertTrue(ClientAuthentication.isAuthMethodEqual(CLIENT_SECRET_BASIC, CLIENT_SECRET_BASIC));
-        assertTrue(ClientAuthentication.isAuthMethodEqual(CLIENT_SECRET_POST, CLIENT_SECRET_POST));
-        assertTrue(ClientAuthentication.isAuthMethodEqual(PRIVATE_KEY_JWT, PRIVATE_KEY_JWT));
-        assertTrue(ClientAuthentication.isAuthMethodEqual(null, null));
-        assertTrue(ClientAuthentication.isAuthMethodEqual(null, CLIENT_SECRET_BASIC));
-        assertTrue(ClientAuthentication.isAuthMethodEqual(null, CLIENT_SECRET_POST));
-        assertTrue(ClientAuthentication.isAuthMethodEqual(CLIENT_SECRET_BASIC, null));
+        assertThat(ClientAuthentication.isAuthMethodEqual(NONE, NONE)).isTrue();
+        assertThat(ClientAuthentication.isAuthMethodEqual(CLIENT_SECRET_BASIC, CLIENT_SECRET_POST)).isTrue();
+        assertThat(ClientAuthentication.isAuthMethodEqual(CLIENT_SECRET_POST, CLIENT_SECRET_BASIC)).isTrue();
+        assertThat(ClientAuthentication.isAuthMethodEqual(CLIENT_SECRET_BASIC, CLIENT_SECRET_BASIC)).isTrue();
+        assertThat(ClientAuthentication.isAuthMethodEqual(CLIENT_SECRET_POST, CLIENT_SECRET_POST)).isTrue();
+        assertThat(ClientAuthentication.isAuthMethodEqual(PRIVATE_KEY_JWT, PRIVATE_KEY_JWT)).isTrue();
+        assertThat(ClientAuthentication.isAuthMethodEqual(null, null)).isTrue();
+        assertThat(ClientAuthentication.isAuthMethodEqual(null, CLIENT_SECRET_BASIC)).isTrue();
+        assertThat(ClientAuthentication.isAuthMethodEqual(null, CLIENT_SECRET_POST)).isTrue();
+        assertThat(ClientAuthentication.isAuthMethodEqual(CLIENT_SECRET_BASIC, null)).isTrue();
     }
 
     @Test
     void isAuthMethodEqualFalse() {
-        assertFalse(ClientAuthentication.isAuthMethodEqual(PRIVATE_KEY_JWT, null));
-        assertFalse(ClientAuthentication.isAuthMethodEqual(PRIVATE_KEY_JWT, CLIENT_SECRET_BASIC));
-        assertFalse(ClientAuthentication.isAuthMethodEqual(PRIVATE_KEY_JWT, NONE));
+        assertThat(ClientAuthentication.isAuthMethodEqual(PRIVATE_KEY_JWT, null)).isFalse();
+        assertThat(ClientAuthentication.isAuthMethodEqual(PRIVATE_KEY_JWT, CLIENT_SECRET_BASIC)).isFalse();
+        assertThat(ClientAuthentication.isAuthMethodEqual(PRIVATE_KEY_JWT, NONE)).isFalse();
     }
 }

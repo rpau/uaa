@@ -21,7 +21,7 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.function.Consumer;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -118,7 +118,7 @@ class ExternalOAuthAuthenticationFilterTest {
             });
             HttpServletResponse mockResponse = mock(HttpServletResponse.class);
 
-            assertThrows(HttpSessionRequiredException.class, () ->
+            assertThatExceptionOfType(HttpSessionRequiredException.class).isThrownBy(() ->
                     externalOAuthAuthenticationFilter.doFilter(mockRequest, mockResponse, mockFilterChain));
             verify(mockFilterChain, never()).doFilter(mockRequest, mockResponse);
         }
@@ -131,7 +131,7 @@ class ExternalOAuthAuthenticationFilterTest {
             });
             HttpServletResponse mockResponse = mock(HttpServletResponse.class);
 
-            assertThrows(CsrfException.class, () ->
+            assertThatExceptionOfType(CsrfException.class).isThrownBy(() ->
                     externalOAuthAuthenticationFilter.doFilter(mockRequest, mockResponse, mockFilterChain));
             verify(mockFilterChain, never()).doFilter(mockRequest, mockResponse);
         }
@@ -144,7 +144,7 @@ class ExternalOAuthAuthenticationFilterTest {
             });
             HttpServletResponse mockResponse = mock(HttpServletResponse.class);
 
-            assertThrows(CsrfException.class, () ->
+            assertThatExceptionOfType(CsrfException.class).isThrownBy(() ->
                     externalOAuthAuthenticationFilter.doFilter(mockRequest, mockResponse, mockFilterChain));
             verify(mockFilterChain, never()).doFilter(mockRequest, mockResponse);
         }
@@ -158,7 +158,7 @@ class ExternalOAuthAuthenticationFilterTest {
             });
             HttpServletResponse mockResponse = mock(HttpServletResponse.class);
 
-            assertThrows(CsrfException.class, () ->
+            assertThatExceptionOfType(CsrfException.class).isThrownBy(() ->
                     externalOAuthAuthenticationFilter.doFilter(mockRequest, mockResponse, mockFilterChain));
             verify(mockFilterChain, never()).doFilter(mockRequest, mockResponse);
         }

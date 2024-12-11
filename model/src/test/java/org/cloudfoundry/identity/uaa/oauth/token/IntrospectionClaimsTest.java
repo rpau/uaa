@@ -8,11 +8,7 @@ import org.junit.jupiter.api.Test;
 import java.text.ParseException;
 import java.util.Arrays;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasEntry;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class IntrospectionClaimsTest {
 
@@ -29,21 +25,21 @@ class IntrospectionClaimsTest {
     @Test
     void setActive() {
         introspectionPayload.setActive(true);
-        assertTrue(introspectionPayload.isActive());
+        assertThat(introspectionPayload.isActive()).isTrue();
     }
 
     @Test
     void isActive() {
-        assertFalse(introspectionPayload.isActive());
+        assertThat(introspectionPayload.isActive()).isFalse();
     }
 
     @Test
-    void testSerialize() {
-        assertTrue(JsonUtils.writeValueAsString(introspectionPayload).contains(TokenConstants.CLIENT_AUTH_NONE));
-        assertNotNull(introspectionPayload.getClaimMap());
-        assertThat(introspectionPayload.getClaimMap(), hasEntry("grant_type", "authorization_code"));
-        assertThat(introspectionPayload.getClaimMap(), hasEntry("client_id", "login"));
-        assertThat(introspectionPayload.getClaimMap(), hasEntry("aud", Arrays.asList("openid", "login")));
-        assertThat(introspectionPayload.getClaimMap(), hasEntry("scope", Arrays.asList("openid")));
+    void serialize() {
+        assertThat(JsonUtils.writeValueAsString(introspectionPayload).contains(TokenConstants.CLIENT_AUTH_NONE)).isTrue();
+        assertThat(introspectionPayload.getClaimMap()).isNotNull();
+        assertThat(introspectionPayload.getClaimMap()).containsEntry("grant_type", "authorization_code");
+        assertThat(introspectionPayload.getClaimMap()).containsEntry("client_id", "login");
+        assertThat(introspectionPayload.getClaimMap()).containsEntry("aud", Arrays.asList("openid", "login"));
+        assertThat(introspectionPayload.getClaimMap()).containsEntry("scope", Arrays.asList("openid"));
     }
 }

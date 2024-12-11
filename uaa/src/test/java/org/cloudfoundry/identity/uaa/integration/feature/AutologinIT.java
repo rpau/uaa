@@ -19,7 +19,6 @@ import org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils;
 import org.cloudfoundry.identity.uaa.test.UaaTestAccounts;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneHolder;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -47,13 +46,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils.getHeaders;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_AUTHORIZATION_CODE;
 import static org.cloudfoundry.identity.uaa.security.web.CookieBasedCsrfTokenRepository.DEFAULT_CSRF_COOKIE_NAME;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.startsWith;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringJUnitConfig(classes = DefaultIntegrationTestConfig.class)
 class AutologinIT {
@@ -83,7 +82,7 @@ class AutologinIT {
 
     @BeforeEach
     @AfterEach
-    public void logout_and_clear_cookies() {
+    void logout_and_clear_cookies() {
         map.add("username", testAccounts.getUserName());
         map.add("password", testAccounts.getPassword());
         try {
@@ -98,12 +97,12 @@ class AutologinIT {
     }
 
     @Test
-    void testAutologinFlow_FORM() {
+    void autologinFlowFORM() {
         testAutologinFlow(MediaType.APPLICATION_FORM_URLENCODED_VALUE, map);
     }
 
     @Test
-    void testAutologinFlow_JSON() {
+    void autologinFlowJSON() {
         testAutologinFlow(MediaType.APPLICATION_JSON_VALUE, map.toSingleValueMap());
     }
 
@@ -132,12 +131,12 @@ class AutologinIT {
 
         webDriver.get(baseUrl);
 
-        Assertions.assertEquals(testAccounts.getUserName(), webDriver.findElement(By.cssSelector(".header .nav")).getText());
+        assertThat(webDriver.findElement(By.cssSelector(".header .nav")).getText()).isEqualTo(testAccounts.getUserName());
         IntegrationTestUtils.validateAccountChooserCookie(baseUrl, webDriver, IdentityZoneHolder.get());
     }
 
     @Test
-    public void testSimpleAutologinFlow() throws Exception {
+    void simpleAutologinFlow() throws Exception {
         HttpHeaders headers = getAppBasicAuthHttpHeaders();
 
         LinkedMultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
@@ -182,7 +181,7 @@ class AutologinIT {
                 cookiesAdded++;
             }
         }
-        assertEquals(2, cookiesAdded);
+        assertThat(cookiesAdded).isEqualTo(2);
 
         //if we receive a 200, then we must approve our scopes
         if (HttpStatus.OK == authorizeResponse.getStatusCode()) {
@@ -198,9 +197,9 @@ class AutologinIT {
         }
 
         //approval is complete, we receive a token code back
-        assertEquals(HttpStatus.FOUND, authorizeResponse.getStatusCode());
+        assertThat(authorizeResponse.getStatusCode()).isEqualTo(HttpStatus.FOUND);
         List<String> location = authorizeResponse.getHeaders().get("Location");
-        assertEquals(1, location.size());
+        assertThat(location.size()).isEqualTo(1);
         String newCode = location.get(0).substring(location.get(0).indexOf("code=") + 5);
 
         //request a token using our code
@@ -223,7 +222,7 @@ class AutologinIT {
                 new URI(tokenUrl)
         );
         ResponseEntity<Map> tokenResponse = template.exchange(requestEntity, Map.class);
-        assertEquals(HttpStatus.OK, tokenResponse.getStatusCode());
+        assertThat(tokenResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
 
         //here we must reset our state. we do that by following the logout flow.
         headers.clear();
@@ -270,7 +269,7 @@ class AutologinIT {
                 HttpMethod.POST,
                 new HttpEntity<>(requestBody, getHeaders(cookieStore)),
                 Void.class);
-        assertEquals(HttpStatus.FOUND, revokeResponse.getStatusCode());
+        assertThat(revokeResponse.getStatusCode()).isEqualTo(HttpStatus.FOUND);
     }
 
     private void setCookiesFromResponse(BasicCookieStore cookieStore, ResponseEntity<String> loginResponse) {
@@ -283,7 +282,7 @@ class AutologinIT {
     }
 
     @Test
-    public void testFormEncodedAutologinRequest() {
+    void formEncodedAutologinRequest() {
         HttpHeaders headers = getAppBasicAuthHttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
@@ -297,11 +296,11 @@ class AutologinIT {
                 Map.class);
 
         String autologinCode = (String) autologinResponseEntity.getBody().get("code");
-        assertEquals(32, autologinCode.length());
+        assertThat(autologinCode.length()).isEqualTo(32);
     }
 
     @Test
-    public void testPasswordRequired() {
+    void passwordRequired() {
         HttpHeaders headers = getAppBasicAuthHttpHeaders();
 
         Map<String, String> requestBody = new HashMap<>();
@@ -313,12 +312,12 @@ class AutologinIT {
                     new HttpEntity<>(requestBody, headers),
                     Map.class);
         } catch (HttpClientErrorException e) {
-            assertEquals(HttpStatus.UNAUTHORIZED, e.getStatusCode());
+            assertThat(e.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
         }
     }
 
     @Test
-    public void testClientAuthorization() {
+    void clientAuthorization() {
         Map<String, String> requestBody = new HashMap<>();
         requestBody.put("username", testAccounts.getUserName());
         requestBody.put("password", testAccounts.getPassword());
@@ -329,12 +328,12 @@ class AutologinIT {
                     new HttpEntity<>(requestBody),
                     Map.class);
         } catch (HttpClientErrorException e) {
-            assertEquals(HttpStatus.UNAUTHORIZED, e.getStatusCode());
+            assertThat(e.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
         }
     }
 
     @Test
-    public void testClientIdMustBeConsistent() {
+    void clientIdMustBeConsistent() {
         webDriver.get(baseUrl + "/logout.do");
 
         HttpHeaders headers = getAppBasicAuthHttpHeaders();
@@ -361,7 +360,7 @@ class AutologinIT {
         try {
             restOperations.exchange(authorizeUrl, HttpMethod.GET, null, Void.class);
         } catch (HttpClientErrorException e) {
-            assertEquals(HttpStatus.UNAUTHORIZED, e.getStatusCode());
+            assertThat(e.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
         }
     }
 

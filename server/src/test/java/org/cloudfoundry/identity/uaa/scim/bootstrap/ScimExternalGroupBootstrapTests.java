@@ -25,8 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @WithDatabaseContext
 class ScimExternalGroupBootstrapTests {
@@ -50,7 +49,7 @@ class ScimExternalGroupBootstrapTests {
         JdbcScimGroupProvisioning gDB = new JdbcScimGroupProvisioning(namedJdbcTemplate, pagingListFactory, dbUtils);
         eDB = new JdbcScimGroupExternalMembershipManager(jdbcTemplate, dbUtils);
         ((JdbcScimGroupExternalMembershipManager) eDB).setScimGroupProvisioning(gDB);
-        assertEquals(0, gDB.retrieveAll(IdentityZoneHolder.get().getId()).size());
+        assertThat(gDB.retrieveAll(IdentityZoneHolder.get().getId()).size()).isEqualTo(0);
 
         gDB.create(new ScimGroup(null, "acme", IdentityZone.getUaaZoneId()), IdentityZoneHolder.get().getId());
         gDB.create(new ScimGroup(null, "acme.dev", IdentityZone.getUaaZoneId()), IdentityZoneHolder.get().getId());
@@ -69,12 +68,12 @@ class ScimExternalGroupBootstrapTests {
         bootstrap.setExternalGroupMaps(originMap);
         bootstrap.afterPropertiesSet();
 
-        assertEquals(2, eDB.getExternalGroupMapsByExternalGroup("cn=Engineering Department,ou=groups,dc=example,dc=com", OriginKeys.LDAP, IdentityZoneHolder.get().getId()).size());
-        assertEquals(1, eDB.getExternalGroupMapsByExternalGroup("cn=HR,ou=groups,dc=example,dc=com", OriginKeys.LDAP, IdentityZoneHolder.get().getId()).size());
-        assertEquals(1, eDB.getExternalGroupMapsByExternalGroup("cn=mgmt,ou=groups,dc=example,dc=com", OriginKeys.LDAP, IdentityZoneHolder.get().getId()).size());
+        assertThat(eDB.getExternalGroupMapsByExternalGroup("cn=Engineering Department,ou=groups,dc=example,dc=com", OriginKeys.LDAP, IdentityZoneHolder.get().getId()).size()).isEqualTo(2);
+        assertThat(eDB.getExternalGroupMapsByExternalGroup("cn=HR,ou=groups,dc=example,dc=com", OriginKeys.LDAP, IdentityZoneHolder.get().getId()).size()).isEqualTo(1);
+        assertThat(eDB.getExternalGroupMapsByExternalGroup("cn=mgmt,ou=groups,dc=example,dc=com", OriginKeys.LDAP, IdentityZoneHolder.get().getId()).size()).isEqualTo(1);
 
-        assertEquals(3, eDB.getExternalGroupMapsByGroupName("acme", OriginKeys.LDAP, IdentityZoneHolder.get().getId()).size());
-        assertEquals(1, eDB.getExternalGroupMapsByGroupName("acme.dev", OriginKeys.LDAP, IdentityZoneHolder.get().getId()).size());
+        assertThat(eDB.getExternalGroupMapsByGroupName("acme", OriginKeys.LDAP, IdentityZoneHolder.get().getId()).size()).isEqualTo(3);
+        assertThat(eDB.getExternalGroupMapsByGroupName("acme.dev", OriginKeys.LDAP, IdentityZoneHolder.get().getId()).size()).isEqualTo(1);
     }
 
     @Test
@@ -88,12 +87,12 @@ class ScimExternalGroupBootstrapTests {
         bootstrap.setExternalGroupMaps(originMap);
         bootstrap.afterPropertiesSet();
 
-        assertEquals(0, eDB.getExternalGroupMapsByExternalGroup("cn=Engineering Department,ou=groups,dc=example,dc=com", OriginKeys.LDAP, IdentityZoneHolder.get().getId()).size());
-        assertEquals(0, eDB.getExternalGroupMapsByExternalGroup("cn=HR,ou=groups,dc=example,dc=com", OriginKeys.LDAP, IdentityZoneHolder.get().getId()).size());
-        assertEquals(0, eDB.getExternalGroupMapsByExternalGroup("cn=mgmt,ou=groups,dc=example,dc=com", OriginKeys.LDAP, IdentityZoneHolder.get().getId()).size());
+        assertThat(eDB.getExternalGroupMapsByExternalGroup("cn=Engineering Department,ou=groups,dc=example,dc=com", OriginKeys.LDAP, IdentityZoneHolder.get().getId()).size()).isEqualTo(0);
+        assertThat(eDB.getExternalGroupMapsByExternalGroup("cn=HR,ou=groups,dc=example,dc=com", OriginKeys.LDAP, IdentityZoneHolder.get().getId()).size()).isEqualTo(0);
+        assertThat(eDB.getExternalGroupMapsByExternalGroup("cn=mgmt,ou=groups,dc=example,dc=com", OriginKeys.LDAP, IdentityZoneHolder.get().getId()).size()).isEqualTo(0);
 
-        assertNull(eDB.getExternalGroupMapsByGroupName("acme1", OriginKeys.LDAP, IdentityZoneHolder.get().getId()));
-        assertNull(eDB.getExternalGroupMapsByGroupName("acme1.dev", OriginKeys.LDAP, IdentityZoneHolder.get().getId()));
+        assertThat(eDB.getExternalGroupMapsByGroupName("acme1", OriginKeys.LDAP, IdentityZoneHolder.get().getId())).isNull();
+        assertThat(eDB.getExternalGroupMapsByGroupName("acme1.dev", OriginKeys.LDAP, IdentityZoneHolder.get().getId())).isNull();
     }
 
     @Test
@@ -105,7 +104,7 @@ class ScimExternalGroupBootstrapTests {
         bootstrap.setExternalGroupMaps(originMap);
         bootstrap.afterPropertiesSet();
 
-        assertEquals(0, eDB.getExternalGroupMapsByExternalGroup("cn=Engineering Department,ou=groups,dc=example,dc=com", OriginKeys.LDAP, IdentityZoneHolder.get().getId()).size());
+        assertThat(eDB.getExternalGroupMapsByExternalGroup("cn=Engineering Department,ou=groups,dc=example,dc=com", OriginKeys.LDAP, IdentityZoneHolder.get().getId()).size()).isEqualTo(0);
     }
 
     @Test

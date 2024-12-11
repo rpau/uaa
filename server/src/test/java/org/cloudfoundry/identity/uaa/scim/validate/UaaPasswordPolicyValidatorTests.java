@@ -16,8 +16,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Mockito.mock;
 
 @ExtendWith(PollutionPreventionExtension.class)
@@ -62,7 +62,7 @@ class UaaPasswordPolicyValidatorTests {
 
 
     @Test
-    void testValidateSuccess() {
+    void validateSuccess() {
         validatePassword("Password2&");
     }
 
@@ -72,42 +72,42 @@ class UaaPasswordPolicyValidatorTests {
     }
 
     @Test
-    void testValidateWithNullPassword() {
+    void validateWithNullPassword() {
         validatePassword(null, "Password must be at least 10 characters in length.");
     }
 
     @Test
-    void testValidateShortPassword() {
+    void validateShortPassword() {
         validatePassword("Pas1", "Password must be at least 10 characters in length.");
     }
 
     @Test
-    void testValidateLongPassword() {
+    void validateLongPassword() {
         validatePassword(RandomStringUtils.randomAlphanumeric(23) + "aA9", "Password must be no more than 23 characters in length.");
     }
 
     @Test
-    void testValidateAllLowerCase() {
+    void validateAllLowerCase() {
         validatePassword("password2", "Password must contain at least 1 uppercase characters.");
     }
 
     @Test
-    void testValidateAllUpperCase() {
+    void validateAllUpperCase() {
         validatePassword("PASSWORD2", "Password must contain at least 1 lowercase characters.");
     }
 
     @Test
-    void testValidateNoDigits() {
+    void validateNoDigits() {
         validatePassword("Password", "Password must contain at least 1 digit characters.");
     }
 
     @Test
-    void testValidateWithNoSpecialCharacter() {
+    void validateWithNoSpecialCharacter() {
         validatePassword("Password123", "Password must contain at least 1 special characters.");
     }
 
     @Test
-    void testValidationDisabledWhenZoneIsNotDefault() {
+    void validationDisabledWhenZoneIsNotDefault() {
         IdentityZone identityZone = new IdentityZone();
         identityZone.setId("foo");
         IdentityZoneHolder.set(identityZone);
@@ -115,7 +115,7 @@ class UaaPasswordPolicyValidatorTests {
     }
 
     @Test
-    void testValidateSpaceNotSpecialCharacter() {
+    void validateSpaceNotSpecialCharacter() {
         validatePassword("Password123 ", "Password must contain at least 1 special characters.");
     }
 
@@ -125,14 +125,14 @@ class UaaPasswordPolicyValidatorTests {
         try {
             validator.validate(password);
             if (expectedErrors != null && expectedErrors.length > 0) {
-                fail();
+                fail("");
             }
         } catch (InvalidPasswordException e) {
             if (expectedErrors.length == 0) {
                 fail("Didn't expect InvalidPasswordException, but messages were " + e.getErrorMessages());
             }
             for (String expectedError : expectedErrors) {
-                assertTrue(e.getErrorMessages().contains(expectedError), "Errors should contain:" + expectedError);
+                assertThat(e.getErrorMessages().contains(expectedError)).as("Errors should contain:" + expectedError).isTrue();
             }
         }
     }

@@ -8,7 +8,6 @@ import org.cloudfoundry.identity.uaa.oauth.common.exceptions.InvalidTokenExcepti
 import org.cloudfoundry.identity.uaa.oauth.provider.OAuth2Authentication;
 import org.cloudfoundry.identity.uaa.oauth.provider.OAuth2Request;
 import org.cloudfoundry.identity.uaa.oauth.provider.TokenRequest;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -27,39 +26,37 @@ import org.springframework.security.web.authentication.preauth.PreAuthenticatedA
 
 import java.util.Arrays;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-public class DefaultTokenServicesTests {
+class DefaultTokenServicesTests {
 
     private DefaultTokenServices services;
     private final TokenStore tokenStore = Mockito.mock(TokenStore.class);
 
     @BeforeEach
-    public void init() throws Exception {
+    void init() throws Exception {
         services = new DefaultTokenServices();
         services.setTokenStore(tokenStore);
         services.afterPropertiesSet();
     }
 
     @Test
-    public void testAccidentalNullAuthentication() {
-        assertThrows(InvalidTokenException.class, () -> {
-            Mockito.when(tokenStore.readAccessToken(Mockito.anyString())).thenReturn(
-                    new DefaultOAuth2AccessToken("FOO"));
-            // A bug in the TokenStore or a race condition could lead to the authentication
-            // being null even if the token is not:
-            Mockito.when(tokenStore.readAuthentication(Mockito.any(OAuth2AccessToken.class)))
-                    .thenReturn(null);
-            services.loadAuthentication("FOO");
-        });
+    void accidentalNullAuthentication() {
+        Mockito.when(tokenStore.readAccessToken(Mockito.anyString())).thenReturn(
+                new DefaultOAuth2AccessToken("FOO"));
+        Mockito.when(tokenStore.readAuthentication(Mockito.any(OAuth2AccessToken.class)))
+                .thenReturn(null);
+        assertThatExceptionOfType(InvalidTokenException.class).isThrownBy(() ->
+                services.loadAuthentication("FOO"));
     }
 
     @Test
-    public void testRefreshAccessTokenWithReauthentication() {
+    void refreshAccessTokenWithReauthentication() {
         UserDetails user = createMockUser("joeuser", "PROCESSOR");
         UserDetailsService userDetailsService = Mockito.mock(UserDetailsService.class);
 
@@ -86,12 +83,12 @@ public class DefaultTokenServicesTests {
 
         OAuth2Authentication refreshedAuthentication = refreshedAuthenticationCaptor.getValue();
         Authentication authentication = refreshedAuthentication.getUserAuthentication();
-        Assertions.assertEquals(user, authentication.getPrincipal());
-        Assertions.assertEquals("some more details", authentication.getDetails());
+        assertThat(authentication.getPrincipal()).isEqualTo(user);
+        assertThat(authentication.getDetails()).isEqualTo("some more details");
     }
 
     @Test
-    public void testRefreshAccessTokenWithoutReauthentication() {
+    void refreshAccessTokenWithoutReauthentication() {
 
         UserDetails user = createMockUser("joeuser", "PROCESSOR");
 
@@ -114,8 +111,8 @@ public class DefaultTokenServicesTests {
 
         OAuth2Authentication refreshedAuthentication = refreshedAuthenticationCaptor.getValue();
         Authentication authentication = refreshedAuthentication.getUserAuthentication();
-        Assertions.assertEquals(user, authentication.getPrincipal());
-        Assertions.assertEquals("some more details", authentication.getDetails());
+        assertThat(authentication.getPrincipal()).isEqualTo(user);
+        assertThat(authentication.getDetails()).isEqualTo("some more details");
     }
 
     private AuthenticationManager createAuthenticationManager(UserDetailsService userDetailsService) {

@@ -5,8 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 
-import static org.cloudfoundry.identity.uaa.util.AssertThrowsWithMessage.assertThrowsWithMessageThat;
-import static org.hamcrest.Matchers.is;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DefaultTestContext
 class IdentityZoneEndpointsAopTests {
@@ -16,34 +15,29 @@ class IdentityZoneEndpointsAopTests {
 
     @Test
     void updateIdentityZone_WithObject() {
-        assertThrowsWithMessageThat(
-                AccessDeniedException.class,
-                () -> identityZoneEndpoints.updateIdentityZone(IdentityZone.getUaa(), null),
-                is("Access to UAA is not allowed."));
+        assertThatThrownBy(() -> identityZoneEndpoints.updateIdentityZone(IdentityZone.getUaa(), null))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessage("Access to UAA is not allowed.");
     }
 
     @Test
     void updateIdentityZone_WithId() {
-        assertThrowsWithMessageThat(
-                AccessDeniedException.class,
-                () -> identityZoneEndpoints.updateIdentityZone(null, IdentityZone.getUaaZoneId()),
-                is("Access to UAA is not allowed."));
+        assertThatThrownBy(() -> identityZoneEndpoints.updateIdentityZone(null, IdentityZone.getUaaZoneId()))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessage("Access to UAA is not allowed.");
     }
 
     @Test
     void createClient() {
-        assertThrowsWithMessageThat(
-                AccessDeniedException.class,
-                () -> identityZoneEndpoints.createClient(IdentityZone.getUaaZoneId(), null),
-                is("Access to UAA is not allowed."));
+        assertThatThrownBy(() -> identityZoneEndpoints.createClient(IdentityZone.getUaaZoneId(), null))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessage("Access to UAA is not allowed.");
     }
 
     @Test
     void deleteClient() {
-        assertThrowsWithMessageThat(
-                AccessDeniedException.class,
-                () -> identityZoneEndpoints.deleteClient(IdentityZone.getUaaZoneId(), null),
-                is("Access to UAA is not allowed."));
+        assertThatThrownBy(() -> identityZoneEndpoints.deleteClient(IdentityZone.getUaaZoneId(), null))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessage("Access to UAA is not allowed.");
     }
-
 }

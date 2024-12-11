@@ -6,13 +6,13 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.test.JsonMatcher.isJsonFile;
 import static org.cloudfoundry.identity.uaa.test.JsonMatcher.isJsonString;
 import static org.cloudfoundry.identity.uaa.test.JsonTranslation.WithAllNullFields.EXPECT_EMPTY_JSON;
 import static org.cloudfoundry.identity.uaa.test.JsonTranslation.WithAllNullFields.EXPECT_NULLS_IN_JSON;
 import static org.cloudfoundry.identity.uaa.test.ModelTestUtils.getResourceAsString;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 public abstract class JsonTranslation<T> {
@@ -53,18 +53,14 @@ public abstract class JsonTranslation<T> {
     }
 
     private void validate() {
-        assertThat("subject cannot be null, did you forget to call %s::setUp?".formatted(JsonTranslation.class.getSimpleName()),
-                this.subject, not(nullValue()));
-        assertThat("subjectClass cannot be null, did you forget to call %s::setUp?".formatted(JsonTranslation.class.getSimpleName()),
-                this.subjectClass, not(nullValue()));
+        assertThat(this.subject).as("subject cannot be null, did you forget to call %s::setUp?".formatted(JsonTranslation.class.getSimpleName())).isNotNull();
+        assertThat(this.subjectClass).as("subjectClass cannot be null, did you forget to call %s::setUp?".formatted(JsonTranslation.class.getSimpleName())).isNotNull();
     }
 
     @Test
     void toJson() throws JsonProcessingException {
         validate();
-        assertThat("file <%s/%s> must exist on classpath".formatted(subjectClass.getPackage().getName().replace(".", "/"), jsonFileName),
-                subjectClass.getResourceAsStream(jsonFileName),
-                notNullValue());
+        assertThat(subjectClass.getResourceAsStream(jsonFileName)).as("file <%s/%s> must exist on classpath".formatted(subjectClass.getPackage().getName().replace(".", "/"), jsonFileName)).isNotNull();
 
         String actual = objectMapper.writeValueAsString(subject);
 
@@ -74,15 +70,13 @@ public abstract class JsonTranslation<T> {
     @Test
     void fromJson() throws IOException {
         validate();
-        assertThat("file <%s/%s> must exist on classpath".formatted(subjectClass.getPackage().getName().replace(".", "/"), jsonFileName),
-                subjectClass.getResourceAsStream(jsonFileName),
-                notNullValue());
+        assertThat(subjectClass.getResourceAsStream(jsonFileName)).as("file <%s/%s> must exist on classpath".formatted(subjectClass.getPackage().getName().replace(".", "/"), jsonFileName)).isNotNull();
 
         String json = getResourceAsString(subjectClass, jsonFileName);
 
         T actual = objectMapper.readValue(json, subjectClass);
 
-        assertThat(actual, is(subject));
+        assertThat(actual).isEqualTo(subject);
     }
 
     @Test
@@ -104,9 +98,7 @@ public abstract class JsonTranslation<T> {
 
         String fileName = subjectClass.getSimpleName() + "-nulls.json";
 
-        assertThat("file <%s/%s> must exist on classpath, or choose a different %s".formatted(subjectClass.getPackage().getName().replace(".", "/"), fileName, WithAllNullFields.class.getSimpleName()),
-                subjectClass.getResourceAsStream(fileName),
-                notNullValue());
+        assertThat(subjectClass.getResourceAsStream(fileName)).as("file <%s/%s> must exist on classpath, or choose a different %s".formatted(subjectClass.getPackage().getName().replace(".", "/"), fileName, WithAllNullFields.class.getSimpleName())).isNotNull();
 
         String actual = objectMapper.writeValueAsString(subjectClass.newInstance());
         assertThat(actual, isJsonFile(this.getClass(), fileName));

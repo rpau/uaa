@@ -13,58 +13,55 @@ import org.springframework.mock.http.MockHttpOutputMessage;
 import java.io.IOException;
 import java.util.Collections;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 
-public class FormOAuth2ExceptionHttpMessageTest {
+class FormOAuth2ExceptionHttpMessageTest {
 
     FormOAuth2ExceptionHttpMessageConverter converter;
     FormOAuth2AccessTokenMessageConverter auth2AccessTokenMessageConverter;
 
     @BeforeEach
-    public void setUp() throws Exception {
+    void setUp() throws Exception {
         converter = new FormOAuth2ExceptionHttpMessageConverter();
         auth2AccessTokenMessageConverter = new FormOAuth2AccessTokenMessageConverter();
     }
 
     @Test
-    public void canRead() {
-        assertTrue(converter.canRead(new OAuth2Exception("").getClass(), MediaType.APPLICATION_FORM_URLENCODED));
-        assertFalse(auth2AccessTokenMessageConverter.canRead(new BadClientCredentialsException().getClass(), MediaType.APPLICATION_FORM_URLENCODED));
+    void canRead() {
+        assertThat(converter.canRead(new OAuth2Exception("").getClass(), MediaType.APPLICATION_FORM_URLENCODED)).isTrue();
+        assertThat(auth2AccessTokenMessageConverter.canRead(new BadClientCredentialsException().getClass(), MediaType.APPLICATION_FORM_URLENCODED)).isFalse();
     }
 
     @Test
-    public void canWrite() {
-        assertTrue(converter.canWrite(new OAuth2Exception("").getClass(), MediaType.APPLICATION_FORM_URLENCODED));
-        assertFalse(auth2AccessTokenMessageConverter.canWrite(new BadClientCredentialsException().getClass(), MediaType.APPLICATION_FORM_URLENCODED));
+    void canWrite() {
+        assertThat(converter.canWrite(new OAuth2Exception("").getClass(), MediaType.APPLICATION_FORM_URLENCODED)).isTrue();
+        assertThat(auth2AccessTokenMessageConverter.canWrite(new BadClientCredentialsException().getClass(), MediaType.APPLICATION_FORM_URLENCODED)).isFalse();
     }
 
     @Test
-    public void getSupportedMediaTypes() {
-        assertEquals(Collections.singletonList(MediaType.APPLICATION_FORM_URLENCODED), converter.getSupportedMediaTypes());
+    void getSupportedMediaTypes() {
+        assertThat(converter.getSupportedMediaTypes()).isEqualTo(Collections.singletonList(MediaType.APPLICATION_FORM_URLENCODED));
     }
 
     @Test
-    public void read() throws IOException {
-        assertNotNull(converter.read(new OAuth2Exception("").getClass(), new MockHttpInputMessage("".getBytes())));
+    void read() throws IOException {
+        assertThat(converter.read(new OAuth2Exception("").getClass(), new MockHttpInputMessage("".getBytes()))).isNotNull();
     }
 
     @Test
-    public void writeInternal() {
-        assertThrows(UnsupportedOperationException.class, () ->
+    void writeInternal() {
+        assertThatExceptionOfType(UnsupportedOperationException.class).isThrownBy(() ->
                 auth2AccessTokenMessageConverter.writeInternal(new DefaultOAuth2AccessToken(""), new MockHttpOutputMessage()));
     }
 
     @Test
-    public void write() throws IOException {
+    void write() throws IOException {
         HttpOutputMessage outputMessage = new MockHttpOutputMessage();
         OAuth2Exception e = new BadClientCredentialsException();
         e.addAdditionalInformation("key", "value");
         converter.write(e, MediaType.APPLICATION_FORM_URLENCODED, outputMessage);
-        assertNotNull(outputMessage.getBody());
-        assertEquals("error=invalid_client&error_description=Bad+client+credentials&key=value", outputMessage.getBody().toString());
+        assertThat(outputMessage.getBody()).isNotNull();
+        assertThat(outputMessage.getBody().toString()).isEqualTo("error=invalid_client&error_description=Bad+client+credentials&key=value");
     }
 }

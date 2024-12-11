@@ -85,6 +85,7 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.fail;
 import static org.cloudfoundry.identity.uaa.provider.ExternalIdentityProviderDefinition.EMAIL_ATTRIBUTE_NAME;
 import static org.cloudfoundry.identity.uaa.provider.ExternalIdentityProviderDefinition.FAMILY_NAME_ATTRIBUTE_NAME;
 import static org.cloudfoundry.identity.uaa.provider.ExternalIdentityProviderDefinition.GIVEN_NAME_ATTRIBUTE_NAME;
@@ -99,9 +100,6 @@ import static org.cloudfoundry.identity.uaa.provider.saml.Saml2TestUtils.token;
 import static org.cloudfoundry.identity.uaa.provider.saml.Saml2TestUtils.verifying;
 import static org.cloudfoundry.identity.uaa.provider.saml.TestOpenSamlObjects.attributeStatements;
 import static org.cloudfoundry.identity.uaa.test.ModelTestUtils.getResourceAsString;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -156,7 +154,7 @@ class OpenSaml4AuthenticationProviderUaaTests {
     private PasswordEncoder passwordEncoder;
 
     private static ScimUser createSamlUser(String username, String zoneId,
-            ScimUserProvisioning userProvisioning) {
+                                           ScimUserProvisioning userProvisioning) {
         ScimUser user = new ScimUser("", username, "Marissa", "Bloggs");
         user.setPrimaryEmail(TEST_EMAIL);
         user.setOrigin(OriginKeys.SAML);
@@ -283,7 +281,7 @@ class OpenSaml4AuthenticationProviderUaaTests {
     }
 
     @Test
-    void testAuthenticateSimple() {
+    void authenticateSimple() {
         assertThat(authenticate()).isNotNull();
     }
 
@@ -321,7 +319,7 @@ class OpenSaml4AuthenticationProviderUaaTests {
     }
 
     @Test
-    void testAuthenticationEvents() {
+    void authenticationEvents() {
         authenticate();
         assertThat(publisher.events).hasSize(3);
         assertThat(publisher.events.get(2)).isInstanceOf(IdentityProviderAuthenticationSuccessEvent.class);
@@ -348,11 +346,11 @@ class OpenSaml4AuthenticationProviderUaaTests {
         UaaAuthentication authentication = authenticate();
         assertThat(authentication.getAuthorities()).
                 containsExactlyInAnyOrder(
-                new SimpleGrantedAuthority(UAA_SAML_ADMIN),
-                new SimpleGrantedAuthority(UAA_SAML_USER),
-                new SimpleGrantedAuthority(UAA_SAML_TEST),
-                new SimpleGrantedAuthority(UaaAuthority.UAA_USER.getAuthority())
-        );
+                        new SimpleGrantedAuthority(UAA_SAML_ADMIN),
+                        new SimpleGrantedAuthority(UAA_SAML_USER),
+                        new SimpleGrantedAuthority(UAA_SAML_TEST),
+                        new SimpleGrantedAuthority(UaaAuthority.UAA_USER.getAuthority())
+                );
     }
 
     @Test
@@ -466,7 +464,7 @@ class OpenSaml4AuthenticationProviderUaaTests {
         providerProvisioning.update(provider, identityZoneManager.getCurrentIdentityZone().getId());
 
         UaaAuthentication authentication = authenticate();
-        assertEquals(Collections.singleton(SAML_ADMIN), authentication.getExternalGroups());
+        assertThat(authentication.getExternalGroups()).isEqualTo(Collections.singleton(SAML_ADMIN));
     }
 
     @Test
@@ -530,10 +528,10 @@ class OpenSaml4AuthenticationProviderUaaTests {
     }
 
     private Map<String, String> getUserAttributes(String firstName,
-            String lastName,
-            String emailAddress,
-            String phoneNumber,
-            Boolean emailVerified) {
+                                                  String lastName,
+                                                  String emailAddress,
+                                                  String phoneNumber,
+                                                  Boolean emailVerified) {
         Map<String, String> attributes = new HashMap<>();
         attributes.put("firstName", firstName);
         attributes.put("lastName", lastName);
@@ -587,8 +585,8 @@ class OpenSaml4AuthenticationProviderUaaTests {
         authenticate();
 
         UaaUser originalUser = userDatabase.retrieveUserByEmail(TEST_EMAIL, OriginKeys.SAML);
-        assertNotNull(originalUser);
-        assertEquals(TEST_USERNAME, originalUser.getUsername());
+        assertThat(originalUser).isNotNull();
+        assertThat(originalUser.getUsername()).isEqualTo(TEST_USERNAME);
 
         LinkedMultiValueMap<String, String> attributes = new LinkedMultiValueMap<>();
         attributes.add(GIVEN_NAME_ATTRIBUTE_NAME, "Marissa");
@@ -602,8 +600,8 @@ class OpenSaml4AuthenticationProviderUaaTests {
 
         UaaUser user = samlUaaAuthenticationUserManager.createIfMissing(samlPrincipal, false, new ArrayList<SimpleGrantedAuthority>(), attributes);
 
-        assertNotNull(user);
-        assertEquals("test-changed@saml.user", user.getUsername());
+        assertThat(user).isNotNull();
+        assertThat(user.getUsername()).isEqualTo("test-changed@saml.user");
     }
 
     @Test

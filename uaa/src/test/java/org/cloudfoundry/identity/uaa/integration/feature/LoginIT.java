@@ -23,7 +23,6 @@ import org.cloudfoundry.identity.uaa.zone.BrandingInformation.Banner;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneConfiguration;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneHolder;
 import org.hamcrest.MatcherAssert;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -51,17 +50,10 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils.doesSupportZoneDNS;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.startsWith;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpMethod.POST;
 
@@ -91,7 +83,7 @@ public class LoginIT {
 
     @BeforeEach
     @AfterEach
-    public void logout_and_clear_cookies() {
+    void logout_and_clear_cookies() {
         try {
             webDriver.get(baseUrl + "/logout.do");
         } catch (org.openqa.selenium.TimeoutException x) {
@@ -102,7 +94,7 @@ public class LoginIT {
     }
 
     @Test
-    public void check_JSESSIONID_and_Current_User_Cookies_defaults() {
+    void check_JSESSIONID_and_Current_User_Cookies_defaults() {
         RestTemplate template = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         List<String> cookies;
@@ -138,19 +130,19 @@ public class LoginIT {
         for (String cookie : loginResponse.getHeaders().get("Set-Cookie")) {
             if (cookie.contains("JSESSIONID")) {
                 jsessionIdValidated = true;
-                assertTrue(cookie.contains("HttpOnly"));
-                assertTrue(cookie.contains("SameSite=None"));
-                assertTrue(cookie.contains("Secure"));
+                assertThat(cookie.contains("HttpOnly")).isTrue();
+                assertThat(cookie.contains("SameSite=None")).isTrue();
+                assertThat(cookie.contains("Secure")).isTrue();
             }
             if (cookie.contains("Current-User")) {
-                assertTrue(cookie.contains("SameSite=Strict"));
+                assertThat(cookie.contains("SameSite=Strict")).isTrue();
             }
         }
-        assertTrue(jsessionIdValidated, "Did not find JSESSIONID");
+        assertThat(jsessionIdValidated).as("Did not find JSESSIONID").isTrue();
     }
 
     @Test
-    public void testBannerFunctionalityInDiscoveryPage() {
+    void bannerFunctionalityInDiscoveryPage() {
         String zoneId = "testzone3";
 
         RestTemplate identityClient = IntegrationTestUtils.getClientCredentialsTemplate(
@@ -170,9 +162,9 @@ public class LoginIT {
         webDriver.get(zoneUrl);
         webDriver.manage().deleteAllCookies();
         webDriver.navigate().refresh();
-        assertEquals("test banner", webDriver.findElement(By.cssSelector(".banner-header span")).getText());
-        assertEquals("rgba(68, 68, 68, 1)", webDriver.findElement(By.cssSelector(".banner-header")).getCssValue("background-color"));
-        assertEquals("rgba(17, 17, 17, 1)", webDriver.findElement(By.cssSelector(".banner-header span")).getCssValue("color"));
+        assertThat(webDriver.findElement(By.cssSelector(".banner-header span")).getText()).isEqualTo("test banner");
+        assertThat(webDriver.findElement(By.cssSelector(".banner-header")).getCssValue("background-color")).isEqualTo("rgba(68, 68, 68, 1)");
+        assertThat(webDriver.findElement(By.cssSelector(".banner-header span")).getCssValue("color")).isEqualTo("rgba(17, 17, 17, 1)");
 
         String base64Val = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAATBJREFUeNqk008og3Ecx/HNnrJSu63kIC5qKRe7KeUiOSulTHJUTrsr0y5ycFaEgyQXElvt5KDYwU0uO2hSUy4KoR7v7/qsfmjPHvzq1e/XU8/39/3zPFHf9yP/WV7jED24nGRbxDFWUAsToM05zyKFLG60d/wmQBxWzwyOlMU1phELEyCmtPeRQRoVbKOM0VYB6q0QW+3IYQpJFFDEYFCAiMqwNY857Ko3SxjGBTbRXb+xMUamcMbWh148YwJvOHSCdyqTAdxZo72ADGwKT98C9CChcxUPQSVYLz50toae4Fy9WcAISl7AiN/RhS1N5RV5rOLxx5eom90pvGAI/VjHMm6bfspK18a1gXvsqM41XDVL052C1Tim56cYd/rR+mdSrXGluxfm5S8Z/HV9CjAAvQZLXoa5mpgAAAAASUVORK5CYII=";
         banner.setLogo(base64Val);
@@ -180,12 +172,12 @@ public class LoginIT {
         IntegrationTestUtils.createZoneOrUpdateSubdomain(identityClient, baseUrl, zoneId, zoneId, config);
         webDriver.get(zoneUrl);
 
-        assertEquals("data:image/png;base64," + base64Val, webDriver.findElement(By.cssSelector(".banner-header img")).getAttribute("src"));
-        assertEquals(2, webDriver.findElement(By.cssSelector(".banner-header")).findElements(By.xpath(".//*")).size());
+        assertThat(webDriver.findElement(By.cssSelector(".banner-header img")).getAttribute("src")).isEqualTo("data:image/png;base64," + base64Val);
+        assertThat(webDriver.findElement(By.cssSelector(".banner-header")).findElements(By.xpath(".//*")).size()).isEqualTo(2);
     }
 
     @Test
-    public void testBannerBackgroundIsHiddenIfNoTextOrImage() {
+    void bannerBackgroundIsHiddenIfNoTextOrImage() {
         String zoneId = "testzone3";
 
         RestTemplate identityClient = IntegrationTestUtils.getClientCredentialsTemplate(
@@ -205,69 +197,69 @@ public class LoginIT {
         webDriver.get(zoneUrl);
         webDriver.manage().deleteAllCookies();
         webDriver.navigate().refresh();
-        assertEquals(0, webDriver.findElements(By.cssSelector(".banner-header")).size());
+        assertThat(webDriver.findElements(By.cssSelector(".banner-header")).size()).isEqualTo(0);
     }
 
     @Test
-    public void testSuccessfulLoginNewUser() {
+    void successfulLoginNewUser() {
         String newUserEmail = createAnotherUser();
         webDriver.get(baseUrl + "/logout.do");
         webDriver.get(baseUrl + "/login");
-        assertEquals("Cloud Foundry", webDriver.getTitle());
+        assertThat(webDriver.getTitle()).isEqualTo("Cloud Foundry");
         attemptLogin(newUserEmail, USER_PASSWORD);
-        assertThat(webDriver.findElement(By.cssSelector("h1")).getText(), Matchers.containsString("Where to?"));
+        assertThat(webDriver.findElement(By.cssSelector("h1")).getText()).contains("Where to?");
         webDriver.get(baseUrl + "/logout.do");
         attemptLogin(newUserEmail, USER_PASSWORD);
 
-        assertNotNull(webDriver.findElement(By.cssSelector("#last_login_time")));
+        assertThat(webDriver.findElement(By.cssSelector("#last_login_time"))).isNotNull();
         String lastLoginDate = webDriver.findElement(By.cssSelector("#last_login_time")).getAttribute("innerHTML");
-        assertFalse(lastLoginDate.isEmpty());
+        assertThat(lastLoginDate.isEmpty()).isFalse();
 
         IntegrationTestUtils.validateAccountChooserCookie(baseUrl, webDriver, IdentityZoneHolder.get());
     }
 
     @Test
-    public void testLoginHint() {
+    void loginHint() {
         String newUserEmail = createAnotherUser();
         webDriver.get(baseUrl + "/logout.do");
         String ldapLoginHint = URLEncoder.encode("{\"origin\":\"ldap\"}", StandardCharsets.UTF_8);
         webDriver.get(baseUrl + "/login?login_hint=" + ldapLoginHint);
-        assertEquals("Cloud Foundry", webDriver.getTitle());
-        assertThat(webDriver.getPageSource(), not(containsString("or sign in with:")));
+        assertThat(webDriver.getTitle()).isEqualTo("Cloud Foundry");
+        assertThat(webDriver.getPageSource()).doesNotContain("or sign in with:");
         attemptLogin(newUserEmail, USER_PASSWORD);
-        assertThat(webDriver.findElement(By.className("alert-error")).getText(), containsString("Provided credentials are invalid. Please try again."));
+        assertThat(webDriver.findElement(By.className("alert-error")).getText()).contains("Provided credentials are invalid. Please try again.");
 
         String uaaLoginHint = URLEncoder.encode("{\"origin\":\"uaa\"}", StandardCharsets.UTF_8);
         webDriver.get(baseUrl + "/login?login_hint=" + uaaLoginHint);
-        assertEquals("Cloud Foundry", webDriver.getTitle());
-        assertThat(webDriver.getPageSource(), not(containsString("or sign in with:")));
+        assertThat(webDriver.getTitle()).isEqualTo("Cloud Foundry");
+        assertThat(webDriver.getPageSource()).doesNotContain("or sign in with:");
         attemptLogin(newUserEmail, USER_PASSWORD);
-        assertThat(webDriver.findElement(By.cssSelector("h1")).getText(), Matchers.containsString("Where to?"));
+        assertThat(webDriver.findElement(By.cssSelector("h1")).getText()).contains("Where to?");
         webDriver.get(baseUrl + "/logout.do");
     }
 
     @Test
-    public void testNoZoneFound() {
-        assertTrue(doesSupportZoneDNS(), "Expected testzone1/2/3/4/doesnotexist.localhost to resolve to 127.0.0.1");
+    void noZoneFound() {
+        assertThat(doesSupportZoneDNS()).as("Expected testzone1/2/3/4/doesnotexist.localhost to resolve to 127.0.0.1").isTrue();
         webDriver.get(baseUrl.replace("localhost", "testzonedoesnotexist.localhost") + "/login");
-        assertEquals("The subdomain does not map to a valid identity zone.", webDriver.findElement(By.tagName("p")).getText());
+        assertThat(webDriver.findElement(By.tagName("p")).getText()).isEqualTo("The subdomain does not map to a valid identity zone.");
     }
 
     @Test
-    public void testAutocompleteIsDisabledForPasswordField() {
+    void autocompleteIsDisabledForPasswordField() {
         webDriver.get(baseUrl + "/login");
         WebElement password = webDriver.findElement(By.name("password"));
-        assertEquals("off", password.getAttribute("autocomplete"));
+        assertThat(password.getAttribute("autocomplete")).isEqualTo("off");
     }
 
     @Test
-    public void testPasscodeRedirect() {
+    void passcodeRedirect() {
         webDriver.get(baseUrl + "/passcode");
-        assertEquals("Cloud Foundry", webDriver.getTitle());
+        assertThat(webDriver.getTitle()).isEqualTo("Cloud Foundry");
 
         attemptLogin(testAccounts.getUserName(), testAccounts.getPassword());
 
-        assertThat(webDriver.findElement(By.cssSelector("h1")).getText(), Matchers.containsString("Temporary Authentication Code"));
+        assertThat(webDriver.findElement(By.cssSelector("h1")).getText()).contains("Temporary Authentication Code");
 
         // Verify that the CopyToClipboard function can be executed
         String passcode = webDriver.findElement(By.id("passcode")).getText();
@@ -278,17 +270,17 @@ public class LoginIT {
     }
 
     @Test
-    public void testUnsuccessfulLogin() {
+    void unsuccessfulLogin() {
         webDriver.get(baseUrl + "/login");
-        assertEquals("Cloud Foundry", webDriver.getTitle());
+        assertThat(webDriver.getTitle()).isEqualTo("Cloud Foundry");
 
         attemptLogin(testAccounts.getUserName(), "invalidpassword");
 
-        assertThat(webDriver.findElement(By.cssSelector("h1")).getText(), Matchers.containsString("Welcome!"));
+        assertThat(webDriver.findElement(By.cssSelector("h1")).getText()).contains("Welcome!");
     }
 
     @Test
-    public void testAccessDeniedIfCsrfIsMissing() {
+    void accessDeniedIfCsrfIsMissing() {
         RestTemplate template = new RestTemplate();
         template.setErrorHandler(new ResponseErrorHandler() {
             @Override
@@ -310,21 +302,21 @@ public class LoginIT {
                 HttpMethod.POST,
                 new HttpEntity<>(body, headers),
                 String.class);
-        assertEquals(HttpStatus.FOUND, loginResponse.getStatusCode());
-        assertTrue(loginResponse.getHeaders().getFirst("Location").contains("invalid_login_request"), "CSRF message should be shown");
+        assertThat(loginResponse.getStatusCode()).isEqualTo(HttpStatus.FOUND);
+        assertThat(loginResponse.getHeaders().getFirst("Location").contains("invalid_login_request")).as("CSRF message should be shown").isTrue();
     }
 
     @Test
-    public void testCsrfIsResetDuringLoginPageReload() {
+    void csrfIsResetDuringLoginPageReload() {
         webDriver.get(baseUrl + "/login");
         String csrf1 = webDriver.manage().getCookieNamed(CookieBasedCsrfTokenRepository.DEFAULT_CSRF_COOKIE_NAME).getValue();
         webDriver.get(baseUrl + "/login");
         String csrf2 = webDriver.manage().getCookieNamed(CookieBasedCsrfTokenRepository.DEFAULT_CSRF_COOKIE_NAME).getValue();
-        assertNotEquals(csrf1, csrf2);
+        assertThat(csrf2).isNotEqualTo(csrf1);
     }
 
     @Test
-    public void testRedirectAfterUnsuccessfulLogin() {
+    void redirectAfterUnsuccessfulLogin() {
         RestTemplate template = new RestTemplate();
 
         HttpHeaders headers = new HttpHeaders();
@@ -348,17 +340,17 @@ public class LoginIT {
                 HttpMethod.POST,
                 new HttpEntity<>(body, headers),
                 String.class);
-        assertEquals(HttpStatus.FOUND, loginResponse.getStatusCode());
+        assertThat(loginResponse.getStatusCode()).isEqualTo(HttpStatus.FOUND);
     }
 
     @Test
-    public void testLoginPageReloadBasedOnCsrf() {
+    void loginPageReloadBasedOnCsrf() {
         webDriver.get(baseUrl + "/login");
-        assertTrue(webDriver.getPageSource().contains("http-equiv=\"refresh\""));
+        assertThat(webDriver.getPageSource().contains("http-equiv=\"refresh\"")).isTrue();
     }
 
     @Test
-    public void userLockedoutAfterUnsuccessfulAttempts() {
+    void userLockedoutAfterUnsuccessfulAttempts() {
         String userEmail = createAnotherUser();
 
         webDriver.get(baseUrl + "/logout.do");
@@ -369,7 +361,7 @@ public class LoginIT {
         }
 
         attemptLogin(userEmail, USER_PASSWORD);
-        assertThat(webDriver.findElement(By.cssSelector(".alert-error")).getText(), Matchers.containsString("Your account has been locked because of too many failed attempts to login."));
+        assertThat(webDriver.findElement(By.cssSelector(".alert-error")).getText()).contains("Your account has been locked because of too many failed attempts to login.");
     }
 
     public void attemptLogin(String username, String password) {
@@ -379,15 +371,15 @@ public class LoginIT {
     }
 
     @Test
-    public void testBuildInfo() {
+    void buildInfo() {
         webDriver.get(baseUrl + "/login");
 
         String regex = "Version: \\S+, Commit: \\w{7}, Timestamp: .+, UAA: " + baseUrl;
-        assertTrue(webDriver.findElement(By.cssSelector(".footer .copyright")).getAttribute("title").matches(regex));
+        assertThat(webDriver.findElement(By.cssSelector(".footer .copyright")).getAttribute("title").matches(regex)).isTrue();
     }
 
     @Test
-    public void testAccountChooserManualLogin() {
+    void accountChooserManualLogin() {
         String zoneUrl = createDiscoveryZone();
 
         String userEmail = createAnotherUser(zoneUrl);
@@ -399,15 +391,15 @@ public class LoginIT {
         webDriver.get(zoneUrl + "/logout.do");
 
         webDriver.get(zoneUrl);
-        assertEquals("Sign in to another account", webDriver.findElement(By.cssSelector("div.action a")).getText());
+        assertThat(webDriver.findElement(By.cssSelector("div.action a")).getText()).isEqualTo("Sign in to another account");
         webDriver.findElement(By.cssSelector("div.action a")).click();
 
         loginThroughDiscovery(userEmail, USER_PASSWORD);
-        assertEquals("Where to?", webDriver.findElement(By.cssSelector(".island h1")).getText());
+        assertThat(webDriver.findElement(By.cssSelector(".island h1")).getText()).isEqualTo("Where to?");
     }
 
     @Test
-    public void testAccountChooserFlow() {
+    void accountChooserFlow() {
         String zoneUrl = createDiscoveryZone();
 
         String userEmail = createAnotherUser(zoneUrl);
@@ -418,19 +410,19 @@ public class LoginIT {
         webDriver.get(zoneUrl + "/logout.do");
 
         webDriver.get(zoneUrl);
-        assertThat(webDriver.findElement(By.className("email-address")).getText(), startsWith(userEmail));
-        assertThat(webDriver.findElement(By.className("email-address")).getText(), containsString(OriginKeys.UAA));
+        assertThat(webDriver.findElement(By.className("email-address")).getText()).startsWith(userEmail);
+        assertThat(webDriver.findElement(By.className("email-address")).getText()).contains(OriginKeys.UAA);
         webDriver.findElement(By.className("email-address")).click();
 
-        assertEquals(userEmail, webDriver.findElement(By.id("username")).getAttribute("value"));
-        assertThat(webDriver.getCurrentUrl(), containsString("login_hint"));
+        assertThat(webDriver.findElement(By.id("username")).getAttribute("value")).isEqualTo(userEmail);
+        assertThat(webDriver.getCurrentUrl()).contains("login_hint");
         webDriver.findElement(By.id("password")).sendKeys(USER_PASSWORD);
         webDriver.findElement(By.xpath("//input[@value='Sign in']")).click();
-        assertEquals("Where to?", webDriver.findElement(By.cssSelector(".island h1")).getText());
+        assertThat(webDriver.findElement(By.cssSelector(".island h1")).getText()).isEqualTo("Where to?");
     }
 
     @Test
-    public void testAccountChooserPopulatesUsernameNotEmailWhenOriginIsUAAorLDAP() throws Exception {
+    void accountChooserPopulatesUsernameNotEmailWhenOriginIsUAAorLDAP() throws Exception {
         String userUAA = "{\"userId\":\"1\",\"username\":\"userUAA\",\"origin\":\"uaa\",\"email\":\"user@uaa.org\"}";
         String userLDAP = "{\"userId\":\"2\",\"username\":\"userLDAP\",\"origin\":\"ldap\",\"email\":\"user@ldap.org\"}";
         String userExternal = "{\"userId\":\"3\",\"username\":\"userExternal\",\"origin\":\"external\",\"email\":\"user@external.org\"}";
@@ -445,24 +437,24 @@ public class LoginIT {
         js.executeScript("document.cookie = \"Saved-Account-3=" + URLEncoder.encode(userExternal, StandardCharsets.UTF_8.name()) + ";path=/;domain=testzone3.localhost\"");
 
         webDriver.navigate().refresh();
-        assertEquals(3, webDriver.findElements(By.cssSelector("span.email-address")).size());
+        assertThat(webDriver.findElements(By.cssSelector("span.email-address")).size()).isEqualTo(3);
 
         webDriver.findElement(By.xpath("//span[contains(text(), 'userUAA')]")).click();
-        assertEquals("userUAA", webDriver.findElement(By.id("username")).getAttribute("value"));
+        assertThat(webDriver.findElement(By.id("username")).getAttribute("value")).isEqualTo("userUAA");
         webDriver.navigate().back();
 
         webDriver.findElement(By.xpath("//span[contains(text(), 'userLDAP')]")).click();
-        assertEquals("userLDAP", webDriver.findElement(By.id("username")).getAttribute("value"));
+        assertThat(webDriver.findElement(By.id("username")).getAttribute("value")).isEqualTo("userLDAP");
         webDriver.navigate().back();
 
         webDriver.findElement(By.xpath("//span[contains(text(), 'userExternal')]")).click();
-        assertEquals("user@external.org", webDriver.findElement(By.id("username")).getAttribute("value"));
+        assertThat(webDriver.findElement(By.id("username")).getAttribute("value")).isEqualTo("user@external.org");
 
         webDriver.manage().deleteAllCookies();
     }
 
     @Test
-    public void testLoginReloadRetainsFormRedirect() {
+    void loginReloadRetainsFormRedirect() {
 
         String redirectUri = "http://expected.com";
         webDriver.get(baseUrl + "/oauth/authorize?client_id=test&redirect_uri=" + redirectUri);
@@ -471,8 +463,8 @@ public class LoginIT {
 
         webDriver.findElement(By.xpath("//input[@value='Sign in']")).click();
 
-        assertThat(webDriver.getCurrentUrl(), Matchers.containsString("/login"));
-        assertThat(webDriver.findElement(By.name("form_redirect_uri")).getAttribute("value"), Matchers.containsString("redirect_uri=" + redirectUri));
+        assertThat(webDriver.getCurrentUrl()).contains("/login");
+        assertThat(webDriver.findElement(By.name("form_redirect_uri")).getAttribute("value")).contains("redirect_uri=" + redirectUri);
 
     }
 

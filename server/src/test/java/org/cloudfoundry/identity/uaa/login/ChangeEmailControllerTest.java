@@ -12,7 +12,6 @@ import org.cloudfoundry.identity.uaa.user.UaaAuthority;
 import org.cloudfoundry.identity.uaa.user.UaaUser;
 import org.cloudfoundry.identity.uaa.user.UaaUserDatabase;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneHolder;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,7 +41,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -79,7 +78,7 @@ class ChangeEmailControllerTest {
     }
 
     @Test
-    void testChangeEmailPage() throws Exception {
+    void changeEmailPage() throws Exception {
         setupSecurityContext();
 
         mockMvc.perform(get("/change_email").param("client_id", "client-id").param("redirect_uri", "http://example.com/redirect"))
@@ -93,7 +92,7 @@ class ChangeEmailControllerTest {
     }
 
     @Test
-    void testChangeEmail() throws Exception {
+    void changeEmail() throws Exception {
         setupSecurityContext();
 
         MockHttpServletRequestBuilder post = post("/change_email.do")
@@ -109,7 +108,7 @@ class ChangeEmailControllerTest {
     }
 
     @Test
-    void testChangeEmailWithClientIdAndRedirectUri() throws Exception {
+    void changeEmailWithClientIdAndRedirectUri() throws Exception {
         setupSecurityContext();
 
         MockHttpServletRequestBuilder post = post("/change_email.do")
@@ -126,7 +125,7 @@ class ChangeEmailControllerTest {
     }
 
     @Test
-    void testChangeEmailWithUsernameConflict() throws Exception {
+    void changeEmailWithUsernameConflict() throws Exception {
         setupSecurityContext();
 
         doThrow(new UaaException("username already exists", 409)).when(changeEmailService).beginEmailChange("user-id-001", "bob", "new@example.com", "", null);
@@ -144,7 +143,7 @@ class ChangeEmailControllerTest {
     }
 
     @Test
-    void testNonUAAOriginUser() throws Exception {
+    void nonUAAOriginUser() throws Exception {
         Authentication authentication = new UaaAuthentication(
                 new UaaPrincipal("user-id-001", "bob", "user@example.com", "NON-UAA-origin ", null, IdentityZoneHolder.get().getId()),
                 Collections.singletonList(UaaAuthority.UAA_USER),
@@ -165,7 +164,7 @@ class ChangeEmailControllerTest {
     }
 
     @Test
-    void testInvalidEmail() throws Exception {
+    void invalidEmail() throws Exception {
         setupSecurityContext();
 
         MockHttpServletRequestBuilder post = post("/change_email.do")
@@ -181,7 +180,7 @@ class ChangeEmailControllerTest {
     }
 
     @Test
-    void testVerifyEmail() throws Exception {
+    void verifyEmail() throws Exception {
         UaaUser user = new UaaUser("user-id-001", "new@example.com", "password", "new@example.com", Collections.<GrantedAuthority>emptyList(), "name", "name", null, null, OriginKeys.UAA, null, true, IdentityZoneHolder.get().getId(), "user-id-001", null);
         when(uaaUserDatabase.retrieveUserById(anyString())).thenReturn(user);
 
@@ -201,7 +200,7 @@ class ChangeEmailControllerTest {
     }
 
     @Test
-    void testVerifyEmailWhenAuthenticated() throws Exception {
+    void verifyEmailWhenAuthenticated() throws Exception {
         UaaUser user = new UaaUser("user-id-001", "new@example.com", "password", "new@example.com", Collections.<GrantedAuthority>emptyList(), "name", "name", null, null, OriginKeys.UAA, null, true, IdentityZoneHolder.get().getId(), "user-id-001", null);
         when(uaaUserDatabase.retrieveUserById(anyString())).thenReturn(user);
 
@@ -222,13 +221,13 @@ class ChangeEmailControllerTest {
                 .andExpect(redirectedUrl("profile?success_message_code=email_change.success"));
 
         UaaPrincipal principal = (UaaPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Assertions.assertEquals("user-id-001", principal.getId());
-        Assertions.assertEquals("new@example.com", principal.getName());
-        Assertions.assertEquals("new@example.com", principal.getEmail());
+        assertThat(principal.getId()).isEqualTo("user-id-001");
+        assertThat(principal.getName()).isEqualTo("new@example.com");
+        assertThat(principal.getEmail()).isEqualTo("new@example.com");
     }
 
     @Test
-    void testVerifyEmailWithRedirectUrl() throws Exception {
+    void verifyEmailWithRedirectUrl() throws Exception {
         UaaUser user = new UaaUser("user-id-001", "new@example.com", "password", "new@example.com", Collections.<GrantedAuthority>emptyList(), "name", "name", null, null, OriginKeys.UAA, null, true, IdentityZoneHolder.get().getId(), "user-id-001", null);
         when(uaaUserDatabase.retrieveUserById(anyString())).thenReturn(user);
 
@@ -249,7 +248,7 @@ class ChangeEmailControllerTest {
     }
 
     @Test
-    void testVerifyEmailWithRedirectWhenAuthenticated() throws Exception {
+    void verifyEmailWithRedirectWhenAuthenticated() throws Exception {
         UaaUser user = new UaaUser("user-id-001", "new@example.com", "password", "new@example.com", Collections.<GrantedAuthority>emptyList(), "name", "name", null, null, OriginKeys.UAA, null, true, IdentityZoneHolder.get().getId(), "user-id-001", null);
         when(uaaUserDatabase.retrieveUserById(anyString())).thenReturn(user);
 
@@ -271,14 +270,14 @@ class ChangeEmailControllerTest {
                 .andExpect(redirectedUrl("//example.com/callback"));
 
         UaaPrincipal principal = (UaaPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Assertions.assertEquals("user-id-001", principal.getId());
-        Assertions.assertEquals("new@example.com", principal.getName());
-        Assertions.assertEquals("new@example.com", principal.getEmail());
+        assertThat(principal.getId()).isEqualTo("user-id-001");
+        assertThat(principal.getName()).isEqualTo("new@example.com");
+        assertThat(principal.getEmail()).isEqualTo("new@example.com");
 
     }
 
     @Test
-    void testVerifyEmailWithInvalidCode() throws Exception {
+    void verifyEmailWithInvalidCode() throws Exception {
         Authentication authentication = new AnonymousAuthenticationToken(
                 "anon",
                 "anonymousUser",
@@ -303,7 +302,7 @@ class ChangeEmailControllerTest {
     }
 
     @Test
-    void testVerifyEmailWhenAutheticatedAsOtherUser() throws Exception {
+    void verifyEmailWhenAutheticatedAsOtherUser() throws Exception {
         UaaUser user = new UaaUser("user-id-002", "new2@example.com", "password", "new2@example.com", Collections.<GrantedAuthority>emptyList(), "name", "name", null, null, OriginKeys.UAA, null, true, IdentityZoneHolder.get().getId(), "user-id-002", null);
         when(uaaUserDatabase.retrieveUserById(anyString())).thenReturn(user);
 
@@ -324,13 +323,13 @@ class ChangeEmailControllerTest {
                 .andExpect(redirectedUrl("profile?success_message_code=email_change.success"));
 
         UaaPrincipal principal = (UaaPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Assertions.assertEquals("user-id-001", principal.getId());
-        Assertions.assertEquals("bob", principal.getName());
-        Assertions.assertEquals("user@example.com", principal.getEmail());
+        assertThat(principal.getId()).isEqualTo("user-id-001");
+        assertThat(principal.getName()).isEqualTo("bob");
+        assertThat(principal.getEmail()).isEqualTo("user@example.com");
     }
 
     @Test
-    void testVerifyEmailDoesNotDeleteAuthenticationMethods() throws Exception {
+    void verifyEmailDoesNotDeleteAuthenticationMethods() throws Exception {
         UaaUser user = new UaaUser("user-id-001", "new@example.com", "password", "new@example.com", Collections.<GrantedAuthority>emptyList(), "name", "name", null, null, OriginKeys.UAA, null, true, IdentityZoneHolder.get().getId(), "user-id-001", null);
         when(uaaUserDatabase.retrieveUserById(anyString())).thenReturn(user);
 
@@ -353,14 +352,14 @@ class ChangeEmailControllerTest {
                 .andExpect(redirectedUrl("profile?success_message_code=email_change.success"));
 
         UaaPrincipal principal = (UaaPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Assertions.assertEquals("user-id-001", principal.getId());
-        Assertions.assertEquals("new@example.com", principal.getName());
-        Assertions.assertEquals("new@example.com", principal.getEmail());
+        assertThat(principal.getId()).isEqualTo("user-id-001");
+        assertThat(principal.getName()).isEqualTo("new@example.com");
+        assertThat(principal.getEmail()).isEqualTo("new@example.com");
 
         authentication = (UaaAuthentication) SecurityContextHolder.getContext().getAuthentication();
-        assertNotNull(authentication.getAuthenticationMethods());
-        Assertions.assertTrue(authentication.getAuthenticationMethods().contains("pwd"));
-        Assertions.assertEquals(1, authentication.getAuthenticationMethods().size());
+        assertThat(authentication.getAuthenticationMethods()).isNotNull();
+        assertThat(authentication.getAuthenticationMethods().contains("pwd")).isTrue();
+        assertThat(authentication.getAuthenticationMethods().size()).isEqualTo(1);
     }
 
     private void setupSecurityContext() {

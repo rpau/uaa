@@ -14,7 +14,7 @@ import java.sql.ResultSet;
 import java.util.Arrays;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @WithDatabaseContext
 class OauthCodeIndexTest {
@@ -45,7 +45,7 @@ class OauthCodeIndexTest {
             try (
                     Connection connection = dataSource.getConnection();
                     ResultSet rs = connection.getMetaData().getIndexInfo(connection.getCatalog(), null, tableName, unique, true)
-                    ) {
+            ) {
                 while (!found && rs.next()) {
                     found = indexName.equalsIgnoreCase(rs.getString("INDEX_NAME"));
                 }
@@ -55,7 +55,7 @@ class OauthCodeIndexTest {
             }
         }
 
-        assertTrue(found, "Expected to find index %s.%s".formatted(uncasedTableName, indexName));
+        assertThat(found).as("Expected to find index %s.%s".formatted(uncasedTableName, indexName)).isTrue();
     }
 
 }

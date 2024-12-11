@@ -3,12 +3,12 @@ package org.cloudfoundry.identity.uaa.oauth.client;
 import org.cloudfoundry.identity.uaa.util.JsonUtils;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class ClientJwtChangeRequestTest {
 
     @Test
-    void testRequestSerialization() {
+    void requestSerialization() {
         ClientJwtChangeRequest def = new ClientJwtChangeRequest(null, null, null);
         def.setKeyId("key-1");
         def.setChangeMode(ClientJwtChangeRequest.ChangeMode.DELETE);
@@ -17,7 +17,7 @@ class ClientJwtChangeRequestTest {
         def.setClientId("admin");
         String jsonRequest = JsonUtils.writeValueAsString(def);
         ClientJwtChangeRequest request = JsonUtils.readValue(jsonRequest, ClientJwtChangeRequest.class);
-        assertNotEquals(def, request);
+        assertThat(request).isNotEqualTo(def);
     }
 
 }

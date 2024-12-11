@@ -36,16 +36,16 @@ import java.io.File;
 import java.net.URL;
 import java.util.Collections;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils.CookieCsrfPostProcessor.cookieCsrf;
 import static org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils.createOtherIdentityZoneAndReturnResult;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.springframework.http.MediaType.TEXT_HTML;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @DefaultTestContext
 @DirtiesContext
-public class LoginPagePerformanceMockMvcTest {
+class LoginPagePerformanceMockMvcTest {
 
     private WebApplicationContext webApplicationContext;
 
@@ -72,7 +72,7 @@ public class LoginPagePerformanceMockMvcTest {
 
         originalLimitedModeStatusFile = MockMvcUtils.getLimitedModeStatusFile(webApplicationContext);
         MockMvcUtils.resetLimitedModeStatusFile(webApplicationContext, null);
-        assertFalse(limitedModeUaaFilter.isEnabled());
+        assertThat(limitedModeUaaFilter.isEnabled()).isFalse();
     }
 
     @AfterEach

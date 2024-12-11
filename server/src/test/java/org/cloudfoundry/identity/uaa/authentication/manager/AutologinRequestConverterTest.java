@@ -15,7 +15,7 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -46,20 +46,20 @@ class AutologinRequestConverterTest {
     @Test
     void supports() {
         Object newObject = new Object();
-        assertFalse(autologinRequestConverter.supports(newObject.getClass()));
-        assertTrue(autologinRequestConverter.supports(autologinRequest.getClass()));
+        assertThat(autologinRequestConverter.supports(newObject.getClass())).isFalse();
+        assertThat(autologinRequestConverter.supports(autologinRequest.getClass())).isTrue();
     }
 
     @Test
     void isJsonContent() {
-        assertTrue(autologinRequestConverter.isJsonContent(jsonMediaType));
-        assertFalse(autologinRequestConverter.isJsonContent(htmlMediaType));
+        assertThat(autologinRequestConverter.isJsonContent(jsonMediaType)).isTrue();
+        assertThat(autologinRequestConverter.isJsonContent(htmlMediaType)).isFalse();
     }
 
     @Test
     void readInternalNoJson() throws IOException {
         AutologinRequest autologin = autologinRequestConverter.readInternal(autologinRequest.getClass(), inputMessage);
-        assertNotNull(autologin);
+        assertThat(autologin).isNotNull();
     }
 
     @Test
@@ -68,9 +68,9 @@ class AutologinRequestConverterTest {
         when(httpHeaders.get(HttpHeaders.CONTENT_TYPE)).thenReturn(jsonMediaType);
         when(inputMessage.getBody()).thenReturn(inputStream);
         AutologinRequest autologin = autologinRequestConverter.readInternal(autologinRequest.getClass(), inputMessage);
-        assertNotNull(autologin);
-        assertEquals("user", autologin.getUsername());
-        assertEquals("pwd", autologin.getPassword());
+        assertThat(autologin).isNotNull();
+        assertThat(autologin.getUsername()).isEqualTo("user");
+        assertThat(autologin.getPassword()).isEqualTo("pwd");
     }
 
     @Test
@@ -78,9 +78,9 @@ class AutologinRequestConverterTest {
         when(httpHeaders.get(HttpHeaders.CONTENT_TYPE)).thenReturn(jsonMediaType);
         when(inputMessage.getBody()).thenReturn(null);
         AutologinRequest autologin = autologinRequestConverter.readInternal(autologinRequest.getClass(), inputMessage);
-        assertNotNull(autologin);
-        assertNull(autologin.getUsername());
-        assertNull(autologin.getPassword());
+        assertThat(autologin).isNotNull();
+        assertThat(autologin.getUsername()).isNull();
+        assertThat(autologin.getPassword()).isNull();
     }
 
     @Test

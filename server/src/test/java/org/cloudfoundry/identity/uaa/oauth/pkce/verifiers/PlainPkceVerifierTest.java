@@ -3,13 +3,12 @@ package org.cloudfoundry.identity.uaa.oauth.pkce.verifiers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Zoltan Maradics
  */
-public class PlainPkceVerifierTest {
+class PlainPkceVerifierTest {
 
     private PlainPkceVerifier plainPkceVerifier;
 
@@ -17,28 +16,28 @@ public class PlainPkceVerifierTest {
     private final String mismatchParameter = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk";
 
     @BeforeEach
-    public void createPlainCodeChallengeMethod() throws Exception {
+    void createPlainCodeChallengeMethod() throws Exception {
         plainPkceVerifier = new PlainPkceVerifier();
     }
 
     @Test
-    public void testCodeVerifierMethodWithMatchParameters() throws Exception {
-        assertTrue(plainPkceVerifier.verify(matchParameter, matchParameter));
+    void codeVerifierMethodWithMatchParameters() throws Exception {
+        assertThat(plainPkceVerifier.verify(matchParameter, matchParameter)).isTrue();
     }
 
     @Test
-    public void testCodeVerifierMethodWithMismatchParameters() throws Exception {
-        assertFalse(plainPkceVerifier.verify(matchParameter, mismatchParameter));
+    void codeVerifierMethodWithMismatchParameters() throws Exception {
+        assertThat(plainPkceVerifier.verify(matchParameter, mismatchParameter)).isFalse();
     }
 
     @Test
-    public void testCodeChallengeIsNull() throws Exception {
-        assertFalse(plainPkceVerifier.verify(matchParameter, null));
+    void codeChallengeIsNull() throws Exception {
+        assertThat(plainPkceVerifier.verify(matchParameter, null)).isFalse();
     }
 
     @Test
-    public void testCodeVerifierIsNull() throws Exception {
-        assertFalse(plainPkceVerifier.verify(null, matchParameter));
+    void codeVerifierIsNull() throws Exception {
+        assertThat(plainPkceVerifier.verify(null, matchParameter)).isFalse();
     }
 
 }

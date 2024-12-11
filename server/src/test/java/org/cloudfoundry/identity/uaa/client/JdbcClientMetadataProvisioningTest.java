@@ -15,15 +15,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.net.URL;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.cloudfoundry.identity.uaa.test.ModelTestUtils.getResourceAsString;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @WithDatabaseContext
 class JdbcClientMetadataProvisioningTest {
@@ -68,8 +63,7 @@ class JdbcClientMetadataProvisioningTest {
                 base64EncodedImg,
                 createdBy);
 
-        assertThrows(EmptyResultDataAccessException.class,
-                () -> jdbcClientMetadataProvisioning.update(clientMetadata, identityZoneId));
+        assertThatExceptionOfType(EmptyResultDataAccessException.class).isThrownBy(() -> jdbcClientMetadataProvisioning.update(clientMetadata, identityZoneId));
     }
 
     /**
@@ -88,7 +82,7 @@ class JdbcClientMetadataProvisioningTest {
                 clientId,
                 identityZoneId);
 
-        assertThat(retrievedClientMetadata.getCreatedBy().length(), is(36));
+        assertThat(retrievedClientMetadata.getCreatedBy()).hasSize(36);
     }
 
     @Test
@@ -105,12 +99,12 @@ class JdbcClientMetadataProvisioningTest {
 
         ClientMetadata retrievedClientMetadata = jdbcClientMetadataProvisioning.retrieve(clientId, identityZoneId);
 
-        assertThat(retrievedClientMetadata.getClientId(), is(clientId));
-        assertThat(retrievedClientMetadata.getIdentityZoneId(), is(identityZoneId));
-        assertThat(retrievedClientMetadata.isShowOnHomePage(), is(true));
-        assertThat(retrievedClientMetadata.getAppLaunchUrl(), is(new URL("http://app.launch/url")));
-        assertThat(retrievedClientMetadata.getAppIcon(), is(base64EncodedImg));
-        assertThat(retrievedClientMetadata.getCreatedBy(), containsString(createdBy));
+        assertThat(retrievedClientMetadata.getClientId()).isEqualTo(clientId);
+        assertThat(retrievedClientMetadata.getIdentityZoneId()).isEqualTo(identityZoneId);
+        assertThat(retrievedClientMetadata.isShowOnHomePage()).isTrue();
+        assertThat(retrievedClientMetadata.getAppLaunchUrl()).isEqualTo(new URL("http://app.launch/url"));
+        assertThat(retrievedClientMetadata.getAppIcon()).isEqualTo(base64EncodedImg);
+        assertThat(retrievedClientMetadata.getCreatedBy()).contains(createdBy);
     }
 
     @Test
@@ -120,16 +114,13 @@ class JdbcClientMetadataProvisioningTest {
         jdbcTemplate.execute(insertIntoOauthClientDetailsWithMetadata(clientId1, "zone1", "createdBy", "appLaunchUrl"));
         jdbcTemplate.execute(insertIntoOauthClientDetailsWithMetadata(clientId2, "zone2", "createdBy", "appLaunchUrl"));
 
-
-        assertDoesNotThrow(
+        assertThatNoException().isThrownBy(
                 () -> jdbcClientMetadataProvisioning.retrieve(clientId1, "zone1"));
-        assertDoesNotThrow(
+        assertThatNoException().isThrownBy(
                 () -> jdbcClientMetadataProvisioning.retrieve(clientId2, "zone2"));
 
-        assertThrows(EmptyResultDataAccessException.class,
-                () -> jdbcClientMetadataProvisioning.retrieve(clientId1, "zone2"));
-        assertThrows(EmptyResultDataAccessException.class,
-                () -> jdbcClientMetadataProvisioning.retrieve(clientId2, "zone1"));
+        assertThatExceptionOfType(EmptyResultDataAccessException.class).isThrownBy(() -> jdbcClientMetadataProvisioning.retrieve(clientId1, "zone2"));
+        assertThatExceptionOfType(EmptyResultDataAccessException.class).isThrownBy(() -> jdbcClientMetadataProvisioning.retrieve(clientId2, "zone1"));
     }
 
     @Test
@@ -147,9 +138,8 @@ class JdbcClientMetadataProvisioningTest {
                 .map(ClientMetadata::getClientId)
                 .toList();
 
-        assertThat(clientIds, hasItem(clientId1));
-        assertThat(clientIds, hasItem(clientId2));
-        assertThat(clientIds, not(hasItem(clientId3)));
+        assertThat(clientIds).contains(clientId1, clientId2)
+                .doesNotContain(clientId3);
     }
 
     @Test
@@ -164,11 +154,11 @@ class JdbcClientMetadataProvisioningTest {
 
         ClientMetadata updatedClientMetadata = jdbcClientMetadataProvisioning.update(newClientMetadata, identityZoneId);
 
-        assertThat(updatedClientMetadata.getClientId(), is(clientId));
-        assertThat(updatedClientMetadata.getIdentityZoneId(), is(identityZoneId));
-        assertThat(updatedClientMetadata.isShowOnHomePage(), is(newClientMetadata.isShowOnHomePage()));
-        assertThat(updatedClientMetadata.getAppLaunchUrl(), is(newClientMetadata.getAppLaunchUrl()));
-        assertThat(updatedClientMetadata.getAppIcon(), is(newClientMetadata.getAppIcon()));
+        assertThat(updatedClientMetadata.getClientId()).isEqualTo(clientId);
+        assertThat(updatedClientMetadata.getIdentityZoneId()).isEqualTo(identityZoneId);
+        assertThat(updatedClientMetadata.isShowOnHomePage()).isEqualTo(newClientMetadata.isShowOnHomePage());
+        assertThat(updatedClientMetadata.getAppLaunchUrl()).isEqualTo(newClientMetadata.getAppLaunchUrl());
+        assertThat(updatedClientMetadata.getAppIcon()).isEqualTo(newClientMetadata.getAppIcon());
     }
 
     @Test
@@ -184,7 +174,7 @@ class JdbcClientMetadataProvisioningTest {
         data.setClientName(clientName);
         jdbcClientMetadataProvisioning.update(data, identityZoneId);
         data = jdbcClientMetadataProvisioning.retrieve(clientId, identityZoneId);
-        assertEquals(clientName, data.getClientName());
+        assertThat(data.getClientName()).isEqualTo(clientName);
     }
 
     private static ClientMetadata createTestClientMetadata(

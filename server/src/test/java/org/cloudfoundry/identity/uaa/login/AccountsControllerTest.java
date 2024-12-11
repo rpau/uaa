@@ -39,7 +39,7 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
 
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -214,7 +214,7 @@ class AccountsControllerTest {
                 .andExpect(status().isFound())
                 .andExpect(redirectedUrl("/login?success=verify_success&form_redirect_uri=//example.com/callback"));
 
-        assertNull(SecurityContextHolder.getContext().getAuthentication());
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
     }
 
     @Test
@@ -229,7 +229,7 @@ class AccountsControllerTest {
                 .andExpect(status().isFound())
                 .andExpect(redirectedUrl("/login?success=verify_success&form_redirect_uri=//example.com/callback"));
 
-        assertNull(SecurityContextHolder.getContext().getAuthentication());
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
         Mockito.verify(accountCreationService, times(1)).completeActivation("the_secret_code");
     }
 

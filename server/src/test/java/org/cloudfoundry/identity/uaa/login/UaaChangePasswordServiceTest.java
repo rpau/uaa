@@ -31,8 +31,8 @@ import java.util.Collections;
 import java.util.List;
 
 import static java.util.Collections.emptyList;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
@@ -46,7 +46,7 @@ class UaaChangePasswordServiceTest {
     private PasswordValidator passwordValidator;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         SecurityContextHolder.clearContext();
         SecurityContextHolder.getContext().setAuthentication(new MockAuthentication());
         scimUserProvisioning = mock(ScimUserProvisioning.class);
@@ -55,23 +55,23 @@ class UaaChangePasswordServiceTest {
     }
 
     @Test
-    void testChangePasswordWithNoCurrentPasswordOrUsername() {
-        assertThrows(BadCredentialsException.class, () ->
+    void changePasswordWithNoCurrentPasswordOrUsername() {
+        assertThatExceptionOfType(BadCredentialsException.class).isThrownBy(() ->
                 subject.changePassword(null, null, "newPassword"));
     }
 
     @Test
-    void testChangePasswordWithInvalidNewPassword() {
+    void changePasswordWithInvalidNewPassword() {
         doThrow(new InvalidPasswordException("")).when(passwordValidator).validate("invPawd");
-        assertThrows(InvalidPasswordException.class, () ->
+        assertThatExceptionOfType(InvalidPasswordException.class).isThrownBy(() ->
                 subject.changePassword("username", "currentPassword", "invPawd"));
     }
 
     @Test
-    void testChangePasswordWithUserNotFound() {
+    void changePasswordWithUserNotFound() {
         String zoneId = IdentityZoneHolder.get().getId();
         when(scimUserProvisioning.query(anyString(), eq(zoneId))).thenReturn(emptyList());
-        assertThrows(ScimResourceNotFoundException.class, () ->
+        assertThatExceptionOfType(ScimResourceNotFoundException.class).isThrownBy(() ->
                 subject.changePassword("username", "currentPassword", "validPassword"));
         verify(passwordValidator).validate("validPassword");
         verify(scimUserProvisioning).retrieveByUsernameAndOriginAndZone(anyString(), eq(OriginKeys.UAA), eq(zoneId));
@@ -87,13 +87,13 @@ class UaaChangePasswordServiceTest {
         ).thenReturn(results);
 
         when(scimUserProvisioning.checkPasswordMatches("id", "samePassword1", IdentityZoneHolder.get().getId())).thenReturn(true);
-        InvalidPasswordException e = assertThrows(InvalidPasswordException.class, () ->
-                subject.changePassword("username", "samePassword1", "samePassword1"));
-        assertEquals("Your new password cannot be the same as the old password.", e.getLocalizedMessage());
+        assertThatThrownBy(() -> subject.changePassword("username", "samePassword1", "samePassword1"))
+                .isInstanceOf(InvalidPasswordException.class)
+                .hasMessage("Your new password cannot be the same as the old password.");
     }
 
     @Test
-    public void testChangePassword() {
+    void changePassword() {
         List<ScimUser> results = getScimUsers();
         String zoneId = IdentityZoneHolder.get().getId();
         when(scimUserProvisioning.retrieveByUsernameAndOriginAndZone(anyString(), eq(OriginKeys.UAA), eq(zoneId))).thenReturn(results);
@@ -104,7 +104,7 @@ class UaaChangePasswordServiceTest {
     }
 
     @Test
-    public void testQueryContainsOriginUaa() {
+    void queryContainsOriginUaa() {
         List<ScimUser> results = getScimUsers();
         String zoneId = IdentityZoneHolder.get().getId();
         when(scimUserProvisioning.retrieveByUsernameAndOriginAndZone(anyString(), eq(OriginKeys.UAA), eq(zoneId))).thenReturn(results);

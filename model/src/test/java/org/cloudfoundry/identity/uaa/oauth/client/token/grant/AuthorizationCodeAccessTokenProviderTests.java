@@ -17,17 +17,15 @@ import org.springframework.util.MultiValueMap;
 
 import java.util.Collections;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-public class AuthorizationCodeAccessTokenProviderTests {
+class AuthorizationCodeAccessTokenProviderTests {
 
     private final MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
 
@@ -43,59 +41,57 @@ public class AuthorizationCodeAccessTokenProviderTests {
     private final AuthorizationCodeResourceDetails resource = new AuthorizationCodeResourceDetails();
 
     @Test
-    public void supportsResource() {
-        assertTrue(provider.supportsResource(new AuthorizationCodeResourceDetails()));
+    void supportsResource() {
+        assertThat(provider.supportsResource(new AuthorizationCodeResourceDetails())).isTrue();
     }
 
     @Test
-    public void getUserApproval() {
-        assertNotNull(provider.getUserApprovalSignal(new AuthorizationCodeResourceDetails()));
+    void getUserApproval() {
+        assertThat(provider.getUserApprovalSignal(new AuthorizationCodeResourceDetails())).isNotNull();
     }
 
     @Test
-    public void supportsRefresh() {
-        assertTrue(provider.supportsRefresh(new AuthorizationCodeResourceDetails()));
+    void supportsRefresh() {
+        assertThat(provider.supportsRefresh(new AuthorizationCodeResourceDetails())).isTrue();
     }
 
     @Test
-    public void refreshAccessToken() {
-        assertEquals("FOO", provider.refreshAccessToken(new AuthorizationCodeResourceDetails(), new DefaultOAuth2RefreshToken(""), new DefaultAccessTokenRequest(
-                Collections.emptyMap())).getValue());
+    void refreshAccessToken() {
+        assertThat(provider.refreshAccessToken(new AuthorizationCodeResourceDetails(), new DefaultOAuth2RefreshToken(""), new DefaultAccessTokenRequest(
+                Collections.emptyMap())).getValue()).isEqualTo("FOO");
     }
 
     @Test
-    public void testGetAccessToken() {
+    void getAccessToken() {
         AccessTokenRequest request = new DefaultAccessTokenRequest();
         request.setAuthorizationCode("foo");
         request.setPreservedState(new Object());
         resource.setAccessTokenUri("http://localhost/oauth/token");
-        assertEquals("FOO", provider.obtainAccessToken(resource, request).getValue());
+        assertThat(provider.obtainAccessToken(resource, request).getValue()).isEqualTo("FOO");
     }
 
     @Test
-    public void testGetCode() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            AccessTokenRequest request = new DefaultAccessTokenRequest();
-            request.setAuthorizationCode(null);
-            request.setPreservedState(new Object());
-            request.setStateKey("key");
-            resource.setAccessTokenUri("http://localhost/oauth/token");
-            assertEquals("FOO", provider.obtainAccessToken(resource, request).getValue());
-        });
+    void getCode() {
+        AccessTokenRequest request = new DefaultAccessTokenRequest();
+        request.setAuthorizationCode(null);
+        request.setPreservedState(new Object());
+        request.setStateKey("key");
+        resource.setAccessTokenUri("http://localhost/oauth/token");
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() ->
+                assertThat(provider.obtainAccessToken(resource, request).getValue()).isEqualTo("FOO"));
     }
 
     @Test
-    public void testGetAccessTokenFailsWithNoState() {
-        assertThrows(InvalidRequestException.class, () -> {
-            AccessTokenRequest request = new DefaultAccessTokenRequest();
-            request.setAuthorizationCode("foo");
-            resource.setAccessTokenUri("http://localhost/oauth/token");
-            assertEquals("FOO", provider.obtainAccessToken(resource, request).getValue());
-        });
+    void getAccessTokenFailsWithNoState() {
+        AccessTokenRequest request = new DefaultAccessTokenRequest();
+        request.setAuthorizationCode("foo");
+        resource.setAccessTokenUri("http://localhost/oauth/token");
+        assertThatExceptionOfType(InvalidRequestException.class).isThrownBy(() ->
+                assertThat(provider.obtainAccessToken(resource, request).getValue()).isEqualTo("FOO"));
     }
 
     @Test
-    public void testRedirectToAuthorizationEndpoint() {
+    void redirectToAuthorizationEndpoint() {
         AccessTokenRequest request = new DefaultAccessTokenRequest();
         request.setCurrentUri("/come/back/soon");
         resource.setUserAuthorizationUri("http://localhost/oauth/authorize");
@@ -103,35 +99,34 @@ public class AuthorizationCodeAccessTokenProviderTests {
             provider.obtainAccessToken(resource, request);
             fail("Expected UserRedirectRequiredException");
         } catch (UserRedirectRequiredException e) {
-            assertEquals("http://localhost/oauth/authorize", e.getRedirectUri());
-            assertEquals("/come/back/soon", e.getStateToPreserve());
+            assertThat(e.getRedirectUri()).isEqualTo("http://localhost/oauth/authorize");
+            assertThat(e.getStateToPreserve()).isEqualTo("/come/back/soon");
         }
     }
 
     // A missing redirect just means the server has to deal with it
     @Test
-    public void testRedirectNotSpecified() {
-        assertThrows(UserRedirectRequiredException.class, () -> {
-            AccessTokenRequest request = new DefaultAccessTokenRequest();
-            resource.setUserAuthorizationUri("http://localhost/oauth/authorize");
-            provider.obtainAccessToken(resource, request);
-        });
+    void redirectNotSpecified() {
+        AccessTokenRequest request = new DefaultAccessTokenRequest();
+        resource.setUserAuthorizationUri("http://localhost/oauth/authorize");
+        assertThatExceptionOfType(UserRedirectRequiredException.class).isThrownBy(() ->
+                provider.obtainAccessToken(resource, request));
     }
 
     @Test
-    public void testGetAccessTokenRequest() {
+    void getAccessTokenRequest() {
         AccessTokenRequest request = new DefaultAccessTokenRequest();
         request.setAuthorizationCode("foo");
         request.setStateKey("bar");
         request.setPreservedState(new Object());
         resource.setAccessTokenUri("http://localhost/oauth/token");
         resource.setPreEstablishedRedirectUri("https://anywhere.com");
-        assertEquals("FOO", provider.obtainAccessToken(resource, request).getValue());
+        assertThat(provider.obtainAccessToken(resource, request).getValue()).isEqualTo("FOO");
         // System.err.println(params);
-        assertEquals("authorization_code", params.getFirst("grant_type"));
-        assertEquals("foo", params.getFirst("code"));
-        assertEquals("https://anywhere.com", params.getFirst("redirect_uri"));
+        assertThat(params.getFirst("grant_type")).isEqualTo("authorization_code");
+        assertThat(params.getFirst("code")).isEqualTo("foo");
+        assertThat(params.getFirst("redirect_uri")).isEqualTo("https://anywhere.com");
         // State is not set in token request
-        assertEquals(null, params.getFirst("state"));
+        assertThat(params.getFirst("state")).isNull();
     }
 }

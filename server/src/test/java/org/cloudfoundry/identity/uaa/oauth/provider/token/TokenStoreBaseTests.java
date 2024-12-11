@@ -15,11 +15,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
@@ -30,27 +26,27 @@ public abstract class TokenStoreBaseTests {
     public abstract TokenStore getTokenStore();
 
     @Test
-    public void testReadingAuthenticationForTokenThatDoesNotExist() {
-        assertNull(getTokenStore().readAuthentication("tokenThatDoesNotExist"));
+    public void readingAuthenticationForTokenThatDoesNotExist() {
+        assertThat(getTokenStore().readAuthentication("tokenThatDoesNotExist")).isNull();
     }
 
     @Test
-    public void testStoreAccessToken() {
+    public void storeAccessToken() {
         OAuth2Authentication expectedAuthentication = new OAuth2Authentication(RequestTokenFactory.createOAuth2Request("id", false), new TestAuthentication("test2", false));
         OAuth2AccessToken expectedOAuth2AccessToken = new DefaultOAuth2AccessToken("testToken");
         getTokenStore().storeAccessToken(expectedOAuth2AccessToken, expectedAuthentication);
 
         OAuth2AccessToken actualOAuth2AccessToken = getTokenStore().readAccessToken("testToken");
-        assertEquals(expectedOAuth2AccessToken, actualOAuth2AccessToken);
-        assertEquals(expectedAuthentication, getTokenStore().readAuthentication(expectedOAuth2AccessToken));
+        assertThat(actualOAuth2AccessToken).isEqualTo(expectedOAuth2AccessToken);
+        assertThat(getTokenStore().readAuthentication(expectedOAuth2AccessToken)).isEqualTo(expectedAuthentication);
         getTokenStore().removeAccessToken(expectedOAuth2AccessToken);
         getTokenStore().removeAccessTokenUsingRefreshToken(new DefaultOAuth2RefreshToken("testToken"));
-        assertNull(getTokenStore().readAccessToken("testToken"));
-        assertNull(getTokenStore().readAuthentication(expectedOAuth2AccessToken.getValue()));
+        assertThat(getTokenStore().readAccessToken("testToken")).isNull();
+        assertThat(getTokenStore().readAuthentication(expectedOAuth2AccessToken.getValue())).isNull();
     }
 
     @Test
-    public void testStoreAccessTokenTwice() {
+    public void storeAccessTokenTwice() {
         OAuth2Authentication expectedAuthentication = new OAuth2Authentication(
                 RequestTokenFactory.createOAuth2Request("id", false), new TestAuthentication("test2", false));
         OAuth2AccessToken expectedOAuth2AccessToken = new DefaultOAuth2AccessToken("testToken");
@@ -58,15 +54,15 @@ public abstract class TokenStoreBaseTests {
         getTokenStore().storeAccessToken(expectedOAuth2AccessToken, expectedAuthentication);
 
         OAuth2AccessToken actualOAuth2AccessToken = getTokenStore().readAccessToken("testToken");
-        assertEquals(expectedOAuth2AccessToken, actualOAuth2AccessToken);
-        assertEquals(expectedAuthentication, getTokenStore().readAuthentication(expectedOAuth2AccessToken));
+        assertThat(actualOAuth2AccessToken).isEqualTo(expectedOAuth2AccessToken);
+        assertThat(getTokenStore().readAuthentication(expectedOAuth2AccessToken)).isEqualTo(expectedAuthentication);
         getTokenStore().removeAccessToken(expectedOAuth2AccessToken);
-        assertNull(getTokenStore().readAccessToken("testToken"));
-        assertNull(getTokenStore().readAuthentication(expectedOAuth2AccessToken.getValue()));
+        assertThat(getTokenStore().readAccessToken("testToken")).isNull();
+        assertThat(getTokenStore().readAuthentication(expectedOAuth2AccessToken.getValue())).isNull();
     }
 
     @Test
-    public void testRetrieveAccessToken() {
+    public void retrieveAccessToken() {
         //Test approved request
         OAuth2Request storedOAuth2Request = RequestTokenFactory.createOAuth2Request("id", true);
         OAuth2Authentication authentication = new OAuth2Authentication(storedOAuth2Request, new TestAuthentication("test2", true));
@@ -78,20 +74,20 @@ public abstract class TokenStoreBaseTests {
         storedOAuth2Request = RequestTokenFactory.createOAuth2Request("id", false);
         authentication = new OAuth2Authentication(storedOAuth2Request, new TestAuthentication("test2", true));
         OAuth2AccessToken actualOAuth2AccessToken = getTokenStore().getAccessToken(authentication);
-        assertEquals(expectedOAuth2AccessToken, actualOAuth2AccessToken);
-        assertEquals(authentication.getUserAuthentication(), getTokenStore().readAuthentication(expectedOAuth2AccessToken.getValue()).getUserAuthentication());
+        assertThat(actualOAuth2AccessToken).isEqualTo(expectedOAuth2AccessToken);
+        assertThat(getTokenStore().readAuthentication(expectedOAuth2AccessToken.getValue()).getUserAuthentication()).isEqualTo(authentication.getUserAuthentication());
         // The authorizationRequest does not match because it is unapproved, but the token was granted to an approved request
-        assertFalse(storedOAuth2Request.equals(getTokenStore().readAuthentication(expectedOAuth2AccessToken.getValue()).getOAuth2Request()));
+        assertThat(getTokenStore().readAuthentication(expectedOAuth2AccessToken.getValue()).getOAuth2Request()).isNotEqualTo(storedOAuth2Request);
         actualOAuth2AccessToken = getTokenStore().getAccessToken(authentication);
-        assertEquals(expectedOAuth2AccessToken, actualOAuth2AccessToken);
+        assertThat(actualOAuth2AccessToken).isEqualTo(expectedOAuth2AccessToken);
         getTokenStore().removeAccessToken(expectedOAuth2AccessToken);
-        assertNull(getTokenStore().readAccessToken("testToken"));
-        assertNull(getTokenStore().readAuthentication(expectedOAuth2AccessToken.getValue()));
-        assertNull(getTokenStore().getAccessToken(authentication));
+        assertThat(getTokenStore().readAccessToken("testToken")).isNull();
+        assertThat(getTokenStore().readAuthentication(expectedOAuth2AccessToken.getValue())).isNull();
+        assertThat(getTokenStore().getAccessToken(authentication)).isNull();
     }
 
     @Test
-    public void testFindAccessTokensByClientIdAndUserName() {
+    public void findAccessTokensByClientIdAndUserName() {
         String clientId = "id" + UUID.randomUUID();
         String name = "test2" + UUID.randomUUID();
         OAuth2Authentication expectedAuthentication = new OAuth2Authentication(RequestTokenFactory.createOAuth2Request(clientId, false), new TestAuthentication(name, false));
@@ -99,104 +95,104 @@ public abstract class TokenStoreBaseTests {
         getTokenStore().storeAccessToken(expectedOAuth2AccessToken, expectedAuthentication);
 
         Collection<OAuth2AccessToken> actualOAuth2AccessTokens = getTokenStore().findTokensByClientIdAndUserName(clientId, name);
-        assertEquals(1, actualOAuth2AccessTokens.size());
+        assertThat(actualOAuth2AccessTokens.size()).isEqualTo(1);
     }
 
     @Test
-    public void testFindAccessTokensByClientId() {
+    public void findAccessTokensByClientId() {
         String clientId = "id" + UUID.randomUUID();
         OAuth2Authentication expectedAuthentication = new OAuth2Authentication(RequestTokenFactory.createOAuth2Request(clientId, false), new TestAuthentication("test2", false));
         OAuth2AccessToken expectedOAuth2AccessToken = new DefaultOAuth2AccessToken("testToken");
         getTokenStore().storeAccessToken(expectedOAuth2AccessToken, expectedAuthentication);
 
         Collection<OAuth2AccessToken> actualOAuth2AccessTokens = getTokenStore().findTokensByClientId(clientId);
-        assertEquals(1, actualOAuth2AccessTokens.size());
+        assertThat(actualOAuth2AccessTokens.size()).isEqualTo(1);
     }
 
     @Test
-    public void testReadingAccessTokenForTokenThatDoesNotExist() {
-        assertNull(getTokenStore().readAccessToken("tokenThatDoesNotExist"));
+    public void readingAccessTokenForTokenThatDoesNotExist() {
+        assertThat(getTokenStore().readAccessToken("tokenThatDoesNotExist")).isNull();
     }
 
     @Test
-    public void testRefreshTokenIsNotStoredDuringAccessToken() {
+    public void refreshTokenIsNotStoredDuringAccessToken() {
         OAuth2Authentication expectedAuthentication = new OAuth2Authentication(RequestTokenFactory.createOAuth2Request("id", false), new TestAuthentication("test2", false));
         DefaultOAuth2AccessToken expectedOAuth2AccessToken = new DefaultOAuth2AccessToken("testToken");
         expectedOAuth2AccessToken.setRefreshToken(new DefaultOAuth2RefreshToken("refreshToken"));
         getTokenStore().storeAccessToken(expectedOAuth2AccessToken, expectedAuthentication);
 
         OAuth2AccessToken actualOAuth2AccessToken = getTokenStore().readAccessToken("testToken");
-        assertNotNull(actualOAuth2AccessToken.getRefreshToken());
+        assertThat(actualOAuth2AccessToken.getRefreshToken()).isNotNull();
 
-        assertNull(getTokenStore().readRefreshToken("refreshToken"));
+        assertThat(getTokenStore().readRefreshToken("refreshToken")).isNull();
     }
 
     @Test
     /**
      * NB: This used to test expiring refresh tokens. That test has been moved to sub-classes since not all stores support the functionality
      */
-    public void testStoreRefreshToken() {
+    public void storeRefreshToken() {
         String refreshToken = "testToken" + UUID.randomUUID();
         DefaultOAuth2RefreshToken expectedRefreshToken = new DefaultOAuth2RefreshToken(refreshToken);
         OAuth2Authentication expectedAuthentication = new OAuth2Authentication(RequestTokenFactory.createOAuth2Request("id", false), new TestAuthentication("test2", false));
         getTokenStore().storeRefreshToken(expectedRefreshToken, expectedAuthentication);
 
         OAuth2RefreshToken actualExpiringRefreshToken = getTokenStore().readRefreshToken(refreshToken);
-        assertEquals(expectedRefreshToken, actualExpiringRefreshToken);
-        assertEquals(expectedAuthentication, getTokenStore().readAuthenticationForRefreshToken(expectedRefreshToken));
+        assertThat(actualExpiringRefreshToken).isEqualTo(expectedRefreshToken);
+        assertThat(getTokenStore().readAuthenticationForRefreshToken(expectedRefreshToken)).isEqualTo(expectedAuthentication);
         getTokenStore().removeRefreshToken(expectedRefreshToken);
-        assertNull(getTokenStore().readRefreshToken(refreshToken));
-        assertNull(getTokenStore().readAuthentication(expectedRefreshToken.getValue()));
+        assertThat(getTokenStore().readRefreshToken(refreshToken)).isNull();
+        assertThat(getTokenStore().readAuthentication(expectedRefreshToken.getValue())).isNull();
     }
 
     @Test
-    public void testReadingRefreshTokenForTokenThatDoesNotExist() {
-        assertNull(getTokenStore().readRefreshToken("tokenThatDoesNotExist"));
+    public void readingRefreshTokenForTokenThatDoesNotExist() {
+        assertThat(getTokenStore().readRefreshToken("tokenThatDoesNotExist")).isNull();
     }
 
     @Test
-    public void testGetAccessTokenForDeletedUser() throws Exception {
+    public void getAccessTokenForDeletedUser() throws Exception {
         //Test approved request
         OAuth2Request storedOAuth2Request = RequestTokenFactory.createOAuth2Request("id", true);
         OAuth2Authentication expectedAuthentication = new OAuth2Authentication(storedOAuth2Request, new TestAuthentication("test", true));
         OAuth2AccessToken expectedOAuth2AccessToken = new DefaultOAuth2AccessToken("testToken");
         getTokenStore().storeAccessToken(expectedOAuth2AccessToken, expectedAuthentication);
-        assertEquals(expectedOAuth2AccessToken, getTokenStore().getAccessToken(expectedAuthentication));
-        assertEquals(expectedAuthentication, getTokenStore().readAuthentication(expectedOAuth2AccessToken.getValue()));
+        assertThat(getTokenStore().getAccessToken(expectedAuthentication)).isEqualTo(expectedOAuth2AccessToken);
+        assertThat(getTokenStore().readAuthentication(expectedOAuth2AccessToken.getValue())).isEqualTo(expectedAuthentication);
 
         //Test unapproved request
         storedOAuth2Request = RequestTokenFactory.createOAuth2Request("id", false);
         OAuth2Authentication anotherAuthentication = new OAuth2Authentication(storedOAuth2Request, new TestAuthentication("test", true));
-        assertEquals(expectedOAuth2AccessToken, getTokenStore().getAccessToken(anotherAuthentication));
+        assertThat(getTokenStore().getAccessToken(anotherAuthentication)).isEqualTo(expectedOAuth2AccessToken);
         // The generated key for the authentication is the same as before, but the two auths are not equal. This could
         // happen if there are 2 users in a system with the same username, or (more likely), if a user account was
         // deleted and re-created.
-        assertEquals(anotherAuthentication.getUserAuthentication(), getTokenStore().readAuthentication(expectedOAuth2AccessToken.getValue()).getUserAuthentication());
+        assertThat(getTokenStore().readAuthentication(expectedOAuth2AccessToken.getValue()).getUserAuthentication()).isEqualTo(anotherAuthentication.getUserAuthentication());
         // The authorizationRequest does not match because it is unapproved, but the token was granted to an approved request
-        assertFalse(storedOAuth2Request.equals(getTokenStore().readAuthentication(expectedOAuth2AccessToken.getValue()).getOAuth2Request()));
+        assertThat(getTokenStore().readAuthentication(expectedOAuth2AccessToken.getValue()).getOAuth2Request()).isNotEqualTo(storedOAuth2Request);
     }
 
     @Test
-    public void testRemoveRefreshToken() {
+    public void removeRefreshToken() {
         OAuth2RefreshToken expectedExpiringRefreshToken = new DefaultExpiringOAuth2RefreshToken("testToken",
                 new Date());
         OAuth2Authentication expectedAuthentication = new OAuth2Authentication(RequestTokenFactory.createOAuth2Request("id", false), new TestAuthentication("test2", false));
         getTokenStore().storeRefreshToken(expectedExpiringRefreshToken, expectedAuthentication);
         getTokenStore().removeRefreshToken(expectedExpiringRefreshToken);
 
-        assertNull(getTokenStore().readRefreshToken("testToken"));
+        assertThat(getTokenStore().readRefreshToken("testToken")).isNull();
     }
 
     @Test
-    public void testRemovedTokenCannotBeFoundByUsername() {
+    public void removedTokenCannotBeFoundByUsername() {
         OAuth2AccessToken token = new DefaultOAuth2AccessToken("testToken");
         OAuth2Authentication expectedAuthentication = new OAuth2Authentication(RequestTokenFactory.createOAuth2Request(
                 "id", false), new TestAuthentication("test2", false));
         getTokenStore().storeAccessToken(token, expectedAuthentication);
         getTokenStore().removeAccessToken(token);
         Collection<OAuth2AccessToken> tokens = getTokenStore().findTokensByClientIdAndUserName("id", "test2");
-        assertFalse(tokens.contains(token));
-        assertTrue(tokens.isEmpty());
+        assertThat(tokens.contains(token)).isFalse();
+        assertThat(tokens.isEmpty()).isTrue();
     }
 
     protected static class TestAuthentication extends AbstractAuthenticationToken {

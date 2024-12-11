@@ -26,13 +26,7 @@ import java.util.Date;
 import java.util.Optional;
 
 import static java.util.Arrays.asList;
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -60,7 +54,7 @@ public class AccountSavingAuthenticationSuccessHandlerTest {
     }
 
     @BeforeEach
-    public void setup() throws Exception {
+    void setup() throws Exception {
         redirectingHandler = mock(SavedRequestAwareAuthenticationSuccessHandler.class);
         currentUserCookieFactory = mock(CurrentUserCookieFactory.class);
         when(currentUserCookieFactory.getCookie(any())).thenReturn(new Cookie("Current-User", "%7B%22userId%22%3A%22user-id%22%7D"));
@@ -76,7 +70,7 @@ public class AccountSavingAuthenticationSuccessHandlerTest {
         try {
             successHandler.setSavedAccountOptionCookie(new MockHttpServletRequest(), new MockHttpServletResponse(), a);
         } catch (IllegalArgumentException x) {
-            assertEquals("Unrecognized authentication principle.", x.getMessage());
+            assertThat(x.getMessage()).isEqualTo("Unrecognized authentication principle.");
         }
 
     }
@@ -116,7 +110,7 @@ public class AccountSavingAuthenticationSuccessHandlerTest {
         successHandler.onAuthenticationSuccess(request, response, authentication);
 
         Cookie accountOptionCookie = response.getCookie("Saved-Account-user-id");
-        assertThat(accountOptionCookie, notNullValue());
+        assertThat(accountOptionCookie).isNotNull();
         String cookieValue = accountOptionCookie.getValue();
 
         SavedAccountOption expectedCookieValue = new SavedAccountOption();
@@ -125,28 +119,27 @@ public class AccountSavingAuthenticationSuccessHandlerTest {
         expectedCookieValue.setEmail(user.getEmail());
         expectedCookieValue.setOrigin(user.getOrigin());
 
-        assertEquals(URLEncoder.encode(JsonUtils.writeValueAsString(expectedCookieValue), StandardCharsets.UTF_8), cookieValue);
-        assertTrue(accountOptionCookie.isHttpOnly());
-        assertEquals(365 * 24 * 60 * 60, accountOptionCookie.getMaxAge());
-        assertEquals("/login", accountOptionCookie.getPath());
-        assertEquals(secure, accountOptionCookie.getSecure());
+        assertThat(cookieValue).isEqualTo(URLEncoder.encode(JsonUtils.writeValueAsString(expectedCookieValue), StandardCharsets.UTF_8));
+        assertThat(accountOptionCookie.isHttpOnly()).isTrue();
+        assertThat(accountOptionCookie.getMaxAge()).isEqualTo(365 * 24 * 60 * 60);
+        assertThat(accountOptionCookie.getPath()).isEqualTo("/login");
+        assertThat(accountOptionCookie.getSecure()).isEqualTo(secure);
 
         verify(redirectingHandler, times(1)).onAuthenticationSuccess(request, response, authentication);
 
         ArgumentCaptor<UaaPrincipal> uaaPrincipal = ArgumentCaptor.forClass(UaaPrincipal.class);
         verify(currentUserCookieFactory).getCookie(uaaPrincipal.capture());
-        assertEquals("user-id", uaaPrincipal.getValue().getId());
+        assertThat(uaaPrincipal.getValue().getId()).isEqualTo("user-id");
 
         Cookie currentUserCookie = response.getCookie("Current-User");
-        assertThat(currentUserCookie, notNullValue());
-        assertThat(currentUserCookie.getValue(), containsString("user-id"));
+        assertThat(currentUserCookie).isNotNull();
+        assertThat(currentUserCookie.getValue()).contains("user-id");
 
         Optional<String> actualCurrentUserCookieHeaderValue = response.getHeaders("Set-Cookie").stream()
                 .filter(headerValue -> headerValue.startsWith("Current-User"))
                 .findAny();
-        assertNotNull(actualCurrentUserCookieHeaderValue);
-        assertEquals("Current-User=%7B%22userId%22%3A%22user-id%22%7D; SameSite=Strict",
-                actualCurrentUserCookieHeaderValue.get());
+        assertThat(actualCurrentUserCookieHeaderValue).isNotNull();
+        assertThat(actualCurrentUserCookieHeaderValue.get()).isEqualTo("Current-User=%7B%22userId%22%3A%22user-id%22%7D; SameSite=Strict");
     }
 
     @MethodSource("parameters")
@@ -183,6 +176,6 @@ public class AccountSavingAuthenticationSuccessHandlerTest {
         successHandler.onAuthenticationSuccess(request, response, authentication);
 
         Cookie accountOptionCookie = response.getCookie("Saved-Account-user-id");
-        assertThat(accountOptionCookie, nullValue());
+        assertThat(accountOptionCookie).isNull();
     }
 }

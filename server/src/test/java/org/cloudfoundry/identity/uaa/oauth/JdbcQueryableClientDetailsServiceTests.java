@@ -19,10 +19,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.sql.SQLException;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_AUTHORIZATION_CODE;
-import static org.cloudfoundry.identity.uaa.util.AssertThrowsWithMessage.assertThrowsWithMessageThat;
-import static org.hamcrest.core.Is.is;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @WithDatabaseContext
 @ExtendWith(PollutionPreventionExtension.class)
@@ -113,22 +112,21 @@ class JdbcQueryableClientDetailsServiceTests {
     void queryEqualsInAnotherZone() {
         verifyScimEquality(namedParameterJdbcTemplate.getJdbcTemplate(), jdbcQueryableClientDetailsService, "zoneOneId");
         verifyScimEquality(namedParameterJdbcTemplate.getJdbcTemplate(), jdbcQueryableClientDetailsService, "otherZoneId");
-        assertEquals(8, multitenantJdbcClientDetailsService.getTotalCount());
+        assertThat(multitenantJdbcClientDetailsService.getTotalCount()).isEqualTo(8);
     }
 
     @Test
     void queryExistsInAnotherZone() {
         verifyScimPresent(namedParameterJdbcTemplate.getJdbcTemplate(), jdbcQueryableClientDetailsService, "zoneOneId");
         verifyScimPresent(namedParameterJdbcTemplate.getJdbcTemplate(), jdbcQueryableClientDetailsService, "otherZoneId");
-        assertEquals(8, multitenantJdbcClientDetailsService.getTotalCount());
+        assertThat(multitenantJdbcClientDetailsService.getTotalCount()).isEqualTo(8);
     }
 
     @Test
     void throwsExceptionWhenSortByIncludesPrivateFieldClientSecret() {
-        assertThrowsWithMessageThat(IllegalArgumentException.class,
-                () -> jdbcQueryableClientDetailsService.query("client_id pr", "client_id,client_secret", true, "zoneOneId").size(),
-                is("Invalid sort field: client_secret")
-        );
+        assertThatThrownBy(() -> jdbcQueryableClientDetailsService.query("client_id pr", "client_id,client_secret", true, "zoneOneId").size())
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Invalid sort field: client_secret");
     }
 
     private static void verifyScimEquality(
@@ -136,8 +134,8 @@ class JdbcQueryableClientDetailsServiceTests {
             final JdbcQueryableClientDetailsService jdbcQueryableClientDetailsService,
             final String zoneId) {
         addClients(jdbcTemplate, zoneId);
-        assertEquals(4, jdbcQueryableClientDetailsService.retrieveAll(zoneId).size());
-        assertEquals(2, jdbcQueryableClientDetailsService.query("authorized_grant_types eq \"client_credentials\"", zoneId).size());
+        assertThat(jdbcQueryableClientDetailsService.retrieveAll(zoneId).size()).isEqualTo(4);
+        assertThat(jdbcQueryableClientDetailsService.query("authorized_grant_types eq \"client_credentials\"", zoneId).size()).isEqualTo(2);
     }
 
     private static void verifyScimPresent(
@@ -145,8 +143,8 @@ class JdbcQueryableClientDetailsServiceTests {
             final JdbcQueryableClientDetailsService jdbcQueryableClientDetailsService,
             final String zoneId) {
         addClients(jdbcTemplate, zoneId);
-        assertEquals(4, jdbcQueryableClientDetailsService.retrieveAll(zoneId).size());
-        assertEquals(4, jdbcQueryableClientDetailsService.query("scope pr", zoneId).size());
+        assertThat(jdbcQueryableClientDetailsService.retrieveAll(zoneId).size()).isEqualTo(4);
+        assertThat(jdbcQueryableClientDetailsService.query("scope pr", zoneId).size()).isEqualTo(4);
     }
 
 }

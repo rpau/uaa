@@ -14,13 +14,14 @@
 package org.cloudfoundry.identity.uaa.mock.oauth;
 
 import org.cloudfoundry.identity.uaa.DefaultTestContext;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.util.Set;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @DefaultTestContext
 public class CheckDefaultAuthoritiesMvcMockTests {
@@ -51,10 +52,10 @@ public class CheckDefaultAuthoritiesMvcMockTests {
     }
 
     @Test
-    void testDefaultAuthorities() {
-        Assertions.assertEquals(14, defaultAuthorities.size());
+    void defaultAuthorities() {
+        assertThat(defaultAuthorities.size()).isEqualTo(14);
         for (String s : EXPECTED_DEFAULT_GROUPS) {
-            Assertions.assertTrue(defaultAuthorities.contains(s), "Expecting authority to be present:" + s);
+            assertThat(defaultAuthorities.contains(s)).as("Expecting authority to be present:" + s).isTrue();
         }
     }
 }

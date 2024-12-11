@@ -24,12 +24,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
@@ -40,64 +37,60 @@ class DefaultTokenServicesWithInMemoryTests extends AbstractPersistentDefaultTok
     private InMemoryTokenStore tokenStore;
 
     @Test
-    void testExpiredToken() {
-        Throwable exception = assertThrows(InvalidTokenException.class, () -> {
-            OAuth2Authentication expectedAuthentication = new OAuth2Authentication(RequestTokenFactory.createOAuth2Request(
-                    "id", false, Collections.singleton("read")), new TestAuthentication("test2", false));
-            DefaultOAuth2AccessToken firstAccessToken = (DefaultOAuth2AccessToken) getTokenServices().createAccessToken(
-                    expectedAuthentication);
-            // Make it expire (and rely on mutable state in volatile token store)
-            firstAccessToken.setExpiration(new Date(System.currentTimeMillis() - 1000));
-            getTokenServices().loadAuthentication(firstAccessToken.getValue());
-        });
-        assertTrue(exception.getMessage().contains("expired"));
-    }
-
-    @Test
-    void testExpiredRefreshToken() {
-        Throwable exception = assertThrows(InvalidTokenException.class, () -> {
-            OAuth2Authentication expectedAuthentication = new OAuth2Authentication(RequestTokenFactory.createOAuth2Request(
-                    "id", false, Collections.singleton("read")), new TestAuthentication("test2", false));
-            DefaultOAuth2AccessToken firstAccessToken = (DefaultOAuth2AccessToken) getTokenServices().createAccessToken(
-                    expectedAuthentication);
-            assertNotNull(firstAccessToken.getRefreshToken());
-            // Make it expire (and rely on mutable state in volatile token store)
-            ReflectionTestUtils.setField(firstAccessToken.getRefreshToken(), "expiration",
-                    new Date(System.currentTimeMillis() - 1000));
-            firstAccessToken.setExpiration(new Date(System.currentTimeMillis() - 1000));
-            TokenRequest tokenRequest = new TokenRequest(Collections.singletonMap("client_id", "id"), "id", null, null);
-            getTokenServices().refreshAccessToken(firstAccessToken.getRefreshToken().getValue(), tokenRequest);
-        });
-        assertTrue(exception.getMessage().contains("refresh token (expired)"));
-    }
-
-    @Test
-    void testRefreshTokenWithUnauthenticatedUser() {
-        assertThrows(AccountExpiredException.class, () -> {
-            OAuth2Authentication expectedAuthentication = new OAuth2Authentication(RequestTokenFactory.createOAuth2Request(
-                    "id", false, Collections.singleton("read")), new TestAuthentication("test2", false));
-            getTokenServices().setAuthenticationManager(new AuthenticationManager() {
-
-                @Override
-                public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-                    throw new AccountExpiredException("Not valid");
-                }
-            });
-            DefaultOAuth2AccessToken firstAccessToken = (DefaultOAuth2AccessToken) getTokenServices().createAccessToken(
-                    expectedAuthentication);
-            assertNotNull(firstAccessToken.getRefreshToken());
-            TokenRequest tokenRequest = new TokenRequest(Collections.singletonMap("client_id", "id"), "id", null, null);
-            getTokenServices().refreshAccessToken(firstAccessToken.getRefreshToken().getValue(), tokenRequest);
-        });
-    }
-
-    @Test
-    void testExpiredRefreshTokenIsRenewedWithNewAccessToken() {
+    void expiredToken() {
         OAuth2Authentication expectedAuthentication = new OAuth2Authentication(RequestTokenFactory.createOAuth2Request(
                 "id", false, Collections.singleton("read")), new TestAuthentication("test2", false));
         DefaultOAuth2AccessToken firstAccessToken = (DefaultOAuth2AccessToken) getTokenServices().createAccessToken(
                 expectedAuthentication);
-        assertNotNull(firstAccessToken.getRefreshToken());
+        firstAccessToken.setExpiration(new Date(System.currentTimeMillis() - 1000));
+        assertThatThrownBy(() -> getTokenServices().loadAuthentication(firstAccessToken.getValue()))
+                .isInstanceOf(InvalidTokenException.class)
+                .hasMessageContaining("expired");
+    }
+
+    @Test
+    void expiredRefreshToken() {
+        OAuth2Authentication expectedAuthentication = new OAuth2Authentication(RequestTokenFactory.createOAuth2Request(
+                "id", false, Collections.singleton("read")), new TestAuthentication("test2", false));
+        DefaultOAuth2AccessToken firstAccessToken = (DefaultOAuth2AccessToken) getTokenServices().createAccessToken(
+                expectedAuthentication);
+        assertThat(firstAccessToken.getRefreshToken()).isNotNull();
+        ReflectionTestUtils.setField(firstAccessToken.getRefreshToken(), "expiration",
+                new Date(System.currentTimeMillis() - 1000));
+        firstAccessToken.setExpiration(new Date(System.currentTimeMillis() - 1000));
+        TokenRequest tokenRequest = new TokenRequest(Collections.singletonMap("client_id", "id"), "id", null, null);
+        assertThatThrownBy(() ->
+                getTokenServices().refreshAccessToken(firstAccessToken.getRefreshToken().getValue(), tokenRequest))
+                .isInstanceOf(InvalidTokenException.class)
+                .hasMessageContaining("refresh token (expired)");
+    }
+
+    @Test
+    void refreshTokenWithUnauthenticatedUser() {
+        OAuth2Authentication expectedAuthentication = new OAuth2Authentication(RequestTokenFactory.createOAuth2Request(
+                "id", false, Collections.singleton("read")), new TestAuthentication("test2", false));
+        getTokenServices().setAuthenticationManager(new AuthenticationManager() {
+
+            @Override
+            public Authentication authenticate(Authentication authentication) throws AuthenticationException {
+                throw new AccountExpiredException("Not valid");
+            }
+        });
+        DefaultOAuth2AccessToken firstAccessToken = (DefaultOAuth2AccessToken) getTokenServices().createAccessToken(
+                expectedAuthentication);
+        assertThat(firstAccessToken.getRefreshToken()).isNotNull();
+        TokenRequest tokenRequest = new TokenRequest(Collections.singletonMap("client_id", "id"), "id", null, null);
+        assertThatExceptionOfType(AccountExpiredException.class).isThrownBy(() ->
+                getTokenServices().refreshAccessToken(firstAccessToken.getRefreshToken().getValue(), tokenRequest));
+    }
+
+    @Test
+    void expiredRefreshTokenIsRenewedWithNewAccessToken() {
+        OAuth2Authentication expectedAuthentication = new OAuth2Authentication(RequestTokenFactory.createOAuth2Request(
+                "id", false, Collections.singleton("read")), new TestAuthentication("test2", false));
+        DefaultOAuth2AccessToken firstAccessToken = (DefaultOAuth2AccessToken) getTokenServices().createAccessToken(
+                expectedAuthentication);
+        assertThat(firstAccessToken.getRefreshToken()).isNotNull();
         // Make it expire (and rely on mutable state in volatile token store)
         ReflectionTestUtils.setField(firstAccessToken.getRefreshToken(), "expiration",
                 new Date(System.currentTimeMillis() - 1000));
@@ -105,12 +98,12 @@ class DefaultTokenServicesWithInMemoryTests extends AbstractPersistentDefaultTok
         DefaultOAuth2AccessToken secondAccessToken = (DefaultOAuth2AccessToken) getTokenServices().createAccessToken(
                 expectedAuthentication);
         ExpiringOAuth2RefreshToken refreshToken = (ExpiringOAuth2RefreshToken) secondAccessToken.getRefreshToken();
-        assertNotNull(refreshToken);
-        assertTrue(refreshToken.getExpiration().getTime() > System.currentTimeMillis());
+        assertThat(refreshToken).isNotNull();
+        assertThat(refreshToken.getExpiration().getTime()).isGreaterThan(System.currentTimeMillis());
     }
 
     @Test
-    void testDifferentRefreshTokenMaintainsState() throws Exception {
+    void differentRefreshTokenMaintainsState() throws Exception {
         // create access token
         getTokenServices().setAccessTokenValiditySeconds(1);
         getTokenServices().setClientDetailsService(new ClientDetailsService() {
@@ -130,19 +123,18 @@ class DefaultTokenServicesWithInMemoryTests extends AbstractPersistentDefaultTok
         firstAccessToken.setExpiration(new Date(System.currentTimeMillis() - 1000));
         // create another access token
         OAuth2AccessToken secondAccessToken = getTokenServices().createAccessToken(expectedAuthentication);
-        assertFalse(firstAccessToken.getValue().equals(secondAccessToken.getValue()),
-                "The new access token should be different");
-        assertEquals(expectedExpiringRefreshToken.getValue(), secondAccessToken.getRefreshToken().getValue(), "The new access token should have the same refresh token");
+        assertThat(secondAccessToken.getValue()).as("The new access token should be different").isNotEqualTo(firstAccessToken.getValue());
+        assertThat(secondAccessToken.getRefreshToken().getValue()).as("The new access token should have the same refresh token").isEqualTo(expectedExpiringRefreshToken.getValue());
         // refresh access token with refresh token
 
         TokenRequest tokenRequest = new TokenRequest(Collections.singletonMap("client_id", "id"), "id",
                 Collections.singleton("read"), null);
         getTokenServices().refreshAccessToken(expectedExpiringRefreshToken.getValue(), tokenRequest);
-        assertEquals(1, getAccessTokenCount());
+        assertThat(getAccessTokenCount()).isOne();
     }
 
     @Test
-    void testNoRefreshTokenIfNotAuthorized() throws Exception {
+    void noRefreshTokenIfNotAuthorized() throws Exception {
         // create access token
         getTokenServices().setAccessTokenValiditySeconds(1);
         getTokenServices().setClientDetailsService(new ClientDetailsService() {
@@ -157,7 +149,7 @@ class DefaultTokenServicesWithInMemoryTests extends AbstractPersistentDefaultTok
                 "id", false, Collections.singleton("read")), new TestAuthentication("test2", false));
         DefaultOAuth2AccessToken token = (DefaultOAuth2AccessToken) getTokenServices().createAccessToken(
                 expectedAuthentication);
-        assertNull(token.getRefreshToken());
+        assertThat(token.getRefreshToken()).isNull();
     }
 
     @Override

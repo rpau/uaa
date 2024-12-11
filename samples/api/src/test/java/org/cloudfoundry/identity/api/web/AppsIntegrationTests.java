@@ -24,15 +24,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotSame;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Dave Syer
  */
 @OAuth2ContextConfiguration
-public class AppsIntegrationTests {
+class AppsIntegrationTests {
 
     @RegisterExtension
     private static final ServerRunningExtension serverRunning = ServerRunningExtension.connect();
@@ -49,18 +47,18 @@ public class AppsIntegrationTests {
      * tests a happy-day flow of the native application profile.
      */
     @Test
-    public void testHappyDay() {
+    void happyDay() {
         RestTemplate restTemplate = serverRunning.createRestTemplate();
         ResponseEntity<String> response = restTemplate.getForEntity(serverRunning.getUrl("/api/apps"), String.class);
         // first, make sure the resource is actually protected.
-        assertNotSame(HttpStatus.OK, response.getStatusCode());
+        assertThat(response.getStatusCode()).isNotSameAs(HttpStatus.OK);
         HttpHeaders approvalHeaders = new HttpHeaders();
         OAuth2AccessToken accessToken = context.getAccessToken();
         approvalHeaders.set("Authorization", "bearer " + accessToken.getValue());
 
         ResponseEntity<String> result = serverRunning.getForString("/api/apps", approvalHeaders);
-        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
         String body = result.getBody();
-        assertTrue(body.contains("dsyerapi.cloudfoundry.com"), "Wrong response: " + body);
+        assertThat(body).as("Wrong response: " + body).contains("dsyerapi.cloudfoundry.com");
     }
 }

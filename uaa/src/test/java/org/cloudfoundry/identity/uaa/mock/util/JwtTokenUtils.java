@@ -9,7 +9,7 @@ import org.cloudfoundry.identity.uaa.util.JsonUtils;
 
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class JwtTokenUtils {
     public static Map<String, Object> getClaimsForToken(String token) {
@@ -29,7 +29,7 @@ public class JwtTokenUtils {
         }
 
         String kid = tokenJwt.getHeader().getKid();
-        assertNotNull(kid, "Token should have a key ID.");
+        assertThat(kid).as("Token should have a key ID.").isNotNull();
         tokenJwt.verifySignature(new KeyInfoService("https://some-uaa").getKey(kid).getVerifier());
 
         return claims;

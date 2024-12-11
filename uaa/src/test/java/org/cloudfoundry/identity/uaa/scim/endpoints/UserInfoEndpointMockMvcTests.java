@@ -23,20 +23,18 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.oauth.token.ClaimConstants.ROLES;
 import static org.cloudfoundry.identity.uaa.oauth.token.ClaimConstants.USER_ATTRIBUTES;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @DefaultTestContext
 class UserInfoEndpointMockMvcTests {
 
-    private RandomValueStringGenerator generator = new RandomValueStringGenerator();
-    private String clientId = generator.generate().toLowerCase();
-    private String clientSecret = generator.generate().toLowerCase();
+    private final RandomValueStringGenerator generator = new RandomValueStringGenerator();
+    private final String clientId = generator.generate().toLowerCase();
+    private final String clientSecret = generator.generate().toLowerCase();
 
     private ScimUser user;
 
@@ -93,34 +91,36 @@ class UserInfoEndpointMockMvcTests {
     void testGetUserInfo() throws Exception {
         UserInfoResponse userInfoResponse = getUserInfo("openid");
 
-        assertEquals(user.getUserName(), userInfoResponse.getUserName());
-        assertEquals(user.getFamilyName(), userInfoResponse.getFamilyName());
-        assertEquals(user.getGivenName(), userInfoResponse.getGivenName());
-        assertEquals(user.isVerified(), userInfoResponse.isEmailVerified());
+        assertThat(userInfoResponse.getUserName()).isEqualTo(user.getUserName());
+        assertThat(userInfoResponse.getFamilyName()).isEqualTo(user.getFamilyName());
+        assertThat(userInfoResponse.getGivenName()).isEqualTo(user.getGivenName());
+        assertThat(userInfoResponse.isEmailVerified()).isEqualTo(user.isVerified());
 
         String userId = userInfoResponse.getUserId();
-        assertNotNull(userId);
+        assertThat(userId).isNotNull();
         Long dbPreviousLogonTime = webApplicationContext.getBean(UaaUserDatabase.class).retrieveUserById(userId).getPreviousLogonTime();
-        assertEquals(dbPreviousLogonTime, userInfoResponse.getPreviousLogonSuccess());
+        assertThat(userInfoResponse.getPreviousLogonSuccess()).isEqualTo(dbPreviousLogonTime);
     }
 
     @Test
     void attributesWithRolesAndUserAttributes() throws Exception {
         UserInfoResponse userInfo = getUserInfo("openid user_attributes roles");
         Map<String, List<String>> uas = userInfo.getUserAttributes();
-        assertNotNull(uas);
-        assertEquals(userAttributes, uas);
+        assertThat(uas)
+                .isNotNull()
+                .isEqualTo(userAttributes);
 
         Object r = userInfo.getRoles();
-        assertNotNull(r);
-        assertEquals(roles, r);
+        assertThat(r)
+                .isNotNull()
+                .isEqualTo(roles);
     }
 
     @Test
     void attributesWithNoExtraScopes() throws Exception {
         UserInfoResponse userInfo = getUserInfo("openid");
-        assertNull(userInfo.getUserAttributes());
-        assertNull(userInfo.getRoles());
+        assertThat(userInfo.getUserAttributes()).isNull();
+        assertThat(userInfo.getRoles()).isNull();
     }
 
     private UserInfoResponse getUserInfo(String scopes) throws Exception {

@@ -15,7 +15,6 @@
 package org.cloudfoundry.identity.uaa.impl;
 
 import com.fasterxml.jackson.core.JsonLocation;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -23,19 +22,21 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class JsonDateDeserializerTest {
+import static org.assertj.core.api.Assertions.assertThat;
+
+class JsonDateDeserializerTest {
 
     String testDateString = "2017-07-07T23:25:01.297Z";
     Exception exceptionOccured;
 
     @Test
-    public void testParsing() throws IOException, ParseException {
+    void parsing() throws IOException, ParseException {
         Date d = JsonDateDeserializer.getDate(testDateString, new JsonLocation(null, 22, 0, 0));
-        Assertions.assertEquals(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").parse(testDateString).getTime(), (long) d.getTime());
+        assertThat((long) d.getTime()).isEqualTo(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").parse(testDateString).getTime());
     }
 
     @Test
-    public void testParsingParallel() throws InterruptedException {
+    void parsingParallel() throws InterruptedException {
         Thread[] threadArray = new Thread[1000];
         for (int i = 0; i < 1000; i++) {
 
@@ -56,7 +57,7 @@ public class JsonDateDeserializerTest {
         for (int i = 0; i < 1000; i++) {
             threadArray[i].join();
         }
-        Assertions.assertNull(exceptionOccured);
+        assertThat(exceptionOccured).isNull();
     }
 
 }

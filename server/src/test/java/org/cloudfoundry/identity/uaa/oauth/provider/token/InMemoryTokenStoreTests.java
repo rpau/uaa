@@ -9,8 +9,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Date;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
@@ -26,7 +25,7 @@ public class InMemoryTokenStoreTests extends TokenStoreBaseTests {
     }
 
     @BeforeEach
-    public void createStore() {
+    void createStore() {
         AuthenticationKeyGenerator dummyKeyGenerator = new AuthenticationKeyGenerator() {
             private final String key = new AlphanumericRandomValueStringGenerator(10).generate();
 
@@ -41,39 +40,39 @@ public class InMemoryTokenStoreTests extends TokenStoreBaseTests {
     }
 
     @Test
-    public void testTokenCountConsistency() {
+    void tokenCountConsistency() {
         for (int i = 0; i <= 10; i++) {
             OAuth2Authentication expectedAuthentication = new OAuth2Authentication(RequestTokenFactory.createOAuth2Request("id" + i, false), new TestAuthentication("test", false));
             DefaultOAuth2AccessToken expectedOAuth2AccessToken = new DefaultOAuth2AccessToken("testToken" + i);
             expectedOAuth2AccessToken.setExpiration(new Date(System.currentTimeMillis() - 1000));
             getTokenStore().storeAccessToken(expectedOAuth2AccessToken, expectedAuthentication);
-            assertNotNull(expectedOAuth2AccessToken);
+            assertThat(expectedOAuth2AccessToken).isNotNull();
         }
     }
 
     @Test
-    public void testTokenCountConsistentWithExpiryQueue() {
+    void tokenCountConsistentWithExpiryQueue() {
         OAuth2Authentication expectedAuthentication = new OAuth2Authentication(RequestTokenFactory.createOAuth2Request("id", false), new TestAuthentication("test", false));
         DefaultOAuth2AccessToken expectedOAuth2AccessToken = new DefaultOAuth2AccessToken("testToken");
         expectedOAuth2AccessToken.setExpiration(new Date(System.currentTimeMillis() + 10000));
         for (int i = 0; i <= 10; i++) {
             getTokenStore().storeAccessToken(expectedOAuth2AccessToken, expectedAuthentication);
-            assertEquals(getTokenStore().getAccessTokenCount(), getTokenStore().getExpiryTokenCount());
-            assertEquals(1, getTokenStore().getRefreshTokenCount());
+            assertThat(getTokenStore().getExpiryTokenCount()).isEqualTo(getTokenStore().getAccessTokenCount());
+            assertThat(getTokenStore().getRefreshTokenCount()).isEqualTo(1);
         }
     }
 
     @Test
-    public void testAutoFlush() {
+    void autoFlush() {
         getTokenStore().setFlushInterval(3);
-        assertEquals(3, getTokenStore().getFlushInterval());
+        assertThat(getTokenStore().getFlushInterval()).isEqualTo(3);
         for (int i = 0; i <= 10; i++) {
             OAuth2Authentication expectedAuthentication = new OAuth2Authentication(
                     RequestTokenFactory.createOAuth2Request("id" + i, false), new TestAuthentication("test", false));
             DefaultOAuth2AccessToken expectedOAuth2AccessToken = new DefaultOAuth2AccessToken("testToken" + i);
             expectedOAuth2AccessToken.setExpiration(new Date(System.currentTimeMillis() - 1000));
             getTokenStore().storeAccessToken(expectedOAuth2AccessToken, expectedAuthentication);
-            assertNotNull(expectedOAuth2AccessToken);
+            assertThat(expectedOAuth2AccessToken).isNotNull();
         }
     }
 }

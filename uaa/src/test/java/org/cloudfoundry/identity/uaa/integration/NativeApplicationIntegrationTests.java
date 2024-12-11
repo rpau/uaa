@@ -31,12 +31,12 @@ import org.springframework.util.MultiValueMap;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Dave Syer
  */
-public class NativeApplicationIntegrationTests {
+class NativeApplicationIntegrationTests {
 
     @RegisterExtension
     private static final ServerRunningExtension serverRunning = ServerRunningExtension.connect();
@@ -49,7 +49,7 @@ public class NativeApplicationIntegrationTests {
     private ResourceOwnerPasswordResourceDetails resource;
 
     @BeforeEach
-    public void init() {
+    void init() {
         resource = testAccounts.getDefaultResourceOwnerPasswordResource();
     }
 
@@ -59,7 +59,7 @@ public class NativeApplicationIntegrationTests {
      * profile).
      */
     @Test
-    public void testHappyDay() {
+    void happyDay() {
 
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("grant_type", "password");
@@ -71,14 +71,14 @@ public class NativeApplicationIntegrationTests {
                 testAccounts.getAuthorizationHeader(resource.getClientId(), resource.getClientSecret()));
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
         ResponseEntity<String> response = serverRunning.postForString("/oauth/token", formData, headers);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 
     /**
      * tests that a client secret is required.
      */
     @Test
-    public void testSecretRequired() {
+    void secretRequired() {
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("grant_type", "password");
         formData.add("username", resource.getUsername());
@@ -88,7 +88,7 @@ public class NativeApplicationIntegrationTests {
         headers.set("Authorization", "Basic " + new String(Base64.encode("no-such-client:".getBytes(StandardCharsets.UTF_8))));
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
         ResponseEntity<String> response = serverRunning.postForString("/oauth/token", formData, headers);
-        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
     }
 
 }

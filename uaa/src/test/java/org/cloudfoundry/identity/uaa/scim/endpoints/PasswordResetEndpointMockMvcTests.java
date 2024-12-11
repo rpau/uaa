@@ -33,15 +33,10 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils.CookieCsrfPostProcessor.cookieCsrf;
 import static org.cloudfoundry.identity.uaa.zone.IdentityZoneSwitchingFilter.HEADER;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.not;
-import static org.hamcrest.Matchers.nullValue;
-import static org.hamcrest.core.Is.is;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -104,14 +99,14 @@ class PasswordResetEndpointMockMvcTests {
                 .andExpect(jsonPath("$.code").value("test" + generator.counter.get()));
 
         ExpiringCode expiringCode = store.retrieveCode("test" + generator.counter.get(), IdentityZoneHolder.get().getId());
-        assertThat(expiringCode.getIntent(), is(ExpiringCodeType.AUTOLOGIN.name()));
+        assertThat(expiringCode.getIntent()).isEqualTo(ExpiringCodeType.AUTOLOGIN.name());
         Map<String, String> data = JsonUtils.readValue(expiringCode.getData(), new TypeReference<Map<String, String>>() {
         });
-        assertThat(data, is(not(nullValue())));
-        assertThat(data.get("user_id"), is(scimUser.getId()));
-        assertThat(data.get("username"), is(scimUser.getUserName()));
-        assertThat(data.get(OAuth2Utils.CLIENT_ID), is("login"));
-        assertThat(data.get(OriginKeys.ORIGIN), is(OriginKeys.UAA));
+        assertThat(data).isNotNull();
+        assertThat(data.get("user_id")).isEqualTo(scimUser.getId());
+        assertThat(data.get("username")).isEqualTo(scimUser.getUserName());
+        assertThat(data.get(OAuth2Utils.CLIENT_ID)).isEqualTo("login");
+        assertThat(data.get(OriginKeys.ORIGIN)).isEqualTo(OriginKeys.UAA);
     }
 
     @Test
@@ -137,8 +132,8 @@ class PasswordResetEndpointMockMvcTests {
         ExpiringCode expiringCode = store.retrieveCode("test" + generator.counter.get(), IdentityZoneHolder.get().getId());
         Map<String, String> data = JsonUtils.readValue(expiringCode.getData(), new TypeReference<Map<String, String>>() {
         });
-        assertThat(data, is(not(nullValue())));
-        assertThat(data.get(OAuth2Utils.CLIENT_ID), is("another-client"));
+        assertThat(data).isNotNull();
+        assertThat(data.get(OAuth2Utils.CLIENT_ID)).isEqualTo("another-client");
     }
 
     @Test
@@ -161,11 +156,11 @@ class PasswordResetEndpointMockMvcTests {
         Map<String, String> resultingCodeData = JsonUtils.readValue(resultingCode.getData(), new TypeReference<Map<String, String>>() {
         });
 
-        assertThat(resultingCodeData, is(not(nullValue())));
-        assertEquals("app", resultingCodeData.get("client_id"));
-        assertEquals(email, resultingCodeData.get("username"));
-        assertEquals(scimUser.getId(), resultingCodeData.get("user_id"));
-        assertEquals("redirect.example.com", resultingCodeData.get("redirect_uri"));
+        assertThat(resultingCodeData).isNotNull();
+        assertThat(resultingCodeData.get("client_id")).isEqualTo("app");
+        assertThat(resultingCodeData.get("username")).isEqualTo(email);
+        assertThat(resultingCodeData.get("user_id")).isEqualTo(scimUser.getId());
+        assertThat(resultingCodeData.get("redirect_uri")).isEqualTo("redirect.example.com");
     }
 
     @Test
@@ -328,7 +323,7 @@ class PasswordResetEndpointMockMvcTests {
         Pattern codePattern = Pattern.compile("<input type=\"hidden\" name=\"code\" value=\"([A-Za-z0-9\\_\\-]+)\"/>");
         Matcher codeMatcher = codePattern.matcher(result.getResponse().getContentAsString());
 
-        assertTrue(codeMatcher.find());
+        assertThat(codeMatcher.find()).isTrue();
 
         return codeMatcher.group(1);
     }

@@ -25,11 +25,9 @@ import org.springframework.http.ResponseEntity;
 import java.util.Collections;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
-public class LoginInfoEndpointIntegrationTests {
+class LoginInfoEndpointIntegrationTests {
 
     @RegisterExtension
     private static final ServerRunningExtension serverRunning = ServerRunningExtension.connect();
@@ -38,14 +36,14 @@ public class LoginInfoEndpointIntegrationTests {
      * tests a happy-day flow of the <code>/info</code> endpoint
      */
     @Test
-    public void testHappyDay() {
+    void happyDay() {
 
         @SuppressWarnings("rawtypes")
         ResponseEntity<Map> response = serverRunning.getForObject("/info", Map.class);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         @SuppressWarnings("unchecked")
         Map<String, String[]> prompts = (Map<String, String[]>) response.getBody().get("prompts");
-        assertNotNull(prompts);
+        assertThat(prompts).isNotNull();
 
     }
 
@@ -53,16 +51,16 @@ public class LoginInfoEndpointIntegrationTests {
      * tests a happy-day flow of the <code>/login</code> endpoint
      */
     @Test
-    public void testHappyDayHtml() {
+    void happyDayHtml() {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(Collections.singletonList(MediaType.TEXT_HTML));
         ResponseEntity<String> response = serverRunning.getForString("/login", headers);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         String body = response.getBody();
         // System.err.println(body);
-        assertNotNull(body);
-        assertTrue(body.contains("<form action=\"/uaa/login.do\" method=\"post\" novalidate=\"novalidate\" accept-charset=\"UTF-8\">"), "Wrong body: " + body);
+        assertThat(body).isNotNull();
+        assertThat(body.contains("<form action=\"/uaa/login.do\" method=\"post\" novalidate=\"novalidate\" accept-charset=\"UTF-8\">")).as("Wrong body: " + body).isTrue();
 
     }
 

@@ -19,13 +19,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.Map;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -52,26 +46,26 @@ class AbstractUaaEventTest {
     @Test
     void process() {
         event.process(auditListener);
-        assertNotNull(auditListener);
+        assertThat(auditListener).isNotNull();
     }
 
     @Test
     void createAuditRecord() {
-        assertNotNull(event.createAuditRecord("me", AuditEventType.GroupModifiedEvent, "notuaa"));
+        assertThat(event.createAuditRecord("me", AuditEventType.GroupModifiedEvent, "notuaa")).isNotNull();
     }
 
     @Test
     void getAuthentication() {
-        assertNotNull(event.getAuthentication());
+        assertThat(event.getAuthentication()).isNotNull();
     }
 
     @Test
     void getContextAuthentication() {
         Authentication authentication = AbstractUaaEvent.getContextAuthentication();
-        assertNotNull(authentication);
+        assertThat(authentication).isNotNull();
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String originString = event.getOrigin(authentication);
-        assertThat(originString, is("caller=null"));
+        assertThat(originString).isEqualTo("caller=null");
     }
 
     @Test
@@ -83,16 +77,16 @@ class AbstractUaaEventTest {
         when(authentication.getDetails()).thenReturn(Map.of("misc", "somedetails", "remoteAddress", "external"));
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String originString = event.getOrigin(authentication);
-        assertThat(originString, containsString("marissa"));
-        assertThat(originString, containsString("client=null"));
-        assertThat(originString, containsString("misc=somedetails"));
-        assertThat(originString, containsString("remoteAddress=external"));
-        assertThat(originString, containsString("details=({"));
+        assertThat(originString).contains("marissa");
+        assertThat(originString).contains("client=null");
+        assertThat(originString).contains("misc=somedetails");
+        assertThat(originString).contains("remoteAddress=external");
+        assertThat(originString).contains("details=({");
     }
 
     @Test
     void getOriginNotAuthenticated() {
-        assertNull(event.getOrigin(null));
+        assertThat(event.getOrigin(null)).isNull();
     }
 
     @Test
@@ -104,37 +98,37 @@ class AbstractUaaEventTest {
         when(authentication.getDetails()).thenReturn("{\"misc\":\"somedetails\",\"remoteAddress\":\"external\"}");
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String originString = event.getOrigin(authentication);
-        assertThat(originString, containsString("marissa"));
-        assertThat(originString, containsString("client=null"));
-        assertThat(originString, not(containsString("misc=somedetails")));
-        assertThat(originString, containsString("remoteAddress=external"));
-        assertThat(originString, not(containsString("{")));
+        assertThat(originString).contains("marissa");
+        assertThat(originString).contains("client=null");
+        assertThat(originString).doesNotContain("misc=somedetails");
+        assertThat(originString).contains("remoteAddress=external");
+        assertThat(originString).doesNotContain("{");
     }
 
     @Test
     void getAuthenticationJsonWebTokenValue() {
         String originTokenString = event.getOrigin(mockAuthenticationWithToken("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJtYXJpc3NhIiwiaXNzIjoidWFhIn0.omitted"));
-        assertThat(originTokenString, containsString("client=clientid"));
-        assertThat(originTokenString, containsString("iss=uaa"));
-        assertThat(originTokenString, containsString("sub=marissa"));
+        assertThat(originTokenString).contains("client=clientid");
+        assertThat(originTokenString).contains("iss=uaa");
+        assertThat(originTokenString).contains("sub=marissa");
     }
 
     @Test
     void getAuthenticationOpaqueTokenValue() {
         String originTokenString = event.getOrigin(mockAuthenticationWithToken("any-value"));
-        assertThat(originTokenString, containsString("client=clientid"));
-        assertThat(originTokenString, containsString("opaque-token=present"));
-        assertThat(originTokenString, not(containsString("any-value")));
+        assertThat(originTokenString).contains("client=clientid");
+        assertThat(originTokenString).contains("opaque-token=present");
+        assertThat(originTokenString).doesNotContain("any-value");
     }
 
 
     @Test
     void getAuthenticationTokenValueInvalid() {
         String originTokenString = event.getOrigin(mockAuthenticationWithToken("fake.token.value"));
-        assertThat(originTokenString, containsString("client=clientid"));
-        assertThat(originTokenString, containsString("<token extraction failed>"));
-        assertThat(originTokenString, not(containsString("fake")));
-        assertThat(originTokenString, not(containsString("value")));
+        assertThat(originTokenString).contains("client=clientid");
+        assertThat(originTokenString).contains("<token extraction failed>");
+        assertThat(originTokenString).doesNotContain("fake");
+        assertThat(originTokenString).doesNotContain("value");
     }
 
     private Authentication mockAuthenticationWithToken(String token) {
@@ -151,6 +145,6 @@ class AbstractUaaEventTest {
 
     @Test
     void getIdentityZoneId() {
-        assertEquals("uaa", event.getIdentityZoneId());
+        assertThat(event.getIdentityZoneId()).isEqualTo("uaa");
     }
 }

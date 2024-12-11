@@ -11,18 +11,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-public class SerializationUtilsTests {
+class SerializationUtilsTests {
 
     @Test
-    public void deserializeAllowedClasses() {
+    void deserializeAllowedClasses() {
         deserializeAllowedClasses(new DefaultOAuth2AccessToken("access-token-" + UUID.randomUUID()));
 
         deserializeAllowedClasses(new DefaultExpiringOAuth2RefreshToken(
@@ -34,36 +32,32 @@ public class SerializationUtilsTests {
 
     private void deserializeAllowedClasses(Object object) {
         byte[] bytes = SerializationUtils.serialize(object);
-        assertNotNull(bytes);
-        assertTrue(bytes.length > 0);
+        assertThat(bytes).isNotEmpty();
 
         Object clone = SerializationUtils.deserialize(bytes);
-        assertNotNull(clone);
-        assertEquals(object, clone);
+        assertThat(clone).isEqualTo(object);
     }
 
     @Test
-    public void deserializeCustomClasses() {
+    void deserializeCustomClasses() {
         OAuth2AccessToken accessToken = new DefaultOAuth2AccessToken("FOO");
         byte[] bytes = SerializationUtils.serialize(accessToken);
         OAuth2AccessToken clone = (OAuth2AccessToken) SerializationUtils.deserialize(bytes);
-        assertNotNull(clone);
-        assertEquals(accessToken, clone);
+        assertThat(clone).isEqualTo(accessToken);
     }
 
     @Test
-    public void deserializeNotAllowedCustomClasses() {
+    void deserializeNotAllowedCustomClasses() {
         OAuth2AccessToken accessToken = new DefaultOAuth2AccessToken("FOO");
         byte[] bytes = SerializationUtils.serialize(accessToken);
         OAuth2AccessToken clone = (OAuth2AccessToken) SerializationUtils.deserialize(bytes);
-        assertNotNull(clone);
-        assertEquals(accessToken, clone);
+        assertThat(clone).isEqualTo(accessToken);
     }
 
     @Test
-    public void paserQuery() {
+    void paserQuery() {
         Map<String, String> queryMap = OAuth2Utils.extractMap("param=value&param2=value2&param3=");
-        assertEquals(3, queryMap.size());
-        assertEquals(0, OAuth2Utils.extractMap("").size());
+        assertThat(queryMap).hasSize(3);
+        assertThat(OAuth2Utils.extractMap("")).isEmpty();
     }
 }

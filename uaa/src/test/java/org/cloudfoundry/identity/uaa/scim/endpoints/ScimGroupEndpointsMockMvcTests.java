@@ -58,16 +58,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.constants.OriginKeys.LDAP;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.greaterThan;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.core.Is.is;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -81,7 +75,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.util.StringUtils.hasText;
 
 @DefaultTestContext
-public class ScimGroupEndpointsMockMvcTests {
+class ScimGroupEndpointsMockMvcTests {
 
     private static List<String> originalDefaultExternalMembers;
     private static List<ScimGroupExternalMember> originalDatabaseExternalMembers;
@@ -158,7 +152,7 @@ public class ScimGroupEndpointsMockMvcTests {
     }
 
     @Test
-    void testIdentityClientManagesZoneAdmins() throws Exception {
+    void identityClientManagesZoneAdmins() throws Exception {
         IdentityZone zone = MockMvcUtils.createZoneUsingWebRequest(mockMvc, identityClientToken);
         ScimGroupMember member = new ScimGroupMember(scimUser.getId());
         ScimGroup group = new ScimGroup(null, "zones." + zone.getId() + ".admin", zone.getId());
@@ -221,7 +215,7 @@ public class ScimGroupEndpointsMockMvcTests {
     }
 
     @Test
-    void testLimitedScopesWithoutMember() throws Exception {
+    void limitedScopesWithoutMember() throws Exception {
         IdentityZone zone = MockMvcUtils.createZoneUsingWebRequest(mockMvc, identityClientToken);
         ScimGroup group = new ScimGroup("zones." + zone.getId() + ".admin");
 
@@ -282,7 +276,7 @@ public class ScimGroupEndpointsMockMvcTests {
     }
 
     @Test
-    void testGroupOperations_as_Zone_Admin() throws Exception {
+    void groupOperationsAsZoneAdmin() throws Exception {
         String subdomain = generator.generate();
         MockMvcUtils.IdentityZoneCreationResult result = MockMvcUtils.createOtherIdentityZoneAndReturnResult(subdomain, mockMvc, webApplicationContext, null, IdentityZoneHolder.getCurrentZoneId());
         String zoneAdminToken = result.getZoneAdminToken();
@@ -326,11 +320,11 @@ public class ScimGroupEndpointsMockMvcTests {
                 .header("Authorization", "bearer " + zoneAdminToken)
                 .accept(APPLICATION_JSON);
 
-        assertEquals(group, JsonUtils.readValue(
+        assertThat(JsonUtils.readValue(
                 mockMvc.perform(get)
                         .andExpect(status().isOk())
                         .andReturn().getResponse().getContentAsString(),
-                ScimGroup.class));
+                ScimGroup.class)).isEqualTo(group);
     }
 
     @Test
@@ -350,7 +344,7 @@ public class ScimGroupEndpointsMockMvcTests {
 
         String body = mvcResult.getResponse().getContentAsString();
         SearchResults<ScimGroup> searchResults = JsonUtils.readValue(body, SearchResults.class);
-        assertThat("Search results: " + body, searchResults.getResources(), hasSize(2));
+        assertThat(searchResults.getResources()).as("Search results: " + body).hasSize(2);
 
         get = get("/Groups")
                 .header("Authorization", "Bearer " + scimReadUserToken)
@@ -364,7 +358,7 @@ public class ScimGroupEndpointsMockMvcTests {
 
         body = mvcResult.getResponse().getContentAsString();
         searchResults = JsonUtils.readValue(body, SearchResults.class);
-        assertThat("Search results: " + body, searchResults.getResources(), hasSize(2));
+        assertThat(searchResults.getResources()).as("Search results: " + body).hasSize(2);
 
         get = get("/Groups")
                 .header("Authorization", "Bearer " + scimReadToken)
@@ -377,7 +371,7 @@ public class ScimGroupEndpointsMockMvcTests {
 
         body = mvcResult.getResponse().getContentAsString();
         searchResults = JsonUtils.readValue(body, SearchResults.class);
-        assertThat("Search results: " + body, searchResults.getResources(), hasSize(4));
+        assertThat(searchResults.getResources()).as("Search results: " + body).hasSize(4);
 
         get = get("/Groups")
                 .header("Authorization", "Bearer " + scimReadUserToken)
@@ -390,7 +384,7 @@ public class ScimGroupEndpointsMockMvcTests {
 
         body = mvcResult.getResponse().getContentAsString();
         searchResults = JsonUtils.readValue(body, SearchResults.class);
-        assertThat("Search results: " + body, searchResults.getResources(), hasSize(4));
+        assertThat(searchResults.getResources()).as("Search results: " + body).hasSize(4);
     }
 
     @Nested
@@ -445,7 +439,7 @@ public class ScimGroupEndpointsMockMvcTests {
                     .andReturn();
 
             SearchResults searchResults = JsonUtils.readValue(mvcResult.getResponse().getContentAsString(), SearchResults.class);
-            assertEquals(searchResults.getResources().size(), getSystemScopes("scim").size() + 1);
+            assertThat(getSystemScopes("scim").size() + 1).isEqualTo(searchResults.getResources().size());
 
             get = get("/Groups")
                     .header("Authorization", "Bearer " + result.getZoneAdminToken())
@@ -457,10 +451,8 @@ public class ScimGroupEndpointsMockMvcTests {
                     .andReturn();
 
             searchResults = JsonUtils.readValue(mvcResult.getResponse().getContentAsString(), SearchResults.class);
-            assertEquals(searchResults.getResources().size(),
-                    UserConfig.DEFAULT_ZONE_GROUPS.size() +
-                            getSystemScopes(null).size() + 2 - 1 //two added groups, password.write exist in both default
-            );
+            assertThat(UserConfig.DEFAULT_ZONE_GROUPS.size() +
+                    getSystemScopes(null).size() + 2 - 1).isEqualTo(searchResults.getResources().size());
         }
 
         @Test
@@ -504,7 +496,7 @@ public class ScimGroupEndpointsMockMvcTests {
                     .andReturn();
 
             SearchResults searchResults = JsonUtils.readValue(mvcResult.getResponse().getContentAsString(), SearchResults.class);
-            assertThat(searchResults.getResources().size(), is(getSystemScopes("scim").size()));
+            assertThat(searchResults.getResources().size()).isEqualTo(getSystemScopes("scim").size());
 
             get = get("/Groups")
                     .with(new SetServerNameRequestPostProcessor(result.getIdentityZone().getSubdomain() + ".localhost"))
@@ -516,10 +508,8 @@ public class ScimGroupEndpointsMockMvcTests {
                     .andReturn();
 
             searchResults = JsonUtils.readValue(mvcResult.getResponse().getContentAsString(), SearchResults.class);
-            assertEquals(searchResults.getResources().size(),
-                    UserConfig.DEFAULT_ZONE_GROUPS.size() +
-                            getSystemScopes(null).size() - 1 //password.write exists in both list
-            );
+            assertThat(UserConfig.DEFAULT_ZONE_GROUPS.size() +
+                    getSystemScopes(null).size() - 1).isEqualTo(searchResults.getResources().size());
         }
     }
 
@@ -535,7 +525,7 @@ public class ScimGroupEndpointsMockMvcTests {
     }
 
     @Test
-    void testGetGroupsWithMaxCountSize_whenProvidedWithNonDefaultCountParams() throws Exception {
+    void getGroupsWithMaxCountSizeWhenProvidedWithNonDefaultCountParams() throws Exception {
         for (int i = 0; i < 12; i++) {
             String displayName = "internal.read" + new RandomValueStringGenerator().generate();
             String externalGroup = "cn=java-developers,ou=scopes,dc=test,dc=com" + new RandomValueStringGenerator().generate();
@@ -552,13 +542,13 @@ public class ScimGroupEndpointsMockMvcTests {
                 .andReturn();
 
         SearchResults searchResults = JsonUtils.readValue(mvcResult.getResponse().getContentAsString(), SearchResults.class);
-        assertThat(searchResults.getResources().size(), is(5));
-        assertThat(searchResults.getItemsPerPage(), is(5));
-        assertThat(searchResults.getTotalResults(), is(greaterThan(10)));
+        assertThat(searchResults.getResources().size()).isEqualTo(5);
+        assertThat(searchResults.getItemsPerPage()).isEqualTo(5);
+        assertThat(searchResults.getTotalResults()).isGreaterThan(10);
     }
 
     @Test
-    void testGetGroupsWithMaxCountSize_whenProvidedWithNoCountParam() throws Exception {
+    void getGroupsWithMaxCountSizeWhenProvidedWithNoCountParam() throws Exception {
         for (int i = 0; i < 12; i++) {
             String displayName = "internal.read" + new RandomValueStringGenerator().generate();
             String externalGroup = "cn=java-developers,ou=scopes,dc=test,dc=com" + new RandomValueStringGenerator().generate();
@@ -575,13 +565,13 @@ public class ScimGroupEndpointsMockMvcTests {
                 .andReturn();
 
         SearchResults searchResults = JsonUtils.readValue(mvcResult.getResponse().getContentAsString(), SearchResults.class);
-        assertThat(searchResults.getResources().size(), is(5));
-        assertThat(searchResults.getItemsPerPage(), is(5));
-        assertThat(searchResults.getTotalResults(), is(greaterThan(10)));
+        assertThat(searchResults.getResources().size()).isEqualTo(5);
+        assertThat(searchResults.getItemsPerPage()).isEqualTo(5);
+        assertThat(searchResults.getTotalResults()).isGreaterThan(10);
     }
 
     @Test
-    void testGetGroupsInvalidFilter() throws Exception {
+    void getGroupsInvalidFilter() throws Exception {
         MockHttpServletRequestBuilder get = get("/Groups")
                 .header("Authorization", "Bearer " + scimReadToken)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -602,7 +592,7 @@ public class ScimGroupEndpointsMockMvcTests {
     }
 
     @Test
-    void testGetGroupsInvalidAttributes() throws Exception {
+    void getGroupsInvalidAttributes() throws Exception {
         String nonexistentAttribute = "displayBlaBla";
 
         MockHttpServletRequestBuilder get = get("/Groups")
@@ -618,17 +608,17 @@ public class ScimGroupEndpointsMockMvcTests {
         String body = mvcResult.getResponse().getContentAsString();
         List<Map<String, Object>> attList = (List) JsonUtils.readValue(body, Map.class).get("resources");
         for (Map<String, Object> attMap : attList) {
-            assertNull(attMap.get(nonexistentAttribute));
+            assertThat(attMap.get(nonexistentAttribute)).isNull();
         }
     }
 
     @Test
-    void testGetExternalGroups() throws Exception {
+    void getExternalGroups() throws Exception {
         checkGetExternalGroups();
     }
 
     @Test
-    void testCreateExternalGroupMapUsingName() throws Exception {
+    void createExternalGroupMapUsingName() throws Exception {
         String displayName = "internal.read";
         String externalGroup = "cn=java-developers,ou=scopes,dc=test,dc=com";
         ResultActions result = createGroup(null, displayName, externalGroup);
@@ -639,12 +629,12 @@ public class ScimGroupEndpointsMockMvcTests {
         ArrayList<String> list = new ArrayList<>(defaultExternalMembers);
         list.add(displayName + "|" + externalGroup);
         defaultExternalMembers = list;
-        assertEquals(previousSize + 1, defaultExternalMembers.size());
+        assertThat(defaultExternalMembers.size()).isEqualTo(previousSize + 1);
         checkGetExternalGroups();
     }
 
     @Test
-    void testCreateExternalGroupMapUsingNameAlreadyExists() throws Exception {
+    void createExternalGroupMapUsingNameAlreadyExists() throws Exception {
         String displayName = "internal.read";
         String externalGroup = "cn=developers,ou=scopes,dc=test,dc=com";
         ResultActions result = createGroup(null, displayName, externalGroup);
@@ -654,7 +644,7 @@ public class ScimGroupEndpointsMockMvcTests {
     }
 
     @Test
-    void testCreateExternalGroupMapNameDoesNotExists() throws Exception {
+    void createExternalGroupMapNameDoesNotExists() throws Exception {
         String displayName = "internal.read" + "sdasdas";
         String externalGroup = "cn=developers,ou=scopes,dc=test,dc=com";
         ResultActions result = createGroup(null, displayName, externalGroup);
@@ -662,14 +652,14 @@ public class ScimGroupEndpointsMockMvcTests {
     }
 
     @Test
-    void testCreateExternalGroupMapNameIsNull() throws Exception {
+    void createExternalGroupMapNameIsNull() throws Exception {
         String externalGroup = "cn=developers,ou=scopes,dc=test,dc=com";
         ResultActions result = createGroup(null, null, externalGroup);
         result.andExpect(status().isNotFound());
     }
 
     @Test
-    void testCreateExternalGroupMapUsingId() throws Exception {
+    void createExternalGroupMapUsingId() throws Exception {
         String displayName = "internal.read";
         String groupId = getGroupId(displayName);
         String externalGroup = "cn=java-developers,ou=scopes,dc=test,dc=com";
@@ -682,12 +672,12 @@ public class ScimGroupEndpointsMockMvcTests {
         ArrayList<String> list = new ArrayList<>(defaultExternalMembers);
         list.add(displayName + "|" + externalGroup);
         defaultExternalMembers = list;
-        assertEquals(previousSize + 1, defaultExternalMembers.size());
+        assertThat(defaultExternalMembers.size()).isEqualTo(previousSize + 1);
         checkGetExternalGroups();
     }
 
     @Test
-    void test_create_and_update_group_description() throws Exception {
+    void create_and_update_group_description() throws Exception {
         String name = new RandomValueStringGenerator().generate();
         ScimGroup group = new ScimGroup(name);
         group.setZoneId("some-other-zone");
@@ -707,11 +697,11 @@ public class ScimGroupEndpointsMockMvcTests {
                                 .andReturn().getResponse().getContentAsString(),
                         ScimGroup.class
                 );
-        assertNotNull(newGroup);
-        assertNotNull(newGroup.getId());
-        assertEquals(IdentityZone.getUaaZoneId(), newGroup.getZoneId());
-        assertEquals(group.getDisplayName(), newGroup.getDisplayName());
-        assertEquals(group.getDescription(), newGroup.getDescription());
+        assertThat(newGroup).isNotNull();
+        assertThat(newGroup.getId()).isNotNull();
+        assertThat(newGroup.getZoneId()).isEqualTo(IdentityZone.getUaaZoneId());
+        assertThat(newGroup.getDisplayName()).isEqualTo(group.getDisplayName());
+        assertThat(newGroup.getDescription()).isEqualTo(group.getDescription());
 
         group.setDescription(name + "-description-updated");
         newGroup.setDescription(group.getDescription());
@@ -732,11 +722,11 @@ public class ScimGroupEndpointsMockMvcTests {
                         ScimGroup.class
                 );
 
-        assertNotNull(newGroup);
-        assertNotNull(newGroup.getId());
-        assertEquals(IdentityZone.getUaaZoneId(), newGroup.getZoneId());
-        assertEquals(group.getDisplayName(), newGroup.getDisplayName());
-        assertEquals(group.getDescription(), newGroup.getDescription());
+        assertThat(newGroup).isNotNull();
+        assertThat(newGroup.getId()).isNotNull();
+        assertThat(newGroup.getZoneId()).isEqualTo(IdentityZone.getUaaZoneId());
+        assertThat(newGroup.getDisplayName()).isEqualTo(group.getDisplayName());
+        assertThat(newGroup.getDescription()).isEqualTo(group.getDescription());
 
     }
 
@@ -769,7 +759,7 @@ public class ScimGroupEndpointsMockMvcTests {
     }
 
     @Test
-    void testDeleteExternalGroupMapUsingNameDeprecatedAPI() throws Exception {
+    void deleteExternalGroupMapUsingNameDeprecatedAPI() throws Exception {
         String displayName = "internal.read";
         String externalGroup = "cn=developers,ou=scopes,dc=test,dc=com";
         ScimGroupExternalMember em = new ScimGroupExternalMember();
@@ -786,14 +776,14 @@ public class ScimGroupEndpointsMockMvcTests {
         //remove the deleted map from our expected list, and check again.
         int previousSize = defaultExternalMembers.size();
         ArrayList<String> list = new ArrayList<>(defaultExternalMembers);
-        assertTrue(list.remove(displayName + "|" + externalGroup));
+        assertThat(list.remove(displayName + "|" + externalGroup)).isTrue();
         defaultExternalMembers = list;
-        assertEquals(previousSize - 1, defaultExternalMembers.size());
+        assertThat(defaultExternalMembers.size()).isEqualTo(previousSize - 1);
         checkGetExternalGroups();
     }
 
     @Test
-    void testDeleteExternalGroupMapUsingName() throws Exception {
+    void deleteExternalGroupMapUsingName() throws Exception {
         String displayName = "internal.read";
         String externalGroup = "cn=developers,ou=scopes,dc=test,dc=com";
         ScimGroupExternalMember em = new ScimGroupExternalMember();
@@ -810,14 +800,14 @@ public class ScimGroupEndpointsMockMvcTests {
         //remove the deleted map from our expected list, and check again.
         int previousSize = defaultExternalMembers.size();
         ArrayList<String> list = new ArrayList<>(defaultExternalMembers);
-        assertTrue(list.remove(displayName + "|" + externalGroup));
+        assertThat(list.remove(displayName + "|" + externalGroup)).isTrue();
         defaultExternalMembers = list;
-        assertEquals(previousSize - 1, defaultExternalMembers.size());
+        assertThat(defaultExternalMembers.size()).isEqualTo(previousSize - 1);
         checkGetExternalGroups();
     }
 
     @Test
-    void testDeleteExternalGroupMapUsingNonExistentName() throws Exception {
+    void deleteExternalGroupMapUsingNonExistentName() throws Exception {
         String displayName = "internal.read.nonexistent";
         String externalGroup = "cn=developers,ou=scopes,dc=test,dc=com";
         ScimGroupExternalMember em = new ScimGroupExternalMember();
@@ -833,7 +823,7 @@ public class ScimGroupEndpointsMockMvcTests {
     }
 
     @Test
-    void testDeleteExternalGroupMapUsingIdDeprecatedAPI() throws Exception {
+    void deleteExternalGroupMapUsingIdDeprecatedAPI() throws Exception {
         String displayName = "internal.read";
         String externalGroup = "cn=developers,ou=scopes,dc=test,dc=com";
         String groupId = getGroupId(displayName);
@@ -848,14 +838,14 @@ public class ScimGroupEndpointsMockMvcTests {
         //remove the deleted map from our expected list, and check again.
         int previousSize = defaultExternalMembers.size();
         ArrayList<String> list = new ArrayList<>(defaultExternalMembers);
-        assertTrue(list.remove(displayName + "|" + externalGroup));
+        assertThat(list.remove(displayName + "|" + externalGroup)).isTrue();
         defaultExternalMembers = list;
-        assertEquals(previousSize - 1, defaultExternalMembers.size());
+        assertThat(defaultExternalMembers.size()).isEqualTo(previousSize - 1);
         checkGetExternalGroups();
     }
 
     @Test
-    void testDeleteExternalGroupMapUsingId() throws Exception {
+    void deleteExternalGroupMapUsingId() throws Exception {
         String displayName = "internal.read";
         String externalGroup = "cn=developers,ou=scopes,dc=test,dc=com";
         String groupId = getGroupId(displayName);
@@ -877,14 +867,14 @@ public class ScimGroupEndpointsMockMvcTests {
         //remove the deleted map from our expected list, and check again.
         int previousSize = defaultExternalMembers.size();
         ArrayList<String> list = new ArrayList<>(defaultExternalMembers);
-        assertTrue(list.remove(displayName + "|" + externalGroup));
+        assertThat(list.remove(displayName + "|" + externalGroup)).isTrue();
         defaultExternalMembers = list;
-        assertEquals(previousSize - 1, defaultExternalMembers.size());
+        assertThat(defaultExternalMembers.size()).isEqualTo(previousSize - 1);
         checkGetExternalGroups();
     }
 
     @Test
-    void testDeleteExternalGroupMapUsingNonExistentId() throws Exception {
+    void deleteExternalGroupMapUsingNonExistentId() throws Exception {
         String externalGroup = "cn=developers,ou=scopes,dc=test,dc=com";
         String groupId = "non-existent";
 
@@ -897,7 +887,7 @@ public class ScimGroupEndpointsMockMvcTests {
     }
 
     @Test
-    void testDeleteExternalGroupMapUsingReadToken() throws Exception {
+    void deleteExternalGroupMapUsingReadToken() throws Exception {
         String displayName = "internal.read";
         String externalGroup = "cn=developers,ou=scopes,dc=test,dc=com";
         String groupId = getGroupId(displayName);
@@ -921,8 +911,8 @@ public class ScimGroupEndpointsMockMvcTests {
                 .andExpect(status().isOk())
                 .andReturn();
         ScimGroupMember scimGroupMember = JsonUtils.readValue(mvcResult.getResponse().getContentAsString(), ScimGroupMember.class);
-        assertNotNull(scimGroupMember);
-        assertEquals(scimUser.getId(), scimGroupMember.getMemberId());
+        assertThat(scimGroupMember).isNotNull();
+        assertThat(scimGroupMember.getMemberId()).isEqualTo(scimUser.getId());
     }
 
     @Test
@@ -960,7 +950,7 @@ public class ScimGroupEndpointsMockMvcTests {
         ScimGroup group = new ScimGroup(groupName);
         group = MockMvcUtils.createGroup(mockMvc, scimWriteToken, group);
         String groupId = getGroupId(groupName);
-        assertEquals(group.getId(), groupId);
+        assertThat(groupId).isEqualTo(group.getId());
 
         scimUser = createUserAndAddToGroups(IdentityZone.getUaa(), Sets.newHashSet(Collections.singletonList(groupName)));
 
@@ -993,7 +983,7 @@ public class ScimGroupEndpointsMockMvcTests {
         ScimGroup group = new ScimGroup(groupName);
         group = MockMvcUtils.createGroup(mockMvc, scimWriteToken, group);
         String groupId = getGroupId(groupName);
-        assertEquals(group.getId(), groupId);
+        assertThat(groupId).isEqualTo(group.getId());
 
         scimUser = createUserAndAddToGroups(IdentityZone.getUaa(), Sets.newHashSet(Collections.singletonList(groupName)));
 
@@ -1041,7 +1031,7 @@ public class ScimGroupEndpointsMockMvcTests {
         String responseBody = mockMvc.perform(post)
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
-        assertEquals(JsonUtils.writeValueAsString(scimGroupMember), responseBody);
+        assertThat(responseBody).isEqualTo(JsonUtils.writeValueAsString(scimGroupMember));
     }
 
 
@@ -1061,7 +1051,7 @@ public class ScimGroupEndpointsMockMvcTests {
         String responseBody = mockMvc.perform(post)
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
-        assertEquals(JsonUtils.writeValueAsString(scimGroupMember), responseBody);
+        assertThat(responseBody).isEqualTo(JsonUtils.writeValueAsString(scimGroupMember));
     }
 
     @Test
@@ -1094,7 +1084,7 @@ public class ScimGroupEndpointsMockMvcTests {
 
         ScimGroupMember deletedMember = JsonUtils.readValue(deleteResponseBody, ScimGroupMember.class);
 
-        assertEquals(user.getId(), deletedMember.getMemberId());
+        assertThat(deletedMember.getMemberId()).isEqualTo(user.getId());
     }
 
     @Test
@@ -1175,7 +1165,7 @@ public class ScimGroupEndpointsMockMvcTests {
     }
 
     @Test
-    void testGetExternalGroupsPagination() throws Exception {
+    void getExternalGroupsPagination() throws Exception {
         checkGetExternalGroupsPagination(1);
         checkGetExternalGroupsPagination(2);
         checkGetExternalGroupsPagination(3);
@@ -1191,24 +1181,24 @@ public class ScimGroupEndpointsMockMvcTests {
         createGroup(null, "internal.read", "external-group-name", "other-origin").andExpect(status().isCreated());
 
         //get all results
-        assertEquals(6, performExternalGroupFilter(getListExternalGroupMethod(), HttpStatus.OK).size());
+        assertThat(performExternalGroupFilter(getListExternalGroupMethod(), HttpStatus.OK).size()).isEqualTo(6);
 
         //filter using origin parameter
-        assertEquals(1, performExternalGroupFilter(getListExternalGroupMethod().param("origin", "other-origin"), HttpStatus.OK).size());
-        assertEquals(5, performExternalGroupFilter(getListExternalGroupMethod().param("origin", OriginKeys.LDAP), HttpStatus.OK).size());
+        assertThat(performExternalGroupFilter(getListExternalGroupMethod().param("origin", "other-origin"), HttpStatus.OK).size()).isEqualTo(1);
+        assertThat(performExternalGroupFilter(getListExternalGroupMethod().param("origin", OriginKeys.LDAP), HttpStatus.OK).size()).isEqualTo(5);
 
         //filter using externalGroup parameter
-        assertEquals(1, performExternalGroupFilter(getListExternalGroupMethod().param("externalGroup", "external-group-name"), HttpStatus.OK).size());
+        assertThat(performExternalGroupFilter(getListExternalGroupMethod().param("externalGroup", "external-group-name"), HttpStatus.OK).size()).isEqualTo(1);
 
         //filter using both
-        assertEquals(0, performExternalGroupFilter(getListExternalGroupMethod().param("externalGroup", "external-group-name").param("origin", OriginKeys.LDAP), HttpStatus.OK).size());
-        assertEquals(1, performExternalGroupFilter(getListExternalGroupMethod().param("externalGroup", "external-group-name").param("origin", "other-origin"), HttpStatus.OK).size());
+        assertThat(performExternalGroupFilter(getListExternalGroupMethod().param("externalGroup", "external-group-name").param("origin", OriginKeys.LDAP), HttpStatus.OK).size()).isEqualTo(0);
+        assertThat(performExternalGroupFilter(getListExternalGroupMethod().param("externalGroup", "external-group-name").param("origin", "other-origin"), HttpStatus.OK).size()).isEqualTo(1);
 
         //filter using filter
-        assertEquals(1, performExternalGroupFilter(getListExternalGroupMethod().param("filter", "externalGroup eq \"external-group-name\""), HttpStatus.OK).size());
-        assertEquals(5, performExternalGroupFilter(getListExternalGroupMethod().param("filter", "origin eq \"ldap\""), HttpStatus.OK).size());
-        assertEquals(0, performExternalGroupFilter(getListExternalGroupMethod().param("filter", "externalGroup eq \"external-group-name\" and origin eq \"ldap\""), HttpStatus.OK).size());
-        assertEquals(1, performExternalGroupFilter(getListExternalGroupMethod().param("filter", "externalGroup eq \"external-group-name\" and origin eq \"other-origin\""), HttpStatus.OK).size());
+        assertThat(performExternalGroupFilter(getListExternalGroupMethod().param("filter", "externalGroup eq \"external-group-name\""), HttpStatus.OK).size()).isEqualTo(1);
+        assertThat(performExternalGroupFilter(getListExternalGroupMethod().param("filter", "origin eq \"ldap\""), HttpStatus.OK).size()).isEqualTo(5);
+        assertThat(performExternalGroupFilter(getListExternalGroupMethod().param("filter", "externalGroup eq \"external-group-name\" and origin eq \"ldap\""), HttpStatus.OK).size()).isEqualTo(0);
+        assertThat(performExternalGroupFilter(getListExternalGroupMethod().param("filter", "externalGroup eq \"external-group-name\" and origin eq \"other-origin\""), HttpStatus.OK).size()).isEqualTo(1);
 
         //invalid parameter combinations
         performExternalGroupFilter(getListExternalGroupMethod().param("filter", "origin eq \"ldap\"").param("origin", "value"), HttpStatus.BAD_REQUEST);
@@ -1314,8 +1304,8 @@ public class ScimGroupEndpointsMockMvcTests {
             memberList.add(sgm);
         }
         members = new SearchResults<>((List<String>) map.get("schemas"), memberList, startIndex, itemsPerPage, totalResults);
-        assertNotNull(members);
-        assertEquals(defaultExternalMembers.size(), members.getResources().size());
+        assertThat(members).isNotNull();
+        assertThat(members.getResources().size()).isEqualTo(defaultExternalMembers.size());
         validateMembers(defaultExternalMembers, members.getResources());
     }
 
@@ -1335,8 +1325,8 @@ public class ScimGroupEndpointsMockMvcTests {
         List<ScimGroupExternalMember> members = new ArrayList<>();
         for (String s : expected) {
             String[] data = s.split("\\|");
-            assertNotNull(data);
-            assertEquals(2, data.length);
+            assertThat(data).isNotNull();
+            assertThat(data.length).isEqualTo(2);
             String displayName = data[0];
             String externalId = data[1];
             ScimGroupExternalMember mbr = new ScimGroupExternalMember("N/A", externalId);
@@ -1354,15 +1344,15 @@ public class ScimGroupEndpointsMockMvcTests {
             final String origin = s.getOrigin();
             boolean found = false;
             for (ScimGroupExternalMember m : actual) {
-                assertNotNull(m.getDisplayName(), "Display name can not be null");
-                assertNotNull(m.getExternalGroup(), "External ID can not be null");
+                assertThat(m.getDisplayName()).as("Display name can not be null").isNotNull();
+                assertThat(m.getExternalGroup()).as("External ID can not be null").isNotNull();
                 if (m.getDisplayName().equals(displayName) && m.getExternalGroup().equals(externalId) && m.getOrigin().equals(origin)) {
                     found = true;
                     break;
                 }
             }
-            assertTrue(found, "Did not find expected external group mapping:" + s);
-            assertEquals(expected.size(), actual.size(), "The result set must contain exactly as many items as expected");
+            assertThat(found).as("Did not find expected external group mapping:" + s).isTrue();
+            assertThat(actual.size()).as("The result set must contain exactly as many items as expected").isEqualTo(expected.size());
         }
     }
 

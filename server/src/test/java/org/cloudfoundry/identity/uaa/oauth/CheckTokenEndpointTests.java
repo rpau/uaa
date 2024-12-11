@@ -51,6 +51,7 @@ import org.cloudfoundry.identity.uaa.zone.MultitenancyFixture;
 import org.cloudfoundry.identity.uaa.zone.TokenPolicy;
 import org.cloudfoundry.identity.uaa.zone.beans.IdentityZoneManager;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -74,13 +75,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.TokenFormat.OPAQUE;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.AdditionalMatchers.not;
 import static org.mockito.ArgumentMatchers.any;
@@ -299,11 +297,9 @@ class CheckTokenEndpointTests {
                 );
         clientDetailsService.setClientDetailsStore(zone.getId(), clientDetailsStore);
         clientDetailsService.setClientDetailsStore(IdentityZoneHolder.get().getId(), clientDetailsStore);
-        try {
+        Assertions.assertDoesNotThrow(() -> {
             tokenEndpointBuilder = new TokenEndpointBuilder("http://localhost:8080/uaa");
-        } catch (Exception e) {
-            fail(e);
-        }
+        });
         userDatabase = mock(UaaUserDatabase.class);
         KeyInfoService keyInfoService = new KeyInfoService("http://localhost:8080/uaa");
         tokenValidationService = new TokenValidationService(tokenProvisioning, tokenEndpointBuilder, userDatabase, clientDetailsService, keyInfoService);
@@ -350,7 +346,7 @@ class CheckTokenEndpointTests {
 
     @MethodSource("data")
     @ParameterizedTest
-    void testClientWildcard(String signerKey, boolean useOpaque) throws Exception {
+    void clientWildcard(String signerKey, boolean useOpaque) throws Exception {
         initCheckTokenEndpointTests(signerKey, useOpaque);
         UaaClientDetails client =
                 new UaaClientDetails("client", "zones", "zones.*.admin", "authorization_code, password",
@@ -371,7 +367,7 @@ class CheckTokenEndpointTests {
 
     @MethodSource("data")
     @ParameterizedTest
-    void testRejectInvalidVerifier(String signerKey, boolean useOpaque) throws Exception {
+    void rejectInvalidVerifier(String signerKey, boolean useOpaque) throws Exception {
         initCheckTokenEndpointTests(signerKey, useOpaque);
         try {
             OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
@@ -385,134 +381,127 @@ class CheckTokenEndpointTests {
 
     @MethodSource("data")
     @ParameterizedTest
-    void testRejectUserSaltChange(String signerKey, boolean useOpaque) {
+    void rejectUserSaltChange(String signerKey, boolean useOpaque) {
         initCheckTokenEndpointTests(signerKey, useOpaque);
-        assertThrows(TokenRevokedException.class, () -> {
-            OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
-            user = new UaaUser(
-                    userId,
-                    userName,
-                    "password",
-                    userEmail,
-                    userAuthorities,
-                    "GivenName",
-                    "FamilyName",
-                    new Date(nowMillis - 2000),
-                    new Date(nowMillis - 2000),
-                    OriginKeys.UAA,
-                    "externalId",
-                    false,
-                    IdentityZoneHolder.get().getId(),
-                    "changedsalt",
-                    new Date(nowMillis - 2000));
-            resetAndMockUserDatabase(userId, user);
-            endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request);
-        });
+        OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
+        user = new UaaUser(
+                userId,
+                userName,
+                "password",
+                userEmail,
+                userAuthorities,
+                "GivenName",
+                "FamilyName",
+                new Date(nowMillis - 2000),
+                new Date(nowMillis - 2000),
+                OriginKeys.UAA,
+                "externalId",
+                false,
+                IdentityZoneHolder.get().getId(),
+                "changedsalt",
+                new Date(nowMillis - 2000));
+        resetAndMockUserDatabase(userId, user);
+        assertThatExceptionOfType(TokenRevokedException.class).isThrownBy(() ->
+                endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request));
     }
 
     @MethodSource("data")
     @ParameterizedTest
-    void testRejectUserUsernameChange(String signerKey, boolean useOpaque) {
+    void rejectUserUsernameChange(String signerKey, boolean useOpaque) {
         initCheckTokenEndpointTests(signerKey, useOpaque);
-        assertThrows(TokenRevokedException.class, () -> {
-            OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
-            user = new UaaUser(
-                    userId,
-                    "newUsername@test.org",
-                    "password",
-                    userEmail,
-                    userAuthorities,
-                    "GivenName",
-                    "FamilyName",
-                    new Date(nowMillis - 2000),
-                    new Date(nowMillis - 2000),
-                    OriginKeys.UAA,
-                    "externalId",
-                    false,
-                    IdentityZoneHolder.get().getId(),
-                    "salt",
-                    new Date(nowMillis - 2000));
-            resetAndMockUserDatabase(userId, user);
-            endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request);
-        });
+        OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
+        user = new UaaUser(
+                userId,
+                "newUsername@test.org",
+                "password",
+                userEmail,
+                userAuthorities,
+                "GivenName",
+                "FamilyName",
+                new Date(nowMillis - 2000),
+                new Date(nowMillis - 2000),
+                OriginKeys.UAA,
+                "externalId",
+                false,
+                IdentityZoneHolder.get().getId(),
+                "salt",
+                new Date(nowMillis - 2000));
+        resetAndMockUserDatabase(userId, user);
+        assertThatExceptionOfType(TokenRevokedException.class).isThrownBy(() ->
+                endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request));
     }
 
     @MethodSource("data")
     @ParameterizedTest
-    void testRejectUserEmailChange(String signerKey, boolean useOpaque) {
+    void rejectUserEmailChange(String signerKey, boolean useOpaque) {
         initCheckTokenEndpointTests(signerKey, useOpaque);
-        assertThrows(TokenRevokedException.class, () -> {
-            OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
-            user = new UaaUser(
-                    userId,
-                    userName,
-                    "password",
-                    "newEmail@test.org",
-                    userAuthorities,
-                    "GivenName",
-                    "FamilyName",
-                    new Date(nowMillis - 2000),
-                    new Date(nowMillis - 2000),
-                    OriginKeys.UAA,
-                    "externalId",
-                    false,
-                    IdentityZoneHolder.get().getId(),
-                    "salt",
-                    new Date(nowMillis - 2000));
-            resetAndMockUserDatabase(userId, user);
-            endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request);
-        });
+        OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
+        user = new UaaUser(
+                userId,
+                userName,
+                "password",
+                "newEmail@test.org",
+                userAuthorities,
+                "GivenName",
+                "FamilyName",
+                new Date(nowMillis - 2000),
+                new Date(nowMillis - 2000),
+                OriginKeys.UAA,
+                "externalId",
+                false,
+                IdentityZoneHolder.get().getId(),
+                "salt",
+                new Date(nowMillis - 2000));
+        resetAndMockUserDatabase(userId, user);
+        assertThatExceptionOfType(TokenRevokedException.class).isThrownBy(() ->
+                endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request));
     }
 
 
     @MethodSource("data")
     @ParameterizedTest
-    void testRejectUserPasswordChange(String signerKey, boolean useOpaque) {
+    void rejectUserPasswordChange(String signerKey, boolean useOpaque) {
         initCheckTokenEndpointTests(signerKey, useOpaque);
-        assertThrows(TokenRevokedException.class, () -> {
-            OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
-            user = new UaaUser(
-                    userId,
-                    userName,
-                    "changedpassword",
-                    userEmail,
-                    userAuthorities,
-                    "GivenName",
-                    "FamilyName",
-                    new Date(nowMillis - 2000),
-                    new Date(nowMillis - 2000),
-                    OriginKeys.UAA,
-                    "externalId",
-                    false,
-                    IdentityZoneHolder.get().getId(),
-                    "salt",
-                    new Date(nowMillis - 2000));
-
-            resetAndMockUserDatabase(userId, user);
-            endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request);
-        });
+        OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
+        user = new UaaUser(
+                userId,
+                userName,
+                "changedpassword",
+                userEmail,
+                userAuthorities,
+                "GivenName",
+                "FamilyName",
+                new Date(nowMillis - 2000),
+                new Date(nowMillis - 2000),
+                OriginKeys.UAA,
+                "externalId",
+                false,
+                IdentityZoneHolder.get().getId(),
+                "salt",
+                new Date(nowMillis - 2000));
+        resetAndMockUserDatabase(userId, user);
+        assertThatExceptionOfType(TokenRevokedException.class).isThrownBy(() ->
+                endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request));
     }
 
     @MethodSource("data")
     @ParameterizedTest
-    void testRejectClientSaltChange(String signerKey, boolean useOpaque) {
+    void rejectClientSaltChange(String signerKey, boolean useOpaque) {
         initCheckTokenEndpointTests(signerKey, useOpaque);
-        assertThrows(TokenRevokedException.class, () -> {
-            OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
-            defaultClient.addAdditionalInformation(ClientConstants.TOKEN_SALT, "changedsalt");
-            endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request);
-        });
+        OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
+        defaultClient.addAdditionalInformation(ClientConstants.TOKEN_SALT, "changedsalt");
+        assertThatExceptionOfType(TokenRevokedException.class).isThrownBy(() ->
+                endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request));
     }
 
     @MethodSource("data")
     @ParameterizedTest
-    void testRejectClientPasswordChange(String signerKey, boolean useOpaque) {
+    void rejectClientPasswordChange(String signerKey, boolean useOpaque) {
         initCheckTokenEndpointTests(signerKey, useOpaque);
-        assertThrows(TokenRevokedException.class, () -> {
-            OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
-            defaultClient.setClientSecret("changedsecret");
-            endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request);
-        });
+        OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
+        defaultClient.setClientSecret("changedsecret");
+        assertThatExceptionOfType(TokenRevokedException.class).isThrownBy(() ->
+                endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request));
     }
 
     private static String missingScopeMessage(String... scopes) {
@@ -521,9 +510,9 @@ class CheckTokenEndpointTests {
 
     @MethodSource("data")
     @ParameterizedTest
-    void testValidateScopesNotPresent(String signerKey, boolean useOpaque) {
+    void validateScopesNotPresent(String signerKey, boolean useOpaque) {
         initCheckTokenEndpointTests(signerKey, useOpaque);
-        assertThrows(InvalidScopeException.class, () -> {
+        assertThatExceptionOfType(InvalidScopeException.class).isThrownBy(() -> {
             try {
                 authentication = new OAuth2Authentication(new AuthorizationRequest("client",
                         Collections.singleton("scim.read")).createOAuth2Request(), null);
@@ -531,7 +520,7 @@ class CheckTokenEndpointTests {
 
                 endpoint.checkToken(accessToken.getValue(), Collections.singletonList("scim.write"), request);
             } catch (InvalidScopeException ex) {
-                assertEquals(missingScopeMessage("scim.write"), ex.getMessage());
+                assertThat(ex.getMessage()).isEqualTo(missingScopeMessage("scim.write"));
                 throw ex;
             }
         });
@@ -539,9 +528,9 @@ class CheckTokenEndpointTests {
 
     @MethodSource("data")
     @ParameterizedTest
-    void testValidateScopesMultipleNotPresent(String signerKey, boolean useOpaque) {
+    void validateScopesMultipleNotPresent(String signerKey, boolean useOpaque) {
         initCheckTokenEndpointTests(signerKey, useOpaque);
-        assertThrows(InvalidScopeException.class, () -> {
+        assertThatExceptionOfType(InvalidScopeException.class).isThrownBy(() -> {
             try {
                 authentication = new OAuth2Authentication(new AuthorizationRequest("client",
                         Collections.singletonList("cat.pet")).createOAuth2Request(), null);
@@ -549,7 +538,7 @@ class CheckTokenEndpointTests {
 
                 endpoint.checkToken(accessToken.getValue(), Arrays.asList("scim.write", "scim.read"), request);
             } catch (InvalidScopeException ex) {
-                assertEquals(missingScopeMessage("scim.write", "scim.read"), ex.getMessage());
+                assertThat(ex.getMessage()).isEqualTo(missingScopeMessage("scim.write", "scim.read"));
                 throw ex;
             }
         });
@@ -557,7 +546,7 @@ class CheckTokenEndpointTests {
 
     @MethodSource("data")
     @ParameterizedTest
-    void testValidateScopeSinglePresent(String signerKey, boolean useOpaque) throws Exception {
+    void validateScopeSinglePresent(String signerKey, boolean useOpaque) throws Exception {
         initCheckTokenEndpointTests(signerKey, useOpaque);
         authentication = new OAuth2Authentication(new AuthorizationRequest("client",
                 Collections.singleton("scim.read")).createOAuth2Request(), null);
@@ -568,7 +557,7 @@ class CheckTokenEndpointTests {
 
     @MethodSource("data")
     @ParameterizedTest
-    void testValidateScopesMultiplePresent(String signerKey, boolean useOpaque) throws Exception {
+    void validateScopesMultiplePresent(String signerKey, boolean useOpaque) throws Exception {
         initCheckTokenEndpointTests(signerKey, useOpaque);
         authentication = new OAuth2Authentication(new AuthorizationRequest("client",
                 Arrays.asList("scim.read", "scim.write")).createOAuth2Request(), null);
@@ -579,9 +568,9 @@ class CheckTokenEndpointTests {
 
     @MethodSource("data")
     @ParameterizedTest
-    void testValidateScopesSomeNotPresent(String signerKey, boolean useOpaque) {
+    void validateScopesSomeNotPresent(String signerKey, boolean useOpaque) {
         initCheckTokenEndpointTests(signerKey, useOpaque);
-        assertThrows(InvalidScopeException.class, () -> {
+        assertThatExceptionOfType(InvalidScopeException.class).isThrownBy(() -> {
             try {
                 authentication = new OAuth2Authentication(new AuthorizationRequest("client",
                         Arrays.asList("scim.read", "scim.write")).createOAuth2Request(), null);
@@ -589,7 +578,7 @@ class CheckTokenEndpointTests {
 
                 endpoint.checkToken(accessToken.getValue(), Arrays.asList("scim.read", "ponies.ride"), request);
             } catch (InvalidScopeException ex) {
-                assertEquals(missingScopeMessage("ponies.ride"), ex.getMessage());
+                assertThat(ex.getMessage()).isEqualTo(missingScopeMessage("ponies.ride"));
                 throw ex;
             }
         });
@@ -599,51 +588,48 @@ class CheckTokenEndpointTests {
     @ParameterizedTest
     void revokingScopesFromUser_invalidatesToken(String signerKey, boolean useOpaque) {
         initCheckTokenEndpointTests(signerKey, useOpaque);
-        assertThrows(InvalidTokenException.class, () -> {
-            OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
-            user = user.authorities(UaaAuthority.NONE_AUTHORITIES);
-            resetAndMockUserDatabase(userId, user);
+        OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
+        user = user.authorities(UaaAuthority.NONE_AUTHORITIES);
+        resetAndMockUserDatabase(userId, user);
+        assertThatExceptionOfType(InvalidTokenException.class).isThrownBy(() ->
 
-            endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request);
-        });
+                endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request));
     }
 
     @MethodSource("data")
     @ParameterizedTest
     void revokingScopesFromClient_invalidatesToken(String signerKey, boolean useOpaque) {
         initCheckTokenEndpointTests(signerKey, useOpaque);
-        assertThrows(InvalidTokenException.class, () -> {
-            OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
-            defaultClient = new UaaClientDetails("client", "scim, cc", "write", "authorization_code, password", "scim.read, scim.write", "http://localhost:8080/uaa");
-            clientDetailsStore = Collections.singletonMap("client", defaultClient);
-            clientDetailsService.setClientDetailsStore(IdentityZoneHolder.get().getId(), clientDetailsStore);
+        OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
+        defaultClient = new UaaClientDetails("client", "scim, cc", "write", "authorization_code, password", "scim.read, scim.write", "http://localhost:8080/uaa");
+        clientDetailsStore = Collections.singletonMap("client", defaultClient);
+        clientDetailsService.setClientDetailsStore(IdentityZoneHolder.get().getId(), clientDetailsStore);
+        assertThatExceptionOfType(InvalidTokenException.class).isThrownBy(() ->
 
-            endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request);
-        });
+                endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request));
     }
 
     @MethodSource("data")
     @ParameterizedTest
     void revokingAuthoritiesFromClients_invalidatesToken(String signerKey, boolean useOpaque) {
         initCheckTokenEndpointTests(signerKey, useOpaque);
-        assertThrows(InvalidTokenException.class, () -> {
-            defaultClient = new UaaClientDetails("client", "scim, cc", "write,read", "authorization_code, password", "scim.write", "http://localhost:8080/uaa");
-            clientDetailsStore = Collections.singletonMap(
-                    "client",
-                    defaultClient
-            );
-            clientDetailsService.setClientDetailsStore(IdentityZoneHolder.get().getId(), clientDetailsStore);
-            resetAndMockUserDatabase(userId, user);
-            authentication = new OAuth2Authentication(new AuthorizationRequest("client",
-                    Collections.singleton("scim.read")).createOAuth2Request(), null);
-            OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
-            endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request);
-        });
+        defaultClient = new UaaClientDetails("client", "scim, cc", "write,read", "authorization_code, password", "scim.write", "http://localhost:8080/uaa");
+        clientDetailsStore = Collections.singletonMap(
+                "client",
+                defaultClient
+        );
+        clientDetailsService.setClientDetailsStore(IdentityZoneHolder.get().getId(), clientDetailsStore);
+        resetAndMockUserDatabase(userId, user);
+        authentication = new OAuth2Authentication(new AuthorizationRequest("client",
+                Collections.singleton("scim.read")).createOAuth2Request(), null);
+        OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
+        assertThatExceptionOfType(InvalidTokenException.class).isThrownBy(() ->
+                endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request));
     }
 
     @MethodSource("data")
     @ParameterizedTest
-    void testSwitchVerifierKey(String signerKey, boolean useOpaque) throws Exception {
+    void switchVerifierKey(String signerKey, boolean useOpaque) throws Exception {
         initCheckTokenEndpointTests(signerKey, useOpaque);
         try {
             OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
@@ -653,13 +639,13 @@ class CheckTokenEndpointTests {
             endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request);
             fail("Token validation should fail");
         } catch (InvalidTokenException ex) {
-            assertTrue(true, "expected - rewrite to use a rule");
+            assertThat(true).as("expected - rewrite to use a rule").isTrue();
         }
     }
 
     @MethodSource("data")
     @ParameterizedTest
-    void testClientAddSecret(String signerKey, boolean useOpaque) throws Exception {
+    void clientAddSecret(String signerKey, boolean useOpaque) throws Exception {
         initCheckTokenEndpointTests(signerKey, useOpaque);
         String firstClientSecret = "oldsecret";
         String secondClientSecret = "newsecret";
@@ -676,7 +662,7 @@ class CheckTokenEndpointTests {
 
     @MethodSource("data")
     @ParameterizedTest
-    void testClientDeleteSecret(String signerKey, boolean useOpaque) throws Exception {
+    void clientDeleteSecret(String signerKey, boolean useOpaque) throws Exception {
         initCheckTokenEndpointTests(signerKey, useOpaque);
         String firstClientSecret = "oldsecret";
         String secondClientSecret = "newsecret";
@@ -694,48 +680,48 @@ class CheckTokenEndpointTests {
 
     @MethodSource("data")
     @ParameterizedTest
-    void testUserIdInResult(String signerKey, boolean useOpaque) throws Exception {
+    void userIdInResult(String signerKey, boolean useOpaque) throws Exception {
         initCheckTokenEndpointTests(signerKey, useOpaque);
         OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
         Claims result = endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request);
-        assertEquals("olds", result.getUserName());
-        assertEquals("12345", result.getUserId());
-        assertNull(result.getExtAttr(), "external attributes must not present");
+        assertThat(result.getUserName()).isEqualTo("olds");
+        assertThat(result.getUserId()).isEqualTo("12345");
+        assertThat(result.getExtAttr()).as("external attributes must not present").isNull();
     }
 
     @MethodSource("data")
     @ParameterizedTest
-    void testExtAttrInResult(String signerKey, boolean useOpaque) throws Exception {
+    void extAttrInResult(String signerKey, boolean useOpaque) throws Exception {
         initCheckTokenEndpointTests(signerKey, useOpaque);
         tokenServices.setUaaTokenEnhancer(new TestTokenEnhancer());
         OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
         Claims result = endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request);
-        assertNotNull(result.getExtAttr(), "external attributes not present");
-        assertEquals("test", result.getExtAttr().get("purpose"));
+        assertThat(result.getExtAttr()).as("external attributes not present").isNotNull();
+        assertThat(result.getExtAttr().get("purpose")).isEqualTo("test");
     }
 
     @MethodSource("data")
     @ParameterizedTest
-    void testIssuerInResults(String signerKey, boolean useOpaque) throws Exception {
+    void issuerInResults(String signerKey, boolean useOpaque) throws Exception {
         initCheckTokenEndpointTests(signerKey, useOpaque);
         ReflectionTestUtils.setField(tokenEndpointBuilder, "issuer", "http://some.other.issuer");
         OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
         Claims claims = endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request);
-        assertNotNull(claims.getIss(), "iss field is not present");
-        assertEquals("http://some.other.issuer/oauth/token", claims.getIss());
+        assertThat(claims.getIss()).as("iss field is not present").isNotNull();
+        assertThat(claims.getIss()).isEqualTo("http://some.other.issuer/oauth/token");
     }
 
     @MethodSource("data")
     @ParameterizedTest
-    void testIssuerInResultsInNonDefaultZone(String signerKey, boolean useOpaque) throws Exception {
+    void issuerInResultsInNonDefaultZone(String signerKey, boolean useOpaque) throws Exception {
         initCheckTokenEndpointTests(signerKey, useOpaque);
         try {
             IdentityZoneHolder.set(zone);
             ReflectionTestUtils.setField(tokenEndpointBuilder, "issuer", "http://some.other.issuer");
             OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
             Claims result = endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request);
-            assertNotNull(result.getIss(), "iss field is not present");
-            assertEquals("http://subdomain.some.other.issuer/oauth/token", result.getIss());
+            assertThat(result.getIss()).as("iss field is not present").isNotNull();
+            assertThat(result.getIss()).isEqualTo("http://subdomain.some.other.issuer/oauth/token");
         } finally {
             IdentityZoneHolder.clear();
         }
@@ -743,10 +729,10 @@ class CheckTokenEndpointTests {
 
     @MethodSource("data")
     @ParameterizedTest
-    void testZoneRejectsTokenSignedWithKeyFromOtherZone(String signerKey, boolean useOpaque) {
+    void zoneRejectsTokenSignedWithKeyFromOtherZone(String signerKey, boolean useOpaque) {
         initCheckTokenEndpointTests(signerKey, useOpaque);
-        assertThrows(InvalidTokenException.class, () -> {
-            OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
+        OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
+        assertThatExceptionOfType(InvalidTokenException.class).isThrownBy(() -> {
 
             try {
                 zone.getConfig().getTokenPolicy().setKeys(Collections.singletonMap("testKey",
@@ -789,7 +775,7 @@ class CheckTokenEndpointTests {
 
     @MethodSource("data")
     @ParameterizedTest
-    void testZoneValidatesTokenSignedWithOwnKey(String signerKey, boolean useOpaque) throws Exception {
+    void zoneValidatesTokenSignedWithOwnKey(String signerKey, boolean useOpaque) throws Exception {
 
         initCheckTokenEndpointTests(signerKey, useOpaque);
 
@@ -817,7 +803,7 @@ class CheckTokenEndpointTests {
 
     @MethodSource("data")
     @ParameterizedTest
-    void testZoneValidatesTokenSignedWithInactiveKey(String signerKey, boolean useOpaque) throws Exception {
+    void zoneValidatesTokenSignedWithInactiveKey(String signerKey, boolean useOpaque) throws Exception {
         initCheckTokenEndpointTests(signerKey, useOpaque);
         HashMap<String, String> keys = new HashMap<>();
         keys.put("oldKey", """
@@ -843,7 +829,7 @@ class CheckTokenEndpointTests {
 
     @MethodSource("data")
     @ParameterizedTest
-    void testZoneValidatesTokenSignedWithRemovedKey(String signerKey, boolean useOpaque) throws Exception {
+    void zoneValidatesTokenSignedWithRemovedKey(String signerKey, boolean useOpaque) throws Exception {
         initCheckTokenEndpointTests(signerKey, useOpaque);
         try {
             HashMap<String, String> keys = new HashMap<>();
@@ -870,44 +856,43 @@ class CheckTokenEndpointTests {
 
             fail("Token validation should fail");
         } catch (InvalidTokenException ex) {
-            assertTrue(true, "expected - rewrite to use a rule");
+            assertThat(true).as("expected - rewrite to use a rule").isTrue();
         }
     }
 
     @MethodSource("data")
     @ParameterizedTest
-    void testDefaultZoneRejectsTokenSignedWithOtherZoneKey(String signerKey, boolean useOpaque) {
+    void defaultZoneRejectsTokenSignedWithOtherZoneKey(String signerKey, boolean useOpaque) throws Exception {
         initCheckTokenEndpointTests(signerKey, useOpaque);
-        assertThrows(InvalidTokenException.class, () -> {
-            zone.getConfig().getTokenPolicy().setKeys(Collections.singletonMap("zoneKey",
-                    """
-                            -----BEGIN RSA PRIVATE KEY-----
-                            MIIBOgIBAAJAcEJMJ3ZT4GgdxipJe4uXvRQFfSpOneGjHfFTLjECMd0OkNtIWoIU
-                            8OisQRmhBDdXk2owne2SGJcqsVN/pd9pMQIDAQABAkAV/KY1xHNBLKNIQNgLnpel
-                            rNo2XabwPVVZc/66uVaYtVSwQjOxlo7mIzp77dpiM6o0kT4v3/9eyfKZte4uB/pR
-                            AiEAtF6MXrNeqEoJVCQ6LOUFgc1HtS1tqHBk6Fo3WO44ctMCIQCfVI3bTCY09F82
-                            TgIHtKdBtKzCGS56EzqbnbNodAoJawIhAJ25dCw31BV7sI6oo0qw9tDcDtGrKRI7
-                            PrJEedPFdQ1LAiEAklI6fHywUc1iayK0ppL3T1Y3mYE6t41VM3hePLzkQsUCIFjE
-                            NEUwGQmhVae7YpA8dgs0wFjsfdX15q+4wwWKu9oN
-                            -----END RSA PRIVATE KEY-----"""));
-            IdentityZoneHolder.set(zone);
-            tokenServices.setTokenEndpointBuilder(new TokenEndpointBuilder("http://some.other.issuer"));
-            OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
-            IdentityZoneHolder.clear();
-            endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request);
-        });
+        zone.getConfig().getTokenPolicy().setKeys(Collections.singletonMap("zoneKey",
+                """
+                        -----BEGIN RSA PRIVATE KEY-----
+                        MIIBOgIBAAJAcEJMJ3ZT4GgdxipJe4uXvRQFfSpOneGjHfFTLjECMd0OkNtIWoIU
+                        8OisQRmhBDdXk2owne2SGJcqsVN/pd9pMQIDAQABAkAV/KY1xHNBLKNIQNgLnpel
+                        rNo2XabwPVVZc/66uVaYtVSwQjOxlo7mIzp77dpiM6o0kT4v3/9eyfKZte4uB/pR
+                        AiEAtF6MXrNeqEoJVCQ6LOUFgc1HtS1tqHBk6Fo3WO44ctMCIQCfVI3bTCY09F82
+                        TgIHtKdBtKzCGS56EzqbnbNodAoJawIhAJ25dCw31BV7sI6oo0qw9tDcDtGrKRI7
+                        PrJEedPFdQ1LAiEAklI6fHywUc1iayK0ppL3T1Y3mYE6t41VM3hePLzkQsUCIFjE
+                        NEUwGQmhVae7YpA8dgs0wFjsfdX15q+4wwWKu9oN
+                        -----END RSA PRIVATE KEY-----"""));
+        IdentityZoneHolder.set(zone);
+        tokenServices.setTokenEndpointBuilder(new TokenEndpointBuilder("http://some.other.issuer"));
+        OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
+        IdentityZoneHolder.clear();
+        assertThatExceptionOfType(InvalidTokenException.class).isThrownBy(() ->
+                endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request));
     }
 
     @MethodSource("data")
     @ParameterizedTest
-    void testValidateAudParameter(String signerKey, boolean useOpaque) throws Exception {
+    void validateAudParameter(String signerKey, boolean useOpaque) throws Exception {
         initCheckTokenEndpointTests(signerKey, useOpaque);
         OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
         Claims result = endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request);
         List<String> aud = result.getAud();
-        assertEquals(2, aud.size());
-        assertTrue(aud.contains("scim"));
-        assertTrue(aud.contains("client"));
+        assertThat(aud.size()).isEqualTo(2);
+        assertThat(aud.contains("scim")).isTrue();
+        assertThat(aud.contains("client")).isTrue();
     }
 
     void internal_byDefaultQueryStringIsAllowed() throws Exception {
@@ -915,7 +900,7 @@ class CheckTokenEndpointTests {
         request.setQueryString("token=" + accessToken.getValue());
         request.setParameter("token", accessToken.getValue());
         Claims claims = endpoint.checkToken(request);
-        assertNotNull(claims);
+        assertThat(claims).isNotNull();
     }
 
     @MethodSource("data")
@@ -944,30 +929,28 @@ class CheckTokenEndpointTests {
     void disable_query_string(String signerKey, boolean useOpaque) {
         initCheckTokenEndpointTests(signerKey, useOpaque);
         endpoint.setAllowQueryString(false);
-        assertThrows(HttpRequestMethodNotSupportedException.class, () -> {
-            internal_byDefaultQueryStringIsAllowed();
-        });
+        assertThatExceptionOfType(HttpRequestMethodNotSupportedException.class).isThrownBy(() ->
+                internal_byDefaultQueryStringIsAllowed());
     }
 
     @MethodSource("data")
     @ParameterizedTest
     void disable_get_method(String signerKey, boolean useOpaque) {
         initCheckTokenEndpointTests(signerKey, useOpaque);
-        assertThrows(HttpRequestMethodNotSupportedException.class, () -> {
-            endpoint.setAllowQueryString(false);
-            internal_ByDefaultGetIsAllowed();
-        });
+        endpoint.setAllowQueryString(false);
+        assertThatExceptionOfType(HttpRequestMethodNotSupportedException.class).isThrownBy(() ->
+                internal_ByDefaultGetIsAllowed());
     }
 
     @MethodSource("data")
     @ParameterizedTest
-    void testClientId(String signerKey, boolean useOpaque) throws Exception {
+    void clientId(String signerKey, boolean useOpaque) throws Exception {
         initCheckTokenEndpointTests(signerKey, useOpaque);
         OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
         Claims result = endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request);
-        assertEquals("client", result.getAzp());
-        assertEquals("client", result.getCid());
-        assertEquals("client", result.getClientId());
+        assertThat(result.getAzp()).isEqualTo("client");
+        assertThat(result.getCid()).isEqualTo("client");
+        assertThat(result.getClientId()).isEqualTo("client");
     }
 
     @MethodSource("data")
@@ -976,7 +959,7 @@ class CheckTokenEndpointTests {
         initCheckTokenEndpointTests(signerKey, useOpaque);
         OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
         Claims result = endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request);
-        assertNotNull(result.getAuthTime());
+        assertThat(result.getAuthTime()).isNotNull();
     }
 
     @MethodSource("data")
@@ -988,9 +971,8 @@ class CheckTokenEndpointTests {
 
         IdentityZoneHolder.get().getConfig().getTokenPolicy().setJwtRevocable(true);
         OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
-        assertThrows(TokenRevokedException.class, () -> {
-            endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request);
-        });
+        assertThatExceptionOfType(TokenRevokedException.class).isThrownBy(() ->
+                endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request));
     }
 
     @MethodSource("data")
@@ -1000,154 +982,149 @@ class CheckTokenEndpointTests {
         OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
         Claims result = endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request);
         Integer iat = result.getIat();
-        assertNotNull(iat);
+        assertThat(iat).isNotNull();
         Long exp = result.getExp();
-        assertNotNull(exp);
-        assertTrue(iat < exp);
+        assertThat(exp).isNotNull();
+        assertThat(iat < exp).isTrue();
     }
 
 
     @MethodSource("data")
     @ParameterizedTest
-    void testEmailInResult(String signerKey, boolean useOpaque) throws Exception {
+    void emailInResult(String signerKey, boolean useOpaque) throws Exception {
         initCheckTokenEndpointTests(signerKey, useOpaque);
         OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
         Claims result = endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request);
-        assertEquals("olds@vmware.com", result.getEmail());
+        assertThat(result.getEmail()).isEqualTo("olds@vmware.com");
     }
 
     @MethodSource("data")
     @ParameterizedTest
-    void testClientIdInResult(String signerKey, boolean useOpaque) throws Exception {
+    void clientIdInResult(String signerKey, boolean useOpaque) throws Exception {
         initCheckTokenEndpointTests(signerKey, useOpaque);
         OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
         Claims result = endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request);
-        assertEquals("client", result.getClientId());
+        assertThat(result.getClientId()).isEqualTo("client");
     }
 
     @MethodSource("data")
     @ParameterizedTest
-    void testClientIdInAud(String signerKey, boolean useOpaque) throws Exception {
+    void clientIdInAud(String signerKey, boolean useOpaque) throws Exception {
         initCheckTokenEndpointTests(signerKey, useOpaque);
         OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
         Claims result = endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request);
-        assertTrue(result.getAud().contains("client"));
+        assertThat(result.getAud().contains("client")).isTrue();
     }
 
 
     @MethodSource("data")
     @ParameterizedTest
-    void testExpiryResult(String signerKey, boolean useOpaque) throws Exception {
+    void expiryResult(String signerKey, boolean useOpaque) throws Exception {
         initCheckTokenEndpointTests(signerKey, useOpaque);
         OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
         Claims result = endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request);
         int expiresIn = 60 * 60 * 12;
-        assertTrue(expiresIn + Instant.now().toEpochMilli() / 1000 >= result.getExp());
+        assertThat(expiresIn + Instant.now().toEpochMilli() / 1000 >= result.getExp()).isTrue();
     }
 
     @MethodSource("data")
     @ParameterizedTest
-    void testUserAuthoritiesNotInResult(String signerKey, boolean useOpaque) throws Exception {
+    void userAuthoritiesNotInResult(String signerKey, boolean useOpaque) throws Exception {
         initCheckTokenEndpointTests(signerKey, useOpaque);
         OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
         Claims result = endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request);
-        assertNull(result.getAuthorities());
+        assertThat(result.getAuthorities()).isNull();
     }
 
     @MethodSource("data")
     @ParameterizedTest
-    void testClientAuthoritiesNotInResult(String signerKey, boolean useOpaque) throws Exception {
+    void clientAuthoritiesNotInResult(String signerKey, boolean useOpaque) throws Exception {
         initCheckTokenEndpointTests(signerKey, useOpaque);
         OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
         Claims result = endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request);
-        assertNull(result.getAuthorities());
+        assertThat(result.getAuthorities()).isNull();
     }
 
     @MethodSource("data")
     @ParameterizedTest
-    void testExpiredToken(String signerKey, boolean useOpaque) {
+    void expiredToken(String signerKey, boolean useOpaque) {
         initCheckTokenEndpointTests(signerKey, useOpaque);
-        assertThrows(InvalidTokenException.class, () -> {
-            UaaClientDetails clientDetails = new UaaClientDetails("client", "scim, cc", "read, write",
-                    "authorization_code, password", "scim.read, scim.write", "http://localhost:8080/uaa");
-            Integer validitySeconds = 1;
-            clientDetails.setAccessTokenValiditySeconds(validitySeconds);
-            Map<String, UaaClientDetails> clientDetailsStore = Collections.singletonMap("client", clientDetails);
-            clientDetailsService.setClientDetailsStore(IdentityZoneHolder.get().getId(), clientDetailsStore);
-            tokenServices.setClientDetailsService(clientDetailsService);
-            when(timeService.getCurrentTimeMillis()).thenReturn(1000L);
-            OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
-
-            when(timeService.getCurrentTimeMillis()).thenReturn(nowMillis + validitySeconds.longValue() * 1000 + 1L);
-            endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request);
-        });
+        UaaClientDetails clientDetails = new UaaClientDetails("client", "scim, cc", "read, write",
+                "authorization_code, password", "scim.read, scim.write", "http://localhost:8080/uaa");
+        Integer validitySeconds = 1;
+        clientDetails.setAccessTokenValiditySeconds(validitySeconds);
+        Map<String, UaaClientDetails> clientDetailsStore = Collections.singletonMap("client", clientDetails);
+        clientDetailsService.setClientDetailsStore(IdentityZoneHolder.get().getId(), clientDetailsStore);
+        tokenServices.setClientDetailsService(clientDetailsService);
+        when(timeService.getCurrentTimeMillis()).thenReturn(1000L);
+        OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
+        when(timeService.getCurrentTimeMillis()).thenReturn(nowMillis + validitySeconds.longValue() * 1000 + 1L);
+        assertThatExceptionOfType(InvalidTokenException.class).isThrownBy(() ->
+                endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request));
     }
 
     @MethodSource("data")
     @ParameterizedTest
-    void testDeniedApprovals(String signerKey, boolean useOpaque) {
+    void deniedApprovals(String signerKey, boolean useOpaque) {
         initCheckTokenEndpointTests(signerKey, useOpaque);
-        assertThrows(InvalidTokenException.class, () -> {
-            OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
-            Date oneSecondAgo = new Date(nowMillis - 1000);
-            Date thirtySecondsAhead = new Date(nowMillis + 30000);
-            approvalStore.revokeApproval(new Approval()
-                    .setUserId(userId)
-                    .setClientId("client")
-                    .setScope("read")
-                    .setExpiresAt(thirtySecondsAhead)
-                    .setStatus(ApprovalStatus.APPROVED)
-                    .setLastUpdatedAt(oneSecondAgo), IdentityZoneHolder.get().getId());
-            approvalStore.addApproval(new Approval()
-                    .setUserId(userId)
-                    .setClientId("client")
-                    .setScope("read")
-                    .setExpiresAt(thirtySecondsAhead)
-                    .setStatus(ApprovalStatus.DENIED)
-                    .setLastUpdatedAt(oneSecondAgo), IdentityZoneHolder.get().getId());
-            Claims result = endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request);
-            assertNull(result.getAuthorities());
-        });
+        OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
+        Date oneSecondAgo = new Date(nowMillis - 1000);
+        Date thirtySecondsAhead = new Date(nowMillis + 30000);
+        approvalStore.revokeApproval(new Approval()
+                .setUserId(userId)
+                .setClientId("client")
+                .setScope("read")
+                .setExpiresAt(thirtySecondsAhead)
+                .setStatus(ApprovalStatus.APPROVED)
+                .setLastUpdatedAt(oneSecondAgo), IdentityZoneHolder.get().getId());
+        approvalStore.addApproval(new Approval()
+                .setUserId(userId)
+                .setClientId("client")
+                .setScope("read")
+                .setExpiresAt(thirtySecondsAhead)
+                .setStatus(ApprovalStatus.DENIED)
+                .setLastUpdatedAt(oneSecondAgo), IdentityZoneHolder.get().getId());
+        assertThatExceptionOfType(InvalidTokenException.class).isThrownBy(() ->
+                endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request));
     }
 
     @MethodSource("data")
     @ParameterizedTest
-    void testExpiredApprovals(String signerKey, boolean useOpaque) {
+    void expiredApprovals(String signerKey, boolean useOpaque) {
         initCheckTokenEndpointTests(signerKey, useOpaque);
-        assertThrows(InvalidTokenException.class, () -> {
-            OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
-            approvalStore.revokeApproval(new Approval()
-                    .setUserId(userId)
-                    .setClientId("client")
-                    .setScope("read")
-                    .setExpiresAt(new Date(nowMillis))
-                    .setStatus(ApprovalStatus.APPROVED), IdentityZoneHolder.get().getId());
-            approvalStore.addApproval(new Approval()
-                    .setUserId(userId)
-                    .setClientId("client")
-                    .setScope("read")
-                    .setExpiresAt(new Date(nowMillis))
-                    .setStatus(ApprovalStatus.APPROVED), IdentityZoneHolder.get().getId());
-            Claims result = endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request);
-            assertNull(result.getAuthorities());
-        });
+        OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
+        approvalStore.revokeApproval(new Approval()
+                .setUserId(userId)
+                .setClientId("client")
+                .setScope("read")
+                .setExpiresAt(new Date(nowMillis))
+                .setStatus(ApprovalStatus.APPROVED), IdentityZoneHolder.get().getId());
+        approvalStore.addApproval(new Approval()
+                .setUserId(userId)
+                .setClientId("client")
+                .setScope("read")
+                .setExpiresAt(new Date(nowMillis))
+                .setStatus(ApprovalStatus.APPROVED), IdentityZoneHolder.get().getId());
+
+        assertThatExceptionOfType(InvalidTokenException.class).isThrownBy(() ->
+                endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request));
     }
 
     @MethodSource("data")
     @ParameterizedTest
-    void testClientOnly(String signerKey, boolean useOpaque) throws Exception {
+    void clientOnly(String signerKey, boolean useOpaque) throws Exception {
         initCheckTokenEndpointTests(signerKey, useOpaque);
         authentication = new OAuth2Authentication(new AuthorizationRequest("client",
                 Collections.singleton("scim.read")).createOAuth2Request(), null);
         OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
         Claims result = endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request);
-        assertEquals("client", result.getClientId());
-        assertNull(result.getUserId());
+        assertThat(result.getClientId()).isEqualTo("client");
+        assertThat(result.getUserId()).isNull();
     }
 
     @MethodSource("data")
     @ParameterizedTest
-    void testValidAuthorities(String signerKey, boolean useOpaque) throws Exception {
+    void validAuthorities(String signerKey, boolean useOpaque) throws Exception {
         initCheckTokenEndpointTests(signerKey, useOpaque);
         Map<String, String> azAttributes = new HashMap<>();
         azAttributes.put("external_group", "domain\\group1");
@@ -1162,12 +1139,12 @@ class CheckTokenEndpointTests {
                 UaaAuthenticationTestFactory.getAuthentication(userId, userName, "olds@vmware.com"));
         OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
         Claims result = endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request);
-        assertEquals(result.getAzAttr(), azAttributes);
+        assertThat(azAttributes).isEqualTo(result.getAzAttr());
     }
 
     @MethodSource("data")
     @ParameterizedTest
-    void testInvalidAuthoritiesNested(String signerKey, boolean useOpaque) throws Exception {
+    void invalidAuthoritiesNested(String signerKey, boolean useOpaque) throws Exception {
         initCheckTokenEndpointTests(signerKey, useOpaque);
         Map<String, Object> nestedAttributes = new HashMap<>();
         nestedAttributes.put("nested_group", "true");
@@ -1184,12 +1161,12 @@ class CheckTokenEndpointTests {
                 UaaAuthenticationTestFactory.getAuthentication(userId, userName, "olds@vmware.com"));
         OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
         Claims result = endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request);
-        assertNull(result.getAzAttr());
+        assertThat(result.getAzAttr()).isNull();
     }
 
     @MethodSource("data")
     @ParameterizedTest
-    void testEmptyAuthorities(String signerKey, boolean useOpaque) throws Exception {
+    void emptyAuthorities(String signerKey, boolean useOpaque) throws Exception {
         initCheckTokenEndpointTests(signerKey, useOpaque);
         Map<String, String> azAttributes = new HashMap<>();
         azAttributes.put("external_group", "domain\\group1");
@@ -1204,24 +1181,24 @@ class CheckTokenEndpointTests {
                 UaaAuthenticationTestFactory.getAuthentication(userId, userName, "olds@vmware.com"));
         OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
         Claims result = endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request);
-        assertNull(result.getAzAttr());
+        assertThat(result.getAzAttr()).isNull();
     }
 
     @MethodSource("data")
     @ParameterizedTest
-    void testNullAndEmptyToken(String signerKey, boolean useOpaque) throws Exception {
+    void nullAndEmptyToken(String signerKey, boolean useOpaque) throws Exception {
         initCheckTokenEndpointTests(signerKey, useOpaque);
         try {
             endpoint.checkToken(null, Collections.emptyList(), request);
             fail("wrong state for check_token");
         } catch (InvalidTokenException e) {
-            assertEquals("Token parameter must be set", e.getMessage());
+            assertThat(e.getMessage()).isEqualTo("Token parameter must be set");
         }
         try {
             endpoint.checkToken(Strings.EMPTY, Collections.emptyList(), request);
             fail("wrong state for check_token");
         } catch (InvalidTokenException e) {
-            assertEquals("Token parameter must be set", e.getMessage());
+            assertThat(e.getMessage()).isEqualTo("Token parameter must be set");
         }
     }
 }

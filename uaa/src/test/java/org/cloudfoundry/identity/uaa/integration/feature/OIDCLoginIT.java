@@ -281,7 +281,7 @@ public class OIDCLoginIT {
     }
 
     @Test
-    void testLoginWithInactiveProviderDoesNotWork() {
+    void loginWithInactiveProviderDoesNotWork() {
         webDriver.get(zoneUrl + "/logout.do");
         webDriver.get(zoneUrl + "/");
         Cookie beforeLogin = webDriver.manage().getCookieNamed("JSESSIONID");
@@ -307,7 +307,7 @@ public class OIDCLoginIT {
     }
 
     @Test
-    void testLoginWithLoginHintUaa() {
+    void loginWithLoginHintUaa() {
         webDriver.get(zoneUrl + "/logout.do");
         String loginHint = URLEncoder.encode("{\"origin\":\"puppy\"}", StandardCharsets.UTF_8);
 
@@ -374,7 +374,7 @@ public class OIDCLoginIT {
     }
 
     @Test
-    void testShadowUserNameDefaultsToOIDCSubjectClaim() {
+    void shadowUserNameDefaultsToOIDCSubjectClaim() {
         Map<String, Object> attributeMappings = new HashMap<>(identityProvider.getConfig().getAttributeMappings());
         attributeMappings.remove(USER_NAME_ATTRIBUTE_NAME);
         identityProvider.getConfig().setAttributeMappings(attributeMappings);
@@ -507,7 +507,7 @@ public class OIDCLoginIT {
     }
 
     @Test
-    void testResponseTypeRequired() {
+    void responseTypeRequired() {
         UaaClientDetails uaaClient = new UaaClientDetails(new RandomValueStringGenerator().generate(), null, "openid,user_attributes", "authorization_code,client_credentials", "uaa.admin,scim.read,scim.write,uaa.resource", baseUrl);
         uaaClient.setClientSecret("secret");
         uaaClient.setAutoApproveScopes(Collections.singleton("true"));

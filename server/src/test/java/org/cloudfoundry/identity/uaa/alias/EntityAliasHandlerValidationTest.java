@@ -3,6 +3,7 @@ package org.cloudfoundry.identity.uaa.alias;
 import org.cloudfoundry.identity.uaa.EntityWithAlias;
 import org.cloudfoundry.identity.uaa.zone.IdentityZone;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -15,7 +16,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
 import static org.cloudfoundry.identity.uaa.alias.EntityAliasHandlerValidationTest.NoExistingAliasBase.ExistingEntityArgument.ENTITY_WITH_EMPTY_ALIAS_PROPS;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 
 public abstract class EntityAliasHandlerValidationTest<T extends EntityWithAlias> {
     private static final String CUSTOM_ZONE_ID = UUID.randomUUID().toString();
@@ -153,7 +153,7 @@ public abstract class EntityAliasHandlerValidationTest<T extends EntityWithAlias
         @Test
         final void shouldReturnFalse_DefaultSetting() {
             AliasEntitiesConfig aliasEntitiesConfig = new AliasEntitiesConfig();
-            assertFalse(aliasEntitiesConfig.aliasEntitiesEnabled(false));
+            assertThat(aliasEntitiesConfig.aliasEntitiesEnabled(false)).isFalse();
         }
     }
 

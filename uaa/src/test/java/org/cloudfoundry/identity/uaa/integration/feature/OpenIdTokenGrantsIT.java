@@ -27,7 +27,6 @@ import org.cloudfoundry.identity.uaa.oauth.token.ClaimConstants;
 import org.cloudfoundry.identity.uaa.scim.ScimUser;
 import org.cloudfoundry.identity.uaa.security.web.CookieBasedCsrfTokenRepository;
 import org.cloudfoundry.identity.uaa.util.UaaTokenUtils;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -58,22 +57,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils.getHeaders;
 import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.USER_OAUTH_APPROVAL;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_AUTHORIZATION_CODE;
 import static org.cloudfoundry.identity.uaa.security.web.CookieBasedCsrfTokenRepository.DEFAULT_CSRF_COOKIE_NAME;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringJUnitConfig(classes = DefaultIntegrationTestConfig.class)
 @OAuth2ContextConfiguration(OAuth2ContextConfiguration.ClientCredentials.class)
-public class OpenIdTokenGrantsIT {
+class OpenIdTokenGrantsIT {
 
 
     @Autowired
@@ -107,7 +99,7 @@ public class OpenIdTokenGrantsIT {
     private String[] openid = new String[]{"openid"};
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         ((RestTemplate) restOperations).setRequestFactory(new IntegrationTestUtils.StatelessRequestFactory());
         ClientCredentialsResourceDetails clientCredentials =
                 getClientCredentialsResource(new String[]{"scim.write"}, testAccounts.getAdminClientId(), testAccounts.getAdminClientSecret());
@@ -117,7 +109,7 @@ public class OpenIdTokenGrantsIT {
 
     @BeforeEach
     @AfterEach
-    public void logout_and_clear_cookies() {
+    void logout_and_clear_cookies() {
         try {
             webDriver.get(baseUrl + "/logout.do");
         } catch (org.openqa.selenium.TimeoutException x) {
@@ -139,7 +131,7 @@ public class OpenIdTokenGrantsIT {
     }
 
     @Test
-    public void testImplicitGrant() {
+    void implicitGrant() {
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 
@@ -158,27 +150,20 @@ public class OpenIdTokenGrantsIT {
                 Void.class
         );
 
-        assertEquals(HttpStatus.FOUND, responseEntity.getStatusCode());
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.FOUND);
 
         UriComponents locationComponents = UriComponentsBuilder.fromUri(responseEntity.getHeaders().getLocation()).build();
-        assertEquals("localhost", locationComponents.getHost());
-        assertEquals("/redirect/cf", locationComponents.getPath());
+        assertThat(locationComponents.getHost()).isEqualTo("localhost");
+        assertThat(locationComponents.getPath()).isEqualTo("/redirect/cf");
 
         MultiValueMap<String, String> params = parseFragmentParams(locationComponents);
 
-        assertThat(params.get("jti"), not(empty()));
-        assertEquals("bearer", params.getFirst("token_type"));
-        assertThat(Integer.parseInt(params.getFirst("expires_in")), Matchers.greaterThan(40000));
+        assertThat(params.get("jti")).isNotEmpty();
+        assertThat(params.getFirst("token_type")).isEqualTo("bearer");
+        assertThat(Integer.parseInt(params.getFirst("expires_in"))).isGreaterThan(40000);
 
         String[] scopes = UriUtils.decode(params.getFirst("scope"), "UTF-8").split(" ");
-        assertThat(Arrays.asList(scopes), containsInAnyOrder(
-                "scim.userids",
-                "password.write",
-                "cloud_controller.write",
-                "openid",
-                "cloud_controller.read",
-                "uaa.user"
-        ));
+        assertThat(Arrays.asList(scopes)).containsExactlyInAnyOrder("scim.userids", "password.write", "cloud_controller.write", "openid", "cloud_controller.read", "uaa.user");
 
         validateToken("access_token", params.toSingleValueMap(), scopes, aud);
         validateToken("id_token", params.toSingleValueMap(), openid, new String[]{"cf"});
@@ -187,16 +172,16 @@ public class OpenIdTokenGrantsIT {
     private void validateToken(String paramName, Map params, String[] scopes, String[] aud) {
         Map<String, Object> claims = UaaTokenUtils.getClaims((String) params.get(paramName), Map.class);
 
-        assertThat(claims.get("jti"), is(params.get("jti")));
-        assertThat(claims.get("client_id"), is("cf"));
-        assertThat(claims.get("cid"), is("cf"));
-        assertThat(claims.get("user_name"), is(user.getUserName()));
-        assertThat(((List<String>) claims.get(ClaimConstants.SCOPE)), containsInAnyOrder(scopes));
-        assertThat(((List<String>) claims.get(ClaimConstants.AUD)), containsInAnyOrder(aud));
+        assertThat(claims.get("jti")).isEqualTo(params.get("jti"));
+        assertThat(claims.get("client_id")).isEqualTo("cf");
+        assertThat(claims.get("cid")).isEqualTo("cf");
+        assertThat(claims.get("user_name")).isEqualTo(user.getUserName());
+        assertThat(((List<String>) claims.get(ClaimConstants.SCOPE))).containsExactlyInAnyOrder(scopes);
+        assertThat(((List<String>) claims.get(ClaimConstants.AUD))).containsExactlyInAnyOrder(aud);
     }
 
     @Test
-    public void testPasswordGrant() {
+    void passwordGrant() {
         String basicDigestHeaderValue = "Basic "
                 + new String(Base64.encodeBase64("cf:".getBytes()));
 
@@ -217,42 +202,35 @@ public class OpenIdTokenGrantsIT {
                 new HttpEntity<>(postBody, headers),
                 Map.class);
 
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
 
         Map<String, Object> params = responseEntity.getBody();
 
-        assertNotNull(params.get("jti"));
-        assertEquals("bearer", params.get("token_type"));
-        assertThat((Integer) params.get("expires_in"), Matchers.greaterThan(40000));
+        assertThat(params.get("jti")).isNotNull();
+        assertThat(params.get("token_type")).isEqualTo("bearer");
+        assertThat((Integer) params.get("expires_in")).isGreaterThan(40000);
 
         String[] scopes = UriUtils.decode((String) params.get("scope"), "UTF-8").split(" ");
-        assertThat(Arrays.asList(scopes), containsInAnyOrder(
-                "scim.userids",
-                "password.write",
-                "cloud_controller.write",
-                "openid",
-                "cloud_controller.read",
-                "uaa.user"
-        ));
+        assertThat(Arrays.asList(scopes)).containsExactlyInAnyOrder("scim.userids", "password.write", "cloud_controller.write", "openid", "cloud_controller.read", "uaa.user");
 
         validateToken("access_token", params, scopes, aud);
         validateToken("id_token", params, openid, new String[]{"cf"});
     }
 
     @Test
-    public void testOpenIdHybridFlowIdTokenAndCode() {
+    void openIdHybridFlowIdTokenAndCode() {
         doOpenIdHybridFlowIdTokenAndCode(new HashSet<>(Arrays.asList("token", "code")), ".+access_token=.+code=.+");
         doOpenIdHybridFlowIdTokenAndCode(new HashSet<>(Arrays.asList("token", "code")), ".+access_token=.+code=.+");
     }
 
     @Test
-    public void testOpenIdHybridFlowIdTokenAndTokenAndCode() {
+    void openIdHybridFlowIdTokenAndTokenAndCode() {
         doOpenIdHybridFlowIdTokenAndCode(new HashSet<>(Arrays.asList("token", "id_token", "code")), ".+access_token=.+id_token=.+code=.+");
         doOpenIdHybridFlowIdTokenAndCode(new HashSet<>(Arrays.asList("token", "id_token", "code")), ".+access_token=.+id_token=.+code=.+");
     }
 
     @Test
-    public void testOpenIdHybridFlowIdTokenAndToken() {
+    void openIdHybridFlowIdTokenAndToken() {
         doOpenIdHybridFlowIdTokenAndCode(new HashSet<>(Arrays.asList("id_token", "code")), ".+id_token=.+code=.+");
         doOpenIdHybridFlowIdTokenAndCode(new HashSet<>(Arrays.asList("id_token", "code")), ".+id_token=.+code=.+");
     }
@@ -288,7 +266,7 @@ public class OpenIdTokenGrantsIT {
                 clientId,
                 redirectUri
         );
-        assertEquals(HttpStatus.FOUND, result.getStatusCode());
+        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.FOUND);
         String location = UriUtils.decode(result.getHeaders().getLocation().toString(), "UTF-8");
 
         if (result.getHeaders().containsKey("Set-Cookie")) {
@@ -304,9 +282,9 @@ public class OpenIdTokenGrantsIT {
                 new HttpEntity<>(null, getHeaders(cookies)),
                 String.class);
         // should be directed to the login screen...
-        assertTrue(response.getBody().contains("/login.do"));
-        assertTrue(response.getBody().contains("username"));
-        assertTrue(response.getBody().contains("password"));
+        assertThat(response.getBody().contains("/login.do")).isTrue();
+        assertThat(response.getBody().contains("username")).isTrue();
+        assertThat(response.getBody().contains("password")).isTrue();
         String csrf = IntegrationTestUtils.extractCookieCsrf(response.getBody());
 
         if (response.getHeaders().containsKey("Set-Cookie")) {
@@ -323,7 +301,7 @@ public class OpenIdTokenGrantsIT {
 
         // Should be redirected to the original URL, but now authenticated
         result = restOperations.exchange(baseUrl + "/login.do", HttpMethod.POST, new HttpEntity<>(formData, getHeaders(cookies)), Void.class);
-        assertEquals(HttpStatus.FOUND, result.getStatusCode());
+        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.FOUND);
 
         cookies.clear();
         if (result.getHeaders().containsKey("Set-Cookie")) {
@@ -348,21 +326,20 @@ public class OpenIdTokenGrantsIT {
         }
         if (response.getStatusCode() == HttpStatus.OK) {
             // The grant access page should be returned
-            assertTrue(response.getBody().contains("You can change your approval of permissions"));
+            assertThat(response.getBody().contains("You can change your approval of permissions")).isTrue();
 
             formData.clear();
             formData.add(USER_OAUTH_APPROVAL, "true");
             formData.add(DEFAULT_CSRF_COOKIE_NAME, IntegrationTestUtils.extractCookieCsrf(response.getBody()));
             result = restOperations.exchange(baseUrl + "/oauth/authorize", HttpMethod.POST, new HttpEntity<>(formData, getHeaders(cookies)), Void.class);
-            assertEquals(HttpStatus.FOUND, result.getStatusCode());
+            assertThat(result.getStatusCode()).isEqualTo(HttpStatus.FOUND);
             location = UriUtils.decode(result.getHeaders().getLocation().toString(), "UTF-8");
         } else {
             // Token cached so no need for second approval
-            assertEquals(HttpStatus.FOUND, response.getStatusCode());
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FOUND);
             location = UriUtils.decode(response.getHeaders().getLocation().toString(), "UTF-8");
         }
-        assertTrue(location.matches(redirectUri + responseTypeMatcher),
-                "Wrong location: " + location);
+        assertThat(location.matches(redirectUri + responseTypeMatcher)).as("Wrong location: " + location).isTrue();
 
         formData.clear();
         formData.add("client_id", clientId);
@@ -376,12 +353,12 @@ public class OpenIdTokenGrantsIT {
 
         @SuppressWarnings("rawtypes")
         ResponseEntity<Map> tokenResponse = restOperations.exchange(baseUrl + "/oauth/token", HttpMethod.POST, new HttpEntity<>(formData, tokenHeaders), Map.class);
-        assertEquals(HttpStatus.OK, tokenResponse.getStatusCode());
+        assertThat(tokenResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
         @SuppressWarnings("unchecked")
         Map<String, String> body = tokenResponse.getBody();
         Jwt token = JwtHelper.decode(body.get("access_token"));
-        assertTrue(token.getClaims().contains("\"aud\""), "Wrong claims: " + token.getClaims());
-        assertTrue(token.getClaims().contains("\"user_id\""), "Wrong claims: " + token.getClaims());
+        assertThat(token.getClaims().contains("\"aud\"")).as("Wrong claims: " + token.getClaims()).isTrue();
+        assertThat(token.getClaims().contains("\"user_id\"")).as("Wrong claims: " + token.getClaims()).isTrue();
     }
 
     private MultiValueMap<String, String> parseFragmentParams(UriComponents locationComponents) {

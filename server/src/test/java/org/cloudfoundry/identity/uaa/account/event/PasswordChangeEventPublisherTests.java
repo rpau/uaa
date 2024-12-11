@@ -21,10 +21,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.account.event.PasswordChangeEventPublisher.DEFAULT_EMAIL_DOMAIN;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -86,7 +84,7 @@ class PasswordChangeEventPublisherTests {
     void shouldReturnNullUserWhenUserIdIsUnrecognized() {
         String unknownUserId = "unknownId";
         when(mockScimUserProvisioning.retrieve(unknownUserId, currentZoneId)).thenReturn(null);
-        assertNull(subject.getUser(unknownUserId));
+        assertThat(subject.getUser(unknownUserId)).isNull();
     }
 
     @Test
@@ -94,51 +92,51 @@ class PasswordChangeEventPublisherTests {
         String userId = "validId";
         when(mockScimUserProvisioning.retrieve(userId, currentZoneId))
                 .thenThrow(new ScimResourceNotFoundException("So sad"));
-        assertNull(subject.getUser(userId));
+        assertThat(subject.getUser(userId)).isNull();
     }
 
     @Test
     void shouldConstructEmailBasedOnUsernameIfNoEmailList() {
         ScimUser scimUser = scimUserFrom("userName", null);
-        assertEquals("userName@%s".formatted(DEFAULT_EMAIL_DOMAIN), subject.getEmail(scimUser));
+        assertThat(subject.getEmail(scimUser)).isEqualTo("userName@%s".formatted(DEFAULT_EMAIL_DOMAIN));
     }
 
     @Test
     void shouldNotConstructEmailBasedOnUsernameIfNoEmailListAndTheUsernameContainsAnAtSymbol() {
         ScimUser scimUser = scimUserFrom("userName@", null);
-        assertEquals("userName@", subject.getEmail(scimUser));
+        assertThat(subject.getEmail(scimUser)).isEqualTo("userName@");
     }
 
     @Test
     void shouldConstructEmailBasedOnUsernameIfEmailListIsEmpty() {
         ScimUser scimUser = scimUserFrom("userName", Collections.emptyList());
-        assertEquals("userName@%s".formatted(DEFAULT_EMAIL_DOMAIN), subject.getEmail(scimUser));
+        assertThat(subject.getEmail(scimUser)).isEqualTo("userName@%s".formatted(DEFAULT_EMAIL_DOMAIN));
     }
 
     @Test
     void shouldConstructEmailBasedOnUsernameIfEmailListIsEmptyAndTheUsernameContainsAnAtSymbol() {
         ScimUser scimUser = scimUserFrom("userName@", Collections.emptyList());
-        assertEquals("userName@", subject.getEmail(scimUser));
+        assertThat(subject.getEmail(scimUser)).isEqualTo("userName@");
     }
 
     @Test
     void shouldReturnFirstEmailFromEmailListIfNoPrimary() {
         ScimUser scimUser = scimUserFrom("userName", Arrays.asList("a@example.com", "b@example.com"));
-        assertEquals("a@example.com", subject.getEmail(scimUser));
+        assertThat(subject.getEmail(scimUser)).isEqualTo("a@example.com");
     }
 
     @Test
     void shouldReturnFirstPrimaryEmail() {
         ScimUser scimUser = scimUserFrom("userName", Arrays.asList("a@example.com", "b@example.com", "c@example.com"));
         scimUser.getEmails().get(1).setPrimary(true);
-        assertEquals("b@example.com", subject.getEmail(scimUser));
+        assertThat(subject.getEmail(scimUser)).isEqualTo("b@example.com");
     }
 
     @Test
     void notAuthenticatedReturnsSystemAuth() {
-        assertSame(authentication, subject.getPrincipal());
+        assertThat(subject.getPrincipal()).isSameAs(authentication);
         SecurityContextHolder.clearContext();
-        assertSame(SystemAuthentication.SYSTEM_AUTHENTICATION, subject.getPrincipal());
+        assertThat(subject.getPrincipal()).isSameAs(SystemAuthentication.SYSTEM_AUTHENTICATION);
     }
 
     private ScimUser scimUserFrom(String userName, List<String> emailAddresses) {

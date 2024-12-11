@@ -1,14 +1,14 @@
 package org.cloudfoundry.identity.uaa.ratelimiting.core;
 
+import org.junit.jupiter.api.Test;
+
 import java.lang.reflect.Field;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class LoggingOptionTest {
 
@@ -27,7 +27,7 @@ class LoggingOptionTest {
         Instant endTime = startTime.plus(duration);
         StringBuilder sb = new StringBuilder();
         LoggingOption.addDuration(sb, startTime, endTime);
-        assertEquals("(" + expectedDuration + ") ", sb.toString());
+        assertThat(sb.toString()).isEqualTo("(" + expectedDuration + ") ");
     }
 
     @Test
@@ -37,15 +37,15 @@ class LoggingOptionTest {
             check(value, String::toLowerCase);
             check(value, String::toUpperCase);
         }
-        assertNull(LoggingOption.valueFor(null));
-        assertNull(LoggingOption.valueFor(""));
-        assertNull(LoggingOption.valueFor(" " + LoggingOption.AllCalls));
+        assertThat(LoggingOption.valueFor(null)).isNull();
+        assertThat(LoggingOption.valueFor("")).isNull();
+        assertThat(LoggingOption.valueFor(" " + LoggingOption.AllCalls)).isNull();
     }
 
     private void check(LoggingOption value, Function<String, String> nameMutator) {
         String mutatedValueName = nameMutator.apply(value.name());
         LoggingOption actual = LoggingOption.valueFor(value.name());
-        assertSame(value, actual, "mutated: " + mutatedValueName);
+        assertThat(actual).as("mutated: " + mutatedValueName).isSameAs(value);
     }
 
     private static final CompoundKey TCK = CompoundKey.from("T", "C", "K");
@@ -55,8 +55,8 @@ class LoggingOptionTest {
     void logNotLimited()
             throws Exception {
         String path = "!L";
-        MockLimiter limiter = new MockLimiter( false, path );
-        assertNull(limiter.execute(LoggingOption.OnlyLimited, 0));
+        MockLimiter limiter = new MockLimiter(false, path);
+        assertThat(limiter.execute(LoggingOption.OnlyLimited, 0)).isNull();
         check(limiter.execute(LoggingOption.AllCalls, 1),
                 extract(LoggingOption.AllCalls, "PREFIX"),
                 path,
@@ -73,7 +73,7 @@ class LoggingOptionTest {
     void logLimited()
             throws Exception {
         String path = "L!";
-        MockLimiter limiter = new MockLimiter( true, path );
+        MockLimiter limiter = new MockLimiter(true, path);
         check(limiter.execute(LoggingOption.OnlyLimited, 1),
                 extract(LoggingOption.OnlyLimited, "PREFIX"),
                 path,
@@ -118,7 +118,7 @@ class LoggingOptionTest {
         private String execute(LoggingOption option, int expectedCalls) {
             MockLogger logger = new MockLogger();
             option.log(requestPath, logger, null, this, null);
-            assertEquals(expectedCalls, logger.calls, requestPath + ":" + option);
+            assertThat(logger.calls).as(requestPath + ":" + option).isEqualTo(expectedCalls);
             return logger.value;
         }
     }
@@ -136,7 +136,7 @@ class LoggingOptionTest {
 
     private static void check(String actual, String prefix, String path, String suffix, String suffixPlus) {
         String expected = prefix + " '" + path + "' " + suffix + (suffixPlus == null ? "" : (" " + suffixPlus));
-        assertEquals(expected, actual);
+        assertThat(actual).isEqualTo(expected);
     }
 
     private static String extract(Object o, String staticStringFieldName)

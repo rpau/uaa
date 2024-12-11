@@ -4,33 +4,33 @@ import org.cloudfoundry.identity.uaa.oauth.provider.OAuth2Authentication;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
-public class InMemoryAuthorizationCodeServicesTest {
+class InMemoryAuthorizationCodeServicesTest {
 
     private InMemoryAuthorizationCodeServices inMemoryAuthorizationCodeServices;
     private OAuth2Authentication oAuth2Authentication;
 
 
     @BeforeEach
-    public void setUp() throws Exception {
+    void setUp() throws Exception {
         inMemoryAuthorizationCodeServices = new InMemoryAuthorizationCodeServices();
         oAuth2Authentication = mock(OAuth2Authentication.class);
     }
 
     @Test
-    public void store() {
+    void store() {
         inMemoryAuthorizationCodeServices.store("code", oAuth2Authentication);
-        assertEquals(oAuth2Authentication, inMemoryAuthorizationCodeServices.authorizationCodeStore.get("code"));
+        assertThat(inMemoryAuthorizationCodeServices.authorizationCodeStore.get("code")).isEqualTo(oAuth2Authentication);
     }
 
     @Test
-    public void remove() {
-        assertEquals(0, inMemoryAuthorizationCodeServices.authorizationCodeStore.size());
+    void remove() {
+        assertThat(inMemoryAuthorizationCodeServices.authorizationCodeStore.size()).isEqualTo(0);
         inMemoryAuthorizationCodeServices.store("code", oAuth2Authentication);
-        assertEquals(1, inMemoryAuthorizationCodeServices.authorizationCodeStore.size());
+        assertThat(inMemoryAuthorizationCodeServices.authorizationCodeStore.size()).isEqualTo(1);
         inMemoryAuthorizationCodeServices.remove("code");
-        assertEquals(0, inMemoryAuthorizationCodeServices.authorizationCodeStore.size());
+        assertThat(inMemoryAuthorizationCodeServices.authorizationCodeStore.size()).isEqualTo(0);
     }
 }

@@ -9,7 +9,6 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.cookie.BasicClientCookie;
-import org.assertj.core.api.Assertions;
 import org.cloudfoundry.identity.uaa.ServerRunningExtension;
 import org.cloudfoundry.identity.uaa.account.UserAccountStatus;
 import org.cloudfoundry.identity.uaa.account.UserInfoResponse;
@@ -185,7 +184,7 @@ public class IntegrationTestUtils {
         user.setVerified(true);
 
         ResponseEntity<ScimUser> result = restTemplate.postForEntity(serverRunning.getUrl("/Users"), user, ScimUser.class);
-        Assertions.assertThat(result.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 
         return user;
     }

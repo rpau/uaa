@@ -14,8 +14,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -25,14 +25,14 @@ import static org.mockito.Mockito.when;
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-public class DefaultOAuth2RequestFactoryTests {
+class DefaultOAuth2RequestFactoryTests {
 
     private DefaultOAuth2RequestFactory defaultOAuth2RequestFactory;
     private ClientDetails clientDetails;
     private Map<String, String> requestParameters;
 
     @BeforeEach
-    public void setUp() throws Exception {
+    void setUp() throws Exception {
         clientDetails = mock(ClientDetails.class);
         ClientDetailsService clientDetailsService = mock(ClientDetailsService.class);
         when(clientDetailsService.loadClientByClientId(any())).thenReturn(clientDetails);
@@ -41,71 +41,70 @@ public class DefaultOAuth2RequestFactoryTests {
     }
 
     @Test
-    public void setSecurityContextAccessor() {
+    void setSecurityContextAccessor() {
         defaultOAuth2RequestFactory.setSecurityContextAccessor(new DefaultSecurityContextAccessor());
-        assertNotNull(defaultOAuth2RequestFactory);
+        assertThat(defaultOAuth2RequestFactory).isNotNull();
     }
 
     @Test
-    public void setCheckUserScopes() {
+    void setCheckUserScopes() {
         defaultOAuth2RequestFactory.setCheckUserScopes(true);
-        assertNotNull(defaultOAuth2RequestFactory);
+        assertThat(defaultOAuth2RequestFactory).isNotNull();
     }
 
     @Test
-    public void createAuthorizationRequest() {
-        assertNotNull(defaultOAuth2RequestFactory.createAuthorizationRequest(requestParameters));
+    void createAuthorizationRequest() {
+        assertThat(defaultOAuth2RequestFactory.createAuthorizationRequest(requestParameters)).isNotNull();
     }
 
     @Test
-    public void createOAuth2Request() {
-        assertNotNull(defaultOAuth2RequestFactory.createOAuth2Request(defaultOAuth2RequestFactory.createAuthorizationRequest(requestParameters)));
+    void createOAuth2Request() {
+        assertThat(defaultOAuth2RequestFactory.createOAuth2Request(defaultOAuth2RequestFactory.createAuthorizationRequest(requestParameters))).isNotNull();
     }
 
     @Test
-    public void createTokenRequest() {
-        assertNotNull(defaultOAuth2RequestFactory.createTokenRequest(defaultOAuth2RequestFactory.createAuthorizationRequest(requestParameters), ""));
+    void createTokenRequest() {
+        assertThat(defaultOAuth2RequestFactory.createTokenRequest(defaultOAuth2RequestFactory.createAuthorizationRequest(requestParameters), "")).isNotNull();
     }
 
     @Test
-    public void testCreateTokenRequest() {
+    void testCreateTokenRequest() {
         when(clientDetails.getClientId()).thenReturn("id");
-        assertNotNull(defaultOAuth2RequestFactory.createTokenRequest(requestParameters, clientDetails));
+        assertThat(defaultOAuth2RequestFactory.createTokenRequest(requestParameters, clientDetails)).isNotNull();
     }
 
     @Test
-    public void testCreateTokenRequestDifferentClientId() {
-        assertThrows(InvalidClientException.class, () -> {
-            when(clientDetails.getClientId()).thenReturn("my-client-id");
-            defaultOAuth2RequestFactory.createTokenRequest(requestParameters, clientDetails);
-        });
+    void createTokenRequestDifferentClientId() {
+        when(clientDetails.getClientId()).thenReturn("my-client-id");
+        assertThatExceptionOfType(InvalidClientException.class).isThrownBy(() ->
+                defaultOAuth2RequestFactory.createTokenRequest(requestParameters, clientDetails));
     }
 
     @Test
-    public void testCreateOAuth2Request() {
+    void testCreateOAuth2Request() {
         when(clientDetails.getClientId()).thenReturn("id");
-        assertNotNull(defaultOAuth2RequestFactory.createOAuth2Request(clientDetails,
-                defaultOAuth2RequestFactory.createTokenRequest(defaultOAuth2RequestFactory.createAuthorizationRequest(requestParameters), "")));
+        assertThat(defaultOAuth2RequestFactory.createOAuth2Request(clientDetails,
+                defaultOAuth2RequestFactory.createTokenRequest(defaultOAuth2RequestFactory.createAuthorizationRequest(requestParameters), ""))).isNotNull();
     }
 
     @Test
-    public void testCreateOAuth2RequestNoClientInRequest() {
+    void createOAuth2RequestNoClientInRequest() {
         when(clientDetails.getClientId()).thenReturn("id");
-        assertNotNull(defaultOAuth2RequestFactory.createTokenRequest(Map.of(), clientDetails));
+        assertThat(defaultOAuth2RequestFactory.createTokenRequest(Map.of(), clientDetails)).isNotNull();
     }
 
     @Test
-    public void createOAuth2RequestWithUserCheck() {
+    void createOAuth2RequestWithUserCheck() {
         defaultOAuth2RequestFactory.setCheckUserScopes(true);
-        assertNotNull(defaultOAuth2RequestFactory.createOAuth2Request(defaultOAuth2RequestFactory.createAuthorizationRequest(requestParameters)));
+        assertThat(defaultOAuth2RequestFactory.createOAuth2Request(defaultOAuth2RequestFactory.createAuthorizationRequest(requestParameters))).isNotNull();
         SecurityContextAccessor securityContextAccessor = mock(SecurityContextAccessor.class);
         defaultOAuth2RequestFactory.setSecurityContextAccessor(securityContextAccessor);
         when(securityContextAccessor.isUser()).thenReturn(true);
-        assertNotNull(defaultOAuth2RequestFactory.createOAuth2Request(defaultOAuth2RequestFactory.createAuthorizationRequest(requestParameters)));
+        assertThat(defaultOAuth2RequestFactory.createOAuth2Request(defaultOAuth2RequestFactory.createAuthorizationRequest(requestParameters))).isNotNull();
     }
 
     @Test
-    public void createOAuth2RequestWithUserCheckAndScopes() {
+    void createOAuth2RequestWithUserCheckAndScopes() {
         SecurityContextAccessor securityContextAccessor = mock(SecurityContextAccessor.class);
         defaultOAuth2RequestFactory.setSecurityContextAccessor(securityContextAccessor);
         defaultOAuth2RequestFactory.setCheckUserScopes(true);
@@ -113,6 +112,6 @@ public class DefaultOAuth2RequestFactoryTests {
         when(clientDetails.getScope()).thenReturn(Set.of("read", "uaa", "admin"));
         Collection<? extends GrantedAuthority> authorities = AuthorityUtils.commaSeparatedStringToAuthorityList("read,write");
         doReturn(authorities).when(securityContextAccessor).getAuthorities();
-        assertNotNull(defaultOAuth2RequestFactory.createOAuth2Request(defaultOAuth2RequestFactory.createAuthorizationRequest(requestParameters)));
+        assertThat(defaultOAuth2RequestFactory.createOAuth2Request(defaultOAuth2RequestFactory.createAuthorizationRequest(requestParameters))).isNotNull();
     }
 }

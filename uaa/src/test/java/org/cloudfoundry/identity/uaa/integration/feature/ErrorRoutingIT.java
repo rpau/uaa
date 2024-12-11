@@ -1,7 +1,6 @@
 package org.cloudfoundry.identity.uaa.integration.feature;
 
 import org.apache.commons.io.IOUtils;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.openqa.selenium.By;
@@ -16,8 +15,10 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 @SpringJUnitConfig(classes = DefaultIntegrationTestConfig.class)
-public class ErrorRoutingIT {
+class ErrorRoutingIT {
 
     @Autowired
     @RegisterExtension
@@ -30,15 +31,15 @@ public class ErrorRoutingIT {
     String baseUrl;
 
     @Test
-    public void testMethodNotAllowedRoutedToErrorPage() {
+    void methodNotAllowedRoutedToErrorPage() {
         webDriver.get(baseUrl + "/authenticate");
 
-        Assertions.assertTrue(webDriver.findElement(By.tagName("h2")).getText().contains("Uh oh."), "Check if on the error page");
-        Assertions.assertTrue(webDriver.findElement(By.tagName("h2")).getText().contains("Something went amiss."), "Check if on the error page");
+        assertThat(webDriver.findElement(By.tagName("h2")).getText().contains("Uh oh.")).as("Check if on the error page").isTrue();
+        assertThat(webDriver.findElement(By.tagName("h2")).getText().contains("Something went amiss.")).as("Check if on the error page").isTrue();
     }
 
     @Test
-    public void testStatusCodeToErrorPage() throws IOException {
+    void statusCodeToErrorPage() throws IOException {
         CallErrorPageAndCheckHttpStatusCode("/error", "GET", 200);
         CallErrorPageAndCheckHttpStatusCode("/error404", "GET", 200);
         CallErrorPageAndCheckHttpStatusCode("/error429", "GET", 200);
@@ -50,17 +51,17 @@ public class ErrorRoutingIT {
     }
 
     @Test
-    public void testResponseToErrorPage() throws IOException {
+    void responseToErrorPage() throws IOException {
         String body = CallErrorPageAndCheckHttpStatusCode("/info", "TRACE", 405);
-        Assertions.assertEquals(-1, body.indexOf("<html"), "Expected no response HTML body, but received: " + body);
+        assertThat(body.indexOf("<html")).as("Expected no response HTML body, but received: " + body).isEqualTo(-1);
     }
 
     @Test
-    public void testRequestRejectedExceptionErrorPage() throws IOException {
+    void requestRejectedExceptionErrorPage() throws IOException {
         final String rejectedEndpoint = "/login;endpoint=x"; // spring securiy throws RequestRejectedException and by default status 500, but now 400
         webDriver.get(baseUrl + rejectedEndpoint);
 
-        Assertions.assertTrue(webDriver.findElement(By.tagName("h2")).getText().contains("The request was rejected because it contained a potentially malicious character."), "Check if on the error page");
+        assertThat(webDriver.findElement(By.tagName("h2")).getText().contains("The request was rejected because it contained a potentially malicious character.")).as("Check if on the error page").isTrue();
 
         CallErrorPageAndCheckHttpStatusCode(rejectedEndpoint, "GET", 400);
     }
@@ -71,7 +72,7 @@ public class ErrorRoutingIT {
         cn.setRequestProperty("Accept", "text/html");
         // connection initiate
         cn.connect();
-        Assertions.assertEquals(codeExpected, cn.getResponseCode(), "Check status code from " + errorPath + " is " + codeExpected);
+        assertThat(cn.getResponseCode()).as("Check status code from " + errorPath + " is " + codeExpected).isEqualTo(codeExpected);
         return getResponseBody(cn);
     }
 

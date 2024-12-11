@@ -8,7 +8,7 @@ import org.springframework.beans.factory.xml.XmlReaderContext;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -17,7 +17,7 @@ import static org.mockito.Mockito.when;
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-public class AuthorizationServerBeanDefinitionParserTest {
+class AuthorizationServerBeanDefinitionParserTest {
 
     private AuthorizationServerBeanDefinitionParser authorizationServerBeanDefinitionParser;
     private Element element;
@@ -26,7 +26,7 @@ public class AuthorizationServerBeanDefinitionParserTest {
     private XmlReaderContext xmlReaderContext;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         authorizationServerBeanDefinitionParser = new AuthorizationServerBeanDefinitionParser();
         element = mock(Element.class);
         elementAuthzCode = mock(Element.class);
@@ -59,13 +59,13 @@ public class AuthorizationServerBeanDefinitionParserTest {
     }
 
     @Test
-    public void parseEndpointAndReturnFilter() {
-        assertNull(authorizationServerBeanDefinitionParser.
-                parseEndpointAndReturnFilter(element, parserContext, "tokenRef", "serialRef"));
+    void parseEndpointAndReturnFilter() {
+        assertThat(authorizationServerBeanDefinitionParser.
+                parseEndpointAndReturnFilter(element, parserContext, "tokenRef", "serialRef")).isNull();
     }
 
     @Test
-    public void parseEndpointAndReturnFilterUsingEndpoints() {
+    void parseEndpointAndReturnFilterUsingEndpoints() {
         when(element.getAttribute("token-endpoint-url")).thenReturn("token-endpoint-url");
         when(element.getAttribute("authorization-endpoint-url")).thenReturn("authorization-endpoint-url");
         when(element.getAttribute("user-approval-page")).thenReturn("user-approval-page");
@@ -76,27 +76,27 @@ public class AuthorizationServerBeanDefinitionParserTest {
         when(elementAuthzCode.getAttribute("client-token-cache-ref")).thenReturn("client-token-cache-ref");
         when(element.getAttribute("redirect-strategy-ref")).thenReturn("redirect-strategy-ref");
         when(element.getAttribute("error-page")).thenReturn("error");
-        assertNull(authorizationServerBeanDefinitionParser.
-                parseEndpointAndReturnFilter(element, parserContext, "tokenRef", "serialRef"));
+        assertThat(authorizationServerBeanDefinitionParser.
+                parseEndpointAndReturnFilter(element, parserContext, "tokenRef", "serialRef")).isNull();
     }
 
     @Test
-    public void parseEndpointAndReturnFilterExistingUserApprovalPage() {
+    void parseEndpointAndReturnFilterExistingUserApprovalPage() {
         when(element.getAttribute("token-endpoint-url")).thenReturn("token-endpoint-url");
         when(element.getAttribute("authorization-endpoint-url")).thenReturn("authorization-endpoint-url");
         when(element.getAttribute("user-approval-page")).thenReturn("user-approval-page");
         when(element.getAttribute("approval-parameter-name")).thenReturn("approval-parameter-name");
         when(element.getAttribute("check-token-enabled")).thenReturn("true");
         when(element.getAttribute("user-approval-handler-ref")).thenReturn("user-approval-handler-ref");
-        assertNull(authorizationServerBeanDefinitionParser.
-                parseEndpointAndReturnFilter(element, parserContext, "tokenRef", "serialRef"));
+        assertThat(authorizationServerBeanDefinitionParser.
+                parseEndpointAndReturnFilter(element, parserContext, "tokenRef", "serialRef")).isNull();
     }
 
     @Test
-    public void parseEndpointNoClientRef() {
+    void parseEndpointNoClientRef() {
         when(element.getAttribute("client-details-service-ref")).thenReturn(null);
-        assertNull(authorizationServerBeanDefinitionParser.
-                parseEndpointAndReturnFilter(element, parserContext, "tokenRef", "serialRef"));
+        assertThat(authorizationServerBeanDefinitionParser.
+                parseEndpointAndReturnFilter(element, parserContext, "tokenRef", "serialRef")).isNull();
         verify(xmlReaderContext).error("ClientDetailsService must be provided", element);
     }
 }

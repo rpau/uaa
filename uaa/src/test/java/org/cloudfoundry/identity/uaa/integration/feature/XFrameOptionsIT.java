@@ -26,8 +26,7 @@ import org.springframework.web.client.RestOperations;
 
 import java.util.List;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.contains;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringJUnitConfig(classes = DefaultIntegrationTestConfig.class)
 class XFrameOptionsIT {
@@ -47,7 +46,7 @@ class XFrameOptionsIT {
 
     @BeforeEach
     @AfterEach
-    public void logout_and_clear_cookies() {
+    void logout_and_clear_cookies() {
         try {
             webDriver.get(baseUrl + "/logout.do");
         } catch (org.openqa.selenium.TimeoutException x) {
@@ -58,9 +57,9 @@ class XFrameOptionsIT {
     }
 
     @Test
-    public void testHeaderOnLogin() {
+    void headerOnLogin() {
         ResponseEntity<Void> response = restOperations.getForEntity(baseUrl + "/login", Void.class);
         List<String> xFrameOptionsHeaders = response.getHeaders().get("X-Frame-Options");
-        assertThat(xFrameOptionsHeaders, contains("DENY"));
+        assertThat(xFrameOptionsHeaders).containsExactly("DENY");
     }
 }

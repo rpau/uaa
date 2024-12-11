@@ -7,69 +7,68 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Date;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-public class JsonSerializationTests {
+class JsonSerializationTests {
 
     @Test
-    public void testDefaultSerialization() throws Exception {
+    void defaultSerialization() throws Exception {
         DefaultOAuth2AccessToken accessToken = new DefaultOAuth2AccessToken("FOO");
         accessToken.setExpiration(new Date(System.currentTimeMillis() + 10000));
         String result = new ObjectMapper().writeValueAsString(accessToken);
         // System.err.println(result);
-        assertTrue(result.contains("\"token_type\":\"bearer\""), "Wrong token: " + result);
-        assertTrue(result.contains("\"access_token\":\"FOO\""), "Wrong token: " + result);
-        assertTrue(result.contains("\"expires_in\":"), "Wrong token: " + result);
+        assertThat(result.contains("\"token_type\":\"bearer\"")).as("Wrong token: " + result).isTrue();
+        assertThat(result.contains("\"access_token\":\"FOO\"")).as("Wrong token: " + result).isTrue();
+        assertThat(result.contains("\"expires_in\":")).as("Wrong token: " + result).isTrue();
     }
 
     @Test
-    public void testRefreshSerialization() throws Exception {
+    void refreshSerialization() throws Exception {
         DefaultOAuth2AccessToken accessToken = new DefaultOAuth2AccessToken("FOO");
         accessToken.setRefreshToken(new DefaultOAuth2RefreshToken("BAR"));
         accessToken.setExpiration(new Date(System.currentTimeMillis() + 10000));
         String result = new ObjectMapper().writeValueAsString(accessToken);
         // System.err.println(result);
-        assertTrue(result.contains("\"token_type\":\"bearer\""), "Wrong token: " + result);
-        assertTrue(result.contains("\"access_token\":\"FOO\""), "Wrong token: " + result);
-        assertTrue(result.contains("\"refresh_token\":\"BAR\""), "Wrong token: " + result);
-        assertTrue(result.contains("\"expires_in\":"), "Wrong token: " + result);
+        assertThat(result.contains("\"token_type\":\"bearer\"")).as("Wrong token: " + result).isTrue();
+        assertThat(result.contains("\"access_token\":\"FOO\"")).as("Wrong token: " + result).isTrue();
+        assertThat(result.contains("\"refresh_token\":\"BAR\"")).as("Wrong token: " + result).isTrue();
+        assertThat(result.contains("\"expires_in\":")).as("Wrong token: " + result).isTrue();
     }
 
     @Test
-    public void testExceptionSerialization() throws Exception {
+    void exceptionSerialization() throws Exception {
         InvalidClientException exception = new InvalidClientException("FOO");
         exception.addAdditionalInformation("foo", "bar");
         String result = new ObjectMapper().writeValueAsString(exception);
         // System.err.println(result);
-        assertTrue(result.contains("\"error\":\"invalid_client\""), "Wrong result: " + result);
-        assertTrue(result.contains("\"error_description\":\"FOO\""), "Wrong result: " + result);
-        assertTrue(result.contains("\"foo\":\"bar\""), "Wrong result: " + result);
+        assertThat(result.contains("\"error\":\"invalid_client\"")).as("Wrong result: " + result).isTrue();
+        assertThat(result.contains("\"error_description\":\"FOO\"")).as("Wrong result: " + result).isTrue();
+        assertThat(result.contains("\"foo\":\"bar\"")).as("Wrong result: " + result).isTrue();
     }
 
     @Test
-    public void testDefaultDeserialization() throws Exception {
+    void defaultDeserialization() throws Exception {
         String accessToken = "{\"access_token\": \"FOO\", \"expires_in\": 100, \"token_type\": \"mac\"}";
         OAuth2AccessToken result = new ObjectMapper().readValue(accessToken, OAuth2AccessToken.class);
         // System.err.println(result);
-        assertEquals("FOO", result.getValue());
-        assertEquals("mac", result.getTokenType());
-        assertTrue(result.getExpiration().getTime() > System.currentTimeMillis());
+        assertThat(result.getValue()).isEqualTo("FOO");
+        assertThat(result.getTokenType()).isEqualTo("mac");
+        assertThat(result.getExpiration().getTime() > System.currentTimeMillis()).isTrue();
     }
 
     @Test
-    public void testExceptionDeserialization() throws Exception {
+    void exceptionDeserialization() throws Exception {
         String exception = "{\"error\": \"invalid_client\", \"error_description\": \"FOO\", \"foo\": \"bar\"}";
         OAuth2Exception result = new ObjectMapper().readValue(exception, OAuth2Exception.class);
         // System.err.println(result);
-        assertEquals("FOO", result.getMessage());
-        assertEquals("invalid_client", result.getOAuth2ErrorCode());
-        assertEquals("{foo=bar}", result.getAdditionalInformation().toString());
-        assertTrue(result instanceof InvalidClientException);
+        assertThat(result.getMessage()).isEqualTo("FOO");
+        assertThat(result.getOAuth2ErrorCode()).isEqualTo("invalid_client");
+        assertThat(result.getAdditionalInformation().toString()).isEqualTo("{foo=bar}");
+        assertThat(result instanceof InvalidClientException).isTrue();
     }
 
 }

@@ -1,18 +1,22 @@
 package org.cloudfoundry.identity.uaa.zone.event;
 
 import org.cloudfoundry.identity.uaa.constants.OriginKeys;
+import org.cloudfoundry.identity.uaa.extensions.PollutionPreventionExtension;
 import org.cloudfoundry.identity.uaa.provider.IdentityProvider;
 import org.cloudfoundry.identity.uaa.provider.SamlIdentityProviderDefinition;
 import org.cloudfoundry.identity.uaa.provider.saml.BootstrapSamlIdentityProviderDataTests;
-import org.cloudfoundry.identity.uaa.extensions.PollutionPreventionExtension;
 import org.cloudfoundry.identity.uaa.util.AlphanumericRandomValueStringGenerator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(PollutionPreventionExtension.class)
 class IdentityProviderModifiedEventTest {
@@ -63,13 +67,11 @@ class IdentityProviderModifiedEventTest {
     static void evaluateEventString(
             final IdentityProviderModifiedEvent event,
             final IdentityProvider<SamlIdentityProviderDefinition> provider) {
-        assertEquals(
-                IdentityProviderModifiedEvent.dataFormat.formatted(
-                        provider.getId(),
-                        provider.getType(),
-                        provider.getOriginKey(),
-                        provider.getIdentityZoneId()),
-                event.getAuditEvent().getData());
+        assertThat(event.getAuditEvent().getData()).isEqualTo(IdentityProviderModifiedEvent.dataFormat.formatted(
+                provider.getId(),
+                provider.getType(),
+                provider.getOriginKey(),
+                provider.getIdentityZoneId()));
     }
 
 }

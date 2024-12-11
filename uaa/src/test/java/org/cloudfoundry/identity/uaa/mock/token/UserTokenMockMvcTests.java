@@ -34,17 +34,13 @@ import org.springframework.http.MediaType;
 import java.util.Collections;
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.authentication.AbstractClientParametersAuthenticationFilter.CLIENT_SECRET;
 import static org.cloudfoundry.identity.uaa.oauth.common.OAuth2AccessToken.ACCESS_TOKEN;
 import static org.cloudfoundry.identity.uaa.oauth.common.OAuth2AccessToken.REFRESH_TOKEN;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_REFRESH_TOKEN;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_USER_TOKEN;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.lessThanOrEqualTo;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -57,7 +53,7 @@ class UserTokenMockMvcTests extends AbstractTokenMockMvcTests {
     private IdentityZoneManager identityZoneManager;
 
     @Test
-    void test_user_managed_token() throws Exception {
+    void user_managed_token() throws Exception {
         String recipientId = "recipientClient" + new RandomValueStringGenerator().generate();
         UaaClientDetails recipient = setUpClients(recipientId, "uaa.user", "uaa.user,test.scope", "password," + GRANT_TYPE_REFRESH_TOKEN, true, TEST_REDIRECT_URI,
                 Collections.singletonList("uaa"), 50000);
@@ -94,13 +90,13 @@ class UserTokenMockMvcTests extends AbstractTokenMockMvcTests {
         });
 
         String refreshToken = (String) result.get(REFRESH_TOKEN);
-        assertNotNull(refreshToken);
-        assertThat(refreshToken.length(), lessThanOrEqualTo(36));
-        assertEquals("test.scope", result.get("scope"));
-        assertNull(result.get(ACCESS_TOKEN));
+        assertThat(refreshToken).isNotNull();
+        assertThat(refreshToken.length()).isLessThanOrEqualTo(36);
+        assertThat(result.get("scope")).isEqualTo("test.scope");
+        assertThat(result.get(ACCESS_TOKEN)).isNull();
 
         RevocableToken token = revocableTokenProvisioning.retrieve(refreshToken, identityZoneManager.getCurrentIdentityZoneId());
-        assertEquals(recipientId, token.getClientId());
+        assertThat(token.getClientId()).isEqualTo(recipientId);
 
         response = mockMvc.perform(
                         post("/oauth/token")
@@ -119,7 +115,7 @@ class UserTokenMockMvcTests extends AbstractTokenMockMvcTests {
     }
 
     @Test
-    void test_client_credentials_token() throws Exception {
+    void client_credentials_token() throws Exception {
         String recipientId = "recipientClient" + new RandomValueStringGenerator().generate();
         UaaClientDetails recipient = setUpClients(recipientId, "uaa.user", "uaa.user,test.scope", "password," + GRANT_TYPE_REFRESH_TOKEN, true, TEST_REDIRECT_URI,
                 Collections.singletonList("uaa"), 50000);
@@ -155,7 +151,7 @@ class UserTokenMockMvcTests extends AbstractTokenMockMvcTests {
     }
 
     @Test
-    void test_invalid_grant_type() throws Exception {
+    void invalid_grant_type() throws Exception {
         String recipientId = "recipientClient" + new RandomValueStringGenerator().generate();
         UaaClientDetails recipient = setUpClients(recipientId, "uaa.user", "uaa.user,test.scope", "password," + GRANT_TYPE_REFRESH_TOKEN, true, TEST_REDIRECT_URI,
                 Collections.singletonList("uaa"), 50000);
@@ -190,7 +186,7 @@ class UserTokenMockMvcTests extends AbstractTokenMockMvcTests {
     }
 
     @Test
-    void test_create_client_with_user_token_grant() throws Exception {
+    void create_client_with_user_token_grant() throws Exception {
         String adminToken = MockMvcUtils.getClientCredentialsOAuthAccessToken(
                 mockMvc,
                 "admin",

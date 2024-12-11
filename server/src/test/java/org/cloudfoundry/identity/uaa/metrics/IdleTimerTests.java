@@ -20,11 +20,8 @@ import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.CountDownLatch;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThan;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class IdleTimerTests {
 
@@ -33,44 +30,44 @@ public class IdleTimerTests {
     public static final int THREAD_COUNT = 10;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         timer = new IdleTimer();
     }
 
     @Test
-    public void timer_started() throws Exception {
+    void timer_started() throws Exception {
         Thread.sleep(10);
-        assertEquals(0, timer.getInflightRequests());
-        assertThat(timer.getRunTime(), greaterThan(0L));
-        assertThat(timer.getIdleTime(), greaterThan(0L));
+        assertThat(timer.getInflightRequests()).isZero();
+        assertThat(timer.getRunTime()).isPositive();
+        assertThat(timer.getIdleTime()).isPositive();
     }
 
     @Test
-    public void illegal_end_request() {
-        Throwable exception = assertThrows(IllegalStateException.class, () ->
-                timer.endRequest());
-        assertTrue(exception.getMessage().contains("Illegal end request invocation, no request in flight"));
+    void illegal_end_request() {
+        assertThatThrownBy(() -> timer.endRequest())
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Illegal end request invocation, no request in flight");
     }
 
     @Test
-    public void while_inflight() throws Exception {
+    void while_inflight() throws Exception {
         timer.startRequest();
         long idleTime = timer.getIdleTime();
-        assertEquals(1, timer.getInflightRequests());
+        assertThat(timer.getInflightRequests()).isOne();
         timer.startRequest();
-        assertEquals(2, timer.getInflightRequests());
+        assertThat(timer.getInflightRequests()).isEqualTo(2);
         timer.endRequest();
-        assertEquals(1, timer.getInflightRequests());
+        assertThat(timer.getInflightRequests()).isOne();
         Thread.sleep(10);
-        assertEquals(idleTime, timer.getIdleTime(), "Idle time should not have changed.");
+        assertThat(timer.getIdleTime()).as("Idle time should not have changed.").isEqualTo(idleTime);
         timer.endRequest();
-        assertEquals(0, timer.getInflightRequests());
+        assertThat(timer.getInflightRequests()).isZero();
         Thread.sleep(10);
-        assertThat("Idle time should have changed.", timer.getIdleTime(), greaterThan(idleTime));
+        assertThat(timer.getIdleTime()).as("Idle time should have changed.").isGreaterThan(idleTime);
     }
 
     @Test
-    public void concurrency_test() throws Exception {
+    void concurrency_test() throws Exception {
         final CountDownLatch latch = new CountDownLatch(THREAD_COUNT);
         Thread[] threads = new Thread[THREAD_COUNT];
         for (int i = 0; i < THREAD_COUNT; i++) {
@@ -89,8 +86,7 @@ public class IdleTimerTests {
             threads[i].start();
         }
         latch.await();
-        assertEquals(THREAD_COUNT * LOOP_COUNT, timer.getRequestCount());
-        assertEquals(0, timer.getInflightRequests());
+        assertThat(timer.getRequestCount()).isEqualTo(THREAD_COUNT * LOOP_COUNT);
+        assertThat(timer.getInflightRequests()).isZero();
     }
-
 }

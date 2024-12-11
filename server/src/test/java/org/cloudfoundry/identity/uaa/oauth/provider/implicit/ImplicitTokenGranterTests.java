@@ -13,7 +13,7 @@ import org.springframework.security.authentication.InsufficientAuthenticationExc
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -25,13 +25,13 @@ import static org.mockito.Mockito.when;
  * <p>
  * Scope: OAuth2 server
  */
-public class ImplicitTokenGranterTests {
+class ImplicitTokenGranterTests {
 
     private ImplicitTokenGranter implicitTokenGranter;
     private ImplicitTokenRequest implicitTokenRequest;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         AuthorizationServerTokenServices tokenServices = mock(AuthorizationServerTokenServices.class);
         ClientDetailsService clientDetailsService = mock(ClientDetailsService.class);
         OAuth2RequestFactory requestFactory = mock(OAuth2RequestFactory.class);
@@ -42,12 +42,12 @@ public class ImplicitTokenGranterTests {
     }
 
     @AfterEach
-    public void cleanup() {
+    void cleanup() {
         SecurityContextHolder.clearContext();
     }
 
     @Test
-    public void getOAuth2Authentication() {
+    void getOAuth2Authentication() {
         Authentication authentication = mock(Authentication.class);
         when(authentication.isAuthenticated()).thenReturn(true);
         SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -55,17 +55,16 @@ public class ImplicitTokenGranterTests {
     }
 
     @Test
-    public void getOAuth2AuthenticationException() {
-        assertThrows(InsufficientAuthenticationException.class, () -> {
-            Authentication authentication = mock(Authentication.class);
-            when(authentication.isAuthenticated()).thenReturn(false);
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-            implicitTokenGranter.getOAuth2Authentication(mock(ClientDetails.class), implicitTokenRequest);
-        });
+    void getOAuth2AuthenticationException() {
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.isAuthenticated()).thenReturn(false);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        assertThatExceptionOfType(InsufficientAuthenticationException.class).isThrownBy(() ->
+                implicitTokenGranter.getOAuth2Authentication(mock(ClientDetails.class), implicitTokenRequest));
     }
 
     @Test
-    public void setImplicitGrantService() {
+    void setImplicitGrantService() {
         implicitTokenGranter.setImplicitGrantService(null);
     }
 }

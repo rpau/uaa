@@ -48,7 +48,7 @@ abstract class BaseOAuth2AccessTokenJacksonTest {
     }
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         accessToken = new DefaultOAuth2AccessToken("token-value");
         accessToken.setExpiration(expiration);
         DefaultOAuth2RefreshToken refreshToken = new DefaultOAuth2RefreshToken("refresh-value");

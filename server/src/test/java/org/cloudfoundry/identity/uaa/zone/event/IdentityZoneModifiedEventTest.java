@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Test;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 
 public class IdentityZoneModifiedEventTest {
@@ -31,7 +31,7 @@ public class IdentityZoneModifiedEventTest {
     private IdentityZone zone;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         zone = new IdentityZone();
         zone.setId("id");
         zone.setSubdomain("subdomain");
@@ -48,17 +48,17 @@ public class IdentityZoneModifiedEventTest {
     }
 
     @Test
-    public void identityZoneCreated() {
+    void identityZoneCreated() {
         evaluateZoneAuditData(IdentityZoneModifiedEvent.identityZoneCreated(zone));
     }
 
     @Test
-    public void identityZoneModified() {
+    void identityZoneModified() {
         evaluateZoneAuditData(IdentityZoneModifiedEvent.identityZoneModified(zone));
     }
 
     public void evaluateZoneAuditData(IdentityZoneModifiedEvent event) {
         String s = event.getAuditEvent().getData();
-        assertEquals(IdentityZoneModifiedEvent.dataFormat.formatted(zone.getId(), zone.getSubdomain()), s);
+        assertThat(s).isEqualTo(IdentityZoneModifiedEvent.dataFormat.formatted(zone.getId(), zone.getSubdomain()));
     }
 }

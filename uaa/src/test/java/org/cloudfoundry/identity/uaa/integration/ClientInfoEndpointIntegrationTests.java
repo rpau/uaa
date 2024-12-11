@@ -29,13 +29,13 @@ import org.springframework.http.ResponseEntity;
 import java.util.Collections;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 
 /**
  * @author Dave Syer
  */
-public class ClientInfoEndpointIntegrationTests {
+class ClientInfoEndpointIntegrationTests {
 
     @RegisterExtension
     private static final ServerRunningExtension serverRunning = ServerRunningExtension.connect();
@@ -46,7 +46,7 @@ public class ClientInfoEndpointIntegrationTests {
     private static final TestAccountExtension testAccountSetup = TestAccountExtension.standard(serverRunning, testAccounts);
 
     @Test
-    public void testGetClientInfo() {
+    void getClientInfo() {
 
         HttpHeaders headers = new HttpHeaders();
         AuthorizationCodeResourceDetails app = testAccounts.getDefaultAuthorizationCodeResource();
@@ -55,12 +55,12 @@ public class ClientInfoEndpointIntegrationTests {
 
         @SuppressWarnings("rawtypes")
         ResponseEntity<Map> response = serverRunning.getForObject("/clientinfo", Map.class, headers);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(app.getClientId(), response.getBody().get("client_id"));
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().get("client_id")).isEqualTo(app.getClientId());
     }
 
     @Test
-    public void testImplicitClientInfo() {
+    void implicitClientInfo() {
 
         HttpHeaders headers = new HttpHeaders();
         ImplicitResourceDetails app = testAccounts.getDefaultImplicitResource();
@@ -69,13 +69,13 @@ public class ClientInfoEndpointIntegrationTests {
 
         @SuppressWarnings("rawtypes")
         ResponseEntity<Map> response = serverRunning.getForObject("/clientinfo", Map.class, headers);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(app.getClientId(), response.getBody().get("client_id"));
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().get("client_id")).isEqualTo(app.getClientId());
 
     }
 
     @Test
-    public void testUnauthenticated() {
+    void unauthenticated() {
 
         HttpHeaders headers = new HttpHeaders();
         ResourceOwnerPasswordResourceDetails app = testAccounts.getDefaultResourceOwnerPasswordResource();
@@ -84,8 +84,8 @@ public class ClientInfoEndpointIntegrationTests {
 
         @SuppressWarnings("rawtypes")
         ResponseEntity<Map> response = serverRunning.getForObject("/clientinfo", Map.class, headers);
-        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
-        assertEquals("invalid_client", response.getBody().get("error"));
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(response.getBody().get("error")).isEqualTo("invalid_client");
 
     }
 

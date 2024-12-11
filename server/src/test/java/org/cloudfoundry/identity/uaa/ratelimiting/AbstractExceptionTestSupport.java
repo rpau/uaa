@@ -1,11 +1,11 @@
 package org.cloudfoundry.identity.uaa.ratelimiting;
 
-import java.util.function.Supplier;
-
 import org.cloudfoundry.identity.uaa.ratelimiting.core.config.exception.RateLimitingConfigException;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.fail;
+import java.util.function.Supplier;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 public class AbstractExceptionTestSupport {
     @SuppressWarnings("unused")
@@ -17,8 +17,7 @@ public class AbstractExceptionTestSupport {
         T result;
         try {
             result = expectedExceptionThrowingLambda.get();
-        }
-        catch (RateLimitingConfigException e) {
+        } catch (RateLimitingConfigException e) {
             String message = e.getMessage();
             if (!expectedMessageOrPrefix.equals(message) && !message.startsWith(expectedMessageOrPrefix)) {
                 fail("expected message like '" + expectedMessageOrPrefix + "', but got: " + message);
@@ -42,7 +41,7 @@ public class AbstractExceptionTestSupport {
     }
 
     private void checkActualClause(Throwable actualCause, String message, Class<?> expectedExceptionCauseClass) {
-        assertNotNull(actualCause, "no actualCause on: " + message);
+        assertThat(actualCause).as("no actualCause on: " + message).isNotNull();
         Class<?> actualExceptionCauseClass = actualCause.getClass();
         if (!expectedExceptionCauseClass.isAssignableFrom(actualExceptionCauseClass)) {
             fail("incompatible exceptions with '" + message + "' & " + expectedExceptionCauseClass +

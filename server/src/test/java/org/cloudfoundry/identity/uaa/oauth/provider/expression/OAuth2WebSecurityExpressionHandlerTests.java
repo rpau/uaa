@@ -16,20 +16,19 @@ import org.springframework.security.web.FilterInvocation;
 
 import java.util.Collections;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-public class OAuth2WebSecurityExpressionHandlerTests {
+class OAuth2WebSecurityExpressionHandlerTests {
 
     private final OAuth2WebSecurityExpressionHandler handler = new OAuth2WebSecurityExpressionHandler();
 
     @Test
-    public void testScopesWithOr() throws Exception {
+    void scopesWithOr() throws Exception {
         AuthorizationRequest request = new AuthorizationRequest("foo", Collections.singleton("read"));
         request.setResourceIdsAndAuthoritiesFromClientDetails(new UaaClientDetails("foo", "bar", "",
                 "client_credentials", "ROLE_USER"));
@@ -42,11 +41,11 @@ public class OAuth2WebSecurityExpressionHandlerTests {
         EvaluationContext context = handler.createEvaluationContext(oAuth2Authentication, invocation);
         Expression expression = handler.getExpressionParser().parseExpression(
                 "#oauth2.hasAnyScope('write') or #oauth2.isUser()");
-        assertTrue((Boolean) expression.getValue(context));
+        assertThat((Boolean) expression.getValue(context)).isTrue();
     }
 
     @Test
-    public void testOauthClient() throws Exception {
+    void oauthClient() throws Exception {
         AuthorizationRequest request = new AuthorizationRequest("foo", Collections.singleton("read"));
         request.setResourceIdsAndAuthoritiesFromClientDetails(new UaaClientDetails("foo", "", "",
                 "client_credentials", "ROLE_CLIENT"));
@@ -61,50 +60,49 @@ public class OAuth2WebSecurityExpressionHandlerTests {
         FilterInvocation invocation = new FilterInvocation("/foo", "GET");
         Expression expression = handler.getExpressionParser()
                 .parseExpression("#oauth2.clientHasAnyRole('ROLE_CLIENT')");
-        assertTrue((Boolean) expression.getValue(handler.createEvaluationContext(oAuth2Authentication, invocation)));
+        assertThat((Boolean) expression.getValue(handler.createEvaluationContext(oAuth2Authentication, invocation))).isTrue();
     }
 
     @Test
-    public void testScopes() throws Exception {
+    void scopes() throws Exception {
         OAuth2Request clientAuthentication = RequestTokenFactory.createOAuth2Request("foo", false,
                 Collections.singleton("read"));
         Authentication userAuthentication = null;
         OAuth2Authentication oAuth2Authentication = new OAuth2Authentication(clientAuthentication, userAuthentication);
         FilterInvocation invocation = new FilterInvocation("/foo", "GET");
         Expression expression = handler.getExpressionParser().parseExpression("#oauth2.hasAnyScope('read')");
-        assertTrue((Boolean) expression.getValue(handler.createEvaluationContext(oAuth2Authentication, invocation)));
+        assertThat((Boolean) expression.getValue(handler.createEvaluationContext(oAuth2Authentication, invocation))).isTrue();
     }
 
     @Test
-    public void testInsufficientScope() {
-        assertThrows(AccessDeniedException.class, () -> {
-            AuthorizationRequest request = new AuthorizationRequest("foo", Collections.singleton("read"));
-            request.setResourceIdsAndAuthoritiesFromClientDetails(new UaaClientDetails("foo", "bar", "",
-                    "client_credentials", "ROLE_USER"));
-            OAuth2Request clientAuthentication = request.createOAuth2Request();
-            Authentication userAuthentication = null;
-            OAuth2Authentication oAuth2Authentication = new OAuth2Authentication(clientAuthentication, userAuthentication);
-            OAuth2SecurityExpressionMethods root = new OAuth2SecurityExpressionMethods(oAuth2Authentication);
-            boolean hasAnyScope = root.hasAnyScope("foo");
-            root.throwOnError(hasAnyScope);
-        });
+    void insufficientScope() {
+        AuthorizationRequest request = new AuthorizationRequest("foo", Collections.singleton("read"));
+        request.setResourceIdsAndAuthoritiesFromClientDetails(new UaaClientDetails("foo", "bar", "",
+                "client_credentials", "ROLE_USER"));
+        OAuth2Request clientAuthentication = request.createOAuth2Request();
+        Authentication userAuthentication = null;
+        OAuth2Authentication oAuth2Authentication = new OAuth2Authentication(clientAuthentication, userAuthentication);
+        OAuth2SecurityExpressionMethods root = new OAuth2SecurityExpressionMethods(oAuth2Authentication);
+        boolean hasAnyScope = root.hasAnyScope("foo");
+        assertThatExceptionOfType(AccessDeniedException.class).isThrownBy(() ->
+                root.throwOnError(hasAnyScope));
     }
 
     @Test
-    public void testNonOauthClient() throws Exception {
+    void nonOauthClient() throws Exception {
         Authentication clientAuthentication = new UsernamePasswordAuthenticationToken("foo", "bar");
         FilterInvocation invocation = new FilterInvocation("/foo", "GET");
         Expression expression = handler.getExpressionParser().parseExpression("#oauth2.clientHasAnyRole()");
-        assertFalse((Boolean) expression.getValue(handler.createEvaluationContext(clientAuthentication, invocation)));
+        assertThat((Boolean) expression.getValue(handler.createEvaluationContext(clientAuthentication, invocation))).isFalse();
     }
 
     @Test
-    public void testStandardSecurityRoot() throws Exception {
+    void standardSecurityRoot() throws Exception {
         Authentication clientAuthentication = new UsernamePasswordAuthenticationToken("foo", "bar", null);
-        assertTrue(clientAuthentication.isAuthenticated());
+        assertThat(clientAuthentication.isAuthenticated()).isTrue();
         FilterInvocation invocation = new FilterInvocation("/foo", "GET");
         Expression expression = handler.getExpressionParser().parseExpression("isAuthenticated()");
-        assertTrue((Boolean) expression.getValue(handler.createEvaluationContext(clientAuthentication, invocation)));
+        assertThat((Boolean) expression.getValue(handler.createEvaluationContext(clientAuthentication, invocation))).isTrue();
     }
 
 }

@@ -19,13 +19,13 @@ import org.junit.jupiter.api.Test;
 
 import javax.validation.ConstraintViolationException;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 
 /**
  * @author Luke Taylor
  */
-public class UaaConfigurationTests {
+class UaaConfigurationTests {
 
     private final YamlConfigurationValidator<UaaConfiguration> validator = new YamlConfigurationValidator<>(
             new UaaConfiguration.UaaConfigConstructor());
@@ -37,7 +37,7 @@ public class UaaConfigurationTests {
     }
 
     @Test
-    public void validYamlIsOk() throws Exception {
+    void validYamlIsOk() throws Exception {
         createValidator(
                 """
                         name: uaa
@@ -56,7 +56,7 @@ public class UaaConfigurationTests {
     }
 
     @Test
-    public void validClientIsOk() throws Exception {
+    void validClientIsOk() throws Exception {
         createValidator(
                 """
                         oauth:
@@ -66,12 +66,12 @@ public class UaaConfigurationTests {
                               autoapprove: true
                               authorized-grant-types: implicit
                         """);
-        assertTrue(validator.getObject().oauth.clients.containsKey("cf"));
+        assertThat(validator.getObject().oauth.clients.containsKey("cf")).isTrue();
     }
 
     @Test
     void invalidIssuerUriCausesException() {
-        assertThrows(ConstraintViolationException.class, () ->
+        assertThatExceptionOfType(ConstraintViolationException.class).isThrownBy(() ->
                 createValidator("name: uaa\nissuer.uri: notauri\n"));
     }
 }

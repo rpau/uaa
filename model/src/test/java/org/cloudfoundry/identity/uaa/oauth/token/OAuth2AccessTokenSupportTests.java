@@ -28,14 +28,14 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.util.Arrays;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-public class OAuth2AccessTokenSupportTests {
+class OAuth2AccessTokenSupportTests {
 
     private final ClientCredentialsResourceDetails resource = new ClientCredentialsResourceDetails();
 
@@ -57,7 +57,7 @@ public class OAuth2AccessTokenSupportTests {
     };
 
     @BeforeEach
-    public void init() throws Exception {
+    void init() throws Exception {
         resource.setClientId("client");
         resource.setClientSecret("secret");
         resource.setAccessTokenUri("https://nowhere/token");
@@ -70,23 +70,22 @@ public class OAuth2AccessTokenSupportTests {
     }
 
     @Test
-    public void testRetrieveTokenFailsWhenTokenEndpointNotAvailable() {
-        assertThrows(OAuth2AccessDeniedException.class, () -> {
-            error = new IOException("Planned");
-            response.setStatus(HttpStatus.BAD_REQUEST);
-            support.retrieveToken(request, resource, form, requestHeaders);
-        });
+    void retrieveTokenFailsWhenTokenEndpointNotAvailable() {
+        error = new IOException("Planned");
+        response.setStatus(HttpStatus.BAD_REQUEST);
+        assertThatExceptionOfType(OAuth2AccessDeniedException.class).isThrownBy(() ->
+                support.retrieveToken(request, resource, form, requestHeaders));
     }
 
     @Test
-    public void testRetrieveToken() throws Exception {
+    void retrieveToken() throws Exception {
         response.setBody(objectMapper.writeValueAsString(accessToken));
         OAuth2AccessToken retrieveToken = support.retrieveToken(request, resource, form, requestHeaders);
-        assertEquals(accessToken, retrieveToken);
+        assertThat(retrieveToken).isEqualTo(accessToken);
     }
 
     @Test
-    public void testRetrieveTokenFormEncoded() throws Exception {
+    void retrieveTokenFormEncoded() throws Exception {
         // SECOAUTH-306: no need to set message converters
         requestHeaders.setAccept(Arrays.asList(MediaType.APPLICATION_FORM_URLENCODED));
         HttpHeaders responseHeaders = new HttpHeaders();
@@ -94,32 +93,32 @@ public class OAuth2AccessTokenSupportTests {
         response.setBody("access_token=FOO");
         response.setHeaders(responseHeaders);
         OAuth2AccessToken retrieveToken = support.retrieveToken(request, resource, form, requestHeaders);
-        assertEquals(accessToken, retrieveToken);
+        assertThat(retrieveToken).isEqualTo(accessToken);
     }
 
     @Test
-    public void testRequestEnhanced() throws Exception {
+    void requestEnhanced() throws Exception {
         DefaultRequestEnhancer enhancer = new DefaultRequestEnhancer();
         enhancer.setParameterIncludes(Arrays.asList("foo"));
         request.set("foo", "bar");
         support.setTokenRequestEnhancer(enhancer);
         response.setBody(objectMapper.writeValueAsString(accessToken));
         OAuth2AccessToken retrieveToken = support.retrieveToken(request, resource, form, requestHeaders);
-        assertEquals("[bar]", form.get("foo").toString());
-        assertEquals(accessToken, retrieveToken);
+        assertThat(form.get("foo").toString()).isEqualTo("[bar]");
+        assertThat(retrieveToken).isEqualTo(accessToken);
     }
 
     @Test
-    public void testRequestNotEnhanced() throws Exception {
+    void requestNotEnhanced() throws Exception {
         request.set("foo", "bar");
         response.setBody(objectMapper.writeValueAsString(accessToken));
         OAuth2AccessToken retrieveToken = support.retrieveToken(request, resource, form, requestHeaders);
-        assertEquals(null, form.get("foo"));
-        assertEquals(accessToken, retrieveToken);
+        assertThat(form.get("foo")).isNull();
+        assertThat(retrieveToken).isEqualTo(accessToken);
     }
 
     @Test
-    public void testRequestEnhancedFromQuery() throws Exception {
+    void requestEnhancedFromQuery() throws Exception {
         DefaultRequestEnhancer enhancer = new DefaultRequestEnhancer();
         enhancer.setParameterIncludes(Arrays.asList("foo"));
         request.set("foo", "bar");
@@ -127,12 +126,12 @@ public class OAuth2AccessTokenSupportTests {
         response.setBody(objectMapper.writeValueAsString(accessToken));
         resource.setClientAuthenticationScheme(AuthenticationScheme.form);
         OAuth2AccessToken retrieveToken = support.retrieveToken(request, resource, form, requestHeaders);
-        assertEquals("[bar]", form.get("foo").toString());
-        assertEquals(accessToken, retrieveToken);
+        assertThat(form.get("foo").toString()).isEqualTo("[bar]");
+        assertThat(retrieveToken).isEqualTo(accessToken);
     }
 
     @Test
-    public void testRequestEnhancedEmptySecret() throws Exception {
+    void requestEnhancedEmptySecret() throws Exception {
         DefaultRequestEnhancer enhancer = new DefaultRequestEnhancer();
         enhancer.setParameterIncludes(Arrays.asList("foo"));
         request.set("foo", "bar");
@@ -141,12 +140,12 @@ public class OAuth2AccessTokenSupportTests {
         resource.setClientSecret("");
         resource.setClientAuthenticationScheme(AuthenticationScheme.form);
         OAuth2AccessToken retrieveToken = support.retrieveToken(request, resource, form, requestHeaders);
-        assertEquals("[bar]", form.get("foo").toString());
-        assertEquals(accessToken, retrieveToken);
+        assertThat(form.get("foo").toString()).isEqualTo("[bar]");
+        assertThat(retrieveToken).isEqualTo(accessToken);
     }
 
     @Test
-    public void testRequestEnhancedNonScheme() throws Exception {
+    void requestEnhancedNonScheme() throws Exception {
         DefaultRequestEnhancer enhancer = new DefaultRequestEnhancer();
         enhancer.setParameterIncludes(Arrays.asList("foo"));
         request.set("foo", "bar");
@@ -155,8 +154,8 @@ public class OAuth2AccessTokenSupportTests {
         resource.setClientId("clientId");
         resource.setClientAuthenticationScheme(AuthenticationScheme.none);
         OAuth2AccessToken retrieveToken = support.retrieveToken(request, resource, form, requestHeaders);
-        assertEquals("[bar]", form.get("foo").toString());
-        assertEquals(accessToken, retrieveToken);
+        assertThat(form.get("foo").toString()).isEqualTo("[bar]");
+        assertThat(retrieveToken).isEqualTo(accessToken);
     }
 
     private final class StubHttpClientResponse extends AbstractClientHttpResponse {

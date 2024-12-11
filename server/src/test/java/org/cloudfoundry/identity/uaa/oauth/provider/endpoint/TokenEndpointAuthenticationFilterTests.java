@@ -23,9 +23,7 @@ import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -33,7 +31,7 @@ import static org.mockito.Mockito.when;
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-public class TokenEndpointAuthenticationFilterTests {
+class TokenEndpointAuthenticationFilterTests {
 
     private final MockHttpServletRequest request = new MockHttpServletRequest();
 
@@ -55,7 +53,7 @@ public class TokenEndpointAuthenticationFilterTests {
     private final OAuth2RequestFactory oAuth2RequestFactory = new DefaultOAuth2RequestFactory(clientDetailsService);
 
     @BeforeEach
-    public void init() {
+    void init() {
         SecurityContextHolder.clearContext();
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("client", "secret", AuthorityUtils
@@ -63,12 +61,12 @@ public class TokenEndpointAuthenticationFilterTests {
     }
 
     @AfterEach
-    public void close() {
+    void close() {
         SecurityContextHolder.clearContext();
     }
 
     @Test
-    public void testPasswordGrant() throws Exception {
+    void passwordGrant() throws Exception {
         request.setParameter("grant_type", "password");
         request.setParameter("client_id", "foo");
         when(authenticationManager.authenticate(Mockito.any())).thenReturn(
@@ -77,12 +75,12 @@ public class TokenEndpointAuthenticationFilterTests {
         TokenEndpointAuthenticationFilter filter = new TokenEndpointAuthenticationFilter(authenticationManager, oAuth2RequestFactory);
         filter.doFilter(request, response, chain);
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        assertTrue(authentication instanceof OAuth2Authentication);
-        assertTrue(authentication.isAuthenticated());
+        assertThat(authentication instanceof OAuth2Authentication).isTrue();
+        assertThat(authentication.isAuthenticated()).isTrue();
     }
 
     @Test
-    public void testPasswordGrantWithUnAuthenticatedClient() throws Exception {
+    void passwordGrantWithUnAuthenticatedClient() throws Exception {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("client", "secret"));
         request.setParameter("grant_type", "password");
@@ -92,20 +90,20 @@ public class TokenEndpointAuthenticationFilterTests {
         TokenEndpointAuthenticationFilter filter = new TokenEndpointAuthenticationFilter(authenticationManager, oAuth2RequestFactory);
         filter.doFilter(request, response, chain);
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        assertTrue(authentication instanceof OAuth2Authentication);
-        assertFalse(authentication.isAuthenticated());
+        assertThat(authentication instanceof OAuth2Authentication).isTrue();
+        assertThat(authentication.isAuthenticated()).isFalse();
     }
 
     @Test
-    public void testNoGrantType() throws Exception {
+    void noGrantType() throws Exception {
         TokenEndpointAuthenticationFilter filter = new TokenEndpointAuthenticationFilter(authenticationManager, oAuth2RequestFactory);
         filter.doFilter(request, response, chain);
         // Just the client
-        assertTrue(SecurityContextHolder.getContext().getAuthentication() instanceof UsernamePasswordAuthenticationToken);
+        assertThat(SecurityContextHolder.getContext().getAuthentication() instanceof UsernamePasswordAuthenticationToken).isTrue();
     }
 
     @Test
-    public void testFilterException() throws Exception {
+    void filterException() throws Exception {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("client", "secret"));
         request.setParameter("grant_type", "password");
@@ -115,6 +113,6 @@ public class TokenEndpointAuthenticationFilterTests {
         when(authenticationManager.authenticate(any())).thenThrow(new BadCredentialsException(""));
         filter.doFilter(request, response, chain);
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        assertNull(authentication);
+        assertThat(authentication).isNull();
     }
 }

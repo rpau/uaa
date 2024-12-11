@@ -15,9 +15,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import java.util.Arrays;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -26,7 +25,7 @@ import static org.mockito.Mockito.when;
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-public class CompositeTokenGranterTests {
+class CompositeTokenGranterTests {
 
     private CompositeTokenGranter compositeTokenGranter;
     private AuthorizationServerTokenServices tokenServices;
@@ -38,7 +37,7 @@ public class CompositeTokenGranterTests {
     private OAuth2Request oauth2Request;
 
     @BeforeEach
-    public void setUp() throws Exception {
+    void setUp() throws Exception {
         tokenServices = mock(AuthorizationServerTokenServices.class);
         clientDetailsService = mock(ClientDetailsService.class);
         tokenRequest = mock(TokenRequest.class);
@@ -51,18 +50,18 @@ public class CompositeTokenGranterTests {
     }
 
     @AfterEach
-    public void cleanup() {
+    void cleanup() {
         SecurityContextHolder.clearContext();
     }
 
     @Test
-    public void testInit() {
+    void init() {
         compositeTokenGranter = new CompositeTokenGranter(Arrays.asList(mock(ImplicitTokenGranter.class)));
     }
 
     @Test
-    public void grant() {
-        assertNull(compositeTokenGranter.grant("any", tokenRequest));
+    void grant() {
+        assertThat(compositeTokenGranter.grant("any", tokenRequest)).isNull();
         compositeTokenGranter.addTokenGranter(new ImplicitTokenGranter(tokenServices, clientDetailsService, oAuth2RequestFactory));
         ClientDetails client = mock(ClientDetails.class);
         when(clientDetailsService.loadClientByClientId(any())).thenReturn(client);
@@ -71,14 +70,13 @@ public class CompositeTokenGranterTests {
         when(authentication.isAuthenticated()).thenReturn(true);
         when(tokenServices.createAccessToken(any())).thenReturn(mock(OAuth2AccessToken.class));
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        assertNotNull(compositeTokenGranter.grant("implicit", new ImplicitTokenRequest(tokenRequest, oauth2Request)));
+        assertThat(compositeTokenGranter.grant("implicit", new ImplicitTokenRequest(tokenRequest, oauth2Request))).isNotNull();
     }
 
     @Test
-    public void addTokenGranter() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            compositeTokenGranter.addTokenGranter(mock(ImplicitTokenGranter.class));
-            compositeTokenGranter.addTokenGranter(null);
-        });
+    void addTokenGranter() {
+        compositeTokenGranter.addTokenGranter(mock(ImplicitTokenGranter.class));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() ->
+                compositeTokenGranter.addTokenGranter(null));
     }
 }

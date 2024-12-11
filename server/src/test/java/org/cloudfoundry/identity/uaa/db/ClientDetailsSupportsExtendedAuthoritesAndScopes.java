@@ -10,10 +10,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.util.Arrays;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.isIn;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @WithDatabaseContext
 class ClientDetailsSupportsExtendedAuthoritesAndScopes {
@@ -36,7 +33,7 @@ class ClientDetailsSupportsExtendedAuthoritesAndScopes {
                 int columnSize = rs.getInt("COLUMN_SIZE");
                 if (tableName.equalsIgnoreCase(rstableName) && (scopeColumnName.equalsIgnoreCase(rscolumnName)
                         || authoritiesColumnName.equalsIgnoreCase(rscolumnName))) {
-                    assertTrue(columnSize > 4000, "Table: %s Column: %s should be over 4000 chars".formatted(rstableName, rscolumnName));
+                    assertThat(columnSize > 4000).as("Table: %s Column: %s should be over 4000 chars".formatted(rstableName, rscolumnName)).isTrue();
                     foundTable = true;
                     if (scopeColumnName.equalsIgnoreCase(rscolumnName)) {
                         foundColumnScope = true;
@@ -45,15 +42,15 @@ class ClientDetailsSupportsExtendedAuthoritesAndScopes {
                     }
 
                     String columnType = rs.getString("TYPE_NAME");
-                    assertNotNull("Table: %s Column: %s should have a column type".formatted(rstableName, rscolumnName), columnType);
-                    assertThat("Table: %s Column: %s should be text, longtext, nvarchar or clob".formatted(rstableName, rscolumnName), columnType.toLowerCase(), isIn(Arrays.asList("text", "longtext", "nvarchar", "clob")));
+                    assertThat("Table: %s Column: %s should have a column type".formatted(rstableName, rscolumnName)).as(columnType).isNotNull();
+                    assertThat(columnType.toLowerCase()).as("Table: %s Column: %s should be text, longtext, nvarchar or clob".formatted(rstableName, rscolumnName)).isIn(Arrays.asList("text", "longtext", "nvarchar", "clob"));
                 }
             }
             rs.close();
 
-            assertTrue(foundTable, "I was expecting to find table:" + tableName);
-            assertTrue(foundColumnScope, "I was expecting to find column: " + scopeColumnName);
-            assertTrue(foundColumnAuthorities, "I was expecting to find column: " + authoritiesColumnName);
+            assertThat(foundTable).as("I was expecting to find table:" + tableName).isTrue();
+            assertThat(foundColumnScope).as("I was expecting to find column: " + scopeColumnName).isTrue();
+            assertThat(foundColumnAuthorities).as("I was expecting to find column: " + authoritiesColumnName).isTrue();
         }
     }
 }

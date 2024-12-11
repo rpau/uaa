@@ -33,10 +33,8 @@ import org.springframework.web.client.RestTemplate;
 import java.net.URI;
 import java.util.Collections;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils.getHeaders;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests implicit grant using a direct posting of credentials to the /authorize
@@ -45,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * @author Dave Syer
  */
-public class ImplicitTokenGrantIntegrationTests {
+class ImplicitTokenGrantIntegrationTests {
 
     private static final String REDIRECT_URL_PATTERN = "http://localhost:8080/redirect/cf#token_type=.+access_token=.+";
 
@@ -66,7 +64,7 @@ public class ImplicitTokenGrantIntegrationTests {
     }
 
     @Test
-    public void authzViaJsonEndpointFailsWithHttpGet() {
+    void authzViaJsonEndpointFailsWithHttpGet() {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
@@ -77,12 +75,12 @@ public class ImplicitTokenGrantIntegrationTests {
         ResponseEntity<Void> result = serverRunning.getForResponse(implicitUrl() + "&credentials={credentials}",
                 headers, credentials);
 
-        assertEquals(HttpStatus.UNAUTHORIZED, result.getStatusCode());
+        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
 
     }
 
     @Test
-    public void authzViaJsonEndpointSucceedsWithCorrectCredentials() {
+    void authzViaJsonEndpointSucceedsWithCorrectCredentials() {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
@@ -94,14 +92,14 @@ public class ImplicitTokenGrantIntegrationTests {
         formData.add("credentials", credentials);
         ResponseEntity<Void> result = serverRunning.postForResponse(implicitUrl(), headers, formData);
 
-        assertNotNull(result.getHeaders().getLocation());
-        assertTrue(result.getHeaders().getLocation().toString()
-                .matches(REDIRECT_URL_PATTERN));
+        assertThat(result.getHeaders().getLocation()).isNotNull();
+        assertThat(result.getHeaders().getLocation().toString()
+                .matches(REDIRECT_URL_PATTERN)).isTrue();
 
     }
 
     @Test
-    public void authzViaJsonEndpointSucceedsWithAcceptForm() {
+    void authzViaJsonEndpointSucceedsWithAcceptForm() {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_FORM_URLENCODED));
@@ -114,19 +112,19 @@ public class ImplicitTokenGrantIntegrationTests {
         ResponseEntity<Void> result = serverRunning.postForResponse(implicitUrl(), headers, formData);
 
         URI location = result.getHeaders().getLocation();
-        assertNotNull(location);
-        assertTrue(location.toString()
-                .matches(REDIRECT_URL_PATTERN), "Wrong location: " + location);
+        assertThat(location).isNotNull();
+        assertThat(location.toString()
+                .matches(REDIRECT_URL_PATTERN)).as("Wrong location: " + location).isTrue();
 
     }
 
     @Test
-    public void authzWithIntermediateFormLoginSucceeds() {
+    void authzWithIntermediateFormLoginSucceeds() {
 
         BasicCookieStore cookies = new BasicCookieStore();
 
         ResponseEntity<Void> result = serverRunning.getForResponse(implicitUrl(), getHeaders(cookies));
-        assertEquals(HttpStatus.FOUND, result.getStatusCode());
+        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.FOUND);
         String location = result.getHeaders().getLocation().toString();
         if (result.getHeaders().containsKey("Set-Cookie")) {
             for (String cookie : result.getHeaders().get("Set-Cookie")) {
@@ -143,9 +141,9 @@ public class ImplicitTokenGrantIntegrationTests {
             }
         }
         // should be directed to the login screen...
-        assertTrue(response.getBody().contains("/login.do"));
-        assertTrue(response.getBody().contains("username"));
-        assertTrue(response.getBody().contains("password"));
+        assertThat(response.getBody().contains("/login.do")).isTrue();
+        assertThat(response.getBody().contains("username")).isTrue();
+        assertThat(response.getBody().contains("password")).isTrue();
 
 
         location = "/login.do";
@@ -160,25 +158,25 @@ public class ImplicitTokenGrantIntegrationTests {
         // System.err.println(result.getStatusCode());
         // System.err.println(result.getHeaders());
 
-        assertNotNull(result.getHeaders().getLocation());
-        assertTrue(result.getHeaders().getLocation().toString()
-                .matches(REDIRECT_URL_PATTERN));
+        assertThat(result.getHeaders().getLocation()).isNotNull();
+        assertThat(result.getHeaders().getLocation().toString()
+                .matches(REDIRECT_URL_PATTERN)).isTrue();
     }
 
     @Test
-    public void authzWithNonExistingIdentityZone() {
+    void authzWithNonExistingIdentityZone() {
         ResponseEntity<Void> result = serverRunning.getForResponse(implicitUrl().replace("localhost", "testzonedoesnotexist.localhost"), new HttpHeaders());
-        assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
+        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 
     @Test
-    public void authzWithInactiveIdentityZone() {
+    void authzWithInactiveIdentityZone() {
         RestTemplate identityClient = IntegrationTestUtils
                 .getClientCredentialsTemplate(IntegrationTestUtils.getClientCredentialsResource(serverRunning.getBaseUrl(),
                         new String[]{"zones.write", "zones.read", "scim.zones"}, "identity", "identitysecret"));
         IntegrationTestUtils.createInactiveIdentityZone(identityClient, "http://localhost:8080/uaa");
 
         ResponseEntity<Void> result = serverRunning.getForResponse(implicitUrl().replace("localhost", "testzoneinactive.localhost"), new HttpHeaders());
-        assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
+        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 }
