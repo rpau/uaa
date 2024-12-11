@@ -3,29 +3,29 @@ package org.cloudfoundry.identity.uaa.oauth.common;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
 import java.util.Date;
 import java.util.HashSet;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class OAuth2AccessTokenJackson2DeserializerTests extends BaseOAuth2AccessTokenJacksonTest {
 
     protected ObjectMapper mapper;
 
-    @Before
+    @BeforeEach
     public void createObjectMapper() {
         mapper = new ObjectMapper();
     }
@@ -99,7 +99,7 @@ public class OAuth2AccessTokenJackson2DeserializerTests extends BaseOAuth2Access
     @Test
     public void readValueWithZeroExpiresAsNotExpired() throws Exception {
         OAuth2AccessToken actual = mapper.readValue(ACCESS_TOKEN_ZERO_EXPIRES, OAuth2AccessToken.class);
-        assertFalse("Token with expires_in:0 must be treated as not expired.", actual.isExpired());
+        assertFalse(actual.isExpired(), "Token with expires_in:0 must be treated as not expired.");
     }
 
     private static void assertTokenEquals(OAuth2AccessToken expected, OAuth2AccessToken actual) {

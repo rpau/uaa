@@ -20,7 +20,7 @@ import org.cloudfoundry.identity.uaa.oauth.KeyInfoService;
 import org.cloudfoundry.identity.uaa.oauth.jwt.JwtClientAuthentication;
 import org.cloudfoundry.identity.uaa.provider.OIDCIdentityProviderDefinition;
 import org.cloudfoundry.identity.uaa.util.JsonUtils;
-import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -44,7 +44,7 @@ public class TestClient {
     private final String baseUrl;
 
     public TestClient(final RestTemplate restTemplate,
-            final String baseUrl) {
+                      final String baseUrl) {
         this.restTemplate = restTemplate;
         this.baseUrl = baseUrl;
     }
@@ -143,7 +143,7 @@ public class TestClient {
 
         HttpEntity<String> requestEntity = new HttpEntity<>(json, headers);
         ResponseEntity<Void> exchange = restTemplate.exchange(url, HttpMethod.POST, requestEntity, Void.class);
-        Assert.assertEquals(HttpStatus.CREATED, exchange.getStatusCode());
+        Assertions.assertEquals(HttpStatus.CREATED, exchange.getStatusCode());
     }
 
     public String extractLink(String messageBody) {

@@ -28,9 +28,9 @@ import org.cloudfoundry.identity.uaa.security.IsSelfCheck;
 import org.cloudfoundry.identity.uaa.util.AlphanumericRandomValueStringGenerator;
 import org.cloudfoundry.identity.uaa.util.UaaStringUtils;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneHolder;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.core.GrantedAuthority;
@@ -44,8 +44,8 @@ import java.util.List;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
@@ -61,7 +61,7 @@ public class IsSelfCheckTest {
     private OAuth2Authentication oAuth2AuthenticationWithUser;
     private OAuth2Authentication oAuth2AuthenticationWithoutUser;
 
-    @Before
+    @BeforeEach
     public void getBean() {
         id = new AlphanumericRandomValueStringGenerator(25).generate();
         clientId = id;
@@ -77,7 +77,7 @@ public class IsSelfCheckTest {
     }
 
 
-    @After
+    @AfterEach
     public void clearContext() {
         SecurityContextHolder.clearContext();
     }

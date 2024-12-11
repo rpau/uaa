@@ -5,7 +5,7 @@ import org.flywaydb.core.api.callback.BaseCallback;
 import org.flywaydb.core.api.callback.Context;
 import org.flywaydb.core.api.callback.Event;
 import org.flywaydb.core.api.configuration.ClassicConfiguration;
-import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 
 import java.sql.SQLException;
 
@@ -33,7 +33,7 @@ public class MigrationTestRunner {
                             context.getConnection().commit();
                         }
                     } catch (SQLException e) {
-                        Assert.fail(e.getMessage());
+                        Assertions.fail(e.getMessage());
                     }
 
                     for (MigrationTest test : tests) {
@@ -42,7 +42,7 @@ public class MigrationTestRunner {
                             try {
                                 test.runAssertions();
                             } catch (Exception e) {
-                                Assert.fail(e.getMessage());
+                                Assertions.fail(e.getMessage());
                             }
                             assertionsRan[0]++;
                         }
@@ -59,8 +59,7 @@ public class MigrationTestRunner {
         try {
             afterEachMigrateCallbackFlyway.migrate();
             assertThat("Not every db migration ran", assertionsRan[0], is(tests.length));
-        }
-        finally {
+        } finally {
             afterEachMigrateCallbackFlyway.clean();
             afterEachMigrateCallbackFlyway.migrate();
         }

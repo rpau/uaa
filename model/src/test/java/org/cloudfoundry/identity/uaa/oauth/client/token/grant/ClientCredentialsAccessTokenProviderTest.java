@@ -8,10 +8,8 @@ import org.cloudfoundry.identity.uaa.oauth.common.DefaultOAuth2RefreshToken;
 import org.cloudfoundry.identity.uaa.oauth.common.OAuth2AccessToken;
 import org.cloudfoundry.identity.uaa.oauth.token.AccessTokenRequest;
 import org.cloudfoundry.identity.uaa.oauth.token.DefaultAccessTokenRequest;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -20,28 +18,25 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ClientCredentialsAccessTokenProviderTest {
-
-    @Rule
-    public ExpectedException expected = ExpectedException.none();
 
     private final MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
 
     private final ClientCredentialsAccessTokenProvider provider = new ClientCredentialsAccessTokenProvider() {
         @Override
         protected OAuth2AccessToken retrieveToken(AccessTokenRequest request, OAuth2ProtectedResourceDetails resource,
-                MultiValueMap<String, String> form, HttpHeaders headers) {
+                                                  MultiValueMap<String, String> form, HttpHeaders headers) {
             params.putAll(form);
             return new DefaultOAuth2AccessToken("FOO");
         }
     };
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
     }
 

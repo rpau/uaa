@@ -5,9 +5,9 @@ import org.cloudfoundry.identity.uaa.oauth.provider.code.AuthorizationCodeServic
 import org.cloudfoundry.identity.uaa.oauth.provider.implicit.ImplicitTokenGranter;
 import org.cloudfoundry.identity.uaa.oauth.provider.implicit.ImplicitTokenRequest;
 import org.cloudfoundry.identity.uaa.oauth.provider.token.AuthorizationServerTokenServices;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -15,7 +15,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import java.util.Arrays;
 import java.util.Set;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -35,7 +37,7 @@ public class CompositeTokenGranterTests {
     private TokenRequest tokenRequest;
     private OAuth2Request oauth2Request;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         tokenServices = mock(AuthorizationServerTokenServices.class);
         clientDetailsService = mock(ClientDetailsService.class);
@@ -48,7 +50,7 @@ public class CompositeTokenGranterTests {
                 tokenServices);
     }
 
-    @After
+    @AfterEach
     public void cleanup() {
         SecurityContextHolder.clearContext();
     }
@@ -72,9 +74,11 @@ public class CompositeTokenGranterTests {
         assertNotNull(compositeTokenGranter.grant("implicit", new ImplicitTokenRequest(tokenRequest, oauth2Request)));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void addTokenGranter() {
-        compositeTokenGranter.addTokenGranter(mock(ImplicitTokenGranter.class));
-        compositeTokenGranter.addTokenGranter(null);
+        assertThrows(IllegalArgumentException.class, () -> {
+            compositeTokenGranter.addTokenGranter(mock(ImplicitTokenGranter.class));
+            compositeTokenGranter.addTokenGranter(null);
+        });
     }
 }

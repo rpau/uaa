@@ -14,7 +14,7 @@
 package org.cloudfoundry.identity.uaa.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.cloudfoundry.identity.uaa.ServerRunning;
+import org.cloudfoundry.identity.uaa.ServerRunningExtension;
 import org.cloudfoundry.identity.uaa.approval.Approval;
 import org.cloudfoundry.identity.uaa.client.InvalidClientDetailsException;
 import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
@@ -30,17 +30,17 @@ import org.cloudfoundry.identity.uaa.oauth.common.exceptions.InvalidClientExcept
 import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
 import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetails;
 import org.cloudfoundry.identity.uaa.resources.SearchResults;
-import org.cloudfoundry.identity.uaa.test.TestAccountSetup;
+import org.cloudfoundry.identity.uaa.test.TestAccountExtension;
 import org.cloudfoundry.identity.uaa.test.UaaTestAccounts;
 import org.cloudfoundry.identity.uaa.util.UaaStringUtils;
 import org.cloudfoundry.identity.uaa.zone.ClientSecretPolicy;
 import org.cloudfoundry.identity.uaa.zone.IdentityZone;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneConfiguration;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneSwitchingFilter;
-import org.junit.Rule;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -77,13 +77,13 @@ public class ClientAdminEndpointsIntegrationTests {
             "dsfasdfdsagfdsao43o4p43adfsfasdvcdasfmdsafzxcvaddsaaddfsafdsafdsfdsdfsfdsfdsasdfadfsadfsasadfsdfadfs";
     private static final Base64.Encoder ENCODER = Base64.getEncoder();
 
-    @Rule
-    public ServerRunning serverRunning = ServerRunning.isRunning();
+    @RegisterExtension
+    private static final ServerRunningExtension serverRunning = ServerRunningExtension.connect();
 
-    private final UaaTestAccounts testAccounts = UaaTestAccounts.standard(serverRunning);
+    private static final UaaTestAccounts testAccounts = UaaTestAccounts.standard(serverRunning);
 
-    @Rule
-    public TestAccountSetup testAccountSetup = TestAccountSetup.standard(serverRunning, testAccounts);
+    @RegisterExtension
+    private static final TestAccountExtension testAccountSetup = TestAccountExtension.standard(serverRunning, testAccounts);
 
     private OAuth2AccessToken token;
     private HttpHeaders headers;
@@ -733,7 +733,7 @@ public class ClientAdminEndpointsIntegrationTests {
     }
 
     @Test
-    // CFID-372
+        // CFID-372
     void testCreateExistingClientFails() {
         UaaClientDetails client = createClient("client_credentials");
 

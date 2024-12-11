@@ -1,20 +1,12 @@
 package org.cloudfoundry.identity.uaa.integration.feature;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import org.cloudfoundry.identity.uaa.ServerRunning;
+import org.cloudfoundry.identity.uaa.ServerRunningExtension;
 import org.cloudfoundry.identity.uaa.oauth.client.test.TestAccounts;
 import org.cloudfoundry.identity.uaa.test.UaaTestAccounts;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.openqa.selenium.WebDriver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,8 +16,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.RestOperations;
 
@@ -35,16 +26,22 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = DefaultIntegrationTestConfig.class)
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+@SpringJUnitConfig(classes = DefaultIntegrationTestConfig.class)
 public class RateLimitingIT {
 
     @Autowired
-    @Rule
-    public IntegrationTestRule integrationTestRule;
+    @RegisterExtension
+    private IntegrationTestExtension integrationTestExtension;
 
-    @Rule
-    public ServerRunning serverRunning = ServerRunning.isRunning();
+    @RegisterExtension
+    private static final ServerRunningExtension serverRunning = ServerRunningExtension.connect();
 
     @Autowired
     RestOperations restOperations;
@@ -58,8 +55,8 @@ public class RateLimitingIT {
     @Value("${integration.test.base_url}")
     String baseUrl;
 
-    @Before
-    @After
+    @BeforeEach
+    @AfterEach
     public void logout_and_clear_cookies() {
         try {
             webDriver.get(baseUrl + "/logout.do");
@@ -92,8 +89,8 @@ public class RateLimitingIT {
             rateLimited = true;
         }
         assertTrue(
-                "Rate limit counters are not as expected. Request: " + requestCount + ", Limit: " + infoLimit + ", blocked: " + limits
-                        + ", allowed: " + oKs, rateLimited);
+                rateLimited, "Rate limit counters are not as expected. Request: " + requestCount + ", Limit: " + infoLimit + ", blocked: " + limits
+                        + ", allowed: " + oKs);
         //After 1s, New Limit should be available
         TimeUnit.SECONDS.sleep(1);
         response = restTemplate.getForEntity(baseUrl + "/info", String.class);

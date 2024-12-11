@@ -14,10 +14,11 @@
 package org.cloudfoundry.identity.uaa.integration.feature;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import org.cloudfoundry.identity.uaa.ServerRunning;
+import org.cloudfoundry.identity.uaa.ServerRunningExtension;
 import org.cloudfoundry.identity.uaa.account.UserInfoResponse;
 import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
 import org.cloudfoundry.identity.uaa.constants.OriginKeys;
+import org.cloudfoundry.identity.uaa.extensions.PollutionPreventionExtension;
 import org.cloudfoundry.identity.uaa.integration.endpoints.LogoutDoEndpoint;
 import org.cloudfoundry.identity.uaa.integration.endpoints.OauthAuthorizeEndpoint;
 import org.cloudfoundry.identity.uaa.integration.endpoints.SamlLogoutAuthSourceEndpoint;
@@ -29,7 +30,7 @@ import org.cloudfoundry.identity.uaa.integration.pageObjects.PasscodePage;
 import org.cloudfoundry.identity.uaa.integration.pageObjects.SamlLoginPage;
 import org.cloudfoundry.identity.uaa.integration.pageObjects.SamlWelcomePage;
 import org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils;
-import org.cloudfoundry.identity.uaa.integration.util.ScreenshotOnFail;
+import org.cloudfoundry.identity.uaa.integration.util.ScreenshotOnFailExtension;
 import org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils;
 import org.cloudfoundry.identity.uaa.oauth.client.ClientConstants;
 import org.cloudfoundry.identity.uaa.oauth.client.test.TestAccounts;
@@ -47,15 +48,15 @@ import org.cloudfoundry.identity.uaa.scim.ScimGroupExternalMember;
 import org.cloudfoundry.identity.uaa.scim.ScimUser;
 import org.cloudfoundry.identity.uaa.test.UaaTestAccounts;
 import org.cloudfoundry.identity.uaa.util.JsonUtils;
-import org.cloudfoundry.identity.uaa.util.RetryRule;
 import org.cloudfoundry.identity.uaa.zone.IdentityZone;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneConfiguration;
 import org.flywaydb.core.internal.util.StringUtils;
-import org.junit.Rule;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
 import org.openqa.selenium.NoSuchElementException;
@@ -135,14 +136,11 @@ public class SamlLoginIT {
     private static final By byPassword = By.name("password");
 
     @Autowired
-    @Rule
-    public IntegrationTestRule integrationTestRule;
+    @RegisterExtension
+    private IntegrationTestExtension integrationTestExtension;
 
-    @Rule
-    public RetryRule retryRule = new RetryRule(3);
-
-    @Rule
-    public ScreenshotOnFail screenShootRule = new ScreenshotOnFail();
+    @RegisterExtension
+    private static final ScreenshotOnFailExtension screenshotExtension = new ScreenshotOnFailExtension();
 
     @Autowired
     RestOperations restOperations;
@@ -159,7 +157,8 @@ public class SamlLoginIT {
     @Autowired
     TestClient testClient;
 
-    ServerRunning serverRunning = ServerRunning.isRunning();
+    @RegisterExtension
+    private static final ServerRunningExtension serverRunning = ServerRunningExtension.connect();
 
     @BeforeAll
     static void checkZoneDNSSupport() {
@@ -215,7 +214,7 @@ public class SamlLoginIT {
 
     @BeforeEach
     void clearWebDriverOfCookies() {
-        screenShootRule.setWebDriver(webDriver);
+        screenshotExtension.setWebDriver(webDriver);
         for (String domain : Arrays.asList("localhost", "testzone1.localhost", "testzone2.localhost", "testzone3.localhost", "testzone4.localhost")) {
             LogoutDoEndpoint.logout(webDriver, baseUrl.replace("localhost", domain));
             new Page(webDriver).clearCookies();
@@ -583,7 +582,7 @@ public class SamlLoginIT {
     }
 
     protected void createClientAndSpecifyProvider(String clientId, IdentityProvider<SamlIdentityProviderDefinition> provider,
-            String redirectUri) {
+                                                  String redirectUri) {
 
         IntegrationTestUtils.getClientCredentialsTemplate(
                 IntegrationTestUtils.getClientCredentialsResource(baseUrl, new String[0], "identity", "identitysecret")

@@ -1,14 +1,5 @@
 package org.cloudfoundry.identity.uaa.scim;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.cloudfoundry.identity.uaa.constants.OriginKeys.UAA;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.when;
-
-import java.util.Collections;
-import java.util.UUID;
-import java.util.stream.Stream;
-
 import org.cloudfoundry.identity.uaa.alias.EntityAliasHandler;
 import org.cloudfoundry.identity.uaa.alias.EntityAliasHandlerValidationTest;
 import org.cloudfoundry.identity.uaa.provider.IdentityProvider;
@@ -21,11 +12,18 @@ import org.cloudfoundry.identity.uaa.zone.beans.IdentityZoneManager;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.EmptyResultDataAccessException;
+
+import java.util.Collections;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.cloudfoundry.identity.uaa.constants.OriginKeys.UAA;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ScimUserAliasHandlerValidationTest extends EntityAliasHandlerValidationTest<ScimUser> {
@@ -98,7 +96,7 @@ class ScimUserAliasHandlerValidationTest extends EntityAliasHandlerValidationTes
             private final String customZoneId = UUID.randomUUID().toString();
 
             @ParameterizedTest
-            @MethodSource("provideExistingEntityArguments")
+            @EnumSource
             void shouldReturnFalse_IfIdpHasNoAlias_UaaToCustomZone(
                     final ExistingEntityArgument existingEntityArgument
             ) {
@@ -106,7 +104,7 @@ class ScimUserAliasHandlerValidationTest extends EntityAliasHandlerValidationTes
             }
 
             @ParameterizedTest
-            @MethodSource("provideExistingEntityArguments")
+            @EnumSource
             void shouldReturnFalse_IfIdpHasNoAlias_CustomToUaaZone(
                     final ExistingEntityArgument existingEntityArgument
             ) {
@@ -143,7 +141,7 @@ class ScimUserAliasHandlerValidationTest extends EntityAliasHandlerValidationTes
             }
 
             @ParameterizedTest
-            @MethodSource("provideExistingEntityArguments")
+            @EnumSource
             void shouldReturnFalse_IfIdpOfOriginalUserDoesNotExist_UaaToCustomZone(
                     final ExistingEntityArgument existingEntityArgument
             ) {
@@ -151,7 +149,7 @@ class ScimUserAliasHandlerValidationTest extends EntityAliasHandlerValidationTes
             }
 
             @ParameterizedTest
-            @MethodSource("provideExistingEntityArguments")
+            @EnumSource
             void shouldReturnFalse_IfIdpOfOriginalUserDoesNotExist_CustomToUaaZone(
                     final ExistingEntityArgument existingEntityArgument
             ) {
@@ -188,7 +186,7 @@ class ScimUserAliasHandlerValidationTest extends EntityAliasHandlerValidationTes
             }
 
             @ParameterizedTest
-            @MethodSource("provideExistingEntityArguments")
+            @EnumSource
             void shouldReturnFalse_IfIdpHasAliasToDifferentZoneThanUser(
                     final ExistingEntityArgument existingEntityArgument
             ) {
@@ -226,7 +224,7 @@ class ScimUserAliasHandlerValidationTest extends EntityAliasHandlerValidationTes
             }
 
             @ParameterizedTest
-            @MethodSource("provideExistingEntityArguments")
+            @EnumSource
             void shouldReturnFalse_IfIdpOfOriginalUserHasEmptyAliasId_UaaToCustomZone(
                     final ExistingEntityArgument existingEntityArgument
             ) {
@@ -234,7 +232,7 @@ class ScimUserAliasHandlerValidationTest extends EntityAliasHandlerValidationTes
             }
 
             @ParameterizedTest
-            @MethodSource("provideExistingEntityArguments")
+            @EnumSource
             void shouldReturnFalse_IfIdpOfOriginalUserHasEmptyAliasId_CustomToUaaZone(
                     final ExistingEntityArgument existingEntityArgument
             ) {
@@ -275,7 +273,7 @@ class ScimUserAliasHandlerValidationTest extends EntityAliasHandlerValidationTes
             }
 
             @ParameterizedTest
-            @MethodSource("provideExistingEntityArguments")
+            @EnumSource
             void shouldReturnTrue_IfIdpHasAliasToSameZoneAsUser_UaaToCustomZone(
                     final ExistingEntityArgument existingEntityArgument
             ) {
@@ -283,7 +281,7 @@ class ScimUserAliasHandlerValidationTest extends EntityAliasHandlerValidationTes
             }
 
             @ParameterizedTest
-            @MethodSource("provideExistingEntityArguments")
+            @EnumSource
             void shouldReturnTrue_IfIdpHasAliasToSameZoneAsUser_CustomToUaaZone(
                     final ExistingEntityArgument existingEntityArgument
             ) {
@@ -354,10 +352,6 @@ class ScimUserAliasHandlerValidationTest extends EntityAliasHandlerValidationTes
                     final IdentityProvider<?> idp
             ) {
                 lenient().when(identityProviderProvisioning.retrieveByOrigin(origin, zoneId)).thenReturn(idp);
-            }
-
-            private static Stream<Arguments> provideExistingEntityArguments() {
-                return existingEntityArgNoAlias().map(Arguments::of);
             }
         }
 

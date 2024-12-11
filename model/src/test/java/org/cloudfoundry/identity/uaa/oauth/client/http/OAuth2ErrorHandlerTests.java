@@ -3,14 +3,12 @@ package org.cloudfoundry.identity.uaa.oauth.client.http;
 import org.cloudfoundry.identity.uaa.oauth.client.resource.BaseOAuth2ProtectedResourceDetails;
 import org.cloudfoundry.identity.uaa.oauth.client.resource.OAuth2AccessDeniedException;
 import org.cloudfoundry.identity.uaa.oauth.common.exceptions.UserDeniedAuthorizationException;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpInputMessage;
 import org.springframework.http.HttpOutputMessage;
@@ -32,20 +30,19 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class OAuth2ErrorHandlerTests {
 
     @Mock
     private ClientHttpResponse response;
-
-    @Rule
-    public ExpectedException expected = ExpectedException.none();
 
     private BaseOAuth2ProtectedResourceDetails resource = new BaseOAuth2ProtectedResourceDetails();
 
@@ -93,7 +90,7 @@ public class OAuth2ErrorHandlerTests {
 
     private OAuth2ErrorHandler handler;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         handler = new OAuth2ErrorHandler(resource);
 
@@ -103,196 +100,203 @@ public class OAuth2ErrorHandlerTests {
      * test response with www-authenticate header
      */
     @Test
-    public void testHandleErrorClientHttpResponse() throws Exception {
+    public void testHandleErrorClientHttpResponse() {
+        Throwable exception = assertThrows(Exception.class, () -> {
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("www-authenticate", "Bearer error=foo");
-        ClientHttpResponse response = new TestClientHttpResponse(headers, 401);
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("www-authenticate", "Bearer error=foo");
+            ClientHttpResponse response = new TestClientHttpResponse(headers, 401);
+            handler.handleError(response);
 
-        // We lose the www-authenticate content in a nested exception (but it's still available) through the
-        // HttpClientErrorException
-        expected.expectMessage("401 Unauthorized");
-        handler.handleError(response);
-
-    }
-
-    @Test
-    public void testHandleErrorWithInvalidToken() throws Exception {
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("www-authenticate", "Bearer error=\"invalid_token\", description=\"foo\"");
-        ClientHttpResponse response = new TestClientHttpResponse(headers, 401);
-
-        expected.expect(AccessTokenRequiredException.class);
-        expected.expectMessage("OAuth2 access denied");
-        handler.handleError(response);
+        });
+        assertTrue(exception.getMessage().contains("401 Unauthorized"));
 
     }
 
     @Test
-    public void testCustomHandler() throws Exception {
+    public void testHandleErrorWithInvalidToken() {
+        Throwable exception = assertThrows(AccessTokenRequiredException.class, () -> {
 
-        OAuth2ErrorHandler handler = new OAuth2ErrorHandler(new ResponseErrorHandler() {
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("www-authenticate", "Bearer error=\"invalid_token\", description=\"foo\"");
+            ClientHttpResponse response = new TestClientHttpResponse(headers, 401);
+            handler.handleError(response);
 
-            public boolean hasError(ClientHttpResponse response) throws IOException {
-                return true;
-            }
-
-            public void handleError(ClientHttpResponse response) throws IOException {
-                throw new RuntimeException("planned");
-            }
-        }, resource);
-
-        HttpHeaders headers = new HttpHeaders();
-        ClientHttpResponse response = new TestClientHttpResponse(headers, 401);
-
-        expected.expectMessage("planned");
-        handler.handleError(response);
+        });
+        assertTrue(exception.getMessage().contains("OAuth2 access denied"));
 
     }
 
     @Test
-    public void testHandle500Error() throws Exception {
-        HttpHeaders headers = new HttpHeaders();
-        ClientHttpResponse response = new TestClientHttpResponse(headers, 500);
+    public void testCustomHandler() {
+        Throwable exception = assertThrows(Exception.class, () -> {
 
-        expected.expect(HttpServerErrorException.class);
-        handler.handleError(response);
+            OAuth2ErrorHandler handler = new OAuth2ErrorHandler(new ResponseErrorHandler() {
+
+                public boolean hasError(ClientHttpResponse response) throws IOException {
+                    return true;
+                }
+
+                public void handleError(ClientHttpResponse response) throws IOException {
+                    throw new RuntimeException("planned");
+                }
+            }, resource);
+
+            HttpHeaders headers = new HttpHeaders();
+            ClientHttpResponse response = new TestClientHttpResponse(headers, 401);
+            handler.handleError(response);
+
+        });
+        assertTrue(exception.getMessage().contains("planned"));
+
     }
 
     @Test
-    public void testHandleGeneric400Error() throws Exception {
-        HttpHeaders headers = new HttpHeaders();
-        ClientHttpResponse response = new TestClientHttpResponse(headers, 400);
-
-        expected.expect(HttpClientErrorException.class);
-        handler.handleError(response);
+    public void testHandle500Error() {
+        assertThrows(HttpServerErrorException.class, () -> {
+            HttpHeaders headers = new HttpHeaders();
+            ClientHttpResponse response = new TestClientHttpResponse(headers, 500);
+            handler.handleError(response);
+        });
     }
 
     @Test
-    public void testHandleGeneric403Error() throws Exception {
-        HttpHeaders headers = new HttpHeaders();
-        ClientHttpResponse response = new TestClientHttpResponse(headers, 403);
+    public void testHandleGeneric400Error() {
+        assertThrows(HttpClientErrorException.class, () -> {
+            HttpHeaders headers = new HttpHeaders();
+            ClientHttpResponse response = new TestClientHttpResponse(headers, 400);
+            handler.handleError(response);
+        });
+    }
 
-        expected.expect(HttpClientErrorException.class);
-        handler.handleError(response);
+    @Test
+    public void testHandleGeneric403Error() {
+        assertThrows(HttpClientErrorException.class, () -> {
+            HttpHeaders headers = new HttpHeaders();
+            ClientHttpResponse response = new TestClientHttpResponse(headers, 403);
+            handler.handleError(response);
+        });
     }
 
     @Test
     // See https://github.com/spring-projects/spring-security-oauth/issues/387
-    public void testHandleGeneric403ErrorWithBody() throws Exception {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        ClientHttpResponse response = new TestClientHttpResponse(headers, 403,
-                new ByteArrayInputStream("{}".getBytes()));
-        handler = new OAuth2ErrorHandler(new DefaultResponseErrorHandler(), resource);
-        expected.expect(HttpClientErrorException.class);
-        handler.handleError(response);
+    public void testHandleGeneric403ErrorWithBody() {
+        assertThrows(HttpClientErrorException.class, () -> {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            ClientHttpResponse response = new TestClientHttpResponse(headers, 403,
+                    new ByteArrayInputStream("{}".getBytes()));
+            handler = new OAuth2ErrorHandler(new DefaultResponseErrorHandler(), resource);
+            handler.handleError(response);
+        });
     }
 
     @Test
-    public void testBodyCanBeUsedByCustomHandler() throws Exception {
-        final String appSpecificBodyContent = "{\"some_status\":\"app error\"}";
-        OAuth2ErrorHandler handler = new OAuth2ErrorHandler(new ResponseErrorHandler() {
-            public boolean hasError(ClientHttpResponse response) throws IOException {
-                return true;
-            }
+    public void testBodyCanBeUsedByCustomHandler() {
+        Throwable exception = assertThrows(Exception.class, () -> {
+            final String appSpecificBodyContent = "{\"some_status\":\"app error\"}";
+            OAuth2ErrorHandler handler = new OAuth2ErrorHandler(new ResponseErrorHandler() {
+                public boolean hasError(ClientHttpResponse response) throws IOException {
+                    return true;
+                }
 
-            public void handleError(ClientHttpResponse response) throws IOException {
-                InputStream body = response.getBody();
-                byte[] buf = new byte[appSpecificBodyContent.length()];
-                int readResponse = body.read(buf);
-                Assert.assertEquals(buf.length, readResponse);
-                Assert.assertEquals(appSpecificBodyContent, new String(buf, "UTF-8"));
-                throw new RuntimeException("planned");
-            }
-        }, resource);
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Content-Length", "" + appSpecificBodyContent.length());
-        headers.set("Content-Type", "application/json");
-        InputStream appSpecificErrorBody = new ByteArrayInputStream(appSpecificBodyContent.getBytes("UTF-8"));
-        ClientHttpResponse response = new TestClientHttpResponse(headers, 400, appSpecificErrorBody);
-
-        expected.expectMessage("planned");
-        handler.handleError(response);
+                public void handleError(ClientHttpResponse response) throws IOException {
+                    InputStream body = response.getBody();
+                    byte[] buf = new byte[appSpecificBodyContent.length()];
+                    int readResponse = body.read(buf);
+                    Assertions.assertEquals(buf.length, readResponse);
+                    Assertions.assertEquals(appSpecificBodyContent, new String(buf, "UTF-8"));
+                    throw new RuntimeException("planned");
+                }
+            }, resource);
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Content-Length", "" + appSpecificBodyContent.length());
+            headers.set("Content-Type", "application/json");
+            InputStream appSpecificErrorBody = new ByteArrayInputStream(appSpecificBodyContent.getBytes("UTF-8"));
+            ClientHttpResponse response = new TestClientHttpResponse(headers, 400, appSpecificErrorBody);
+            handler.handleError(response);
+        });
+        assertTrue(exception.getMessage().contains("planned"));
     }
 
     @Test
-    public void testHandleErrorWithMissingHeader() throws IOException {
+    public void testHandleErrorWithMissingHeader() {
+        assertThrows(HttpClientErrorException.class, () -> {
 
-        final HttpHeaders headers = new HttpHeaders();
-        when(response.getHeaders()).thenReturn(headers);
-        when(response.getStatusCode()).thenReturn(HttpStatus.BAD_REQUEST);
-        when(response.getBody()).thenReturn(new ByteArrayInputStream(new byte[0]));
-        when(response.getStatusText()).thenReturn(HttpStatus.BAD_REQUEST.toString());
-
-        expected.expect(HttpClientErrorException.class);
-        handler.handleError(response);
-    }
-
-    // gh-875
-    @Test
-    public void testHandleErrorWhenAccessDeniedMessageAndStatus400ThenThrowsUserDeniedAuthorizationException() throws Exception {
-        String accessDeniedMessage = "{\"error\":\"access_denied\", \"error_description\":\"some error message\"}";
-        ByteArrayInputStream messageBody = new ByteArrayInputStream(accessDeniedMessage.getBytes());
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        ClientHttpResponse response = new TestClientHttpResponse(headers, 400, messageBody);
-        expected.expect(UserDeniedAuthorizationException.class);
-        handler.handleError(response);
+            final HttpHeaders headers = new HttpHeaders();
+            when(response.getHeaders()).thenReturn(headers);
+            when(response.getStatusCode()).thenReturn(HttpStatus.BAD_REQUEST);
+            when(response.getBody()).thenReturn(new ByteArrayInputStream(new byte[0]));
+            when(response.getStatusText()).thenReturn(HttpStatus.BAD_REQUEST.toString());
+            handler.handleError(response);
+        });
     }
 
     // gh-875
     @Test
-    public void testHandleErrorWhenAccessDeniedMessageAndStatus403ThenThrowsOAuth2AccessDeniedException() throws Exception {
-        String accessDeniedMessage = "{\"error\":\"access_denied\", \"error_description\":\"some error message\"}";
-        ByteArrayInputStream messageBody = new ByteArrayInputStream(accessDeniedMessage.getBytes());
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        ClientHttpResponse response = new TestClientHttpResponse(headers, 403, messageBody);
-        expected.expect(OAuth2AccessDeniedException.class);
-        handler.handleError(response);
+    public void testHandleErrorWhenAccessDeniedMessageAndStatus400ThenThrowsUserDeniedAuthorizationException() {
+        assertThrows(UserDeniedAuthorizationException.class, () -> {
+            String accessDeniedMessage = "{\"error\":\"access_denied\", \"error_description\":\"some error message\"}";
+            ByteArrayInputStream messageBody = new ByteArrayInputStream(accessDeniedMessage.getBytes());
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            ClientHttpResponse response = new TestClientHttpResponse(headers, 400, messageBody);
+            handler.handleError(response);
+        });
+    }
+
+    // gh-875
+    @Test
+    public void testHandleErrorWhenAccessDeniedMessageAndStatus403ThenThrowsOAuth2AccessDeniedException() {
+        assertThrows(OAuth2AccessDeniedException.class, () -> {
+            String accessDeniedMessage = "{\"error\":\"access_denied\", \"error_description\":\"some error message\"}";
+            ByteArrayInputStream messageBody = new ByteArrayInputStream(accessDeniedMessage.getBytes());
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            ClientHttpResponse response = new TestClientHttpResponse(headers, 403, messageBody);
+            handler.handleError(response);
+        });
     }
 
     @Test
-    public void testHandleMessageConversionExceptions() throws Exception {
-        HttpMessageConverter<?> extractor = new HttpMessageConverter() {
-            @Override
-            public boolean canRead(Class clazz, MediaType mediaType) {
-                return true;
-            }
+    public void testHandleMessageConversionExceptions() {
+        assertThrows(HttpClientErrorException.class, () -> {
+            HttpMessageConverter<?> extractor = new HttpMessageConverter() {
+                @Override
+                public boolean canRead(Class clazz, MediaType mediaType) {
+                    return true;
+                }
 
-            @Override
-            public boolean canWrite(Class clazz, MediaType mediaType) {
-                return false;
-            }
+                @Override
+                public boolean canWrite(Class clazz, MediaType mediaType) {
+                    return false;
+                }
 
-            @Override
-            public List<MediaType> getSupportedMediaTypes() {
-                return null;
-            }
+                @Override
+                public List<MediaType> getSupportedMediaTypes() {
+                    return null;
+                }
 
-            @Override
-            public Object read(Class clazz, HttpInputMessage inputMessage) throws IOException, HttpMessageNotReadableException {
-                throw new HttpMessageConversionException("error");
-            }
+                @Override
+                public Object read(Class clazz, HttpInputMessage inputMessage) throws IOException, HttpMessageNotReadableException {
+                    throw new HttpMessageConversionException("error");
+                }
 
-            @Override
-            public void write(Object o, MediaType contentType, HttpOutputMessage outputMessage) throws IOException, HttpMessageNotWritableException {
+                @Override
+                public void write(Object o, MediaType contentType, HttpOutputMessage outputMessage) throws IOException, HttpMessageNotWritableException {
 
-            }
-        };
+                }
+            };
 
-        ArrayList<HttpMessageConverter<?>> messageConverters = new ArrayList<>();
-        messageConverters.add(extractor);
-        handler.setMessageConverters(messageConverters);
+            ArrayList<HttpMessageConverter<?>> messageConverters = new ArrayList<>();
+            messageConverters.add(extractor);
+            handler.setMessageConverters(messageConverters);
 
-        HttpHeaders headers = new HttpHeaders();
-        final String appSpecificBodyContent = "This user is not authorized";
-        InputStream appSpecificErrorBody = new ByteArrayInputStream(appSpecificBodyContent.getBytes("UTF-8"));
-        ClientHttpResponse response = new TestClientHttpResponse(headers, 401, appSpecificErrorBody);
-
-        expected.expect(HttpClientErrorException.class);
-        handler.handleError(response);
+            HttpHeaders headers = new HttpHeaders();
+            final String appSpecificBodyContent = "This user is not authorized";
+            InputStream appSpecificErrorBody = new ByteArrayInputStream(appSpecificBodyContent.getBytes("UTF-8"));
+            ClientHttpResponse response = new TestClientHttpResponse(headers, 401, appSpecificErrorBody);
+            handler.handleError(response);
+        });
     }
 }

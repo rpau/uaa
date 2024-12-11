@@ -13,36 +13,42 @@
  *******************************************************************************/
 package org.cloudfoundry.identity.uaa.integration;
 
-import org.cloudfoundry.identity.uaa.ServerRunning;
+import org.cloudfoundry.identity.uaa.ServerRunningExtension;
 import org.cloudfoundry.identity.uaa.oauth.client.http.OAuth2ErrorHandler;
 import org.cloudfoundry.identity.uaa.oauth.client.test.OAuth2ContextConfiguration;
+import org.cloudfoundry.identity.uaa.oauth.client.test.OAuth2ContextExtension;
+import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
 import org.cloudfoundry.identity.uaa.scim.ScimUser;
-import org.cloudfoundry.identity.uaa.test.TestAccountSetup;
+import org.cloudfoundry.identity.uaa.test.TestAccountExtension;
 import org.cloudfoundry.identity.uaa.test.UaaTestAccounts;
-import org.cloudfoundry.identity.uaa.oauth.client.test.OAuth2ContextSetup;
 import org.cloudfoundry.identity.uaa.util.JsonUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.ClientHttpResponse;
-import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @OAuth2ContextConfiguration(OAuth2ContextConfiguration.ClientCredentials.class)
 public class ScimUserEndpointsIntegrationTests {
@@ -59,22 +65,21 @@ public class ScimUserEndpointsIntegrationTests {
 
     private static final int NUM_DEFAULT_GROUPS_ON_STARTUP = 14;
 
-    @Rule
-    public ServerRunning serverRunning = ServerRunning.isRunning();
+    @RegisterExtension
+    private static final ServerRunningExtension serverRunning = ServerRunningExtension.connect();
 
-    private UaaTestAccounts testAccounts = UaaTestAccounts.standard(serverRunning);
+    private static final UaaTestAccounts testAccounts = UaaTestAccounts.standard(serverRunning);
 
+    @RegisterExtension
+    private static final TestAccountExtension testAccountSetup = TestAccountExtension.standard(serverRunning, testAccounts);
 
-    @Rule
-    public TestAccountSetup testAccountSetup = TestAccountSetup.standard(serverRunning, testAccounts);
-
-    @Rule
-    public OAuth2ContextSetup context = OAuth2ContextSetup.withTestAccounts(serverRunning, testAccountSetup);
+    @RegisterExtension
+    private static final OAuth2ContextExtension context = OAuth2ContextExtension.withTestAccounts(serverRunning, testAccountSetup);
 
     private RestTemplate client;
     private List<ScimUser> scimUsers;
 
-    @Before
+    @BeforeEach
     public void createRestTemplate() {
         client = (RestTemplate) serverRunning.getRestTemplate();
         client.setErrorHandler(new OAuth2ErrorHandler(context.getResource()) {
@@ -109,7 +114,7 @@ public class ScimUserEndpointsIntegrationTests {
     }
 
     private ResponseEntity<ScimUser> createUser(String username, String firstName, String lastName,
-            String email, boolean verified) {
+                                                String email, boolean verified) {
         ScimUser user = new ScimUser();
         user.setPassword("password");
         user.setUserName(username);
@@ -207,7 +212,6 @@ public class ScimUserEndpointsIntegrationTests {
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertEquals("invalid_scim_resource", error.get("error"));
-
     }
 
     @Test
@@ -242,7 +246,6 @@ public class ScimUserEndpointsIntegrationTests {
         assertEquals(JOE, joe1.getUserName());
 
         assertEquals(joe.getId(), joe1.getId());
-
     }
 
     @Test
@@ -261,7 +264,6 @@ public class ScimUserEndpointsIntegrationTests {
         assertEquals(JOE + "new", joe1.getUserName());
 
         assertEquals(joe.getId(), joe1.getId());
-
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -278,9 +280,8 @@ public class ScimUserEndpointsIntegrationTests {
         ResponseEntity<Map> response = client.exchange(serverRunning.getUrl(userEndpoint) + "/{id}", HttpMethod.PUT,
                 new HttpEntity<Map>(map, headers), Map.class, joe.getId());
         Map<String, Object> joe1 = response.getBody();
-        assertTrue("Wrong message: " + joe1, ((String) joe1.get("message")).toLowerCase()
-                .contains("unrecognized field"));
-
+        assertTrue(((String) joe1.get("message")).toLowerCase()
+                .contains("unrecognized field"), "Wrong message: " + joe1);
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -318,9 +319,7 @@ public class ScimUserEndpointsIntegrationTests {
         assertEquals(JOE, joe1.getUserName());
 
         assertEquals(joe.getId(), joe1.getId());
-        assertNull(joe1.getUserType()); // check that authorities was not
-        // updated
-
+        assertNull(joe1.getUserType()); // check that authorities was not updated
     }
 
     @Test
@@ -411,7 +410,6 @@ public class ScimUserEndpointsIntegrationTests {
         Map<String, String> error = response.getBody();
         assertEquals("scim_resource_not_found", error.get("error"));
         assertEquals("User 9999 does not exist", error.get("message"));
-
     }
 
     // curl -v -H "Content-Type: application/json" -H "Accept: application/json"
@@ -447,8 +445,8 @@ public class ScimUserEndpointsIntegrationTests {
         @SuppressWarnings("rawtypes")
         Map results = response.getBody();
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertTrue("There should be more than zero users", (Integer) results.get("totalResults") > 0);
-        assertTrue("There should be some resources", !((Collection<?>) results.get("resources")).isEmpty());
+        assertTrue((Integer) results.get("totalResults") > 0, "There should be more than zero users");
+        assertTrue(!((Collection<?>) results.get("resources")).isEmpty(), "There should be some resources");
         @SuppressWarnings("rawtypes")
         Map firstUser = (Map) ((List) results.get("resources")).get(0);
         // [cfid-111] All attributes should be returned if no attributes
@@ -466,7 +464,7 @@ public class ScimUserEndpointsIntegrationTests {
         ResponseEntity<Map> response = serverRunning.getForObject(usersEndpoint + "?attributes=id,userName", Map.class);
         Map<String, Object> results = response.getBody();
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertTrue("There should be more than zero users", (Integer) results.get("totalResults") > 0);
+        assertTrue((Integer) results.get("totalResults") > 0, "There should be more than zero users");
         Map firstUser = (Map) ((List) results.get("resources")).get(0);
         // All attributes should be returned if no attributes supplied in query
         assertTrue(firstUser.containsKey("id"));
@@ -482,7 +480,7 @@ public class ScimUserEndpointsIntegrationTests {
         @SuppressWarnings("unchecked")
         Map<String, Object> results = response.getBody();
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertTrue("There should be more than zero users", (Integer) results.get("totalResults") > 0);
+        assertTrue((Integer) results.get("totalResults") > 0, "There should be more than zero users");
     }
 
     @Test
@@ -492,16 +490,16 @@ public class ScimUserEndpointsIntegrationTests {
         @SuppressWarnings("unchecked")
         Map<String, Object> results = response.getBody();
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertTrue("There should be more than zero users", (Integer) results.get("totalResults") > 0);
+        assertTrue((Integer) results.get("totalResults") > 0, "There should be more than zero users");
         assertEquals(2, results.get("startIndex"));
     }
 
-    @Before
+    @BeforeEach
     public void setupScimUsers() {
         scimUsers = new ArrayList<>();
     }
 
-    @After
+    @AfterEach
     public void teardownScimUsers() {
         for (ScimUser scimUser : scimUsers) {
             deleteUser(scimUser.getId(), scimUser.getVersion());

@@ -14,9 +14,9 @@
 
 package org.cloudfoundry.identity.uaa.security;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -27,7 +27,11 @@ import org.springframework.security.web.csrf.MissingCsrfTokenException;
 
 import javax.servlet.http.HttpServletResponse;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class CsrfAwareEntryPointAndDeniedHandlerTest {
 
@@ -35,12 +39,12 @@ public class CsrfAwareEntryPointAndDeniedHandlerTest {
     protected MockHttpServletRequest request = new MockHttpServletRequest();
     protected MockHttpServletResponse response = new MockHttpServletResponse();
 
-    @Before
+    @BeforeEach
     public void setUpCsrfAccessDeniedHandler() {
         response.setCommitted(false);
     }
 
-    @After
+    @AfterEach
     public void cleanUpAuth() {
         SecurityContextHolder.clearContext();
     }
@@ -87,24 +91,24 @@ public class CsrfAwareEntryPointAndDeniedHandlerTest {
         assertNull(response.getErrorMessage());
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testNullCsrfUrl() {
-        new CsrfAwareEntryPointAndDeniedHandler(null, "/login");
+        assertThrows(NullPointerException.class, () -> new CsrfAwareEntryPointAndDeniedHandler(null, "/login"));
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testInvalidCsrfUrl() {
-        new CsrfAwareEntryPointAndDeniedHandler("csrf", "/login");
+        assertThrows(NullPointerException.class, () -> new CsrfAwareEntryPointAndDeniedHandler("csrf", "/login"));
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testNullLoginfUrl() {
-        new CsrfAwareEntryPointAndDeniedHandler("/csrf", null);
+        assertThrows(NullPointerException.class, () -> new CsrfAwareEntryPointAndDeniedHandler("/csrf", null));
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testInvalidLoginUrl() {
-        new CsrfAwareEntryPointAndDeniedHandler("/csrf", "login");
+        assertThrows(NullPointerException.class, () -> new CsrfAwareEntryPointAndDeniedHandler("/csrf", "login"));
     }
 
 }

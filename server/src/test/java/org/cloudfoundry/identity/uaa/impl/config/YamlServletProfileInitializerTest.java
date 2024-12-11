@@ -38,13 +38,13 @@ import java.util.Arrays;
 import java.util.Enumeration;
 
 import static org.cloudfoundry.identity.uaa.impl.config.YamlServletProfileInitializer.YML_ENV_VAR_NAME;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
@@ -270,12 +270,12 @@ class YamlServletProfileInitializerTest {
             public String getEnvironmentVariable(String name) {
                 return name.equals(YML_ENV_VAR_NAME) ?
                         """
-                        uaa.url: http://uaa.test.url/
-                        login.url: http://login.test.url/
-                        smtp:
-                          host: mail.server.host
-                          port: 3535
-                        """ :
+                                uaa.url: http://uaa.test.url/
+                                login.url: http://login.test.url/
+                                smtp:
+                                  host: mail.server.host
+                                  port: 3535
+                                """ :
                         null;
             }
         };

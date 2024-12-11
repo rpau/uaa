@@ -2,18 +2,18 @@ package org.cloudfoundry.identity.uaa.oauth.provider;
 
 import org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils;
 import org.cloudfoundry.identity.uaa.oauth.provider.implicit.ImplicitTokenRequest;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
 /**
@@ -24,7 +24,7 @@ public class OAuth2RequestTests {
 
     private OAuth2Request oAuth2Request;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
 
         oAuth2Request = new OAuth2Request(Map.of("client_id", "id"), "id", Collections.emptyList(), true, Set.of("client"),

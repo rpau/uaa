@@ -7,8 +7,8 @@ import org.junit.jupiter.api.Test;
 import static org.cloudfoundry.identity.uaa.oauth.jwk.JsonWebKey.KeyType.EC;
 import static org.cloudfoundry.identity.uaa.oauth.jwk.JsonWebKey.KeyType.oct;
 import static org.cloudfoundry.identity.uaa.test.ModelTestUtils.getResourceAsString;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 class JsonWebKeyDeserializerTest {

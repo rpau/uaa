@@ -1,15 +1,14 @@
 package org.cloudfoundry.identity.uaa.provider.saml;
 
+import org.cloudfoundry.identity.uaa.provider.SamlIdentityProviderDefinition;
+import org.cloudfoundry.identity.uaa.util.JsonUtils;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.util.ReflectionUtils;
+
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.Collections;
-
-import org.cloudfoundry.identity.uaa.provider.SamlIdentityProviderDefinition;
-import org.cloudfoundry.identity.uaa.util.JsonUtils;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.springframework.util.ReflectionUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.provider.SamlIdentityProviderDefinition.MetadataLocation.DATA;
@@ -20,7 +19,7 @@ public class SamlIdentityProviderDefinitionTests {
 
     SamlIdentityProviderDefinition definition;
 
-    @Before
+    @BeforeEach
     public void createDefinition() {
         definition = buildSamlIdentityProviderDefinition();
     }

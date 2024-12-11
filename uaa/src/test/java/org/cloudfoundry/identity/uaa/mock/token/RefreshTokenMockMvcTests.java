@@ -18,11 +18,17 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.Lists;
 import org.apache.directory.api.util.Base64;
 import org.apache.http.HttpStatus;
+import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
 import org.cloudfoundry.identity.uaa.constants.OriginKeys;
 import org.cloudfoundry.identity.uaa.oauth.TokenValidityResolver;
+import org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils;
+import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
 import org.cloudfoundry.identity.uaa.oauth.openid.IdTokenCreator;
+import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetails;
 import org.cloudfoundry.identity.uaa.oauth.refresh.RefreshTokenCreator;
-import org.cloudfoundry.identity.uaa.oauth.token.*;
+import org.cloudfoundry.identity.uaa.oauth.token.ClaimConstants;
+import org.cloudfoundry.identity.uaa.oauth.token.CompositeToken;
+import org.cloudfoundry.identity.uaa.oauth.token.TokenConstants;
 import org.cloudfoundry.identity.uaa.provider.IdentityProvider;
 import org.cloudfoundry.identity.uaa.provider.UaaIdentityProviderDefinition;
 import org.cloudfoundry.identity.uaa.scim.ScimUser;
@@ -39,17 +45,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils;
-import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
-import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetails;
-import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
 
 import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import static junit.framework.TestCase.assertNull;
+import static org.cloudfoundry.identity.uaa.oauth.common.OAuth2AccessToken.REFRESH_TOKEN;
 import static org.cloudfoundry.identity.uaa.oauth.token.ClaimConstants.EXPIRY_IN_SECONDS;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_CLIENT_CREDENTIALS;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_PASSWORD;
@@ -59,13 +61,13 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.IsNot.not;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.cloudfoundry.identity.uaa.oauth.common.OAuth2AccessToken.REFRESH_TOKEN;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -184,27 +186,27 @@ class RefreshTokenMockMvcTests extends AbstractTokenMockMvcTests {
     void refreshTokenGrant_rejectsAccessTokens_ClientCredentialsGrantType() throws Exception {
         createClientAndUserInRandomZone();
         String tokenResponse = mockMvc.perform(
-                post("/oauth/token")
-                        .header("Host", getZoneHostUrl(zone))
-                        .accept(MediaType.APPLICATION_JSON)
-                        .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-                        .param(OAuth2Utils.GRANT_TYPE, GRANT_TYPE_CLIENT_CREDENTIALS)
-                        .param("client_secret", SECRET)
-                        .param(OAuth2Utils.CLIENT_ID, client.getClientId()))
+                        post("/oauth/token")
+                                .header("Host", getZoneHostUrl(zone))
+                                .accept(MediaType.APPLICATION_JSON)
+                                .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+                                .param(OAuth2Utils.GRANT_TYPE, GRANT_TYPE_CLIENT_CREDENTIALS)
+                                .param("client_secret", SECRET)
+                                .param(OAuth2Utils.CLIENT_ID, client.getClientId()))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         String accessToken = (String) JsonUtils.readValue(tokenResponse, new TypeReference<Map<String, Object>>() {
         }).get("access_token");
 
         mockMvc.perform(
-                post("/oauth/token")
-                        .header("Host", getZoneHostUrl(zone))
-                        .accept(MediaType.APPLICATION_JSON)
-                        .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-                        .param(OAuth2Utils.GRANT_TYPE, REFRESH_TOKEN)
-                        .param(REFRESH_TOKEN, accessToken)
-                        .param("client_secret", SECRET)
-                        .param(OAuth2Utils.CLIENT_ID, client.getClientId()))
+                        post("/oauth/token")
+                                .header("Host", getZoneHostUrl(zone))
+                                .accept(MediaType.APPLICATION_JSON)
+                                .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+                                .param(OAuth2Utils.GRANT_TYPE, REFRESH_TOKEN)
+                                .param(REFRESH_TOKEN, accessToken)
+                                .param("client_secret", SECRET)
+                                .param(OAuth2Utils.CLIENT_ID, client.getClientId()))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -212,14 +214,14 @@ class RefreshTokenMockMvcTests extends AbstractTokenMockMvcTests {
     void refreshTokenGrant_rejectsAccessTokens_PasswordGrantType() throws Exception {
         createClientAndUserInRandomZone();
         String body = mockMvc.perform(post("/oauth/token")
-                .accept(MediaType.APPLICATION_JSON_VALUE)
-                .header("Host", getZoneHostUrl(zone))
-                .header("Authorization", "Basic " + new String(Base64.encode((client.getClientId() + ":" + SECRET).getBytes())))
-                .param("grant_type", GRANT_TYPE_PASSWORD)
-                .param("client_id", client.getClientId())
-                .param("client_secret", SECRET)
-                .param("username", user.getUserName())
-                .param("password", SECRET))
+                        .accept(MediaType.APPLICATION_JSON_VALUE)
+                        .header("Host", getZoneHostUrl(zone))
+                        .header("Authorization", "Basic " + new String(Base64.encode((client.getClientId() + ":" + SECRET).getBytes())))
+                        .param("grant_type", GRANT_TYPE_PASSWORD)
+                        .param("client_id", client.getClientId())
+                        .param("client_secret", SECRET)
+                        .param("username", user.getUserName())
+                        .param("password", SECRET))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
@@ -228,14 +230,14 @@ class RefreshTokenMockMvcTests extends AbstractTokenMockMvcTests {
         String accessToken = (String) bodyMap.get("access_token");
 
         mockMvc.perform(
-                post("/oauth/token")
-                        .header("Host", getZoneHostUrl(zone))
-                        .accept(MediaType.APPLICATION_JSON)
-                        .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-                        .param(OAuth2Utils.GRANT_TYPE, REFRESH_TOKEN)
-                        .param(REFRESH_TOKEN, accessToken)
-                        .param("client_secret", SECRET)
-                        .param(OAuth2Utils.CLIENT_ID, client.getClientId()))
+                        post("/oauth/token")
+                                .header("Host", getZoneHostUrl(zone))
+                                .accept(MediaType.APPLICATION_JSON)
+                                .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+                                .param(OAuth2Utils.GRANT_TYPE, REFRESH_TOKEN)
+                                .param(REFRESH_TOKEN, accessToken)
+                                .param("client_secret", SECRET)
+                                .param(OAuth2Utils.CLIENT_ID, client.getClientId()))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -243,14 +245,14 @@ class RefreshTokenMockMvcTests extends AbstractTokenMockMvcTests {
     void refreshTokenGrant_rejectsIdTokens() throws Exception {
         createClientAndUserInRandomZone();
         String body = mockMvc.perform(post("/oauth/token")
-                .accept(MediaType.APPLICATION_JSON_VALUE)
-                .header("Host", getZoneHostUrl(zone))
-                .header("Authorization", "Basic " + new String(Base64.encode((client.getClientId() + ":" + SECRET).getBytes())))
-                .param("grant_type", GRANT_TYPE_PASSWORD)
-                .param("client_id", client.getClientId())
-                .param("client_secret", SECRET)
-                .param("username", user.getUserName())
-                .param("password", SECRET))
+                        .accept(MediaType.APPLICATION_JSON_VALUE)
+                        .header("Host", getZoneHostUrl(zone))
+                        .header("Authorization", "Basic " + new String(Base64.encode((client.getClientId() + ":" + SECRET).getBytes())))
+                        .param("grant_type", GRANT_TYPE_PASSWORD)
+                        .param("client_id", client.getClientId())
+                        .param("client_secret", SECRET)
+                        .param("username", user.getUserName())
+                        .param("password", SECRET))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
@@ -259,14 +261,14 @@ class RefreshTokenMockMvcTests extends AbstractTokenMockMvcTests {
         String idToken = (String) bodyMap.get("id_token");
 
         mockMvc.perform(
-                post("/oauth/token")
-                        .header("Host", getZoneHostUrl(zone))
-                        .accept(MediaType.APPLICATION_JSON)
-                        .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-                        .param(OAuth2Utils.GRANT_TYPE, REFRESH_TOKEN)
-                        .param(REFRESH_TOKEN, idToken)
-                        .param("client_secret", SECRET)
-                        .param(OAuth2Utils.CLIENT_ID, client.getClientId()))
+                        post("/oauth/token")
+                                .header("Host", getZoneHostUrl(zone))
+                                .accept(MediaType.APPLICATION_JSON)
+                                .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+                                .param(OAuth2Utils.GRANT_TYPE, REFRESH_TOKEN)
+                                .param(REFRESH_TOKEN, idToken)
+                                .param("client_secret", SECRET)
+                                .param(OAuth2Utils.CLIENT_ID, client.getClientId()))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -512,14 +514,14 @@ class RefreshTokenMockMvcTests extends AbstractTokenMockMvcTests {
         String refreshToken = getJwtRefreshToken(client.getClientId(), SECRET, user.getUserName(), SECRET, "localhost");
 
         mockMvc.perform(
-                post("/oauth/token")
-                        .header("Host", "localhost")
-                        .accept(MediaType.APPLICATION_JSON)
-                        .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-                        .param(OAuth2Utils.GRANT_TYPE, REFRESH_TOKEN)
-                        .param(REFRESH_TOKEN, refreshToken)
-                        .param("client_secret", SECRET)
-                        .param(OAuth2Utils.CLIENT_ID, clientWithoutRefresh.getClientId()))
+                        post("/oauth/token")
+                                .header("Host", "localhost")
+                                .accept(MediaType.APPLICATION_JSON)
+                                .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+                                .param(OAuth2Utils.GRANT_TYPE, REFRESH_TOKEN)
+                                .param(REFRESH_TOKEN, refreshToken)
+                                .param("client_secret", SECRET)
+                                .param(OAuth2Utils.CLIENT_ID, clientWithoutRefresh.getClientId()))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.error_description").value("Unauthorized grant type"));
     }
@@ -530,14 +532,14 @@ class RefreshTokenMockMvcTests extends AbstractTokenMockMvcTests {
 
     MockHttpServletResponse useRefreshToken(String refreshToken, String clientId, String clientSecret, String host) throws Exception {
         return mockMvc.perform(
-                post("/oauth/token")
-                        .header("Host", host)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-                        .param(OAuth2Utils.GRANT_TYPE, REFRESH_TOKEN)
-                        .param(REFRESH_TOKEN, refreshToken)
-                        .param("client_secret", clientSecret)
-                        .param(OAuth2Utils.CLIENT_ID, clientId))
+                        post("/oauth/token")
+                                .header("Host", host)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+                                .param(OAuth2Utils.GRANT_TYPE, REFRESH_TOKEN)
+                                .param(REFRESH_TOKEN, refreshToken)
+                                .param("client_secret", clientSecret)
+                                .param(OAuth2Utils.CLIENT_ID, clientId))
                 .andReturn().getResponse();
     }
 
@@ -554,18 +556,18 @@ class RefreshTokenMockMvcTests extends AbstractTokenMockMvcTests {
 
     private CompositeToken getTokensWithPasswordGrant(String clientId, String clientSecret, String userName, String password, String host, String tokenFormat) throws Exception {
         String response = mockMvc.perform(
-                post("/oauth/token")
-                        .header("Host", host)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-                        .param(OAuth2Utils.GRANT_TYPE, GRANT_TYPE_PASSWORD)
-                        .param("username", userName)
-                        .param("password", password)
-                        .param("client_secret", clientSecret)
-                        .param(REQUEST_TOKEN_FORMAT, tokenFormat)
-                        .param(OAuth2Utils.CLIENT_ID, clientId)
-        )
-        .andExpect(status().isOk())
+                        post("/oauth/token")
+                                .header("Host", host)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+                                .param(OAuth2Utils.GRANT_TYPE, GRANT_TYPE_PASSWORD)
+                                .param("username", userName)
+                                .param("password", password)
+                                .param("client_secret", clientSecret)
+                                .param(REQUEST_TOKEN_FORMAT, tokenFormat)
+                                .param(OAuth2Utils.CLIENT_ID, clientId)
+                )
+                .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
         return JsonUtils.readValue(response, CompositeToken.class);

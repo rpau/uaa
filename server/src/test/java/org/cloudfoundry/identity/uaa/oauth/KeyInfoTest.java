@@ -1,15 +1,13 @@
 package org.cloudfoundry.identity.uaa.oauth;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class KeyInfoTest {
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
 
     private static final String sampleRsaPrivateKey = """
             -----BEGIN RSA PRIVATE KEY-----
@@ -67,18 +65,20 @@ public class KeyInfoTest {
 
     @Test
     public void creatingHmacKeyWithInvalidUrlShouldFail() {
-        expectedException.expect(IllegalArgumentException.class);
-        expectedException.expectMessage("Invalid Key URL");
+        Throwable exception = assertThrows(IllegalArgumentException.class, () -> {
 
-        new KeyInfo("id", "secret", "foo bar");
+            new KeyInfo("id", "secret", "foo bar");
+        });
+        assertTrue(exception.getMessage().contains("Invalid Key URL"));
     }
 
 
     @Test
     public void creatingRsaKeyWithInvalidUrlShouldFail() {
-        expectedException.expect(IllegalArgumentException.class);
-        expectedException.expectMessage("Invalid Key URL");
+        Throwable exception = assertThrows(IllegalArgumentException.class, () -> {
 
-        new KeyInfo("id", "secret", "foo bar");
+            new KeyInfo("id", "secret", "foo bar");
+        });
+        assertTrue(exception.getMessage().contains("Invalid Key URL"));
     }
 }

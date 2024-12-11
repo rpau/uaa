@@ -3,6 +3,7 @@ package org.cloudfoundry.identity.uaa.mock.zones;
 import org.cloudfoundry.identity.uaa.DefaultTestContext;
 import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
 import org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils;
+import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetails;
 import org.cloudfoundry.identity.uaa.scim.ScimGroup;
 import org.cloudfoundry.identity.uaa.scim.ScimGroupMember;
 import org.cloudfoundry.identity.uaa.scim.ScimUser;
@@ -15,7 +16,6 @@ import org.cloudfoundry.identity.uaa.zone.IdentityZoneHolder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetails;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
 
@@ -25,7 +25,7 @@ import java.util.UUID;
 import static org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils.httpBearer;
 import static org.cloudfoundry.identity.uaa.zone.IdentityZoneSwitchingFilter.HEADER;
 import static org.cloudfoundry.identity.uaa.zone.IdentityZoneSwitchingFilter.SUBDOMAIN_HEADER;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -70,9 +70,9 @@ class IdentityZoneSwitchingFilterMockMvcTest {
 
         // Authenticate with new Client in new Zone
         mockMvc.perform(post("/oauth/token")
-                .param("grant_type", "client_credentials")
-                .with(httpBasic(client.getClientId(), client.getClientSecret()))
-                .with(new SetServerNameRequestPostProcessor(identityZone.getSubdomain() + ".localhost")))
+                        .param("grant_type", "client_credentials")
+                        .with(httpBasic(client.getClientId(), client.getClientSecret()))
+                        .with(new SetServerNameRequestPostProcessor(identityZone.getSubdomain() + ".localhost")))
                 .andExpect(status().isOk());
     }
 
@@ -83,10 +83,10 @@ class IdentityZoneSwitchingFilterMockMvcTest {
         ClientDetails client = createClientInOtherZone(mockMvc, generator, zoneAdminToken, status().isCreated(), SUBDOMAIN_HEADER, identityZone.getSubdomain());
 
         mockMvc.perform(
-                post("/oauth/token")
-                        .param("grant_type", "client_credentials")
-                        .with(httpBasic(client.getClientId(), client.getClientSecret()))
-                        .with(new SetServerNameRequestPostProcessor(identityZone.getSubdomain() + ".localhost")))
+                        post("/oauth/token")
+                                .param("grant_type", "client_credentials")
+                                .with(httpBasic(client.getClientId(), client.getClientSecret()))
+                                .with(new SetServerNameRequestPostProcessor(identityZone.getSubdomain() + ".localhost")))
                 .andExpect(status().isOk());
     }
 
@@ -97,16 +97,16 @@ class IdentityZoneSwitchingFilterMockMvcTest {
         client.setClientSecret("secret");
 
         mockMvc.perform(post("/oauth/clients")
-                .header("Authorization", "Bearer " + adminToken)
-                .accept(APPLICATION_JSON)
-                .contentType(APPLICATION_JSON)
-                .content(JsonUtils.writeValueAsString(client)))
+                        .header("Authorization", "Bearer " + adminToken)
+                        .accept(APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON)
+                        .content(JsonUtils.writeValueAsString(client)))
                 .andExpect(status().isCreated());
 
         mockMvc.perform(
-                post("/oauth/token")
-                        .param("grant_type", "client_credentials")
-                        .with(httpBasic(client.getClientId(), client.getClientSecret())))
+                        post("/oauth/token")
+                                .param("grant_type", "client_credentials")
+                                .with(httpBasic(client.getClientId(), client.getClientSecret())))
                 .andExpect(status().isOk());
     }
 
@@ -203,11 +203,11 @@ class IdentityZoneSwitchingFilterMockMvcTest {
         UaaClientDetails client = new UaaClientDetails(clientId, null, null, "client_credentials", null);
         client.setClientSecret("secret");
         mockMvc.perform(post("/oauth/clients")
-                .header(headerKey, headerValue)
-                .with(httpBearer(accessToken))
-                .accept(APPLICATION_JSON)
-                .contentType(APPLICATION_JSON)
-                .content(JsonUtils.writeValueAsString(client)))
+                        .header(headerKey, headerValue)
+                        .with(httpBearer(accessToken))
+                        .accept(APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON)
+                        .content(JsonUtils.writeValueAsString(client)))
                 .andExpect(statusMatcher);
         return client;
     }

@@ -1,13 +1,13 @@
 package org.cloudfoundry.identity.uaa.oauth.provider.config.xml;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.xml.ParserContext;
 import org.springframework.beans.factory.xml.XmlReaderContext;
 import org.w3c.dom.Element;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -22,7 +22,7 @@ public class ResourceServerBeanDefinitionParserTest {
     private ParserContext parserContext;
     private XmlReaderContext xmlReaderContext;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         element = mock(Element.class);
         parserContext = mock(ParserContext.class);

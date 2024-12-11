@@ -5,7 +5,7 @@ import org.cloudfoundry.identity.uaa.oauth.provider.AuthorizationRequest;
 import org.cloudfoundry.identity.uaa.oauth.provider.OAuth2Authentication;
 import org.cloudfoundry.identity.uaa.oauth.provider.OAuth2Request;
 import org.cloudfoundry.identity.uaa.oauth.provider.RequestTokenFactory;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -13,8 +13,9 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.util.Collections;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
@@ -61,26 +62,30 @@ public class OAuth2SecurityExpressionMethodsTests {
         assertFalse(root.hasAnyScope("write"));
     }
 
-    @Test(expected = AccessDeniedException.class)
-    public void testScopesWithException() throws Exception {
-        OAuth2Request clientAuthentication = RequestTokenFactory.createOAuth2Request("foo", false, Collections.singleton("read"));
+    @Test
+    public void testScopesWithException() {
+        assertThrows(AccessDeniedException.class, () -> {
+            OAuth2Request clientAuthentication = RequestTokenFactory.createOAuth2Request("foo", false, Collections.singleton("read"));
 
-        Authentication userAuthentication = null;
-        OAuth2Authentication oAuth2Authentication = new OAuth2Authentication(clientAuthentication, userAuthentication);
-        OAuth2SecurityExpressionMethods root = new OAuth2SecurityExpressionMethods(oAuth2Authentication);
-        boolean hasAnyScope = root.hasAnyScope("foo");
-        assertFalse(root.throwOnError(hasAnyScope));
+            Authentication userAuthentication = null;
+            OAuth2Authentication oAuth2Authentication = new OAuth2Authentication(clientAuthentication, userAuthentication);
+            OAuth2SecurityExpressionMethods root = new OAuth2SecurityExpressionMethods(oAuth2Authentication);
+            boolean hasAnyScope = root.hasAnyScope("foo");
+            assertFalse(root.throwOnError(hasAnyScope));
+        });
     }
 
-    @Test(expected = AccessDeniedException.class)
-    public void testInsufficientScope() throws Exception {
-        OAuth2Request clientAuthentication = RequestTokenFactory.createOAuth2Request("foo", false, Collections.singleton("read"));
+    @Test
+    public void testInsufficientScope() {
+        assertThrows(AccessDeniedException.class, () -> {
+            OAuth2Request clientAuthentication = RequestTokenFactory.createOAuth2Request("foo", false, Collections.singleton("read"));
 
-        Authentication userAuthentication = null;
-        OAuth2Authentication oAuth2Authentication = new OAuth2Authentication(clientAuthentication, userAuthentication);
-        OAuth2SecurityExpressionMethods root = new OAuth2SecurityExpressionMethods(oAuth2Authentication);
-        boolean hasAnyScope = root.hasAnyScope("foo");
-        root.throwOnError(hasAnyScope);
+            Authentication userAuthentication = null;
+            OAuth2Authentication oAuth2Authentication = new OAuth2Authentication(clientAuthentication, userAuthentication);
+            OAuth2SecurityExpressionMethods root = new OAuth2SecurityExpressionMethods(oAuth2Authentication);
+            boolean hasAnyScope = root.hasAnyScope("foo");
+            root.throwOnError(hasAnyScope);
+        });
     }
 
     @Test

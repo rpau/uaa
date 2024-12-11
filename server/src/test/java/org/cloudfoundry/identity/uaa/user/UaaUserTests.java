@@ -9,7 +9,7 @@ import static org.cloudfoundry.identity.uaa.user.UaaUserMatcher.aUaaUser;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class UaaUserTests {
     @Nested

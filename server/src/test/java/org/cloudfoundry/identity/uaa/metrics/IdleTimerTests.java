@@ -15,27 +15,24 @@
 
 package org.cloudfoundry.identity.uaa.metrics;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.CountDownLatch;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class IdleTimerTests {
 
     public static final int LOOP_COUNT = 100000;
     private IdleTimer timer;
-
-    @Rule
-    public ExpectedException exception = ExpectedException.none();
     public static final int THREAD_COUNT = 10;
 
-    @Before
+    @BeforeEach
     public void setup() {
         timer = new IdleTimer();
     }
@@ -44,15 +41,15 @@ public class IdleTimerTests {
     public void timer_started() throws Exception {
         Thread.sleep(10);
         assertEquals(0, timer.getInflightRequests());
-        assertThat(timer.getRunTime(), greaterThan(0l));
-        assertThat(timer.getIdleTime(), greaterThan(0l));
+        assertThat(timer.getRunTime(), greaterThan(0L));
+        assertThat(timer.getIdleTime(), greaterThan(0L));
     }
 
     @Test
     public void illegal_end_request() {
-        exception.expect(IllegalStateException.class);
-        exception.expectMessage("Illegal end request invocation, no request in flight");
-        timer.endRequest();
+        Throwable exception = assertThrows(IllegalStateException.class, () ->
+                timer.endRequest());
+        assertTrue(exception.getMessage().contains("Illegal end request invocation, no request in flight"));
     }
 
     @Test
@@ -65,7 +62,7 @@ public class IdleTimerTests {
         timer.endRequest();
         assertEquals(1, timer.getInflightRequests());
         Thread.sleep(10);
-        assertEquals("Idle time should not have changed.", idleTime, timer.getIdleTime());
+        assertEquals(idleTime, timer.getIdleTime(), "Idle time should not have changed.");
         timer.endRequest();
         assertEquals(0, timer.getInflightRequests());
         Thread.sleep(10);

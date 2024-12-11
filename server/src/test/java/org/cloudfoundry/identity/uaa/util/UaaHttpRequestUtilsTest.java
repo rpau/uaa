@@ -10,7 +10,11 @@ import org.apache.http.conn.routing.HttpRoutePlanner;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.protocol.HttpContext;
 import org.cloudfoundry.identity.uaa.test.network.NetworkTestUtils;
-import org.junit.*;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -19,11 +23,16 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.net.ssl.SSLHandshakeException;
 import java.io.File;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import static org.cloudfoundry.identity.uaa.util.UaaHttpRequestUtils.createRequestFactory;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.springframework.http.HttpStatus.OK;
 
 public class UaaHttpRequestUtilsTest {
@@ -37,14 +46,14 @@ public class UaaHttpRequestUtilsTest {
     private NetworkTestUtils.SimpleHttpResponseHandler httpResponseHandler;
     private NetworkTestUtils.SimpleHttpResponseHandler httpsResponseHandler;
 
-    @BeforeClass
+    @BeforeAll
     public static void storeSystemProxyConfig() {
         for (String s : Arrays.asList(HTTP_HOST_PROPERTY, HTTP_PORT_PROPERTY, HTTPS_HOST_PROPERTY, HTTPS_PORT_PROPERTY)) {
             systemProxyConfig.put(s, System.getProperty(s));
         }
     }
 
-    @AfterClass
+    @AfterAll
     public static void restoreSystemProxyConfig() {
         for (Map.Entry<String, String> entry : systemProxyConfig.entrySet()) {
             if (entry.getValue() != null) {
@@ -67,7 +76,7 @@ public class UaaHttpRequestUtilsTest {
     private String httpsUrl;
     private String httpUrl;
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         clearSystemProxyConfig();
         File keystore = NetworkTestUtils.getKeystore(new Date(), 10);
@@ -82,7 +91,7 @@ public class UaaHttpRequestUtilsTest {
         httpUrl = "http://localhost:" + httpServer.getAddress().getPort() + "/";
     }
 
-    @After
+    @AfterEach
     public void teardown() {
         httpsServer.stop(0);
         httpServer.stop(0);

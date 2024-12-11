@@ -1,6 +1,6 @@
 /*
  * *****************************************************************************
- *     Cloud Foundry 
+ *     Cloud Foundry
  *     Copyright (c) [2009-2016] Pivotal Software, Inc. All Rights Reserved.
  *
  *     This product is licensed to you under the Apache License, Version 2.0 (the "License").
@@ -14,26 +14,25 @@
 
 package org.cloudfoundry.identity.uaa.client;
 
-import static org.junit.Assert.assertTrue;
-
 import org.cloudfoundry.identity.uaa.oauth.client.DefaultOAuth2ClientContext;
 import org.cloudfoundry.identity.uaa.oauth.client.OAuth2ClientContext;
 import org.cloudfoundry.identity.uaa.oauth.client.OAuth2RestTemplate;
 import org.cloudfoundry.identity.uaa.oauth.client.resource.AuthorizationCodeResourceDetails;
 import org.cloudfoundry.identity.uaa.oauth.common.AuthenticationScheme;
 import org.cloudfoundry.identity.uaa.oauth.common.DefaultOAuth2AccessToken;
-import org.junit.Assume;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.Assume.assumeNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests some real internet-based OAuth2 user info providers. To run these tests
  * you need to get access tokens for the
  * relevant providers and set them up as system properties.
- * 
+ *
  * @author Dave Syer
- * 
  */
-public class OAuth2ClientAuthenticationFilterTests {
+class OAuth2ClientAuthenticationFilterTests {
 
     private final SocialClientUserDetailsSource filter = new SocialClientUserDetailsSource();
 
@@ -41,12 +40,12 @@ public class OAuth2ClientAuthenticationFilterTests {
 
     private void setUpContext(String tokenName) {
         String accessToken = System.getProperty(tokenName);
-        Assume.assumeNotNull(accessToken);
+        assumeNotNull(accessToken);
         context.setAccessToken(new DefaultOAuth2AccessToken(accessToken));
     }
 
     @Test
-    public void testCloudFoundryAuthentication() {
+    void testCloudFoundryAuthentication() {
         OAuth2RestTemplate restTemplate = new OAuth2RestTemplate(new AuthorizationCodeResourceDetails(), context);
         setUpContext("cf.token");
         filter.setRestTemplate(restTemplate);
@@ -57,7 +56,7 @@ public class OAuth2ClientAuthenticationFilterTests {
     }
 
     @Test
-    public void testGithubAuthentication() {
+    void testGithubAuthentication() {
         OAuth2RestTemplate restTemplate = new OAuth2RestTemplate(new AuthorizationCodeResourceDetails(), context);
         setUpContext("github.token");
         filter.setRestTemplate(restTemplate);
@@ -68,7 +67,7 @@ public class OAuth2ClientAuthenticationFilterTests {
     }
 
     @Test
-    public void testFacebookAuthentication() {
+    void testFacebookAuthentication() {
         AuthorizationCodeResourceDetails resource = new AuthorizationCodeResourceDetails();
         resource.setAuthenticationScheme(AuthenticationScheme.query);
         OAuth2RestTemplate restTemplate = new OAuth2RestTemplate(resource, context);
@@ -79,5 +78,4 @@ public class OAuth2ClientAuthenticationFilterTests {
         SocialClientUserDetails user = (SocialClientUserDetails) filter.getPrincipal();
         assertTrue(!user.getAuthorities().isEmpty());
     }
-
 }

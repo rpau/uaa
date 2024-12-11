@@ -13,17 +13,12 @@
  *******************************************************************************/
 package org.cloudfoundry.identity.uaa.integration.feature;
 
-import java.security.SecureRandom;
-import java.util.List;
-import java.util.Map;
-
-import org.cloudfoundry.identity.uaa.ServerRunning;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.cloudfoundry.identity.uaa.ServerRunningExtension;
+import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,22 +27,26 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.web.client.RestTemplate;
 
-import static org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils.updateUserToForcePasswordChange;
-import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.*;
+import java.security.SecureRandom;
+import java.util.List;
+import java.util.Map;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = DefaultIntegrationTestConfig.class)
+import static org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils.updateUserToForcePasswordChange;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+@SpringJUnitConfig(classes = DefaultIntegrationTestConfig.class)
 public class ForcedPasswordChangeIT {
 
     @Autowired
-    @Rule
-    public IntegrationTestRule integrationTestRule;
+    @RegisterExtension
+    private IntegrationTestExtension integrationTestExtension;
 
     @Autowired
     WebDriver webDriver;
@@ -61,17 +60,17 @@ public class ForcedPasswordChangeIT {
     @Value("${integration.test.base_url}")
     String baseUrl;
 
-    @Rule
-    public ServerRunning serverRunning = ServerRunning.isRunning();
+    @RegisterExtension
+    private static final ServerRunningExtension serverRunning = ServerRunningExtension.connect();
 
     private String userId;
 
-    private  String userEmail;
+    private String userEmail;
 
     private String adminAccessToken;
 
-    @Before
-    @After
+    @BeforeEach
+    @AfterEach
     public void logoutAndClearCookies() {
         try {
             webDriver.get(baseUrl + "/logout.do");
@@ -82,7 +81,7 @@ public class ForcedPasswordChangeIT {
         webDriver.manage().deleteAllCookies();
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
         restTemplate = serverRunning.createRestTemplate();
         int randomInt = new SecureRandom().nextInt();
@@ -94,12 +93,12 @@ public class ForcedPasswordChangeIT {
         ResponseEntity<Map> response = restTemplate.exchange(baseUrl + "/Users?filter=userName eq  \"{user-name}\"", HttpMethod.GET,
                 new HttpEntity<>(headers), Map.class, userEmail);
         Map results = response.getBody();
-        assertTrue("There should be more than zero users", (Integer) results.get("totalResults") > 0);
+        assertTrue((Integer) results.get("totalResults") > 0, "There should be more than zero users");
         Map firstUser = (Map) ((List) results.get("resources")).get(0);
         userId = (String) firstUser.get("id");
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         webDriver.get(baseUrl + "/logout.do");
         HttpHeaders headers = new HttpHeaders();

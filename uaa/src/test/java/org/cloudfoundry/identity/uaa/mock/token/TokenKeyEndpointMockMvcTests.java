@@ -3,21 +3,21 @@ package org.cloudfoundry.identity.uaa.mock.token;
 import org.apache.commons.codec.binary.Base64;
 import org.cloudfoundry.identity.uaa.DefaultTestContext;
 import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
+import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
 import org.cloudfoundry.identity.uaa.oauth.token.VerificationKeyResponse;
 import org.cloudfoundry.identity.uaa.util.JsonUtils;
 import org.cloudfoundry.identity.uaa.util.MapCollector;
 import org.cloudfoundry.identity.uaa.util.SetServerNameRequestPostProcessor;
-import org.cloudfoundry.identity.uaa.zone.MultitenantClientServices;
 import org.cloudfoundry.identity.uaa.zone.IdentityZone;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneConfiguration;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneProvisioning;
+import org.cloudfoundry.identity.uaa.zone.MultitenantClientServices;
 import org.cloudfoundry.identity.uaa.zone.MultitenantJdbcClientDetailsService;
 import org.cloudfoundry.identity.uaa.zone.TokenPolicy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.web.context.WebApplicationContext;
@@ -30,11 +30,11 @@ import static org.hamcrest.CoreMatchers.any;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsMapContaining.hasKey;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -112,9 +112,9 @@ class TokenKeyEndpointMockMvcTests {
     @Test
     void checkTokenKeyReturnETag() throws Exception {
         mockMvc.perform(
-                get("/token_key")
-                        .with(new SetServerNameRequestPostProcessor(testZone.getSubdomain() + ".localhost"))
-                        .accept(MediaType.APPLICATION_JSON))
+                        get("/token_key")
+                                .with(new SetServerNameRequestPostProcessor(testZone.getSubdomain() + ".localhost"))
+                                .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(header().string("ETag", any(String.class)))
                 .andReturn();
@@ -123,9 +123,9 @@ class TokenKeyEndpointMockMvcTests {
     @Test
     void checkTokenKeyReturns304IfResourceUnchanged() throws Exception {
         mockMvc.perform(
-                get("/token_key")
-                        .with(new SetServerNameRequestPostProcessor(testZone.getSubdomain() + ".localhost"))
-                        .header("If-None-Match", testZone.getLastModified().getTime()))
+                        get("/token_key")
+                                .with(new SetServerNameRequestPostProcessor(testZone.getSubdomain() + ".localhost"))
+                                .header("If-None-Match", testZone.getLastModified().getTime()))
                 .andExpect(status().isNotModified())
                 .andReturn();
     }
@@ -170,10 +170,10 @@ class TokenKeyEndpointMockMvcTests {
         webApplicationContext.getBean(MultitenantClientServices.class).addClientDetails(client, testZone.getSubdomain());
 
         MvcResult result = mockMvc.perform(
-                get("/token_key")
-                        .with(new SetServerNameRequestPostProcessor(testZone.getSubdomain() + ".localhost"))
-                        .accept(MediaType.APPLICATION_JSON)
-                        .header("Authorization", getBasicAuth(client)))
+                        get("/token_key")
+                                .with(new SetServerNameRequestPostProcessor(testZone.getSubdomain() + ".localhost"))
+                                .accept(MediaType.APPLICATION_JSON)
+                                .header("Authorization", getBasicAuth(client)))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -237,9 +237,9 @@ class TokenKeyEndpointMockMvcTests {
     @Test
     void checkTokenKeysReturnETag() throws Exception {
         mockMvc.perform(
-                get("/token_keys")
-                        .with(new SetServerNameRequestPostProcessor(testZone.getSubdomain() + ".localhost"))
-                        .accept(MediaType.APPLICATION_JSON))
+                        get("/token_keys")
+                                .with(new SetServerNameRequestPostProcessor(testZone.getSubdomain() + ".localhost"))
+                                .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(header().string("ETag", any(String.class)))
                 .andReturn();
@@ -248,9 +248,9 @@ class TokenKeyEndpointMockMvcTests {
     @Test
     void checkTokenKeysReturns304IfResourceUnchanged() throws Exception {
         mockMvc.perform(
-                get("/token_keys")
-                        .with(new SetServerNameRequestPostProcessor(testZone.getSubdomain() + ".localhost"))
-                        .header("If-None-Match", testZone.getLastModified().getTime()))
+                        get("/token_keys")
+                                .with(new SetServerNameRequestPostProcessor(testZone.getSubdomain() + ".localhost"))
+                                .header("If-None-Match", testZone.getLastModified().getTime()))
                 .andExpect(status().isNotModified())
                 .andReturn();
     }

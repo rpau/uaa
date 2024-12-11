@@ -1,8 +1,8 @@
 package org.cloudfoundry.identity.uaa.oauth.provider.config.xml;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA

@@ -40,9 +40,9 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasEntry;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -100,13 +100,13 @@ class RefreshRotationTest {
 
         OAuth2AccessToken refreshedToken = tokenServices.refreshAccessToken(refreshTokenValue, new TokenRequest(new HashMap<>(), CLIENT_ID, Lists.newArrayList("openid"), GRANT_TYPE_REFRESH_TOKEN));
         assertThat(refreshedToken, is(notNullValue()));
-        assertEquals("New refresh token should be equal to the old one.", refreshTokenValue, refreshedToken.getRefreshToken().getValue());
+        assertEquals(refreshTokenValue, refreshedToken.getRefreshToken().getValue(), "New refresh token should be equal to the old one.");
 
         new IdentityZoneManagerImpl().getCurrentIdentityZone().getConfig().getTokenPolicy().setRefreshTokenRotate(true);
 
         Map<String, RevocableToken> tokens = tokenSupport.tokens;
         refreshedToken = tokenServices.refreshAccessToken(refreshTokenValue, new TokenRequest(new HashMap<>(), CLIENT_ID, Lists.newArrayList("openid"), GRANT_TYPE_REFRESH_TOKEN));
-        assertNotEquals("New access token should be different from the old one.", refreshTokenValue, refreshedToken.getRefreshToken().getValue());
+        assertNotEquals(refreshTokenValue, refreshedToken.getRefreshToken().getValue(), "New access token should be different from the old one.");
 
     }
 
@@ -134,11 +134,11 @@ class RefreshRotationTest {
         setupOAuth2Authentication(oAuth2Request);
         OAuth2AccessToken refreshedToken = tokenServices.refreshAccessToken(refreshTokenValue, new TokenRequest(new HashMap<>(), CLIENT_ID, Lists.newArrayList("openid"), GRANT_TYPE_REFRESH_TOKEN));
         assertThat(refreshedToken, is(notNullValue()));
-        assertNotEquals("New access token should be different from the old one.", refreshTokenValue, refreshedToken.getRefreshToken().getValue());
+        assertNotEquals(refreshTokenValue, refreshedToken.getRefreshToken().getValue(), "New access token should be different from the old one.");
         assertThat((Map<String, Object>) UaaTokenUtils.getClaims(refreshedToken.getValue(), Map.class), hasEntry(CLIENT_AUTH_METHOD, CLIENT_AUTH_NONE));
 
         refreshedToken = tokenServices.refreshAccessToken(refreshTokenValue, new TokenRequest(new HashMap<>(), CLIENT_ID, Lists.newArrayList("openid"), GRANT_TYPE_REFRESH_TOKEN));
-        assertNotEquals("New access token should be different from the old one.", refreshTokenValue, refreshedToken.getRefreshToken().getValue());
+        assertNotEquals(refreshTokenValue, refreshedToken.getRefreshToken().getValue(), "New access token should be different from the old one.");
         assertThat((Map<String, Object>) UaaTokenUtils.getClaims(refreshedToken.getValue(), Map.class), hasEntry(CLIENT_AUTH_METHOD, CLIENT_AUTH_NONE));
     }
 
@@ -167,11 +167,11 @@ class RefreshRotationTest {
         setupOAuth2Authentication(authorizationRequest.createOAuth2Request());
         OAuth2AccessToken refreshedToken = tokenServices.refreshAccessToken(refreshTokenValue, new TokenRequest(new HashMap<>(), CLIENT_ID, Lists.newArrayList("openid"), GRANT_TYPE_REFRESH_TOKEN));
         assertThat(refreshedToken, is(notNullValue()));
-        assertNotEquals("New access token should be different from the old one.", refreshTokenValue, refreshedToken.getRefreshToken().getValue());
+        assertNotEquals(refreshTokenValue, refreshedToken.getRefreshToken().getValue(), "New access token should be different from the old one.");
         assertThat((Map<String, Object>) UaaTokenUtils.getClaims(refreshedToken.getValue(), Map.class), hasEntry(CLIENT_AUTH_METHOD, CLIENT_AUTH_NONE));
 
         refreshedToken = tokenServices.refreshAccessToken(refreshTokenValue, new TokenRequest(new HashMap<>(), CLIENT_ID, Lists.newArrayList("openid"), GRANT_TYPE_REFRESH_TOKEN));
-        assertNotEquals("New access token should be different from the old one.", refreshTokenValue, refreshedToken.getRefreshToken().getValue());
+        assertNotEquals(refreshTokenValue, refreshedToken.getRefreshToken().getValue(), "New access token should be different from the old one.");
         assertThat((Map<String, Object>) UaaTokenUtils.getClaims(refreshedToken.getValue(), Map.class), hasEntry(CLIENT_AUTH_METHOD, CLIENT_AUTH_NONE));
     }
 
@@ -198,7 +198,7 @@ class RefreshRotationTest {
         setupOAuth2Authentication(oAuth2Request);
         OAuth2AccessToken refreshedToken = tokenServices.refreshAccessToken(refreshTokenValue, new TokenRequest(new HashMap<>(), CLIENT_ID, Lists.newArrayList("openid"), GRANT_TYPE_REFRESH_TOKEN));
         assertThat(refreshedToken, is(notNullValue()));
-        assertNotEquals("New access token should be different from the old one.", refreshTokenValue, refreshedToken.getRefreshToken().getValue());
+        assertNotEquals(refreshTokenValue, refreshedToken.getRefreshToken().getValue(), "New access token should be different from the old one.");
         assertThat((Map<String, Object>) UaaTokenUtils.getClaims(refreshedToken.getValue(), Map.class), hasEntry(CLIENT_AUTH_METHOD, CLIENT_AUTH_NONE));
     }
 

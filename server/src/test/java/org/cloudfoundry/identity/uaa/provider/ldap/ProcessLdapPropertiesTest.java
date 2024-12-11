@@ -16,17 +16,20 @@ package org.cloudfoundry.identity.uaa.provider.ldap;
 
 import org.cloudfoundry.identity.uaa.provider.ldap.extension.DefaultTlsDirContextAuthenticationStrategy;
 import org.cloudfoundry.identity.uaa.provider.ldap.extension.ExternalTlsDirContextAuthenticationStrategy;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.ldap.core.support.SimpleDirContextAuthenticationStrategy;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.cloudfoundry.identity.uaa.provider.LdapIdentityProviderDefinition.*;
+import static org.cloudfoundry.identity.uaa.provider.LdapIdentityProviderDefinition.LDAP_TLS_EXTERNAL;
+import static org.cloudfoundry.identity.uaa.provider.LdapIdentityProviderDefinition.LDAP_TLS_NONE;
+import static org.cloudfoundry.identity.uaa.provider.LdapIdentityProviderDefinition.LDAP_TLS_SIMPLE;
 import static org.cloudfoundry.identity.uaa.provider.ldap.ProcessLdapProperties.LDAP_SOCKET_FACTORY;
 import static org.cloudfoundry.identity.uaa.provider.ldap.ProcessLdapProperties.LDAP_SSL_SOCKET_FACTORY;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class ProcessLdapPropertiesTest {
 
@@ -75,10 +78,12 @@ public class ProcessLdapPropertiesTest {
         assertEquals(ExternalTlsDirContextAuthenticationStrategy.class, process.getAuthenticationStrategy().getClass());
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void invalid_authentication_strategy() throws Exception {
-        ProcessLdapProperties process = new ProcessLdapProperties("ldap://localhost:389", false, "asdadasda");
-        process.getAuthenticationStrategy();
+    @Test
+    public void invalid_authentication_strategy() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            ProcessLdapProperties process = new ProcessLdapProperties("ldap://localhost:389", false, "asdadasda");
+            process.getAuthenticationStrategy();
+        });
     }
 
 }

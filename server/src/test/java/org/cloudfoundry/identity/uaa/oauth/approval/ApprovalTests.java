@@ -1,13 +1,16 @@
 package org.cloudfoundry.identity.uaa.oauth.approval;
 
 import org.cloudfoundry.identity.uaa.approval.Approval;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ApprovalTests {
 
@@ -194,12 +197,12 @@ public class ApprovalTests {
 
     @Test
     public void testExpiry() {
-        int thirtyMintues = 30 * 60 * 1000;
+        int thirtyMinutes = 30 * 60 * 1000;
         assertTrue(new Approval()
                 .setUserId("u1")
                 .setClientId("c1")
                 .setScope("s1")
-                .setExpiresAt(Approval.timeFromNow(thirtyMintues))
+                .setExpiresAt(Approval.timeFromNow(thirtyMinutes))
                 .setStatus(Approval.ApprovalStatus.APPROVED).isActiveAsOf(new Date()));
         int expiresIn = -1;
         assertFalse(new Approval()

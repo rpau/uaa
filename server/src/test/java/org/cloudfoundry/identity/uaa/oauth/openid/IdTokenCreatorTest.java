@@ -1,10 +1,10 @@
 package org.cloudfoundry.identity.uaa.oauth.openid;
 
 import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
+import org.cloudfoundry.identity.uaa.extensions.PollutionPreventionExtension;
 import org.cloudfoundry.identity.uaa.oauth.TokenEndpointBuilder;
 import org.cloudfoundry.identity.uaa.oauth.TokenValidityResolver;
 import org.cloudfoundry.identity.uaa.oauth.token.ClaimConstants;
-import org.cloudfoundry.identity.uaa.extensions.PollutionPreventionExtension;
 import org.cloudfoundry.identity.uaa.user.UaaUser;
 import org.cloudfoundry.identity.uaa.user.UaaUserDatabase;
 import org.cloudfoundry.identity.uaa.user.UaaUserPrototype;
@@ -26,18 +26,19 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static org.cloudfoundry.identity.uaa.oauth.client.ClientConstants.TOKEN_SALT;
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.hasItem;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsCollectionContaining.hasItems;
-import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(PollutionPreventionExtension.class)
 class IdTokenCreatorTest {
     private String issuerUrl;
-    private String uaaUrl;
     private String clientId;
-    private String userId;
     private IdTokenCreator tokenCreator;
     private Date expDate;
     private Date iatDate;
@@ -45,10 +46,8 @@ class IdTokenCreatorTest {
     private Set<String> amr;
     private Set<String> acr;
 
-    private UaaUserDatabase mockUaaUserDatabase;
     private String givenName;
     private String familyName;
-    private String email;
     private UaaUser user;
     private UaaClientDetails clientDetails;
     private long previousLogonTime;
@@ -64,18 +63,16 @@ class IdTokenCreatorTest {
     private String zoneId;
     private String origin;
     private String jti;
-    private String clientsecret;
-    private String tokensalt;
     private IdentityZoneManager mockIdentityZoneManager;
 
     @BeforeEach
     void setup() throws Exception {
         issuerUrl = "http://localhost:8080/uaa/oauth/token";
-        uaaUrl = "http://localhost:8080/uaa";
+        String uaaUrl = "http://localhost:8080/uaa";
         clientId = "clientId";
-        clientsecret = "clientsecret";
-        tokensalt = "tokensalt";
-        userId = "userId";
+        String clientsecret = "clientsecret";
+        String tokensalt = "tokensalt";
+        String userId = "userId";
         zoneId = "zoneId";
         jti = "accessTokenId";
 
@@ -94,7 +91,7 @@ class IdTokenCreatorTest {
         };
         givenName = "bruce";
         familyName = "denis";
-        email = "u@p.i";
+        String email = "u@p.i";
         previousLogonTime = 12345;
         phoneNumber = "(123) 456-7890";
         roles = new HashSet<>();
@@ -142,7 +139,7 @@ class IdTokenCreatorTest {
         when(mockIdentityZoneManager.getCurrentIdentityZone()).thenReturn(IdentityZone.getUaa());
         when(mockIdentityZoneManager.getCurrentIdentityZoneId()).thenReturn(zoneId);
 
-        mockUaaUserDatabase = mock(UaaUserDatabase.class);
+        UaaUserDatabase mockUaaUserDatabase = mock(UaaUserDatabase.class);
         when(mockUaaUserDatabase.retrieveUserById(userId)).thenReturn(user);
 
         userAuthenticationData = new UserAuthenticationData(

@@ -15,9 +15,9 @@
 package org.cloudfoundry.identity.uaa.oauth.client;
 
 import org.cloudfoundry.identity.uaa.util.JsonUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Created by fhanik on 5/5/15.

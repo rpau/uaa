@@ -138,7 +138,7 @@ class IdentityProviderEndpointsAliasMockMvcTests {
                 final Optional<IdentityProvider<?>> createdIdp = allIdps.stream()
                         .filter(it -> it.getOriginKey().equals(existingIdp.getOriginKey()))
                         .findFirst();
-                assertThat(createdIdp).isPresent().contains(existingIdp);
+                assertThat(createdIdp).contains(existingIdp);
                 assertThat(createdIdp.get().getAliasZid()).isEqualTo(zone2.getId());
             }
         }
@@ -546,8 +546,8 @@ class IdentityProviderEndpointsAliasMockMvcTests {
                     final IdentityProvider<?> updatedOriginalIdp = updateIdp(zone1, originalIdp);
                     assertThat(updatedOriginalIdp).isNotNull();
                     assertThat(updatedOriginalIdp.getAliasId()).isNotBlank();
-                    assertThat(updatedOriginalIdp.getAliasZid()).isNotBlank();
-                    assertThat(updatedOriginalIdp.getAliasZid()).isEqualTo(zone2.getId());
+                    assertThat(updatedOriginalIdp.getAliasZid()).isNotBlank()
+                            .isEqualTo(zone2.getId());
                     assertThat(updatedOriginalIdp.getName()).isNotBlank().isEqualTo(newName);
 
                     // check if the change is propagated to the alias IdP
@@ -984,8 +984,8 @@ class IdentityProviderEndpointsAliasMockMvcTests {
                     IdentityProvider.class
             );
             assertThat(originalIdpAfterUpdate).isNotNull();
-            assertThat(originalIdpAfterUpdate.getIdentityZoneId()).isNotBlank();
-            assertThat(originalIdpAfterUpdate.getIdentityZoneId()).isEqualTo(zone.getId());
+            assertThat(originalIdpAfterUpdate.getIdentityZoneId()).isNotBlank()
+                    .isEqualTo(zone.getId());
             return originalIdpAfterUpdate;
         }
 
@@ -1033,7 +1033,7 @@ class IdentityProviderEndpointsAliasMockMvcTests {
                     zone.getId(),
                     idp.getId()
             );
-            assertThat(idpAfterFailedUpdateOpt).isPresent().contains(idpBeforeUpdate);
+            assertThat(idpAfterFailedUpdateOpt).contains(idpBeforeUpdate);
 
             // if an alias IdP was present before update, check if it also remains unchanged
             if (aliasIdpBeforeUpdate != null) {
@@ -1041,7 +1041,7 @@ class IdentityProviderEndpointsAliasMockMvcTests {
                         idpBeforeUpdate.getAliasZid(),
                         idpBeforeUpdate.getAliasId()
                 );
-                assertThat(aliasIdpAfterFailedUpdateOpt).isPresent().contains(aliasIdpBeforeUpdate);
+                assertThat(aliasIdpAfterFailedUpdateOpt).contains(aliasIdpBeforeUpdate);
             }
         }
     }
@@ -1299,19 +1299,19 @@ class IdentityProviderEndpointsAliasMockMvcTests {
         final int responseStatus = getResult.getResponse().getStatus();
         assertThat(responseStatus).isIn(404, 200);
 
-        switch (responseStatus) {
-            case 404:
-                return Optional.empty();
-            case 200:
+        return switch (responseStatus) {
+            case 404 -> Optional.empty();
+            case 200 -> {
                 final IdentityProvider<?> responseBody = JsonUtils.readValue(
                         getResult.getResponse().getContentAsString(),
                         IdentityProvider.class
                 );
-                return Optional.ofNullable(responseBody);
-            default:
+                yield Optional.ofNullable(responseBody);
+            }
+            default ->
                 // should not happen
-                return Optional.empty();
-        }
+                    Optional.empty();
+        };
     }
 
     private List<IdentityProvider<?>> readAllIdpsInZone(final IdentityZone zone) throws Exception {
@@ -1328,7 +1328,7 @@ class IdentityProviderEndpointsAliasMockMvcTests {
         final JdbcIdentityProviderProvisioning identityProviderProvisioning = webApplicationContext
                 .getBean(JdbcIdentityProviderProvisioning.class);
         final int rowsDeleted = identityProviderProvisioning.deleteByOrigin(originKey, zoneId);
-        assertThat(rowsDeleted).isEqualTo(1);
+        assertThat(rowsDeleted).isOne();
     }
 
     private void assertIdpAndAliasHaveSameRelyingPartySecretInDb(final IdentityProvider<?> originalIdp) {

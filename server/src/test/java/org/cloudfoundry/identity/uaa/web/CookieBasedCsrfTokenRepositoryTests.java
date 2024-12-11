@@ -15,24 +15,27 @@
 
 package org.cloudfoundry.identity.uaa.web;
 
+import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
 import org.cloudfoundry.identity.uaa.security.web.CookieBasedCsrfTokenRepository;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.http.HttpMethod;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
 import org.springframework.security.web.csrf.CsrfToken;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 
 import static org.cloudfoundry.identity.uaa.security.web.CookieBasedCsrfTokenRepository.DEFAULT_CSRF_COOKIE_NAME;
-import static org.hamcrest.Matchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.nullValue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CookieBasedCsrfTokenRepositoryTests {
 
@@ -70,7 +73,7 @@ class CookieBasedCsrfTokenRepositoryTests {
         request.setPathInfo("/login/somepath");
         request.setContextPath(contextPath);
         CsrfToken token = repo.generateToken(request);
-        assertTrue("The token is at least 22 characters long.", token.getToken().length() >= 22);
+        assertTrue(token.getToken().length() >= 22, "The token is at least 22 characters long.");
         repo.saveToken(token, request, response);
 
         Cookie cookie = response.getCookie(token.getParameterName());

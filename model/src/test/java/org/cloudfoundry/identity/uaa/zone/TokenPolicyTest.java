@@ -2,22 +2,19 @@ package org.cloudfoundry.identity.uaa.zone;
 
 import org.cloudfoundry.identity.uaa.oauth.token.TokenConstants;
 import org.cloudfoundry.identity.uaa.util.JsonUtils;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 import java.util.Map;
 
 import static org.cloudfoundry.identity.uaa.test.ModelTestUtils.getResourceAsString;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TokenPolicyTest {
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
 
     @Test
     public void json_has_expected_properties() {
@@ -61,28 +58,36 @@ public class TokenPolicyTest {
         assertEquals(TokenConstants.TokenFormat.JWT.getStringValue(), policy.getRefreshTokenFormat());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void nullSigningKey() {
-        TokenPolicy tokenPolicy = new TokenPolicy();
-        tokenPolicy.setKeys(Collections.singletonMap("key-id", null));
+        assertThrows(IllegalArgumentException.class, () -> {
+            TokenPolicy tokenPolicy = new TokenPolicy();
+            tokenPolicy.setKeys(Collections.singletonMap("key-id", null));
+        });
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void emptySigningKey() {
-        TokenPolicy tokenPolicy = new TokenPolicy();
-        tokenPolicy.setKeys(Collections.singletonMap("key-id", "             "));
+        assertThrows(IllegalArgumentException.class, () -> {
+            TokenPolicy tokenPolicy = new TokenPolicy();
+            tokenPolicy.setKeys(Collections.singletonMap("key-id", "             "));
+        });
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void nullKeyId() {
-        TokenPolicy tokenPolicy = new TokenPolicy();
-        tokenPolicy.setKeys(Collections.singletonMap(null, "signing-key"));
+        assertThrows(IllegalArgumentException.class, () -> {
+            TokenPolicy tokenPolicy = new TokenPolicy();
+            tokenPolicy.setKeys(Collections.singletonMap(null, "signing-key"));
+        });
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void emptyKeyId() {
-        TokenPolicy tokenPolicy = new TokenPolicy();
-        tokenPolicy.setKeys(Collections.singletonMap(" ", "signing-key"));
+        assertThrows(IllegalArgumentException.class, () -> {
+            TokenPolicy tokenPolicy = new TokenPolicy();
+            tokenPolicy.setKeys(Collections.singletonMap(" ", "signing-key"));
+        });
     }
 
     @Test
@@ -94,12 +99,13 @@ public class TokenPolicyTest {
 
     @Test
     public void tokenPolicy_whenInvalidUniquenessValue_throwsException() {
+        Throwable exception = assertThrows(IllegalArgumentException.class, () -> {
 
-        TokenPolicy tokenPolicy = new TokenPolicy();
-        expectedException.expect(IllegalArgumentException.class);
-        expectedException.expectMessage("Invalid refresh token format invalid. Acceptable values are: [opaque, jwt]");
+            TokenPolicy tokenPolicy = new TokenPolicy();
 
-        tokenPolicy.setRefreshTokenFormat("invalid");
+            tokenPolicy.setRefreshTokenFormat("invalid");
+        });
+        assertTrue(exception.getMessage().contains("Invalid refresh token format invalid. Acceptable values are: [opaque, jwt]"));
     }
 
     @Test

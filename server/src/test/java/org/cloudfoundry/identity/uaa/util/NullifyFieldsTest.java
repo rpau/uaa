@@ -14,11 +14,11 @@
 
 package org.cloudfoundry.identity.uaa.util;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class NullifyFieldsTest {
 
@@ -26,7 +26,7 @@ public class NullifyFieldsTest {
     private A a;
     private B b;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         a = new A();
         b = new B();
@@ -137,7 +137,7 @@ public class NullifyFieldsTest {
 
     }
 
-    public static class B extends  A {
+    public static class B extends A {
         public static final Object b0 = new Object();
         public static Object b1 = new Object();
         private static Object b2 = new Object();

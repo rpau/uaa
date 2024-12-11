@@ -2,13 +2,13 @@ package org.cloudfoundry.identity.uaa.scim.validate;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.cloudfoundry.identity.uaa.constants.OriginKeys;
+import org.cloudfoundry.identity.uaa.extensions.PollutionPreventionExtension;
 import org.cloudfoundry.identity.uaa.provider.IdentityProvider;
 import org.cloudfoundry.identity.uaa.provider.IdentityProviderProvisioning;
 import org.cloudfoundry.identity.uaa.provider.PasswordPolicy;
 import org.cloudfoundry.identity.uaa.provider.UaaIdentityProviderDefinition;
 import org.cloudfoundry.identity.uaa.scim.ScimUser;
 import org.cloudfoundry.identity.uaa.scim.exception.InvalidPasswordException;
-import org.cloudfoundry.identity.uaa.extensions.PollutionPreventionExtension;
 import org.cloudfoundry.identity.uaa.zone.IdentityZone;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneHolder;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,8 +16,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.mock;
 
 @ExtendWith(PollutionPreventionExtension.class)
@@ -119,7 +119,7 @@ class UaaPasswordPolicyValidatorTests {
         validatePassword("Password123 ", "Password must contain at least 1 special characters.");
     }
 
-    private void validatePassword(String password, String ... expectedErrors) {
+    private void validatePassword(String password, String... expectedErrors) {
         ScimUser user = new ScimUser();
         user.setOrigin(OriginKeys.UAA);
         try {
@@ -132,7 +132,7 @@ class UaaPasswordPolicyValidatorTests {
                 fail("Didn't expect InvalidPasswordException, but messages were " + e.getErrorMessages());
             }
             for (String expectedError : expectedErrors) {
-                assertTrue("Errors should contain:" + expectedError, e.getErrorMessages().contains(expectedError));
+                assertTrue(e.getErrorMessages().contains(expectedError), "Errors should contain:" + expectedError);
             }
         }
     }

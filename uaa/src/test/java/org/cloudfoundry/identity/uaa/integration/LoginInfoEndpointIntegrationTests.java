@@ -13,9 +13,10 @@
  *******************************************************************************/
 package org.cloudfoundry.identity.uaa.integration;
 
-import org.cloudfoundry.identity.uaa.ServerRunning;
-import org.junit.Rule;
-import org.junit.Test;
+
+import org.cloudfoundry.identity.uaa.ServerRunningExtension;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -24,14 +25,14 @@ import org.springframework.http.ResponseEntity;
 import java.util.Collections;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class LoginInfoEndpointIntegrationTests {
 
-    @Rule
-    public ServerRunning serverRunning = ServerRunning.isRunning();
+    @RegisterExtension
+    private static final ServerRunningExtension serverRunning = ServerRunningExtension.connect();
 
     /**
      * tests a happy-day flow of the <code>/info</code> endpoint
@@ -61,7 +62,7 @@ public class LoginInfoEndpointIntegrationTests {
         String body = response.getBody();
         // System.err.println(body);
         assertNotNull(body);
-        assertTrue("Wrong body: " + body, body.contains("<form action=\"/uaa/login.do\" method=\"post\" novalidate=\"novalidate\" accept-charset=\"UTF-8\">"));
+        assertTrue(body.contains("<form action=\"/uaa/login.do\" method=\"post\" novalidate=\"novalidate\" accept-charset=\"UTF-8\">"), "Wrong body: " + body);
 
     }
 

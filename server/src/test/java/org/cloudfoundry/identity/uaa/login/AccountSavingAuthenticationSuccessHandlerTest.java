@@ -1,16 +1,14 @@
 package org.cloudfoundry.identity.uaa.login;
 
-import junit.framework.Assert;
 import org.cloudfoundry.identity.uaa.authentication.UaaAuthentication;
 import org.cloudfoundry.identity.uaa.authentication.UaaPrincipal;
 import org.cloudfoundry.identity.uaa.user.UaaUser;
 import org.cloudfoundry.identity.uaa.util.JsonUtils;
 import org.cloudfoundry.identity.uaa.zone.IdentityZone;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneHolder;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -28,23 +26,26 @@ import java.util.Date;
 import java.util.Optional;
 
 import static java.util.Arrays.asList;
-import static junit.framework.Assert.assertNotNull;
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertTrue;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 
-@RunWith(Parameterized.class)
 public class AccountSavingAuthenticationSuccessHandlerTest {
 
     // Parameterized fields:
-    private final boolean secure;
+    private boolean secure;
 
-    public AccountSavingAuthenticationSuccessHandlerTest(boolean secure) {
+    public void initAccountSavingAuthenticationSuccessHandlerTest(boolean secure) {
         this.secure = secure;
     }
 
@@ -52,14 +53,13 @@ public class AccountSavingAuthenticationSuccessHandlerTest {
     private SavedRequestAwareAuthenticationSuccessHandler redirectingHandler;
     private CurrentUserCookieFactory currentUserCookieFactory;
 
-    @Parameterized.Parameters
     public static Collection parameters() {
         return asList(new Object[][]{
                 {false}, {true}
         });
     }
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         redirectingHandler = mock(SavedRequestAwareAuthenticationSuccessHandler.class);
         currentUserCookieFactory = mock(CurrentUserCookieFactory.class);
@@ -67,8 +67,10 @@ public class AccountSavingAuthenticationSuccessHandlerTest {
         successHandler = new AccountSavingAuthenticationSuccessHandler(redirectingHandler, currentUserCookieFactory);
     }
 
-    @Test
-    public void invalid_principal_throws() {
+    @MethodSource("parameters")
+    @ParameterizedTest
+    void invalid_principal_throws(boolean secure) {
+        initAccountSavingAuthenticationSuccessHandlerTest(secure);
         Authentication a = mock(Authentication.class);
         when(a.getPrincipal()).thenReturn(new Object());
         try {
@@ -79,9 +81,11 @@ public class AccountSavingAuthenticationSuccessHandlerTest {
 
     }
 
+    @MethodSource("parameters")
     @SuppressWarnings("deprecation")
-    @Test
-    public void whenSuccessfullyAuthenticated_accountGetsSavedViaCookie() throws IOException, ServletException, CurrentUserCookieFactory.CurrentUserCookieEncodingException {
+    @ParameterizedTest
+    void whenSuccessfullyAuthenticated_accountGetsSavedViaCookie(boolean secure) throws IOException, ServletException, CurrentUserCookieFactory.CurrentUserCookieEncodingException {
+        initAccountSavingAuthenticationSuccessHandlerTest(secure);
         IdentityZoneHolder.get().getConfig().setAccountChooserEnabled(true);
         Date yesterday = new Date(System.currentTimeMillis() - (1000 * 60 * 60 * 24));
         UaaUser user = new UaaUser(
@@ -125,7 +129,7 @@ public class AccountSavingAuthenticationSuccessHandlerTest {
         assertTrue(accountOptionCookie.isHttpOnly());
         assertEquals(365 * 24 * 60 * 60, accountOptionCookie.getMaxAge());
         assertEquals("/login", accountOptionCookie.getPath());
-        Assert.assertEquals(secure, accountOptionCookie.getSecure());
+        assertEquals(secure, accountOptionCookie.getSecure());
 
         verify(redirectingHandler, times(1)).onAuthenticationSuccess(request, response, authentication);
 
@@ -145,8 +149,10 @@ public class AccountSavingAuthenticationSuccessHandlerTest {
                 actualCurrentUserCookieHeaderValue.get());
     }
 
-    @Test
-    public void empty_Account_Cookie() throws IOException, ServletException {
+    @MethodSource("parameters")
+    @ParameterizedTest
+    void empty_Account_Cookie(boolean secure) throws IOException, ServletException {
+        initAccountSavingAuthenticationSuccessHandlerTest(secure);
         IdentityZoneHolder.get().getConfig().setAccountChooserEnabled(false);
         Date yesterday = new Date(System.currentTimeMillis() - (1000 * 60 * 60 * 24));
         UaaUser user = new UaaUser(

@@ -1,6 +1,6 @@
 /*
  * *****************************************************************************
- *     Cloud Foundry 
+ *     Cloud Foundry
  *     Copyright (c) [2009-2016] Pivotal Software, Inc. All Rights Reserved.
  *
  *     This product is licensed to you under the Apache License, Version 2.0 (the "License").
@@ -14,26 +14,26 @@
 package org.cloudfoundry.identity.uaa.login;
 
 import org.cloudfoundry.identity.uaa.account.PasswordConfirmationValidation;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class PasswordConfirmationValidationTest {
 
     @Test
     public void testValidWithMatchingPasswords() {
         PasswordConfirmationValidation validation = new PasswordConfirmationValidation("secret", "secret");
-        Assert.assertTrue(validation.valid());
+        Assertions.assertTrue(validation.valid());
     }
 
     @Test
     public void testInvalidWithMismatchedPasswords() {
         PasswordConfirmationValidation validation = new PasswordConfirmationValidation("secret", "mecret");
-        Assert.assertFalse(validation.valid());
+        Assertions.assertFalse(validation.valid());
     }
 
     @Test
     public void testInvalidWithEmptyPassword() {
         PasswordConfirmationValidation validation = new PasswordConfirmationValidation("", "");
-        Assert.assertFalse(validation.valid());
+        Assertions.assertFalse(validation.valid());
     }
 }

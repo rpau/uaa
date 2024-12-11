@@ -15,8 +15,8 @@
 
 package org.cloudfoundry.identity.uaa.web;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -25,7 +25,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import javax.servlet.FilterChain;
 
 import static java.util.Collections.emptyList;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 
 public class HeaderFilterTest {
@@ -38,7 +38,7 @@ public class HeaderFilterTest {
         filter.doFilter(request, response, mockChain);
         ArgumentCaptor<HttpHeadersFilterRequestWrapper> args = ArgumentCaptor.forClass(HttpHeadersFilterRequestWrapper.class);
         Mockito.verify(mockChain, Mockito.times(1)).doFilter(args.capture(), any());
-        Assert.assertTrue(args.getValue() instanceof HttpHeadersFilterRequestWrapper);
+        Assertions.assertTrue(args.getValue() instanceof HttpHeadersFilterRequestWrapper);
     }
 
     @Test
@@ -46,5 +46,4 @@ public class HeaderFilterTest {
         HeaderFilter filter = new HeaderFilter(null);
         assertNotNull(filter.getFilteredHeaderNames());
     }
-
 }

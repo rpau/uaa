@@ -5,12 +5,12 @@ import org.cloudfoundry.identity.uaa.authentication.AuthenticationPolicyRejectio
 import org.cloudfoundry.identity.uaa.authentication.UaaAuthenticationDetails;
 import org.cloudfoundry.identity.uaa.authentication.UaaLoginHint;
 import org.cloudfoundry.identity.uaa.constants.OriginKeys;
+import org.cloudfoundry.identity.uaa.extensions.PollutionPreventionExtension;
+import org.cloudfoundry.identity.uaa.provider.IdentityProvider;
+import org.cloudfoundry.identity.uaa.provider.IdentityProviderProvisioning;
 import org.cloudfoundry.identity.uaa.provider.LdapIdentityProviderDefinition;
 import org.cloudfoundry.identity.uaa.scim.ScimGroupExternalMembershipManager;
 import org.cloudfoundry.identity.uaa.scim.ScimGroupProvisioning;
-import org.cloudfoundry.identity.uaa.provider.IdentityProvider;
-import org.cloudfoundry.identity.uaa.provider.IdentityProviderProvisioning;
-import org.cloudfoundry.identity.uaa.extensions.PollutionPreventionExtension;
 import org.cloudfoundry.identity.uaa.zone.IdentityZone;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneHolder;
 import org.cloudfoundry.identity.uaa.zone.MultitenancyFixture;
@@ -23,7 +23,10 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.ProviderNotFoundException;
 import org.springframework.security.core.Authentication;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -35,8 +38,8 @@ import static org.mockito.Mockito.when;
 class DynamicZoneAwareAuthenticationManagerTest {
 
     private static final IdentityZone ZONE = MultitenancyFixture.identityZone("test", "test");
-    private IdentityProviderProvisioning providerProvisioning = mock(IdentityProviderProvisioning.class);
-    private LdapIdentityProviderDefinition ldapIdentityProviderDefinition = LdapIdentityProviderDefinition.searchAndBindMapGroupToScopes(
+    private final IdentityProviderProvisioning providerProvisioning = mock(IdentityProviderProvisioning.class);
+    private final LdapIdentityProviderDefinition ldapIdentityProviderDefinition = LdapIdentityProviderDefinition.searchAndBindMapGroupToScopes(
             "ldap://localhost:38889/",
             "cn=admin,ou=Users,dc=test,dc=com",
             "adminsecret",
@@ -53,16 +56,15 @@ class DynamicZoneAwareAuthenticationManagerTest {
             true);
 
 
-    private AuthenticationManager uaaAuthenticationMgr = mock(AuthenticationManager.class);
-    private ScimGroupExternalMembershipManager scimGroupExternalMembershipManager = mock(ScimGroupExternalMembershipManager.class);
-    private ScimGroupProvisioning scimGroupProvisioning = mock(ScimGroupProvisioning.class);
-    private LdapLoginAuthenticationManager ldapLoginAuthenticationManager = mock(LdapLoginAuthenticationManager.class);
-    private Authentication success = mock(Authentication.class);
-    private IdentityProvider uaaActive = mock(IdentityProvider.class);
-    private IdentityProvider uaaInactive = mock(IdentityProvider.class);
-    private IdentityProvider ldapActive = mock(IdentityProvider.class);
-    private IdentityProvider ldapInactive = mock(IdentityProvider.class);
-
+    private final AuthenticationManager uaaAuthenticationMgr = mock(AuthenticationManager.class);
+    private final ScimGroupExternalMembershipManager scimGroupExternalMembershipManager = mock(ScimGroupExternalMembershipManager.class);
+    private final ScimGroupProvisioning scimGroupProvisioning = mock(ScimGroupProvisioning.class);
+    private final LdapLoginAuthenticationManager ldapLoginAuthenticationManager = mock(LdapLoginAuthenticationManager.class);
+    private final Authentication success = mock(Authentication.class);
+    private final IdentityProvider uaaActive = mock(IdentityProvider.class);
+    private final IdentityProvider uaaInactive = mock(IdentityProvider.class);
+    private final IdentityProvider ldapActive = mock(IdentityProvider.class);
+    private final IdentityProvider ldapInactive = mock(IdentityProvider.class);
 
     @BeforeEach
     @AfterEach

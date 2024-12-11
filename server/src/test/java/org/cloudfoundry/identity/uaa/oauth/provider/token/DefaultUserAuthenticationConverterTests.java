@@ -1,6 +1,6 @@
 package org.cloudfoundry.identity.uaa.oauth.provider.token;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -13,18 +13,19 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-public class DefaultUserAuthenticationConverterTests {
+class DefaultUserAuthenticationConverterTests {
     private final DefaultUserAuthenticationConverter converter = new DefaultUserAuthenticationConverter();
 
     @Test
-    public void shouldExtractAuthenticationWhenAuthoritiesIsCollection() throws Exception {
+    void shouldExtractAuthenticationWhenAuthoritiesIsCollection() {
         Map<String, Object> map = new HashMap<>();
         map.put(UserAuthenticationConverter.USERNAME, "test_user");
         ArrayList<String> lists = new ArrayList<>();
@@ -39,7 +40,7 @@ public class DefaultUserAuthenticationConverterTests {
     }
 
     @Test
-    public void shouldExtractAuthenticationWhenAuthoritiesIsString() throws Exception {
+    void shouldExtractAuthenticationWhenAuthoritiesIsString() {
         Map<String, Object> map = new HashMap<>();
         map.put(UserAuthenticationConverter.USERNAME, "test_user");
         map.put(UserAuthenticationConverter.AUTHORITIES, "a1,a2");
@@ -50,7 +51,7 @@ public class DefaultUserAuthenticationConverterTests {
     }
 
     @Test
-    public void shouldExtractAuthenticationWhenUserDetailsProvided() throws Exception {
+    void shouldExtractAuthenticationWhenUserDetailsProvided() {
         Map<String, Object> map = new HashMap<>();
         map.put(UserAuthenticationConverter.USERNAME, "test_user");
 
@@ -64,7 +65,7 @@ public class DefaultUserAuthenticationConverterTests {
     }
 
     @Test
-    public void shouldExtractWithDefaultUsernameClaimWhenNotSet() throws Exception {
+    void shouldExtractWithDefaultUsernameClaimWhenNotSet() {
         Map<String, Object> map = new HashMap<>();
         map.put(UserAuthenticationConverter.USERNAME, "test_user");
 
@@ -74,7 +75,7 @@ public class DefaultUserAuthenticationConverterTests {
     }
 
     @Test
-    public void shouldConvertUserWithDefaultUsernameClaimWhenNotSet() throws Exception {
+    void shouldConvertUserWithDefaultUsernameClaimWhenNotSet() {
         Authentication authentication = new UsernamePasswordAuthenticationToken("test_user", "", AuthorityUtils.createAuthorityList("user"));
         converter.setDefaultAuthorities(new String[]{"user"});
         Map<String, ?> map = converter.convertUserAuthentication(authentication);
@@ -83,7 +84,7 @@ public class DefaultUserAuthenticationConverterTests {
     }
 
     @Test
-    public void shouldExtractWithCustomUsernameClaimWhenSet() throws Exception {
+    void shouldExtractWithCustomUsernameClaimWhenSet() {
         String customUserClaim = "custom_user_name";
         DefaultUserAuthenticationConverter converter = new DefaultUserAuthenticationConverter();
         converter.setUserClaimName(customUserClaim);
@@ -97,7 +98,7 @@ public class DefaultUserAuthenticationConverterTests {
     }
 
     @Test
-    public void shouldConvertUserWithCustomUsernameClaimWhenSet() throws Exception {
+    void shouldConvertUserWithCustomUsernameClaimWhenSet() {
         String customUserClaim = "custom_user_name";
         DefaultUserAuthenticationConverter converter = new DefaultUserAuthenticationConverter();
         converter.setUserClaimName(customUserClaim);
@@ -109,9 +110,11 @@ public class DefaultUserAuthenticationConverterTests {
         assertEquals("test_user", map.get(customUserClaim));
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void shouldAuthorities() {
-        DefaultUserAuthenticationConverter converter = new DefaultUserAuthenticationConverter();
-        converter.getAuthorities(Map.of("authorities", 1));
+    @Test
+    void shouldAuthorities() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            DefaultUserAuthenticationConverter converter = new DefaultUserAuthenticationConverter();
+            converter.getAuthorities(Map.of("authorities", 1));
+        });
     }
 }

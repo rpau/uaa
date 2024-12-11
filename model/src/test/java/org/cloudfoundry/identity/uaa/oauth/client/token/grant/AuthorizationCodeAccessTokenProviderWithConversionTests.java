@@ -12,9 +12,7 @@ import org.cloudfoundry.identity.uaa.oauth.token.DefaultAccessTokenRequest;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -31,8 +29,8 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
@@ -72,7 +70,7 @@ public class AuthorizationCodeAccessTokenProviderWithConversionTests {
             this.responseBody = responseBody;
         }
 
-        public OutputStream getBody() throws IOException {
+        public OutputStream getBody() {
             return new ByteArrayOutputStream();
         }
 
@@ -83,8 +81,7 @@ public class AuthorizationCodeAccessTokenProviderWithConversionTests {
         public URI getURI() {
             try {
                 return new URI("https://www.foo.com/");
-            }
-            catch (URISyntaxException e) {
+            } catch (URISyntaxException e) {
                 throw new IllegalStateException(e);
             }
         }
@@ -108,26 +105,23 @@ public class AuthorizationCodeAccessTokenProviderWithConversionTests {
                     return new ByteArrayInputStream(responseBody.getBytes("UTF-8"));
                 }
 
-                public String getStatusText() throws IOException {
+                public String getStatusText() {
                     return responseStatus.getReasonPhrase();
                 }
 
-                public HttpStatus getStatusCode() throws IOException {
+                public HttpStatus getStatusCode() {
                     return responseStatus;
                 }
 
                 public void close() {
                 }
 
-                public int getRawStatusCode() throws IOException {
+                public int getRawStatusCode() {
                     return responseStatus.value();
                 }
             };
         }
     }
-
-    @Rule
-    public ExpectedException expected = ExpectedException.none();
 
     private ClientHttpRequestFactory requestFactory;
 
@@ -168,10 +162,10 @@ public class AuthorizationCodeAccessTokenProviderWithConversionTests {
         request.setAuthorizationCode("foo");
         request.setPreservedState(new Object());
         resource.setAccessTokenUri("http://localhost/oauth/token");
-        expected.expect(OAuth2AccessDeniedException.class);
-        expected.expect(hasCause(instanceOf(InvalidClientException.class)));
         setUpRestTemplate();
-        provider.obtainAccessToken(resource, request);
+        assertThatThrownBy(() -> provider.obtainAccessToken(resource, request))
+                .isInstanceOf(OAuth2AccessDeniedException.class)
+                .hasCauseInstanceOf(InvalidClientException.class);
     }
 
     @Test
@@ -180,7 +174,7 @@ public class AuthorizationCodeAccessTokenProviderWithConversionTests {
         final HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
         requestFactory = new ClientHttpRequestFactory() {
-            public ClientHttpRequest createRequest(URI uri, HttpMethod httpMethod) throws IOException {
+            public ClientHttpRequest createRequest(URI uri, HttpMethod httpMethod) {
                 return new StubClientHttpRequest(responseHeaders, "access_token=FOO");
             }
         };
@@ -197,7 +191,7 @@ public class AuthorizationCodeAccessTokenProviderWithConversionTests {
         final HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
         requestFactory = new ClientHttpRequestFactory() {
-            public ClientHttpRequest createRequest(URI uri, HttpMethod httpMethod) throws IOException {
+            public ClientHttpRequest createRequest(URI uri, HttpMethod httpMethod) {
                 return new StubClientHttpRequest(HttpStatus.BAD_REQUEST, responseHeaders,
                         "error=invalid_client&error_description=FOO");
             }
@@ -206,10 +200,10 @@ public class AuthorizationCodeAccessTokenProviderWithConversionTests {
         request.setAuthorizationCode("foo");
         request.setPreservedState(new Object());
         resource.setAccessTokenUri("http://localhost/oauth/token");
-        expected.expect(OAuth2AccessDeniedException.class);
-        expected.expect(hasCause(instanceOf(InvalidClientException.class)));
         setUpRestTemplate();
-        provider.obtainAccessToken(resource, request);
+        assertThatThrownBy(() -> provider.obtainAccessToken(resource, request))
+                .isInstanceOf(OAuth2AccessDeniedException.class)
+                .hasCauseInstanceOf(InvalidClientException.class);
     }
 
     private Matcher<Throwable> hasCause(final Matcher<?> matcher) {
@@ -225,5 +219,4 @@ public class AuthorizationCodeAccessTokenProviderWithConversionTests {
             }
         };
     }
-
 }

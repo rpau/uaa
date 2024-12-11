@@ -10,8 +10,8 @@ import org.cloudfoundry.identity.uaa.oauth.client.resource.OAuth2AccessDeniedExc
 import org.cloudfoundry.identity.uaa.oauth.common.AuthenticationScheme;
 import org.cloudfoundry.identity.uaa.oauth.common.DefaultOAuth2RefreshToken;
 import org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -25,7 +25,13 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.cloudfoundry.identity.uaa.oauth.common.OAuth2AccessToken.BEARER_TYPE;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -35,7 +41,7 @@ public class UaaTokenTests {
     private BaseOAuth2ProtectedResourceDetails resourceDetails;
     private AuthorizationCodeAccessTokenProvider authorizationCodeAccessTokenProvider;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         persistToken = new CompositeToken("token-value");
         persistToken.setScope(Set.of("admin", "read", "write"));
@@ -98,11 +104,13 @@ public class UaaTokenTests {
         assertTrue(authorizationCodeAccessTokenProvider.supportsRefresh(new AuthorizationCodeResourceDetails()));
     }
 
-    @Test(expected = OAuth2AccessDeniedException.class)
+    @Test
     public void testAccessTokenProviderChainException() {
-        ClientCredentialsAccessTokenProvider clientCredentialsAccessTokenProvider = new ClientCredentialsAccessTokenProvider();
-        AccessTokenProviderChain accessTokenProviderChain = new AccessTokenProviderChain(Arrays.asList(clientCredentialsAccessTokenProvider));
-        accessTokenProviderChain.refreshAccessToken(new ClientCredentialsResourceDetails(), new DefaultOAuth2RefreshToken(""), null);
+        assertThrows(OAuth2AccessDeniedException.class, () -> {
+            ClientCredentialsAccessTokenProvider clientCredentialsAccessTokenProvider = new ClientCredentialsAccessTokenProvider();
+            AccessTokenProviderChain accessTokenProviderChain = new AccessTokenProviderChain(Arrays.asList(clientCredentialsAccessTokenProvider));
+            accessTokenProviderChain.refreshAccessToken(new ClientCredentialsResourceDetails(), new DefaultOAuth2RefreshToken(""), null);
+        });
     }
 
     @Test
@@ -149,15 +157,17 @@ public class UaaTokenTests {
         assertFalse(accessTokenRequest.containsValue("value"));
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testAuthorizationCodeAccessTokenProvider() {
-        ClientHttpRequestFactory clientHttpRequestFactory = mock(ClientHttpRequestFactory.class);
-        AccessTokenRequest request = mock(AccessTokenRequest.class);
-        AuthorizationCodeResourceDetails authorizationCodeResourceDetails = new AuthorizationCodeResourceDetails();
-        authorizationCodeResourceDetails.setScope(List.of("admin"));
-        when(request.getHeaders()).thenReturn(new HashMap<>(Map.of(OAuth2Utils.USER_OAUTH_APPROVAL, List.of("true"))));
-        when(request.containsKey(OAuth2Utils.USER_OAUTH_APPROVAL)).thenReturn(true);
-        authorizationCodeAccessTokenProvider.setRequestFactory(clientHttpRequestFactory);
-        authorizationCodeAccessTokenProvider.obtainAuthorizationCode(authorizationCodeResourceDetails, request);
+        assertThrows(NullPointerException.class, () -> {
+            ClientHttpRequestFactory clientHttpRequestFactory = mock(ClientHttpRequestFactory.class);
+            AccessTokenRequest request = mock(AccessTokenRequest.class);
+            AuthorizationCodeResourceDetails authorizationCodeResourceDetails = new AuthorizationCodeResourceDetails();
+            authorizationCodeResourceDetails.setScope(List.of("admin"));
+            when(request.getHeaders()).thenReturn(new HashMap<>(Map.of(OAuth2Utils.USER_OAUTH_APPROVAL, List.of("true"))));
+            when(request.containsKey(OAuth2Utils.USER_OAUTH_APPROVAL)).thenReturn(true);
+            authorizationCodeAccessTokenProvider.setRequestFactory(clientHttpRequestFactory);
+            authorizationCodeAccessTokenProvider.obtainAuthorizationCode(authorizationCodeResourceDetails, request);
+        });
     }
 }

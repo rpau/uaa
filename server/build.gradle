@@ -93,9 +93,7 @@ dependencies {
 
     testImplementation(libraries.springTest)
 
-    testImplementation(libraries.junit)
     testImplementation(libraries.mockito)
-
     testImplementation(libraries.mockitoJunit5)
 
     testImplementation(libraries.postgresql)

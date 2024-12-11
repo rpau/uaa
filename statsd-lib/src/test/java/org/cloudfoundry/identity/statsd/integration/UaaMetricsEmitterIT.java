@@ -6,7 +6,12 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
@@ -21,9 +26,13 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
-import static org.cloudfoundry.identity.statsd.integration.IntegrationTestUtils.*;
+import static org.cloudfoundry.identity.statsd.integration.IntegrationTestUtils.TEST_PASSWORD;
+import static org.cloudfoundry.identity.statsd.integration.IntegrationTestUtils.TEST_USERNAME;
+import static org.cloudfoundry.identity.statsd.integration.IntegrationTestUtils.UAA_BASE_URL;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class UaaMetricsEmitterIT {
     private static final long WAIT_FOR_MESSAGE = TimeUnit.MILLISECONDS.toNanos(5500);
@@ -105,11 +114,11 @@ class UaaMetricsEmitterIT {
         String data1 = firstBatch.get(statsDKey);
         String data2 = secondBatch.get(statsDKey);
 
-        assertNotNull("Expected to find message for:'" + statsDKey + "' in the first batch.", data1);
+        assertNotNull(data1, "Expected to find message for:'" + statsDKey + "' in the first batch.");
         long first = IntegrationTestUtils.getStatsDValueFromMessage(data1);
         assertThat(statsDKey + " first value must have a positive value.", first, greaterThanOrEqualTo(0L));
 
-        assertNotNull("Expected to find message for:'" + statsDKey + "' in the second batch.", data2);
+        assertNotNull(data2, "Expected to find message for:'" + statsDKey + "' in the second batch.");
         long second = IntegrationTestUtils.getStatsDValueFromMessage(data2);
         assertThat(statsDKey + " second value must have a positive value.", second, greaterThanOrEqualTo(0L));
     }

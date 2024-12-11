@@ -14,11 +14,11 @@
 
 package org.cloudfoundry.identity.uaa.security;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import javax.net.ssl.X509TrustManager;
 
+import javax.net.ssl.X509TrustManager;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.X509Certificate;
 
@@ -40,7 +40,7 @@ public class X509ExpiryCheckingTrustManagerTest {
         doThrow(new CertificateExpiredException()).when(certificate).checkValidity();
         try {
             manager.checkServerTrusted(x509Certificates, "string");
-            Assert.fail();
+            Assertions.fail();
         } catch (CertificateExpiredException e) {
             verify(mockedDelegate).checkServerTrusted(x509Certificates, "string");
             verify(certificate).checkValidity();

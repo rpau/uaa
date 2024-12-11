@@ -1,13 +1,12 @@
 package org.cloudfoundry.identity.uaa.oauth.pkce;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.hamcrest.Matchers.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import org.cloudfoundry.identity.uaa.oauth.client.ClientConstants;
+import org.cloudfoundry.identity.uaa.oauth.common.exceptions.InvalidGrantException;
+import org.cloudfoundry.identity.uaa.oauth.pkce.verifiers.PlainPkceVerifier;
+import org.cloudfoundry.identity.uaa.oauth.pkce.verifiers.S256PkceVerifier;
+import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetails;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -15,18 +14,17 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.cloudfoundry.identity.uaa.oauth.client.ClientConstants;
-import org.cloudfoundry.identity.uaa.oauth.pkce.verifiers.PlainPkceVerifier;
-import org.cloudfoundry.identity.uaa.oauth.pkce.verifiers.S256PkceVerifier;
-import org.junit.Before;
-import org.junit.Test;
-import org.cloudfoundry.identity.uaa.oauth.common.exceptions.InvalidGrantException;
-import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetails;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
- * 
  * @author Zoltan Maradics
- *
  */
 public class PkceValidationServiceTest {
 
@@ -40,7 +38,7 @@ public class PkceValidationServiceTest {
 
     private final String invalidCodeChallengeMethod = "InvalidMethod";
 
-    @Before
+    @BeforeEach
     public void createPkceValidationService() throws Exception {
         pkceValidationService = new PkceValidationService(createPkceVerifiers());
         authorizeRequestParameters = new HashMap<>();
@@ -97,17 +95,20 @@ public class PkceValidationServiceTest {
         assertTrue(pkceValidationService.checkAndValidate(authorizeRequestParameters, null, null));
     }
 
-    @Test(expected = PkceValidationException.class)
-    public void testCodeChallengeMissingForEvaluation() throws Exception {
-        pkceValidationService.checkAndValidate(authorizeRequestParameters,
-                validPlainCodeChallengeOrCodeVerifierParameter, null);
+    @Test
+    public void testCodeChallengeMissingForEvaluation() {
+        assertThrows(PkceValidationException.class, () ->
+                pkceValidationService.checkAndValidate(authorizeRequestParameters,
+                        validPlainCodeChallengeOrCodeVerifierParameter, null));
     }
 
-    @Test(expected = PkceValidationException.class)
-    public void testCodeVerifierMissingForEvaluation() throws Exception {
-        authorizeRequestParameters.put(PkceValidationService.CODE_CHALLENGE,
-                validPlainCodeChallengeOrCodeVerifierParameter);
-        pkceValidationService.checkAndValidate(authorizeRequestParameters, "", null);
+    @Test
+    public void testCodeVerifierMissingForEvaluation() {
+        assertThrows(PkceValidationException.class, () -> {
+            authorizeRequestParameters.put(PkceValidationService.CODE_CHALLENGE,
+                    validPlainCodeChallengeOrCodeVerifierParameter);
+            pkceValidationService.checkAndValidate(authorizeRequestParameters, "", null);
+        });
     }
 
     @Test

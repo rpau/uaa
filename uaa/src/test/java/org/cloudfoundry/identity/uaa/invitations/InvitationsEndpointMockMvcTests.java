@@ -8,14 +8,21 @@ import org.cloudfoundry.identity.uaa.codestore.ExpiringCodeStore;
 import org.cloudfoundry.identity.uaa.codestore.ExpiringCodeType;
 import org.cloudfoundry.identity.uaa.constants.OriginKeys;
 import org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils;
+import org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils;
+import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetails;
 import org.cloudfoundry.identity.uaa.provider.IdentityProvider;
 import org.cloudfoundry.identity.uaa.provider.JdbcIdentityProviderProvisioning;
 import org.cloudfoundry.identity.uaa.provider.UaaIdentityProviderDefinition;
 import org.cloudfoundry.identity.uaa.scim.ScimUser;
-import org.cloudfoundry.identity.uaa.util.AlphanumericRandomValueStringGenerator;
 import org.cloudfoundry.identity.uaa.test.ZoneSeeder;
 import org.cloudfoundry.identity.uaa.test.ZoneSeederExtension;
-import org.cloudfoundry.identity.uaa.zone.*;
+import org.cloudfoundry.identity.uaa.util.AlphanumericRandomValueStringGenerator;
+import org.cloudfoundry.identity.uaa.zone.BrandingInformation;
+import org.cloudfoundry.identity.uaa.zone.IdentityZone;
+import org.cloudfoundry.identity.uaa.zone.IdentityZoneConfiguration;
+import org.cloudfoundry.identity.uaa.zone.IdentityZoneHolder;
+import org.cloudfoundry.identity.uaa.zone.IdentityZoneProvisioning;
+import org.cloudfoundry.identity.uaa.zone.MultitenantJdbcClientDetailsService;
 import org.flywaydb.core.internal.util.StringUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,8 +31,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils;
-import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetails;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -40,6 +45,8 @@ import static org.cloudfoundry.identity.uaa.constants.OriginKeys.ORIGIN;
 import static org.cloudfoundry.identity.uaa.constants.OriginKeys.UAA;
 import static org.cloudfoundry.identity.uaa.invitations.InvitationsEndpoint.EMAIL;
 import static org.cloudfoundry.identity.uaa.invitations.InvitationsEndpoint.USER_ID;
+import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.CLIENT_ID;
+import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.REDIRECT_URI;
 import static org.cloudfoundry.identity.uaa.util.JsonUtils.readValue;
 import static org.cloudfoundry.identity.uaa.util.JsonUtils.writeValueAsString;
 import static org.cloudfoundry.identity.uaa.zone.IdentityZoneSwitchingFilter.HEADER;
@@ -47,14 +54,15 @@ import static org.cloudfoundry.identity.uaa.zone.IdentityZoneSwitchingFilter.SUB
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.CoreMatchers.startsWith;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.not;
-import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.CLIENT_ID;
-import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.REDIRECT_URI;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -334,7 +342,7 @@ class InvitationsEndpointMockMvcTests {
                     zoneSeeder.getPlainTextClientSecret(zoneSeeder.getAdminClientWithClientCredentialsGrant()));
 
             mockMvc.perform(get(acceptInvitationLink)
-                    .header("Host", (zoneSeeder.getIdentityZoneSubdomain() + ".localhost")))
+                            .header("Host", (zoneSeeder.getIdentityZoneSubdomain() + ".localhost")))
                     .andExpect(content().string(containsString("Create your account")))
                     .andExpect(content().string(containsString("Best Company")))
                     .andExpect(content().string(containsString("Create account")));
@@ -420,7 +428,7 @@ class InvitationsEndpointMockMvcTests {
         sendRequestWithToken(webApplicationContext, mockMvc, userToken, clientId, "user1@" + emailDomain);
 
         String code = jdbcTemplate.queryForObject("SELECT code FROM expiring_code_store", String.class);
-        assertNotNull("Invite Code Must be Present", code);
+        assertNotNull(code, "Invite Code Must be Present");
 
         MockHttpServletRequestBuilder accept = get("/invitations/accept")
                 .param("code", code);
@@ -431,12 +439,12 @@ class InvitationsEndpointMockMvcTests {
     }
 
     private static InvitationsResponse sendRequestWithTokenAndReturnResponse(WebApplicationContext webApplicationContext,
-            MockMvc mockMvc,
-            String token,
-            String subdomain,
-            String clientId,
-            String redirectUri,
-            String... emails) throws Exception {
+                                                                             MockMvc mockMvc,
+                                                                             String token,
+                                                                             String subdomain,
+                                                                             String clientId,
+                                                                             String redirectUri,
+                                                                             String... emails) throws Exception {
         return MockMvcUtils.sendRequestWithTokenAndReturnResponse(webApplicationContext,
                 mockMvc, token, subdomain, clientId, redirectUri, emails);
     }

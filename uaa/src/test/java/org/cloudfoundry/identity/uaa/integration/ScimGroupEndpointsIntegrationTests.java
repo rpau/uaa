@@ -16,31 +16,36 @@ package org.cloudfoundry.identity.uaa.integration;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.cookie.BasicClientCookie;
 import org.assertj.core.api.Assertions;
-import org.cloudfoundry.identity.uaa.ServerRunning;
+import org.cloudfoundry.identity.uaa.ServerRunningExtension;
+import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
 import org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils;
 import org.cloudfoundry.identity.uaa.oauth.client.http.OAuth2ErrorHandler;
 import org.cloudfoundry.identity.uaa.oauth.client.test.OAuth2ContextConfiguration;
-import org.cloudfoundry.identity.uaa.oauth.client.test.OAuth2ContextSetup;
+import org.cloudfoundry.identity.uaa.oauth.client.test.OAuth2ContextExtension;
 import org.cloudfoundry.identity.uaa.oauth.common.DefaultOAuth2AccessToken;
 import org.cloudfoundry.identity.uaa.oauth.common.OAuth2AccessToken;
+import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
 import org.cloudfoundry.identity.uaa.scim.ScimGroup;
 import org.cloudfoundry.identity.uaa.scim.ScimGroupMember;
 import org.cloudfoundry.identity.uaa.scim.ScimUser;
 import org.cloudfoundry.identity.uaa.security.web.CookieBasedCsrfTokenRepository;
-import org.cloudfoundry.identity.uaa.test.TestAccountSetup;
+import org.cloudfoundry.identity.uaa.test.TestAccountExtension;
 import org.cloudfoundry.identity.uaa.test.UaaTestAccounts;
 import org.cloudfoundry.identity.uaa.util.JsonUtils;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneConfiguration;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneHolder;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.springframework.http.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.security.crypto.codec.Base64;
-import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
-import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
@@ -48,10 +53,17 @@ import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils.doesSupportZoneDNS;
 import static org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils.getHeaders;
+import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.USER_OAUTH_APPROVAL;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_AUTHORIZATION_CODE;
 import static org.cloudfoundry.identity.uaa.security.web.CookieBasedCsrfTokenRepository.DEFAULT_CSRF_COOKIE_NAME;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -59,8 +71,12 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.*;
-import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.USER_OAUTH_APPROVAL;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 @OAuth2ContextConfiguration(OAuth2ContextConfiguration.ClientCredentials.class)
 public class ScimGroupEndpointsIntegrationTests {
@@ -89,22 +105,21 @@ public class ScimGroupEndpointsIntegrationTests {
             "cloud_controller.write", "password.write", "scim.userids", "uaa.user", "approvals.me",
             "oauth.approvals", "cloud_controller_service_permissions.read", "profile", "roles", "user_attributes", "uaa.offline_token");
 
-    @Rule
-    public ServerRunning serverRunning = ServerRunning.isRunning();
+    @RegisterExtension
+    private static final ServerRunningExtension serverRunning = ServerRunningExtension.connect();
 
-    private UaaTestAccounts testAccounts = UaaTestAccounts.standard(serverRunning);
+    private static final UaaTestAccounts testAccounts = UaaTestAccounts.standard(serverRunning);
 
-    @Rule
-    public TestAccountSetup testAccountSetup = TestAccountSetup.standard(serverRunning, testAccounts);
+    @RegisterExtension
+    private static final TestAccountExtension testAccountSetup = TestAccountExtension.standard(serverRunning, testAccounts);
 
-    @Rule
-    public OAuth2ContextSetup context = OAuth2ContextSetup.withTestAccounts(serverRunning, testAccountSetup);
-
+    @RegisterExtension
+    private static final OAuth2ContextExtension context = OAuth2ContextExtension.withTestAccounts(serverRunning, testAccountSetup);
 
     private RestTemplate client;
     private List<ScimGroup> scimGroups;
 
-    @Before
+    @BeforeEach
     public void createRestTemplate() {
         client = (RestTemplate) serverRunning.getRestTemplate();
         client.setErrorHandler(new OAuth2ErrorHandler(context.getResource()) {
@@ -124,7 +139,7 @@ public class ScimGroupEndpointsIntegrationTests {
         vidya = new ScimGroupMember(createUser("vidya_" + new RandomValueStringGenerator().generate().toLowerCase(), "Passwo3d").getId());
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         deleteResource(userEndpoint, dale.getMemberId());
         deleteResource(userEndpoint, joel.getMemberId());
@@ -201,8 +216,8 @@ public class ScimGroupEndpointsIntegrationTests {
         @SuppressWarnings("rawtypes")
         Map results = response.getBody();
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertTrue("There should be more than zero users", (Integer) results.get("totalResults") > 0);
-        assertTrue("There should be some resources", !((Collection<?>) results.get("resources")).isEmpty());
+        assertTrue((Integer) results.get("totalResults") > 0, "There should be more than zero users");
+        assertTrue(!((Collection<?>) results.get("resources")).isEmpty(), "There should be some resources");
         @SuppressWarnings("rawtypes")
         Map firstGroup = (Map) ((List) results.get("resources")).get(0);
         assertTrue(firstGroup.containsKey("id"));
@@ -222,7 +237,7 @@ public class ScimGroupEndpointsIntegrationTests {
     @Test
     public void createAllowedGroupSucceeds() throws URISyntaxException {
         String testZoneId = "testzone1";
-        assertTrue("Expected testzone1.localhost and testzone2.localhost to resolve to 127.0.0.1", doesSupportZoneDNS());
+        assertTrue(doesSupportZoneDNS(), "Expected testzone1.localhost and testzone2.localhost to resolve to 127.0.0.1");
         String adminToken = IntegrationTestUtils.getClientCredentialsToken(serverRunning.getBaseUrl(), "admin", "adminsecret");
         IdentityZoneConfiguration config = new IdentityZoneConfiguration();
         config.getUserConfig().setAllowedGroups(allowedGroups);
@@ -239,7 +254,7 @@ public class ScimGroupEndpointsIntegrationTests {
     @Test
     public void createNotAllowedGroupFailsCorrectly() throws URISyntaxException {
         String testZoneId = "testzone1";
-        assertTrue("Expected testzone1.localhost and testzone2.localhost to resolve to 127.0.0.1", doesSupportZoneDNS());
+        assertTrue(doesSupportZoneDNS(), "Expected testzone1.localhost and testzone2.localhost to resolve to 127.0.0.1");
         final String notAllowed = "not_allowed_" + new RandomValueStringGenerator().generate().toLowerCase();
         String adminToken = IntegrationTestUtils.getClientCredentialsToken(serverRunning.getBaseUrl(), "admin", "adminsecret");
         ScimGroup g1 = new ScimGroup(null, notAllowed, testZoneId);
@@ -265,7 +280,7 @@ public class ScimGroupEndpointsIntegrationTests {
     @Test
     public void relyOnDefaultGroupsShouldAllowedGroupSucceed() throws URISyntaxException {
         String testZoneId = "testzone1";
-        assertTrue("Expected testzone1.localhost and testzone2.localhost to resolve to 127.0.0.1", doesSupportZoneDNS());
+        assertTrue(doesSupportZoneDNS(), "Expected testzone1.localhost and testzone2.localhost to resolve to 127.0.0.1");
         String adminToken = IntegrationTestUtils.getClientCredentialsToken(serverRunning.getBaseUrl(), "admin", "adminsecret");
 
         final String ccReadGroupName = "cloud_controller_service_permissions.read";
@@ -291,7 +306,7 @@ public class ScimGroupEndpointsIntegrationTests {
     @Test
     public void changeDefaultGroupsAllowedGroupsUsageShouldSucceed() throws URISyntaxException {
         String testZoneId = "testzone1";
-        assertTrue("Expected testzone1.localhost and testzone2.localhost to resolve to 127.0.0.1", doesSupportZoneDNS());
+        assertTrue(doesSupportZoneDNS(), "Expected testzone1.localhost and testzone2.localhost to resolve to 127.0.0.1");
         String adminToken = IntegrationTestUtils.getClientCredentialsToken(serverRunning.getBaseUrl(), "admin", "adminsecret");
         IdentityZoneConfiguration config = new IdentityZoneConfiguration();
 
@@ -482,7 +497,7 @@ public class ScimGroupEndpointsIntegrationTests {
         ScimUser user = createUser(deleteMe, "Passwo3d");
         createGroup(cfid, new ScimGroupMember(user.getId()));
         OAuth2AccessToken token = getAccessToken(deleteMe, "secret", deleteMe, "Passwo3d");
-        assertTrue("Wrong token: " + token, token.getScope().contains(cfid));
+        assertTrue(token.getScope().contains(cfid), "Wrong token: " + token);
 
         deleteTestClient(deleteMe);
         deleteResource(userEndpoint, user.getId());
@@ -496,19 +511,19 @@ public class ScimGroupEndpointsIntegrationTests {
         ScimUser user = createUser(deleteMe, "Passwo3d");
         createGroup(cfid, new ScimGroupMember(user.getId()));
         OAuth2AccessToken token = getAccessTokenWithPassword(deleteMe, "secret", deleteMe, "Passwo3d");
-        assertTrue("Wrong token: " + token, token.getScope().contains(cfid));
+        assertTrue(token.getScope().contains(cfid), "Wrong token: " + token);
 
         deleteTestClient(deleteMe);
         deleteResource(userEndpoint, user.getId());
 
     }
 
-    @Before
+    @BeforeEach
     public void initScimGroups() {
         scimGroups = new ArrayList<>();
     }
 
-    @After
+    @AfterEach
     public void teardownScimGroups() {
         for (ScimGroup scimGroup : scimGroups) {
             deleteResource(groupEndpoint, scimGroup.getId());
@@ -587,7 +602,7 @@ public class ScimGroupEndpointsIntegrationTests {
     }
 
     private OAuth2AccessToken getAccessTokenWithPassword(String clientId, String clientSecret, String username,
-            String password) {
+                                                         String password) {
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("client_id", clientId);
         formData.add("grant_type", "password");
@@ -678,7 +693,7 @@ public class ScimGroupEndpointsIntegrationTests {
             assertEquals(HttpStatus.FOUND, response.getStatusCode());
             location = response.getHeaders().getLocation().toString();
         }
-        assertTrue("Wrong location: " + location, location.matches("http://redirect.uri" + ".*code=.+"));
+        assertTrue(location.matches("http://redirect.uri" + ".*code=.+"), "Wrong location: " + location);
 
         formData.clear();
         formData.add("client_id", clientId);

@@ -15,15 +15,25 @@
 
 package org.cloudfoundry.identity.uaa.util;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.concurrent.ConcurrentMap;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.same;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class TimeBasedExpiringValueMapTest {
 
@@ -36,7 +46,7 @@ public class TimeBasedExpiringValueMapTest {
     private final Object value1 = new Object();
     private final Object value2 = new Object();
 
-    @Before
+    @BeforeEach
     public void setUp() {
         map = new TimeBasedExpiringValueMap<>(timeService, TIMEOUT);
     }

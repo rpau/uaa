@@ -1,6 +1,6 @@
 /*
  * *****************************************************************************
- *     Cloud Foundry 
+ *     Cloud Foundry
  *     Copyright (c) [2009-2016] Pivotal Software, Inc. All Rights Reserved.
  *
  *     This product is licensed to you under the Apache License, Version 2.0 (the "License").
@@ -15,13 +15,10 @@ package org.cloudfoundry.identity.api.web;
 
 import org.cloudfoundry.identity.uaa.oauth.client.test.RestTemplateHolder;
 import org.cloudfoundry.identity.uaa.test.UrlHelper;
-import org.junit.Assume;
-import org.junit.internal.AssumptionViolatedException;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.platform.commons.logging.Logger;
 import org.junit.platform.commons.logging.LoggerFactory;
-import org.junit.rules.TestWatchman;
-import org.junit.runners.model.FrameworkMethod;
-import org.junit.runners.model.Statement;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -37,36 +34,38 @@ import org.springframework.web.util.UriTemplate;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * <p>
- * A rule that prevents integration tests from failing if the server application
- * is not running or not accessible. If the server is not running in the
- * background all the tests here will simply be skipped because of a violated
- * assumption (showing as successful). Usage:
+ * An Extension that fails integration tests if the server application
+ * is not running or not accessible.
+ * Usage:
  * </p>
- * 
+ *
  * <pre>
- * &#064;Rule public static ServerRunning brokerIsRunning = ServerRunning.isRunning();
- * 
- * &#064;Test public void testSendAndReceive() throws Exception { // ... test using server etc. }
+ * &#064;RegisterExtension
+ * public static final ServerRunningExtension serverRunning = ServerRunningExtension.connect();
+ *
+ * &#064;Test
+ * void testSendAndReceive() {
+ *      ResponseEntity<Void> response = serverRunning.postForResponse(serverRunning.getAuthorizationUri(), headers, params);
+ * }
  * </pre>
+ *
  * <p>
- * The rule can be declared as static so that it only has to check once for all
- * tests in the enclosing test case, but there isn't a lot of overhead in making
- * it non-static.
+ * The Extension can be declared as static so that it only has to check once for all
+ * tests in the enclosing test case.
  * </p>
- * 
- * @see Assume
- * @see AssumptionViolatedException
- * 
+ *
  * @author Dave Syer
- * 
+ * @author Duane May
+ * <p>
+ * There is a second class in the server module that is mostly the same. Should refactor Test Utils for reuse.
  */
-public final class ServerRunning extends TestWatchman implements RestTemplateHolder, UrlHelper {
+public final class ServerRunningExtension implements BeforeAllCallback, RestTemplateHolder, UrlHelper {
 
-    private static final Logger logger = LoggerFactory.getLogger(ServerRunning.class);
+    private static final Logger logger = LoggerFactory.getLogger(ServerRunningExtension.class);
 
     private static final int DEFAULT_PORT = 8080;
 
@@ -89,14 +88,26 @@ public final class ServerRunning extends TestWatchman implements RestTemplateHol
     /**
      * @return a new rule that assumes an existing running broker
      */
-    public static ServerRunning isRunning() {
-        return new ServerRunning();
+    public static ServerRunningExtension connect() {
+        return new ServerRunningExtension();
     }
 
-    private ServerRunning() {
+    private ServerRunningExtension() {
         setPort(DEFAULT_PORT);
         setUaaPort(DEFAULT_UAA_PORT);
         setHostName(DEFAULT_HOST);
+    }
+
+    @Override
+    public void beforeAll(ExtensionContext context) throws Exception {
+        try {
+            RestTemplate client = new RestTemplate();
+            client.getForEntity(new UriTemplate(getUrl("/uaa/login", uaaPort)).toString(), String.class);
+            client.getForEntity(new UriTemplate(getUrl("/api/index.html")).toString(), String.class);
+            logger.debug(() -> "Basic connectivity test passed");
+        } catch (RestClientException e) {
+            fail("Not executing tests because basic connectivity test failed for hostName=%s, port=%d".formatted(hostName, port));
+        }
     }
 
     public void setUaaPort(int uaaPort) {
@@ -116,24 +127,6 @@ public final class ServerRunning extends TestWatchman implements RestTemplateHol
      */
     public void setHostName(String hostName) {
         this.hostName = hostName;
-    }
-
-    @Override
-    public Statement apply(Statement base, FrameworkMethod method, Object target) {
-        try {
-            RestTemplate client = new RestTemplate();
-            client.getForEntity(new UriTemplate(getUrl("/uaa/login", uaaPort)).toString(), String.class);
-            client.getForEntity(new UriTemplate(getUrl("/api/index.html")).toString(), String.class);
-            logger.debug(() -> "Basic connectivity test passed");
-        } catch (RestClientException e) {
-            failTest();
-        }
-
-        return super.apply(base, method, target);
-    }
-
-    private void failTest() {
-        fail("Not executing tests because basic connectivity test failed for hostName=%s, port=%d".formatted(hostName, port));
     }
 
     @Override
@@ -200,7 +193,7 @@ public final class ServerRunning extends TestWatchman implements RestTemplateHol
         return client;
     }
 
-    public RestOperations createRestTemplate() {
+    public RestTemplate createRestTemplate() {
         RestTemplate client = new RestTemplate();
         client.setRequestFactory(new SimpleClientHttpRequestFactory() {
             @Override

@@ -6,13 +6,13 @@ import org.cloudfoundry.identity.uaa.authentication.UaaAuthentication;
 import org.cloudfoundry.identity.uaa.authentication.UaaPrincipal;
 import org.cloudfoundry.identity.uaa.constants.OriginKeys;
 import org.cloudfoundry.identity.uaa.error.UaaException;
-import org.cloudfoundry.identity.uaa.home.BuildInfo;
 import org.cloudfoundry.identity.uaa.extensions.PollutionPreventionExtension;
+import org.cloudfoundry.identity.uaa.home.BuildInfo;
 import org.cloudfoundry.identity.uaa.user.UaaAuthority;
 import org.cloudfoundry.identity.uaa.user.UaaUser;
 import org.cloudfoundry.identity.uaa.user.UaaUserDatabase;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneHolder;
-import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,7 +42,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -222,9 +222,9 @@ class ChangeEmailControllerTest {
                 .andExpect(redirectedUrl("profile?success_message_code=email_change.success"));
 
         UaaPrincipal principal = (UaaPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Assert.assertEquals("user-id-001", principal.getId());
-        Assert.assertEquals("new@example.com", principal.getName());
-        Assert.assertEquals("new@example.com", principal.getEmail());
+        Assertions.assertEquals("user-id-001", principal.getId());
+        Assertions.assertEquals("new@example.com", principal.getName());
+        Assertions.assertEquals("new@example.com", principal.getEmail());
     }
 
     @Test
@@ -271,9 +271,9 @@ class ChangeEmailControllerTest {
                 .andExpect(redirectedUrl("//example.com/callback"));
 
         UaaPrincipal principal = (UaaPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Assert.assertEquals("user-id-001", principal.getId());
-        Assert.assertEquals("new@example.com", principal.getName());
-        Assert.assertEquals("new@example.com", principal.getEmail());
+        Assertions.assertEquals("user-id-001", principal.getId());
+        Assertions.assertEquals("new@example.com", principal.getName());
+        Assertions.assertEquals("new@example.com", principal.getEmail());
 
     }
 
@@ -324,9 +324,9 @@ class ChangeEmailControllerTest {
                 .andExpect(redirectedUrl("profile?success_message_code=email_change.success"));
 
         UaaPrincipal principal = (UaaPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Assert.assertEquals("user-id-001", principal.getId());
-        Assert.assertEquals("bob", principal.getName());
-        Assert.assertEquals("user@example.com", principal.getEmail());
+        Assertions.assertEquals("user-id-001", principal.getId());
+        Assertions.assertEquals("bob", principal.getName());
+        Assertions.assertEquals("user@example.com", principal.getEmail());
     }
 
     @Test
@@ -353,14 +353,14 @@ class ChangeEmailControllerTest {
                 .andExpect(redirectedUrl("profile?success_message_code=email_change.success"));
 
         UaaPrincipal principal = (UaaPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Assert.assertEquals("user-id-001", principal.getId());
-        Assert.assertEquals("new@example.com", principal.getName());
-        Assert.assertEquals("new@example.com", principal.getEmail());
+        Assertions.assertEquals("user-id-001", principal.getId());
+        Assertions.assertEquals("new@example.com", principal.getName());
+        Assertions.assertEquals("new@example.com", principal.getEmail());
 
         authentication = (UaaAuthentication) SecurityContextHolder.getContext().getAuthentication();
         assertNotNull(authentication.getAuthenticationMethods());
-        Assert.assertTrue(authentication.getAuthenticationMethods().contains("pwd"));
-        Assert.assertEquals(1, authentication.getAuthenticationMethods().size());
+        Assertions.assertTrue(authentication.getAuthenticationMethods().contains("pwd"));
+        Assertions.assertEquals(1, authentication.getAuthenticationMethods().size());
     }
 
     private void setupSecurityContext() {

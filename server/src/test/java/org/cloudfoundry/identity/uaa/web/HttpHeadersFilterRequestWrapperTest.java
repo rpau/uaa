@@ -16,9 +16,9 @@
 package org.cloudfoundry.identity.uaa.web;
 
 import org.cloudfoundry.identity.uaa.util.EmptyEnumerationOfString;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
 import org.springframework.mock.web.MockHttpServletRequest;
 
@@ -27,13 +27,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class HttpHeadersFilterRequestWrapperTest {
 
@@ -42,7 +42,7 @@ public class HttpHeadersFilterRequestWrapperTest {
     MockHttpServletRequest mock;
     private HttpHeadersFilterRequestWrapper request;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         mock = new MockHttpServletRequest(HttpMethod.GET.name(), "http://localhost:8080/uaa/login");
         mock.addHeader("X-Forwarded-For", "proxy-ip");
@@ -54,7 +54,7 @@ public class HttpHeadersFilterRequestWrapperTest {
         request = new HttpHeadersFilterRequestWrapper(BAD_HEADERS, mock);
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
     }
 
@@ -94,7 +94,7 @@ public class HttpHeadersFilterRequestWrapperTest {
     @Test
     public void filtered_x_forwarded_headers_single_header() {
         for (String header : BAD_HEADERS) {
-            assertNull("Header %s should be filtered.".formatted(header), request.getHeader(header));
+            assertNull(request.getHeader(header), "Header %s should be filtered.".formatted(header));
         }
     }
 
@@ -102,18 +102,18 @@ public class HttpHeadersFilterRequestWrapperTest {
     public void non_filtered_x_forwarded_headers_single_header() {
         request = new HttpHeadersFilterRequestWrapper(Collections.emptyList(), mock);
         for (String header : BAD_HEADERS) {
-            assertNotNull("Header %s should be present.".formatted(header), request.getHeader(header));
+            assertNotNull(request.getHeader(header), "Header %s should be present.".formatted(header));
         }
     }
 
     @Test
     public void filtered_x_forwarded_headers_multi_header() {
         for (String header : BAD_HEADERS) {
-            assertFalse("Header %s should return empty enumeration.".formatted(header), request.getHeaders(header).hasMoreElements());
+            assertFalse(request.getHeaders(header).hasMoreElements(), "Header %s should return empty enumeration.".formatted(header));
             assertSame(
-                    "Header %s should return singleton enumeration .".formatted(header),
                     EmptyEnumerationOfString.EMPTY_ENUMERATION,
-                    request.getHeaders(header)
+                    request.getHeaders(header),
+                    "Header %s should return singleton enumeration .".formatted(header)
             );
         }
     }
@@ -122,10 +122,10 @@ public class HttpHeadersFilterRequestWrapperTest {
     public void non_filtered_x_forwarded_headers_multi_header() {
         request = new HttpHeadersFilterRequestWrapper(Collections.emptyList(), mock);
         for (String header : BAD_HEADERS) {
-            assertTrue("Header %s should return empty enumeration.".formatted(header), request.getHeaders(header).hasMoreElements());
+            assertTrue(request.getHeaders(header).hasMoreElements(), "Header %s should return empty enumeration.".formatted(header));
             assertNotNull(
-                    "Header %s should return a value.".formatted(header),
-                    request.getHeaders(header).nextElement()
+                    request.getHeaders(header).nextElement(),
+                    "Header %s should return a value.".formatted(header)
             );
         }
     }

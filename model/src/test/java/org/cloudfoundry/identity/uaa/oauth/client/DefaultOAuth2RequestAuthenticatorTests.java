@@ -4,10 +4,11 @@ import org.cloudfoundry.identity.uaa.oauth.client.http.AccessTokenRequiredExcept
 import org.cloudfoundry.identity.uaa.oauth.client.resource.BaseOAuth2ProtectedResourceDetails;
 import org.cloudfoundry.identity.uaa.oauth.common.DefaultOAuth2AccessToken;
 import org.cloudfoundry.identity.uaa.oauth.common.OAuth2AccessToken;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.mock.http.client.MockClientHttpRequest;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
@@ -21,10 +22,12 @@ public class DefaultOAuth2RequestAuthenticatorTests {
 
     private final DefaultOAuth2ClientContext context = new DefaultOAuth2ClientContext();
 
-    @Test(expected = AccessTokenRequiredException.class)
+    @Test
     public void missingAccessToken() {
-        BaseOAuth2ProtectedResourceDetails resource = new BaseOAuth2ProtectedResourceDetails();
-        authenticator.authenticate(resource, new DefaultOAuth2ClientContext(), request);
+        assertThrows(AccessTokenRequiredException.class, () -> {
+            BaseOAuth2ProtectedResourceDetails resource = new BaseOAuth2ProtectedResourceDetails();
+            authenticator.authenticate(resource, new DefaultOAuth2ClientContext(), request);
+        });
     }
 
     @Test

@@ -1,6 +1,6 @@
 /*
  * *****************************************************************************
- *     Cloud Foundry 
+ *     Cloud Foundry
  *     Copyright (c) [2009-2016] Pivotal Software, Inc. All Rights Reserved.
  *
  *     This product is licensed to you under the Apache License, Version 2.0 (the "License").
@@ -14,28 +14,8 @@
 
 package org.cloudfoundry.identity.uaa.config;
 
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import static org.junit.Assert.assertEquals;
-
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-
-import javax.validation.Constraint;
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
-import javax.validation.Payload;
-import javax.validation.constraints.NotNull;
-
 import org.cloudfoundry.identity.uaa.config.YamlBindingTests.OAuthConfiguration.OAuthConfigurationValidator;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.MutablePropertyValues;
 import org.springframework.beans.PropertyValue;
@@ -48,14 +28,29 @@ import org.springframework.validation.DataBinder;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
+import javax.validation.Constraint;
+import javax.validation.ConstraintValidator;
+import javax.validation.ConstraintValidatorContext;
+import javax.validation.Payload;
+import javax.validation.constraints.NotNull;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 /**
  * @author Dave Syer
- * 
  */
 public class YamlBindingTests {
-
-    @Rule
-    public ExpectedException expected = ExpectedException.none();
 
     @Test
     public void testBindString() {
@@ -126,11 +121,12 @@ public class YamlBindingTests {
 
     @Test
     public void testBindErrorNotWritable() {
-        expected.expectMessage("property 'spam'");
-        expected.expectMessage("not writable");
-        VanillaTarget target = new VanillaTarget();
-        BindingResult result = bind(target, "spam: bar\nvalue: 123");
-        assertEquals(1, result.getErrorCount());
+        Throwable exception = assertThrows(Exception.class, () -> {
+            VanillaTarget target = new VanillaTarget();
+            BindingResult result = bind(target, "spam: bar\nvalue: 123");
+            assertEquals(1, result.getErrorCount());
+        });
+        assertTrue(exception.getMessage().contains("not writable"));
     }
 
     private BindingResult bind(Object target, String values) {
@@ -272,7 +268,7 @@ public class YamlBindingTests {
                 if (value.client != null && value.client.autoapprove != null) {
                     if (value.clients != null) {
                         context.buildConstraintViolationWithTemplate(
-                                "Please use oauth.clients to specifiy autoapprove not client.autoapprove")
+                                        "Please use oauth.clients to specifiy autoapprove not client.autoapprove")
                                 .addConstraintViolation();
                         valid = false;
                     }

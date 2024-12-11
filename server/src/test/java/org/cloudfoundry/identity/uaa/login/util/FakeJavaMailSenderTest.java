@@ -15,12 +15,12 @@
 package org.cloudfoundry.identity.uaa.login.util;
 
 import org.cloudfoundry.identity.uaa.message.util.FakeJavaMailSender;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import javax.mail.internet.MimeMessage;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 public class FakeJavaMailSenderTest {
 

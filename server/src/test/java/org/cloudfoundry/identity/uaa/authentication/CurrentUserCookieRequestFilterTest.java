@@ -2,9 +2,9 @@ package org.cloudfoundry.identity.uaa.authentication;
 
 import org.cloudfoundry.identity.uaa.login.CurrentUserCookieFactory;
 import org.cloudfoundry.identity.uaa.util.JsonUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -13,14 +13,18 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
-
 import java.io.IOException;
 import java.util.Collections;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.nullValue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 public class CurrentUserCookieRequestFilterTest {
 
@@ -30,7 +34,7 @@ public class CurrentUserCookieRequestFilterTest {
     private MockHttpServletRequest req;
     private MockHttpServletResponse res;
 
-    @Before
+    @BeforeEach
     public void setup() {
         SecurityContextHolder.clearContext();
         currentUserCookieFactory = mock(CurrentUserCookieFactory.class);
@@ -40,7 +44,7 @@ public class CurrentUserCookieRequestFilterTest {
         filter = new CurrentUserCookieRequestFilter(currentUserCookieFactory);
     }
 
-    @After
+    @AfterEach
     public void cleanup() {
         SecurityContextHolder.clearContext();
     }

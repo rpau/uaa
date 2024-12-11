@@ -8,9 +8,7 @@ import org.cloudfoundry.identity.uaa.oauth.common.DefaultOAuth2RefreshToken;
 import org.cloudfoundry.identity.uaa.oauth.common.OAuth2AccessToken;
 import org.cloudfoundry.identity.uaa.oauth.token.AccessTokenRequest;
 import org.cloudfoundry.identity.uaa.oauth.token.DefaultAccessTokenRequest;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.mock.http.client.MockClientHttpResponse;
 import org.springframework.util.LinkedMultiValueMap;
@@ -21,11 +19,12 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
@@ -33,15 +32,12 @@ import static org.junit.Assert.assertTrue;
  */
 public class ImplicitAccessTokenProviderTests {
 
-    @Rule
-    public ExpectedException expected = ExpectedException.none();
-
     private final MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
 
     private final ImplicitAccessTokenProvider provider = new ImplicitAccessTokenProvider() {
         @Override
         protected OAuth2AccessToken retrieveToken(AccessTokenRequest request, OAuth2ProtectedResourceDetails resource,
-                MultiValueMap<String, String> form, HttpHeaders headers) {
+                                                  MultiValueMap<String, String> form, HttpHeaders headers) {
             params.putAll(form);
             return new DefaultOAuth2AccessToken("FOO");
         }
@@ -49,10 +45,12 @@ public class ImplicitAccessTokenProviderTests {
 
     private final ImplicitResourceDetails resource = new ImplicitResourceDetails();
 
-    @Test(expected = IllegalStateException.class)
-    public void testRedirectNotSpecified() throws Exception {
-        AccessTokenRequest request = new DefaultAccessTokenRequest();
-        provider.obtainAccessToken(resource, request);
+    @Test
+    public void testRedirectNotSpecified() {
+        assertThrows(IllegalStateException.class, () -> {
+            AccessTokenRequest request = new DefaultAccessTokenRequest();
+            provider.obtainAccessToken(resource, request);
+        });
     }
 
     @Test
@@ -87,15 +85,16 @@ public class ImplicitAccessTokenProviderTests {
 
     @Test
     public void obtainAccessTokenNoRecdirect() {
-        ImplicitResourceDetails details = new ImplicitResourceDetails();
-        details.setScope(Set.of("openid").stream().toList());
-        assertFalse(details.isClientOnly());
-        expected.expect(IllegalStateException.class);
-        assertNotNull(provider.obtainAccessToken(details, new DefaultAccessTokenRequest(Map.of("scope", new String[]{"x"}, "client_id", new String[]{"x"}))));
+        assertThrows(IllegalStateException.class, () -> {
+            ImplicitResourceDetails details = new ImplicitResourceDetails();
+            details.setScope(Set.of("openid").stream().toList());
+            assertFalse(details.isClientOnly());
+            assertNotNull(provider.obtainAccessToken(details, new DefaultAccessTokenRequest(Map.of("scope", new String[]{"x"}, "client_id", new String[]{"x"}))));
+        });
     }
 
     @Test
-    public void testGetAccessTokenRequest() throws Exception {
+    public void testGetAccessTokenRequest() {
         AccessTokenRequest request = new DefaultAccessTokenRequest();
         resource.setClientId("foo");
         resource.setAccessTokenUri("http://localhost/oauth/authorize");

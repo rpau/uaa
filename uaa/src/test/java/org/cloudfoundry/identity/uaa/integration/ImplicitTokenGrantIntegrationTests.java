@@ -15,13 +15,13 @@ package org.cloudfoundry.identity.uaa.integration;
 
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.cookie.BasicClientCookie;
-import org.cloudfoundry.identity.uaa.ServerRunning;
+import org.cloudfoundry.identity.uaa.ServerRunningExtension;
 import org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils;
 import org.cloudfoundry.identity.uaa.security.web.CookieBasedCsrfTokenRepository;
-import org.cloudfoundry.identity.uaa.test.TestAccountSetup;
+import org.cloudfoundry.identity.uaa.test.TestAccountExtension;
 import org.cloudfoundry.identity.uaa.test.UaaTestAccounts;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -34,9 +34,9 @@ import java.net.URI;
 import java.util.Collections;
 
 import static org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils.getHeaders;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests implicit grant using a direct posting of credentials to the /authorize
@@ -48,13 +48,14 @@ import static org.junit.Assert.assertTrue;
 public class ImplicitTokenGrantIntegrationTests {
 
     private static final String REDIRECT_URL_PATTERN = "http://localhost:8080/redirect/cf#token_type=.+access_token=.+";
-    @Rule
-    public ServerRunning serverRunning = ServerRunning.isRunning();
 
-    private final UaaTestAccounts testAccounts = UaaTestAccounts.standard(serverRunning);
+    @RegisterExtension
+    private static final ServerRunningExtension serverRunning = ServerRunningExtension.connect();
 
-    @Rule
-    public TestAccountSetup testAccountSetup = TestAccountSetup.standard(serverRunning, testAccounts);
+    private static final UaaTestAccounts testAccounts = UaaTestAccounts.standard(serverRunning);
+
+    @RegisterExtension
+    private static final TestAccountExtension testAccountSetup = TestAccountExtension.standard(serverRunning, testAccounts);
 
     private String implicitUrl() {
         URI uri = serverRunning.buildUri("/oauth/authorize").queryParam("response_type", "token")
@@ -114,8 +115,8 @@ public class ImplicitTokenGrantIntegrationTests {
 
         URI location = result.getHeaders().getLocation();
         assertNotNull(location);
-        assertTrue("Wrong location: " + location, location.toString()
-                .matches(REDIRECT_URL_PATTERN));
+        assertTrue(location.toString()
+                .matches(REDIRECT_URL_PATTERN), "Wrong location: " + location);
 
     }
 

@@ -14,21 +14,21 @@
 package org.cloudfoundry.identity.uaa.test;
 
 import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
+import org.cloudfoundry.identity.uaa.constants.OriginKeys;
 import org.cloudfoundry.identity.uaa.oauth.client.DefaultOAuth2ClientContext;
 import org.cloudfoundry.identity.uaa.oauth.client.OAuth2ClientContext;
 import org.cloudfoundry.identity.uaa.oauth.client.OAuth2RestTemplate;
 import org.cloudfoundry.identity.uaa.oauth.client.http.OAuth2ErrorHandler;
 import org.cloudfoundry.identity.uaa.oauth.client.resource.OAuth2ProtectedResourceDetails;
+import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetails;
 import org.cloudfoundry.identity.uaa.oauth.token.AccessTokenRequest;
 import org.cloudfoundry.identity.uaa.oauth.token.DefaultAccessTokenRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.cloudfoundry.identity.uaa.constants.OriginKeys;
 import org.cloudfoundry.identity.uaa.user.UaaUser;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneHolder;
-import org.junit.rules.TestWatchman;
-import org.junit.runners.model.FrameworkMethod;
-import org.junit.runners.model.Statement;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.ClientHttpResponse;
@@ -38,7 +38,6 @@ import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetails;
 import org.springframework.util.Assert;
 import org.springframework.web.client.RestOperations;
 
@@ -52,15 +51,25 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * @author Dave Syer
+ * <pre>
+ * &#064;RegisterExtension
+ * public static final ServerRunningExtension serverRunning = ServerRunningExtension.connect();
  *
+ * private static final UaaTestAccounts testAccounts = UaaTestAccounts.standard(serverRunning);
+ *
+ * &#064;RegisterExtension
+ * private static final TestAccountSetup testAccountSetup = TestAccountSetup.standard(serverRunning, testAccounts);
+ * </pre>
+ *
+ * @author Dave Syer
+ * @author Duane May
  */
-public final class TestAccountSetup extends TestWatchman {
+public final class TestAccountExtension implements BeforeAllCallback {
 
-    private static final Logger logger = LoggerFactory.getLogger(TestAccountSetup.class);
+    private static final Logger logger = LoggerFactory.getLogger(TestAccountExtension.class);
 
     private final UrlHelper serverRunning;
 
@@ -70,19 +79,18 @@ public final class TestAccountSetup extends TestWatchman {
 
     private static boolean initialized;
 
-    private TestAccountSetup(UrlHelper serverRunning, UaaTestAccounts testAccounts) {
+    private TestAccountExtension(UrlHelper serverRunning, UaaTestAccounts testAccounts) {
         this.serverRunning = serverRunning;
         this.testAccounts = testAccounts;
     }
 
-    public static TestAccountSetup standard(UrlHelper serverRunning, UaaTestAccounts testAccounts) {
-        return new TestAccountSetup(serverRunning, testAccounts);
+    public static TestAccountExtension standard(UrlHelper serverRunning, UaaTestAccounts testAccounts) {
+        return new TestAccountExtension(serverRunning, testAccounts);
     }
 
     @Override
-    public Statement apply(Statement base, FrameworkMethod method, Object target) {
-        initializeIfNecessary(method, target);
-        return super.apply(base, method, target);
+    public void beforeAll(ExtensionContext context) {
+        initializeIfNecessary();
     }
 
     /**
@@ -96,12 +104,12 @@ public final class TestAccountSetup extends TestWatchman {
         return testAccounts;
     }
 
-    private void initializeIfNecessary(FrameworkMethod method, Object target) {
+    private void initializeIfNecessary() {
         OAuth2ProtectedResourceDetails resource = testAccounts.getAdminClientCredentialsResource();
         OAuth2RestTemplate client = createRestTemplate(resource, new DefaultAccessTokenRequest());
         // Cache statically to save time on a test suite
         if (!initialized) {
-            logger.info("Checking user account context for server=" + resource.getAccessTokenUri());
+            logger.info("Checking user account context for server={}", resource.getAccessTokenUri());
             if (!scimClientExists(client)) {
                 createScimClient(client);
             }
@@ -167,9 +175,7 @@ public final class TestAccountSetup extends TestWatchman {
     }
 
     private void initializeUserAccount(RestOperations client) {
-
         if (this.user == null) {
-
             UaaUser user = testAccounts.getUserWithRandomID();
             @SuppressWarnings("rawtypes")
             ResponseEntity<Map> results = client.getForEntity(serverRunning.getUserUri() + "?filter=userName eq \""
@@ -191,9 +197,7 @@ public final class TestAccountSetup extends TestWatchman {
                 map = value;
             }
             this.user = getUserFromMap(map);
-
         }
-
     }
 
     private UaaUser getUserFromMap(Map<String, ?> map) {
@@ -263,7 +267,7 @@ public final class TestAccountSetup extends TestWatchman {
     }
 
     private OAuth2RestTemplate createRestTemplate(OAuth2ProtectedResourceDetails resource,
-            AccessTokenRequest accessTokenRequest) {
+                                                  AccessTokenRequest accessTokenRequest) {
         OAuth2ClientContext context = new DefaultOAuth2ClientContext(accessTokenRequest);
         OAuth2RestTemplate client = new OAuth2RestTemplate(resource, context);
         client.setRequestFactory(new SimpleClientHttpRequestFactory() {
@@ -282,6 +286,7 @@ public final class TestAccountSetup extends TestWatchman {
 
             @Override
             public void handleError(ClientHttpResponse response) {
+                // do nothing
             }
         });
         List<HttpMessageConverter<?>> list = new ArrayList<>();
@@ -290,5 +295,4 @@ public final class TestAccountSetup extends TestWatchman {
         client.setMessageConverters(list);
         return client;
     }
-
 }

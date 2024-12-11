@@ -1,14 +1,14 @@
 package org.cloudfoundry.identity.uaa.oauth.provider.config.xml;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.xml.ParserContext;
 import org.springframework.beans.factory.xml.XmlReaderContext;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -22,27 +22,21 @@ public class AuthorizationServerBeanDefinitionParserTest {
     private AuthorizationServerBeanDefinitionParser authorizationServerBeanDefinitionParser;
     private Element element;
     private Element elementAuthzCode;
-    private Element elementRefreshToken;
-    private Element elementImplicit;
-    private Element elementClientCredentials;
-    private Element elementPassword;
-    private Element elementCustomGrant;
     private ParserContext parserContext;
-    private NodeList nodeList;
     private XmlReaderContext xmlReaderContext;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    public void setUp() {
         authorizationServerBeanDefinitionParser = new AuthorizationServerBeanDefinitionParser();
         element = mock(Element.class);
         elementAuthzCode = mock(Element.class);
-        elementRefreshToken = mock(Element.class);
-        elementImplicit = mock(Element.class);
-        elementClientCredentials = mock(Element.class);
-        elementCustomGrant = mock(Element.class);
-        elementPassword = mock(Element.class);
+        Element elementRefreshToken = mock(Element.class);
+        Element elementImplicit = mock(Element.class);
+        Element elementClientCredentials = mock(Element.class);
+        Element elementCustomGrant = mock(Element.class);
+        Element elementPassword = mock(Element.class);
         parserContext = mock(ParserContext.class);
-        nodeList = mock(NodeList.class);
+        NodeList nodeList = mock(NodeList.class);
         xmlReaderContext = mock(XmlReaderContext.class);
         when(parserContext.getReaderContext()).thenReturn(xmlReaderContext);
         when(parserContext.getRegistry()).thenReturn(mock(BeanDefinitionRegistry.class));

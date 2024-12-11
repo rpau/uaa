@@ -20,6 +20,7 @@ import org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils;
 import org.cloudfoundry.identity.uaa.oauth.client.resource.ClientCredentialsResourceDetails;
 import org.cloudfoundry.identity.uaa.oauth.client.test.OAuth2ContextConfiguration;
 import org.cloudfoundry.identity.uaa.oauth.client.test.TestAccounts;
+import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
 import org.cloudfoundry.identity.uaa.oauth.jwt.Jwt;
 import org.cloudfoundry.identity.uaa.oauth.jwt.JwtHelper;
 import org.cloudfoundry.identity.uaa.oauth.token.ClaimConstants;
@@ -27,18 +28,20 @@ import org.cloudfoundry.identity.uaa.scim.ScimUser;
 import org.cloudfoundry.identity.uaa.security.web.CookieBasedCsrfTokenRepository;
 import org.cloudfoundry.identity.uaa.util.UaaTokenUtils;
 import org.hamcrest.Matchers;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.openqa.selenium.WebDriver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
-import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestOperations;
@@ -47,17 +50,28 @@ import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.web.util.UriUtils;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils.getHeaders;
+import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.USER_OAUTH_APPROVAL;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_AUTHORIZATION_CODE;
 import static org.cloudfoundry.identity.uaa.security.web.CookieBasedCsrfTokenRepository.DEFAULT_CSRF_COOKIE_NAME;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.USER_OAUTH_APPROVAL;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = DefaultIntegrationTestConfig.class)
+@SpringJUnitConfig(classes = DefaultIntegrationTestConfig.class)
 @OAuth2ContextConfiguration(OAuth2ContextConfiguration.ClientCredentials.class)
 public class OpenIdTokenGrantsIT {
 
@@ -66,8 +80,8 @@ public class OpenIdTokenGrantsIT {
     TestAccounts testAccounts;
 
     @Autowired
-    @Rule
-    public IntegrationTestRule integrationTestRule;
+    @RegisterExtension
+    private IntegrationTestExtension integrationTestExtension;
 
     @Autowired
     WebDriver webDriver;
@@ -92,7 +106,7 @@ public class OpenIdTokenGrantsIT {
     private String[] aud = {"scim", "openid", "cloud_controller", "password", "cf", "uaa"};
     private String[] openid = new String[]{"openid"};
 
-    @Before
+    @BeforeEach
     public void setUp() {
         ((RestTemplate) restOperations).setRequestFactory(new IntegrationTestUtils.StatelessRequestFactory());
         ClientCredentialsResourceDetails clientCredentials =
@@ -101,8 +115,8 @@ public class OpenIdTokenGrantsIT {
         user = createUser(new RandomValueStringGenerator().generate(), "openiduser", "openidlast", "test@openid,com", true);
     }
 
-    @Before
-    @After
+    @BeforeEach
+    @AfterEach
     public void logout_and_clear_cookies() {
         try {
             webDriver.get(baseUrl + "/logout.do");
@@ -115,12 +129,12 @@ public class OpenIdTokenGrantsIT {
     }
 
     private ClientCredentialsResourceDetails getClientCredentialsResource(String[] scope, String clientId,
-            String clientSecret) {
+                                                                          String clientSecret) {
         return IntegrationTestUtils.getClientCredentialsResource(baseUrl, scope, clientId, clientSecret);
     }
 
     private ScimUser createUser(String username, String firstName, String lastName,
-            String email, boolean verified) {
+                                String email, boolean verified) {
         return IntegrationTestUtils.createUser(client, baseUrl, username, firstName, lastName, email, verified);
     }
 
@@ -347,8 +361,8 @@ public class OpenIdTokenGrantsIT {
             assertEquals(HttpStatus.FOUND, response.getStatusCode());
             location = UriUtils.decode(response.getHeaders().getLocation().toString(), "UTF-8");
         }
-        assertTrue("Wrong location: " + location,
-                location.matches(redirectUri + responseTypeMatcher));
+        assertTrue(location.matches(redirectUri + responseTypeMatcher),
+                "Wrong location: " + location);
 
         formData.clear();
         formData.add("client_id", clientId);
@@ -366,8 +380,8 @@ public class OpenIdTokenGrantsIT {
         @SuppressWarnings("unchecked")
         Map<String, String> body = tokenResponse.getBody();
         Jwt token = JwtHelper.decode(body.get("access_token"));
-        assertTrue("Wrong claims: " + token.getClaims(), token.getClaims().contains("\"aud\""));
-        assertTrue("Wrong claims: " + token.getClaims(), token.getClaims().contains("\"user_id\""));
+        assertTrue(token.getClaims().contains("\"aud\""), "Wrong claims: " + token.getClaims());
+        assertTrue(token.getClaims().contains("\"user_id\""), "Wrong claims: " + token.getClaims());
     }
 
     private MultiValueMap<String, String> parseFragmentParams(UriComponents locationComponents) {

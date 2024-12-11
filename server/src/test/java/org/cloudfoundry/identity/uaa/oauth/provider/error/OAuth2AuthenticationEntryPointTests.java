@@ -1,7 +1,7 @@
 package org.cloudfoundry.identity.uaa.oauth.provider.error;
 
 import org.cloudfoundry.identity.uaa.oauth.common.exceptions.InvalidClientException;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -9,8 +9,8 @@ import org.springframework.security.authentication.BadCredentialsException;
 
 import javax.servlet.http.HttpServletResponse;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA

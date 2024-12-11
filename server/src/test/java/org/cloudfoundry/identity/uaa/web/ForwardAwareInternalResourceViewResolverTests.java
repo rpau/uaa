@@ -14,9 +14,9 @@
 
 package org.cloudfoundry.identity.uaa.web;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -26,11 +26,10 @@ import org.springframework.web.servlet.View;
 
 import java.util.Locale;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author Dave Syer
- *
  */
 public class ForwardAwareInternalResourceViewResolverTests {
 
@@ -40,7 +39,7 @@ public class ForwardAwareInternalResourceViewResolverTests {
 
     private final GenericApplicationContext context = new GenericApplicationContext();
 
-    @Before
+    @BeforeEach
     public void start() {
         ServletRequestAttributes attributes = new ServletRequestAttributes(request);
         LocaleContextHolder.setLocale(request.getLocale());
@@ -48,7 +47,7 @@ public class ForwardAwareInternalResourceViewResolverTests {
         context.refresh();
     }
 
-    @After
+    @AfterEach
     public void clean() {
         RequestContextHolder.resetRequestAttributes();
     }

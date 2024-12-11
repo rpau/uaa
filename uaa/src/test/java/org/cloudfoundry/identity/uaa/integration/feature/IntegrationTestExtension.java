@@ -1,6 +1,6 @@
 /*
  * *****************************************************************************
- *     Cloud Foundry 
+ *     Cloud Foundry
  *     Copyright (c) [2009-2016] Pivotal Software, Inc. All Rights Reserved.
  *
  *     This product is licensed to you under the Apache License, Version 2.0 (the "License").
@@ -13,11 +13,11 @@
  *******************************************************************************/
 package org.cloudfoundry.identity.uaa.integration.feature;
 
+import org.junit.jupiter.api.extension.BeforeEachCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.junit.rules.TestRule;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -26,23 +26,35 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
-public class IntegrationTestRule implements TestRule {
-    private static final Logger logger = LoggerFactory.getLogger(IntegrationTestRule.class);
+/**
+ * <pre>
+ * &#064;Autowired
+ * &#064;RegisterExtension
+ * private static IntegrationTestExtension integrationTestExtension;
+ * </pre>
+ */
+public class IntegrationTestExtension implements BeforeEachCallback {
+    private static final Logger log = LoggerFactory.getLogger(IntegrationTestExtension.class);
 
     private static final Map<String, Boolean> sharedStatuses = new HashMap<>();
 
-    private final String baseUrl;
+    @Value("${integration.test.base_url}")
+    private String baseUrl;
 
-    public IntegrationTestRule(String baseUrl) {
+    public IntegrationTestExtension() {
+    }
+
+    public IntegrationTestExtension(String baseUrl) {
         this.baseUrl = baseUrl;
     }
 
     @Override
-    public Statement apply(Statement statement, Description description) {
-        assertTrue("The UAA server cannot be reached at " + baseUrl, getStatus());
-        return statement;
+    public void beforeEach(ExtensionContext context) {
+        if (!getStatus()) {
+            fail("The UAA server cannot be reached at %s".formatted(baseUrl));
+        }
     }
 
     private synchronized Boolean getStatus() {
@@ -59,13 +71,13 @@ public class IntegrationTestRule implements TestRule {
         String host = components.getHost();
         int port = components.getPort();
 
-        logger.info("Testing connectivity for " + baseUrl);
+        log.info("Testing connectivity for {}", baseUrl);
         try (Socket socket = new Socket(host, port)) {
-            logger.info("Connectivity test succeeded for " + baseUrl);
+            log.info("Connectivity test succeeded for {}", baseUrl);
             return true;
 
         } catch (IOException e) {
-            logger.warn("Connectivity test failed for " + baseUrl, e);
+            log.warn("Connectivity test failed for {}", baseUrl, e);
             return false;
         }
     }

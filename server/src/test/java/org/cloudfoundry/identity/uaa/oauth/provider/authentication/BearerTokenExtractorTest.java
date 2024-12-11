@@ -1,11 +1,12 @@
 package org.cloudfoundry.identity.uaa.oauth.provider.authentication;
 
 import org.cloudfoundry.identity.uaa.oauth.common.OAuth2AccessToken;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
@@ -16,7 +17,7 @@ public class BearerTokenExtractorTest {
     private BearerTokenExtractor extractor;
     private MockHttpServletRequest request;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         extractor = new BearerTokenExtractor();
         request = new MockHttpServletRequest();

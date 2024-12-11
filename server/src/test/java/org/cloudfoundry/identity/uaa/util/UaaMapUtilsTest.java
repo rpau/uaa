@@ -14,8 +14,8 @@
 
 package org.cloudfoundry.identity.uaa.util;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -26,9 +26,9 @@ import java.util.Map;
 import static org.cloudfoundry.identity.uaa.util.UaaMapUtils.prettyPrintYaml;
 import static org.cloudfoundry.identity.uaa.util.UaaMapUtils.redactValues;
 import static org.cloudfoundry.identity.uaa.util.UaaMapUtils.sortByKeys;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertSame;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 
 public class UaaMapUtilsTest {
@@ -41,7 +41,7 @@ public class UaaMapUtilsTest {
     private Map<String, Object> thirdC;
     private Map<String, Object> emptyMap;
 
-    @Before
+    @BeforeEach
     public void setup() {
         top = new HashMap<>();
         secondA = new HashMap<>();

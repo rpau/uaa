@@ -23,10 +23,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -255,16 +255,16 @@ class ScimUserLookupMockMvcTests {
 
     private void validateLookupResults(String[] usernames, String body) {
         Map<String, Object> map = JsonUtils.readValue(body, Map.class);
-        assertNotNull("Response should contain 'resources' object", map.get("resources"));
-        assertNotNull("Response should contain 'startIndex' object", map.get("startIndex"));
-        assertNotNull("Response should contain 'itemsPerPage' object", map.get("itemsPerPage"));
-        assertNotNull("Response should contain 'totalResults' object", map.get("totalResults"));
+        assertNotNull(map.get("resources"), "Response should contain 'resources' object");
+        assertNotNull(map.get("startIndex"), "Response should contain 'startIndex' object");
+        assertNotNull(map.get("itemsPerPage"), "Response should contain 'itemsPerPage' object");
+        assertNotNull(map.get("totalResults"), "Response should contain 'totalResults' object");
         List<Map<String, Object>> resources = (List<Map<String, Object>>) map.get("resources");
         assertEquals(usernames.length, resources.size());
         for (Map<String, Object> user : resources) {
-            assertNotNull("Response should contain 'origin' object", user.get(OriginKeys.ORIGIN));
-            assertNotNull("Response should contain 'id' object", user.get("id"));
-            assertNotNull("Response should contain 'userName' object", user.get("userName"));
+            assertNotNull(user.get(OriginKeys.ORIGIN), "Response should contain 'origin' object");
+            assertNotNull(user.get("id"), "Response should contain 'id' object");
+            assertNotNull(user.get("userName"), "Response should contain 'userName' object");
             String userName = (String) user.get("userName");
             boolean found = false;
             for (String s : usernames) {
@@ -273,7 +273,7 @@ class ScimUserLookupMockMvcTests {
                     break;
                 }
             }
-            assertTrue("Received non requested user in result set '" + userName + "'", found);
+            assertTrue(found, "Received non requested user in result set '" + userName + "'");
         }
         for (String s : usernames) {
             boolean found = false;
@@ -284,7 +284,7 @@ class ScimUserLookupMockMvcTests {
                     break;
                 }
             }
-            assertTrue("Missing user in result '" + s + "'", found);
+            assertTrue(found, "Missing user in result '" + s + "'");
         }
     }
 

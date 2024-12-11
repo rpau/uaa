@@ -22,8 +22,8 @@ import org.springframework.web.context.WebApplicationContext;
 
 import java.util.Collections;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -70,10 +70,10 @@ class ZonesWriteScopeMockMvcTest {
         String zonesWriteToken = testClient.getUserOAuthAccessTokenForZone("admin", "admin-secret", "marissa", "koala", "zones.write", subdomain);
 
         MvcResult result = mockMvc.perform(
-                get("/identity-zones/" + zone.getId())
-                        .header("Authorization", "Bearer " + zonesWriteToken)
-                        .header("Host", subdomain + ".localhost")
-                        .accept(APPLICATION_JSON))
+                        get("/identity-zones/" + zone.getId())
+                                .header("Authorization", "Bearer " + zonesWriteToken)
+                                .header("Host", subdomain + ".localhost")
+                                .accept(APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -82,16 +82,16 @@ class ZonesWriteScopeMockMvcTest {
         assertEquals(zone.getId(), responseNode.get("id").asText());
 
         mockMvc.perform(
-                get("/identity-zones/" + zone2.getId())
-                        .header("Authorization", "Bearer " + zonesWriteToken)
-                        .header("Host", subdomain + ".localhost")
-                        .accept(APPLICATION_JSON))
+                        get("/identity-zones/" + zone2.getId())
+                                .header("Authorization", "Bearer " + zonesWriteToken)
+                                .header("Host", subdomain + ".localhost")
+                                .accept(APPLICATION_JSON))
                 .andExpect(status().isNotFound());
 
         mockMvc.perform(
-                get("/identity-zones/uaa")
-                        .header("Authorization", "Bearer " + zonesWriteToken)
-                        .accept(APPLICATION_JSON))
+                        get("/identity-zones/uaa")
+                                .header("Authorization", "Bearer " + zonesWriteToken)
+                                .accept(APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -104,10 +104,10 @@ class ZonesWriteScopeMockMvcTest {
         String zonesWriteToken = testClient.getUserOAuthAccessTokenForZone("admin", "admin-secret", "marissa", "koala", "zones.write", subdomain);
 
         MvcResult result = mockMvc.perform(
-                get("/identity-zones")
-                        .header("Authorization", "Bearer " + zonesWriteToken)
-                        .header("Host", subdomain + ".localhost")
-                        .accept(APPLICATION_JSON))
+                        get("/identity-zones")
+                                .header("Authorization", "Bearer " + zonesWriteToken)
+                                .header("Host", subdomain + ".localhost")
+                                .accept(APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -126,20 +126,20 @@ class ZonesWriteScopeMockMvcTest {
         String zonesWriteToken = testClient.getUserOAuthAccessTokenForZone("admin", "admin-secret", "marissa", "koala", "zones.write", subdomain);
 
         mockMvc.perform(
-                put("/identity-zones/" + zone.getId())
-                        .header("Authorization", "Bearer " + zonesWriteToken)
-                        .header("Host", subdomain + ".localhost")
-                        .contentType(APPLICATION_JSON)
-                        .content(JsonUtils.writeValueAsString(zone)))
+                        put("/identity-zones/" + zone.getId())
+                                .header("Authorization", "Bearer " + zonesWriteToken)
+                                .header("Host", subdomain + ".localhost")
+                                .contentType(APPLICATION_JSON)
+                                .content(JsonUtils.writeValueAsString(zone)))
                 .andExpect(status().isOk())
                 .andReturn();
 
         mockMvc.perform(
-                put("/identity-zones/uaa")
-                        .header("Authorization", "Bearer " + zonesWriteToken)
-                        .header("Host", subdomain + ".localhost")
-                        .contentType(APPLICATION_JSON)
-                        .content(JsonUtils.writeValueAsString(zone)))
+                        put("/identity-zones/uaa")
+                                .header("Authorization", "Bearer " + zonesWriteToken)
+                                .header("Host", subdomain + ".localhost")
+                                .contentType(APPLICATION_JSON)
+                                .content(JsonUtils.writeValueAsString(zone)))
                 .andExpect(status().isForbidden())
                 .andReturn();
     }
@@ -153,18 +153,18 @@ class ZonesWriteScopeMockMvcTest {
         String zonesWriteToken = testClient.getUserOAuthAccessTokenForZone("admin", "admin-secret", "marissa", "koala", "zones.write", subdomain);
 
         mockMvc.perform(
-                post("/identity-zones")
-                        .header("Authorization", "Bearer " + zonesWriteToken)
-                        .contentType(APPLICATION_JSON)
-                        .content(JsonUtils.writeValueAsString(zone2)))
+                        post("/identity-zones")
+                                .header("Authorization", "Bearer " + zonesWriteToken)
+                                .contentType(APPLICATION_JSON)
+                                .content(JsonUtils.writeValueAsString(zone2)))
                 .andExpect(status().isUnauthorized());
 
         mockMvc.perform(
-                post("/identity-zones")
-                        .header("Authorization", "Bearer " + zonesWriteToken)
-                        .header("Host", subdomain + ".localhost")
-                        .contentType(APPLICATION_JSON)
-                        .content(JsonUtils.writeValueAsString(zone2)))
+                        post("/identity-zones")
+                                .header("Authorization", "Bearer " + zonesWriteToken)
+                                .header("Host", subdomain + ".localhost")
+                                .contentType(APPLICATION_JSON)
+                                .content(JsonUtils.writeValueAsString(zone2)))
                 .andExpect(status().isForbidden());
     }
 
@@ -177,22 +177,22 @@ class ZonesWriteScopeMockMvcTest {
         String zonesWriteToken = testClient.getUserOAuthAccessTokenForZone("admin", "admin-secret", "marissa", "koala", "zones.write", subdomain);
 
         mockMvc.perform(
-                delete("/identity-zones/" + zone2.getId())
-                        .header("Authorization", "Bearer " + zonesWriteToken)
-                        .contentType(APPLICATION_JSON))
+                        delete("/identity-zones/" + zone2.getId())
+                                .header("Authorization", "Bearer " + zonesWriteToken)
+                                .contentType(APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
 
         mockMvc.perform(
-                delete("/identity-zones/" + zone2.getId())
-                        .header("Authorization", "Bearer " + zonesWriteToken)
-                        .header("Host", zone2.getSubdomain() + ".localhost")
-                        .contentType(APPLICATION_JSON))
+                        delete("/identity-zones/" + zone2.getId())
+                                .header("Authorization", "Bearer " + zonesWriteToken)
+                                .header("Host", zone2.getSubdomain() + ".localhost")
+                                .contentType(APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
 
         mockMvc.perform(
-                delete("/identity-zones/uaa")
-                        .header("Authorization", "Bearer " + zonesWriteToken)
-                        .contentType(APPLICATION_JSON))
+                        delete("/identity-zones/uaa")
+                                .header("Authorization", "Bearer " + zonesWriteToken)
+                                .contentType(APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
     }
 

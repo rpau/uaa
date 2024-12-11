@@ -36,8 +36,8 @@ import java.util.List;
 
 import static java.util.Collections.emptyList;
 import static org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils.getClientCredentialsOAuthAccessToken;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -116,7 +116,7 @@ class ListUserTokenMockMvcTests extends AbstractTokenMockMvcTests {
 
     void validateTokens(List<String> actual, List<String> expected) {
         for (String t : expected) {
-            assertTrue("Expecting token:" + t + " to be present in list.", actual.contains(t));
+            assertTrue(actual.contains(t), "Expecting token:" + t + " to be present in list.");
         }
     }
 

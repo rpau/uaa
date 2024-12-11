@@ -1,6 +1,6 @@
 /*
  * *****************************************************************************
- *     Cloud Foundry 
+ *     Cloud Foundry
  *     Copyright (c) [2009-2016] Pivotal Software, Inc. All Rights Reserved.
  *
  *     This product is licensed to you under the Apache License, Version 2.0 (the "License").
@@ -14,14 +14,13 @@
 
 package org.cloudfoundry.identity.uaa.client;
 
-import static org.junit.Assert.assertEquals;
-
 import org.cloudfoundry.identity.uaa.client.SocialClientUserDetails.Source;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Dave Syer
- * 
  */
 public class SourceTests {
 

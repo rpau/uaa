@@ -7,12 +7,11 @@ import org.cloudfoundry.identity.uaa.provider.IdentityProvider;
 import org.cloudfoundry.identity.uaa.provider.OIDCIdentityProviderDefinition;
 import org.cloudfoundry.identity.uaa.scim.ScimUser;
 import org.cloudfoundry.identity.uaa.test.UaaTestAccounts;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.openqa.selenium.WebDriver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,8 +21,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestOperations;
@@ -38,14 +36,13 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.cloudfoundry.identity.uaa.provider.ExternalIdentityProviderDefinition.USER_NAME_ATTRIBUTE_NAME;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = DefaultIntegrationTestConfig.class)
+@SpringJUnitConfig(classes = DefaultIntegrationTestConfig.class)
 public class PasswordGrantIT {
     @Autowired
-    @Rule
-    public IntegrationTestRule integrationTestRule;
+    @RegisterExtension
+    private IntegrationTestExtension integrationTestExtension;
 
     @Autowired
     WebDriver webDriver;
@@ -65,8 +62,8 @@ public class PasswordGrantIT {
     @Autowired
     TestAccounts testAccounts;
 
-    @Before
-    @After
+    @BeforeEach
+    @AfterEach
     public void logout_and_clear_cookies() {
         try {
             webDriver.get(baseUrl + "/logout.do");
@@ -94,7 +91,7 @@ public class PasswordGrantIT {
                 new HttpEntity<>(postBody, headers),
                 Void.class);
 
-        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        Assertions.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
 
     @Test
@@ -114,7 +111,7 @@ public class PasswordGrantIT {
                 new HttpEntity<>(postBody, headers),
                 Void.class);
 
-        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        Assertions.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
 
     @Test
@@ -134,7 +131,7 @@ public class PasswordGrantIT {
                 new HttpEntity<>(postBody, headers),
                 Void.class);
 
-        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        Assertions.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
 
     @Test
@@ -158,7 +155,7 @@ public class PasswordGrantIT {
                     new HttpEntity<>(postBody, headers),
                     Void.class);
 
-            Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+            Assertions.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         } finally {
             IntegrationTestUtils.deleteProvider(clientCredentialsToken, baseUrl, "uaa", "puppy");
         }
@@ -191,8 +188,8 @@ public class PasswordGrantIT {
 
             // verify that the puppy user has the correct family and given name
             ScimUser puppyUser = IntegrationTestUtils.getUser(clientCredentialsToken, baseUrl, "puppy", "marissa");
-            Assert.assertEquals(oldMail, puppyUser.getFamilyName());
-            Assert.assertEquals(oldMail, puppyUser.getGivenName());
+            Assertions.assertEquals(oldMail, puppyUser.getFamilyName());
+            Assertions.assertEquals(oldMail, puppyUser.getGivenName());
 
             // update uaa user email
             user.getEmails().get(0).setValue(newMail);
@@ -202,8 +199,8 @@ public class PasswordGrantIT {
             restOperations.exchange(baseUrl + "/oauth/token", HttpMethod.POST, new HttpEntity<>(postBody, headers), String.class);
             // verify that given and family have been updated accordingly
             puppyUser = IntegrationTestUtils.getUser(clientCredentialsToken, baseUrl, "puppy", "marissa");
-            Assert.assertEquals(newMail, puppyUser.getFamilyName());
-            Assert.assertEquals(newMail, puppyUser.getGivenName());
+            Assertions.assertEquals(newMail, puppyUser.getFamilyName());
+            Assertions.assertEquals(newMail, puppyUser.getGivenName());
 
             // get new user instance to get current version count and revert the update from above
             user = IntegrationTestUtils.getUser(clientCredentialsToken, baseUrl, "uaa", "marissa");
@@ -212,7 +209,7 @@ public class PasswordGrantIT {
 
             // verify that the email is the old one
             user = IntegrationTestUtils.getUser(clientCredentialsToken, baseUrl, "uaa", "marissa");
-            Assert.assertEquals(oldMail, user.getEmails().get(0).getValue());
+            Assertions.assertEquals(oldMail, user.getEmails().get(0).getValue());
         } finally {
             IntegrationTestUtils.deleteProvider(clientCredentialsToken, baseUrl, "uaa", "puppy");
         }
@@ -241,7 +238,7 @@ public class PasswordGrantIT {
                         new HttpEntity<>(postBody, headers),
                         Void.class);
             } catch (HttpClientErrorException e) {
-                Assert.assertEquals(HttpStatus.UNAUTHORIZED, e.getStatusCode());
+                Assertions.assertEquals(HttpStatus.UNAUTHORIZED, e.getStatusCode());
             }
             //Check Audit events?
 
@@ -269,7 +266,7 @@ public class PasswordGrantIT {
                     Void.class);
             fail();
         } catch (HttpClientErrorException e) {
-            Assert.assertEquals(HttpStatus.UNAUTHORIZED, e.getStatusCode());
+            Assertions.assertEquals(HttpStatus.UNAUTHORIZED, e.getStatusCode());
         }
     }
 
@@ -292,7 +289,7 @@ public class PasswordGrantIT {
                     new HttpEntity<>(postBody, headers),
                     Void.class);
         } catch (HttpClientErrorException e) {
-            Assert.assertEquals(HttpStatus.FORBIDDEN, e.getStatusCode());
+            Assertions.assertEquals(HttpStatus.FORBIDDEN, e.getStatusCode());
         }
 
     }

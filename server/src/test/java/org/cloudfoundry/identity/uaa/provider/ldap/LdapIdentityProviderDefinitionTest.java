@@ -17,8 +17,8 @@ import org.cloudfoundry.identity.uaa.provider.LdapIdentityProviderDefinition;
 import org.cloudfoundry.identity.uaa.util.JsonUtils;
 import org.cloudfoundry.identity.uaa.util.LdapUtils;
 import org.cloudfoundry.identity.uaa.util.UaaMapUtils;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.config.YamlMapFactoryBean;
 import org.springframework.beans.factory.config.YamlProcessor;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -26,7 +26,11 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.cloudfoundry.identity.uaa.constants.OriginKeys.LDAP;
 import static org.cloudfoundry.identity.uaa.provider.LdapIdentityProviderDefinition.LDAP_PROPERTY_TYPES;
@@ -34,35 +38,36 @@ import static org.cloudfoundry.identity.uaa.provider.LdapIdentityProviderDefinit
 import static org.cloudfoundry.identity.uaa.provider.LdapIdentityProviderDefinition.LDAP_TLS_EXTERNAL;
 import static org.cloudfoundry.identity.uaa.provider.LdapIdentityProviderDefinition.LDAP_TLS_NONE;
 import static org.cloudfoundry.identity.uaa.provider.LdapIdentityProviderDefinition.LDAP_TLS_SIMPLE;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
-public class LdapIdentityProviderDefinitionTest {
+class LdapIdentityProviderDefinitionTest {
 
     private LdapIdentityProviderDefinition ldapIdentityProviderDefinition;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
 
     }
 
     @Test
-    public void test_property_types() {
+    void test_property_types() {
         assertEquals(String.class, LDAP_PROPERTY_TYPES.get(LDAP_SSL_TLS));
     }
 
     @Test
-    public void test_default_tls_is_none() {
+    void test_default_tls_is_none() {
         assertEquals(LDAP_TLS_NONE, new LdapIdentityProviderDefinition().getTlsConfiguration());
     }
 
     @Test
-    public void testEquals() {
+    void testEquals() {
         LdapIdentityProviderDefinition ldapIdentityProviderDefinition1 = new LdapIdentityProviderDefinition();
         ldapIdentityProviderDefinition1.setAddShadowUserOnLogin(true);
         LdapIdentityProviderDefinition ldapIdentityProviderDefinition2 = new LdapIdentityProviderDefinition();
@@ -74,7 +79,7 @@ public class LdapIdentityProviderDefinitionTest {
     }
 
     @Test
-    public void noPasswordCastException() {
+    void noPasswordCastException() {
         LdapIdentityProviderDefinition definition = new LdapIdentityProviderDefinition();
         assertNull(definition.getBindPassword());
         definition.setBindPassword("value");
@@ -82,7 +87,7 @@ public class LdapIdentityProviderDefinitionTest {
     }
 
     @Test
-    public void test_tls_options() {
+    void test_tls_options() {
         ldapIdentityProviderDefinition = new LdapIdentityProviderDefinition();
         ldapIdentityProviderDefinition.setTlsConfiguration(LDAP_TLS_NONE);
         ldapIdentityProviderDefinition.setTlsConfiguration(LDAP_TLS_EXTERNAL);
@@ -98,7 +103,7 @@ public class LdapIdentityProviderDefinitionTest {
     }
 
     @Test
-    public void test_serialization_of_tls_attribute() {
+    void test_serialization_of_tls_attribute() {
         ldapIdentityProviderDefinition = LdapIdentityProviderDefinition.searchAndBindMapGroupToScopes(
                 "ldap://localhost:389/",
                 "cn=admin,ou=Users,dc=test,dc=com",
@@ -124,7 +129,7 @@ public class LdapIdentityProviderDefinitionTest {
     }
 
     @Test
-    public void testSearchAndBindConfiguration() {
+    void testSearchAndBindConfiguration() {
         ldapIdentityProviderDefinition = LdapIdentityProviderDefinition.searchAndBindMapGroupToScopes(
                 "ldap://localhost:389/",
                 "cn=admin,ou=Users,dc=test,dc=com",
@@ -214,7 +219,7 @@ public class LdapIdentityProviderDefinitionTest {
     }
 
     @Test
-    public void test_Simple_Bind_Config() throws Exception {
+    void test_Simple_Bind_Config() throws Exception {
         String config = """
                 ldap:
                   profile:
@@ -248,7 +253,7 @@ public class LdapIdentityProviderDefinitionTest {
     }
 
     @Test
-    public void test_Search_and_Bind_Config() throws Exception {
+    void test_Search_and_Bind_Config() throws Exception {
         String config = """
                 ldap:
                   profile:
@@ -285,7 +290,7 @@ public class LdapIdentityProviderDefinitionTest {
     }
 
     @Test
-    public void test_Search_and_Bind_With_Groups_Config() throws Exception {
+    void test_Search_and_Bind_With_Groups_Config() throws Exception {
         String config = """
                 ldap:
                   profile:
@@ -331,7 +336,7 @@ public class LdapIdentityProviderDefinitionTest {
 
 
     @Test
-    public void test_Search_and_Compare_Config() throws Exception {
+    void test_Search_and_Compare_Config() throws Exception {
         String config = """
                 ldap:
                   profile:
@@ -376,7 +381,7 @@ public class LdapIdentityProviderDefinitionTest {
     }
 
     @Test
-    public void test_Search_and_Compare_With_Groups_1_Config_And_Custom_Attributes() throws Exception {
+    void test_Search_and_Compare_With_Groups_1_Config_And_Custom_Attributes() throws Exception {
         String config = """
                 ldap:
                   profile:
@@ -437,7 +442,7 @@ public class LdapIdentityProviderDefinitionTest {
     }
 
     @Test
-    public void testSetEmailDomain() {
+    void testSetEmailDomain() {
         LdapIdentityProviderDefinition def = new LdapIdentityProviderDefinition();
         def.setEmailDomain(Collections.singletonList("test.com"));
         assertEquals("test.com", def.getEmailDomain().get(0));
@@ -446,7 +451,7 @@ public class LdapIdentityProviderDefinitionTest {
     }
 
     @Test
-    public void set_external_groups_whitelist() {
+    void set_external_groups_whitelist() {
         LdapIdentityProviderDefinition def = new LdapIdentityProviderDefinition();
         List<String> externalGroupsWhitelist = new ArrayList<>();
         externalGroupsWhitelist.add("value");
@@ -457,7 +462,7 @@ public class LdapIdentityProviderDefinitionTest {
     }
 
     @Test
-    public void set_user_attributes() {
+    void set_user_attributes() {
         LdapIdentityProviderDefinition def = new LdapIdentityProviderDefinition();
         Map<String, Object> attributeMappings = new HashMap<>();
         attributeMappings.put("given_name", "first_name");
@@ -468,7 +473,7 @@ public class LdapIdentityProviderDefinitionTest {
     }
 
     @Test
-    public void set_valid_files() {
+    void set_valid_files() {
         ldapIdentityProviderDefinition = new LdapIdentityProviderDefinition();
         for (String s : LdapIdentityProviderDefinition.VALID_PROFILE_FILES) {
             ldapIdentityProviderDefinition.setLdapProfileFile(s);
@@ -478,111 +483,123 @@ public class LdapIdentityProviderDefinitionTest {
         }
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void set_unknown_profile_file_throws_error() {
-        ldapIdentityProviderDefinition = new LdapIdentityProviderDefinition();
-        ldapIdentityProviderDefinition.setLdapProfileFile("some.other.file");
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void set_unknown_group_file_throws_error() {
-        ldapIdentityProviderDefinition = new LdapIdentityProviderDefinition();
-        ldapIdentityProviderDefinition.setLdapGroupFile("some.other.file");
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void deserialize_unknown_profile_file_throws_error() throws Exception {
-        String config = """
-                ldap:
-                  profile:
-                    file: ldap/ldap-1search-and-compare.xml
-                  base:
-                    url: 'ldap://localhost:10389/'
-                    mailAttributeName: mail
-                    userDn: 'cn=admin,ou=Users,dc=test,dc=com'
-                    password: 'password'
-                    searchBase: ''
-                    searchFilter: 'cn={0}'
-                    passwordAttributeName: userPassword
-                    passwordEncoder: org.cloudfoundry.identity.uaa.provider.ldap.DynamicPasswordComparator
-                    localPasswordCompare: true
-                    mailSubstitute: 'generated-{0}@company.example.com'
-                    mailSubstituteOverridesLdap: true
-                  ssl:
-                    skipverification: true""";
-
-        LdapUtils.fromConfig(getLdapConfig(config));
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void deserialize_unknown_group_file_throws_error() throws Exception {
-        String config = """
-                ldap:
-                  profile:
-                    file: ldap/ldap-search-and-compare.xml
-                  base:
-                    url: 'ldap://localhost:10389/'
-                    mailAttributeName: mail
-                    userDn: 'cn=admin,ou=Users,dc=test,dc=com'
-                    password: 'password'
-                    searchBase: ''
-                    searchFilter: 'cn={0}'
-                    passwordAttributeName: userPassword
-                    passwordEncoder: org.cloudfoundry.identity.uaa.provider.ldap.DynamicPasswordComparator
-                    localPasswordCompare: true
-                    mailSubstitute: 'generated-{0}@company.example.com'
-                    mailSubstituteOverridesLdap: true
-                  groups:
-                    file: ldap/ldap-groups1-as-scopes.xml
-                    searchBase: ou=scopes,dc=test,dc=com
-                    groupRoleAttribute: scopenames
-                    searchSubtree: false
-                    groupSearchFilter: member={0}
-                    maxSearchDepth: 20
-                    autoAdd: false
-                  ssl:
-                    skipverification: true""";
-
-        LdapUtils.fromConfig(getLdapConfig(config));
+    @Test
+    void set_unknown_profile_file_throws_error() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            ldapIdentityProviderDefinition = new LdapIdentityProviderDefinition();
+            ldapIdentityProviderDefinition.setLdapProfileFile("some.other.file");
+        });
     }
 
     @Test
-    public void set_correct_password_compare() {
+    void set_unknown_group_file_throws_error() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            ldapIdentityProviderDefinition = new LdapIdentityProviderDefinition();
+            ldapIdentityProviderDefinition.setLdapGroupFile("some.other.file");
+        });
+    }
+
+    @Test
+    void deserialize_unknown_profile_file_throws_error() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            String config = """
+                    ldap:
+                      profile:
+                        file: ldap/ldap-1search-and-compare.xml
+                      base:
+                        url: 'ldap://localhost:10389/'
+                        mailAttributeName: mail
+                        userDn: 'cn=admin,ou=Users,dc=test,dc=com'
+                        password: 'password'
+                        searchBase: ''
+                        searchFilter: 'cn={0}'
+                        passwordAttributeName: userPassword
+                        passwordEncoder: org.cloudfoundry.identity.uaa.provider.ldap.DynamicPasswordComparator
+                        localPasswordCompare: true
+                        mailSubstitute: 'generated-{0}@company.example.com'
+                        mailSubstituteOverridesLdap: true
+                      ssl:
+                        skipverification: true""";
+
+            LdapUtils.fromConfig(getLdapConfig(config));
+        });
+    }
+
+    @Test
+    void deserialize_unknown_group_file_throws_error() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            String config = """
+                    ldap:
+                      profile:
+                        file: ldap/ldap-search-and-compare.xml
+                      base:
+                        url: 'ldap://localhost:10389/'
+                        mailAttributeName: mail
+                        userDn: 'cn=admin,ou=Users,dc=test,dc=com'
+                        password: 'password'
+                        searchBase: ''
+                        searchFilter: 'cn={0}'
+                        passwordAttributeName: userPassword
+                        passwordEncoder: org.cloudfoundry.identity.uaa.provider.ldap.DynamicPasswordComparator
+                        localPasswordCompare: true
+                        mailSubstitute: 'generated-{0}@company.example.com'
+                        mailSubstituteOverridesLdap: true
+                      groups:
+                        file: ldap/ldap-groups1-as-scopes.xml
+                        searchBase: ou=scopes,dc=test,dc=com
+                        groupRoleAttribute: scopenames
+                        searchSubtree: false
+                        groupSearchFilter: member={0}
+                        maxSearchDepth: 20
+                        autoAdd: false
+                      ssl:
+                        skipverification: true""";
+
+            LdapUtils.fromConfig(getLdapConfig(config));
+        });
+    }
+
+    @Test
+    void set_correct_password_compare() {
         ldapIdentityProviderDefinition = new LdapIdentityProviderDefinition();
         ldapIdentityProviderDefinition.setPasswordEncoder(DynamicPasswordComparator.class.getName());
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void set_wrong_password_compare_complains() {
-        ldapIdentityProviderDefinition = new LdapIdentityProviderDefinition();
-        ldapIdentityProviderDefinition.setPasswordEncoder("some.other.encoder");
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void deserialize_unknown_comparator_throws_error() throws Exception {
-        String config = """
-                ldap:
-                  profile:
-                    file: ldap/ldap-search-and-compare.xml
-                  base:
-                    url: 'ldap://localhost:10389/'
-                    mailAttributeName: mail
-                    userDn: 'cn=admin,ou=Users,dc=test,dc=com'
-                    password: 'password'
-                    searchBase: ''
-                    searchFilter: 'cn={0}'
-                    passwordAttributeName: userPassword
-                    passwordEncoder: org.cloudfoundry.identity.uaa.provider.ldap.DynamicPasswordComparator1
-                    localPasswordCompare: true
-                    mailSubstitute: 'generated-{0}@company.example.com'
-                    mailSubstituteOverridesLdap: true
-                """;
-
-        LdapUtils.fromConfig(getLdapConfig(config));
+    @Test
+    void set_wrong_password_compare_complains() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            ldapIdentityProviderDefinition = new LdapIdentityProviderDefinition();
+            ldapIdentityProviderDefinition.setPasswordEncoder("some.other.encoder");
+        });
     }
 
     @Test
-    public void deserialize_correct_comparator() throws Exception {
+    void deserialize_unknown_comparator_throws_error() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            String config = """
+                    ldap:
+                      profile:
+                        file: ldap/ldap-search-and-compare.xml
+                      base:
+                        url: 'ldap://localhost:10389/'
+                        mailAttributeName: mail
+                        userDn: 'cn=admin,ou=Users,dc=test,dc=com'
+                        password: 'password'
+                        searchBase: ''
+                        searchFilter: 'cn={0}'
+                        passwordAttributeName: userPassword
+                        passwordEncoder: org.cloudfoundry.identity.uaa.provider.ldap.DynamicPasswordComparator1
+                        localPasswordCompare: true
+                        mailSubstitute: 'generated-{0}@company.example.com'
+                        mailSubstituteOverridesLdap: true
+                    """;
+
+            LdapUtils.fromConfig(getLdapConfig(config));
+        });
+    }
+
+    @Test
+    void deserialize_correct_comparator() throws Exception {
         String config = """
                 ldap:
                   profile:

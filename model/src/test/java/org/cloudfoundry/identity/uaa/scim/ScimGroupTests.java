@@ -15,15 +15,16 @@
 package org.cloudfoundry.identity.uaa.scim;
 
 import org.cloudfoundry.identity.uaa.util.JsonUtils;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
 
 import static java.util.Collections.emptyList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class ScimGroupTests {
     private static final String GROUP_BEFORE_DESCRIPTION = "{\"meta\":{\"version\":0,\"created\":\"2016-01-13T09:01:33.909Z\"},\"zoneId\":\"zoneId\",\"displayName\":\"name\",\"schemas\":[\"urn:scim:schemas:core:1.0\"],\"id\":\"id\"}";
@@ -33,7 +34,7 @@ public class ScimGroupTests {
     private ScimGroupMember member2;
     private ScimGroupMember member3;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         group = new ScimGroup("id", "name", "zoneId");
         group.setDescription("description");
@@ -119,16 +120,20 @@ public class ScimGroupTests {
         assertNull(group.getDisplayName());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void cant_drop_zone_id() {
-        patch.getMeta().setAttributes(new String[]{"zoneID"});
-        group.patch(patch);
+        assertThrows(IllegalArgumentException.class, () -> {
+            patch.getMeta().setAttributes(new String[]{"zoneID"});
+            group.patch(patch);
+        });
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void cant_drop_id() {
-        patch.getMeta().setAttributes(new String[]{"id"});
-        group.patch(patch);
+        assertThrows(IllegalArgumentException.class, () -> {
+            patch.getMeta().setAttributes(new String[]{"id"});
+            group.patch(patch);
+        });
     }
 
     @Test

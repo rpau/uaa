@@ -14,35 +14,33 @@
 package org.cloudfoundry.identity.uaa.integration.feature;
 
 import com.dumbster.smtp.SimpleSmtpServer;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.web.client.RestTemplate;
 
 import java.security.SecureRandom;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = DefaultIntegrationTestConfig.class)
+@SpringJUnitConfig(classes = DefaultIntegrationTestConfig.class)
 public class ChangePasswordIT {
 
     public static final String PASSWORD = "s3Cret";
     public static final String NEW_PASSWORD = "newsecr3T";
+
     @Autowired
-    @Rule
-    public IntegrationTestRule integrationTestRule;
+    @RegisterExtension
+    private IntegrationTestExtension integrationTestExtension;
 
     @Autowired
     WebDriver webDriver;
@@ -61,8 +59,8 @@ public class ChangePasswordIT {
 
     private String userEmail;
 
-    @Before
-    @After
+    @BeforeEach
+    @AfterEach
     public void logout_and_clear_cookies() {
         try {
             webDriver.get(baseUrl + "/logout.do");
@@ -73,7 +71,7 @@ public class ChangePasswordIT {
         webDriver.manage().deleteAllCookies();
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
         int randomInt = new SecureRandom().nextInt();
 

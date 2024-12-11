@@ -1,16 +1,14 @@
 package org.cloudfoundry.identity.uaa.impl.config;
 
 import org.cloudfoundry.identity.uaa.oauth.KeyInfo;
-import org.junit.Assert;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class LegacyTokenKeyTest {
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
 
     @Test
     public void shouldBuildLegacyTokenKey_withSecureKeyUrl() {
@@ -18,7 +16,7 @@ public class LegacyTokenKeyTest {
 
         KeyInfo legacyTokenKeyInfo = LegacyTokenKey.getLegacyTokenKeyInfo();
 
-        Assert.assertThat(legacyTokenKeyInfo.keyURL(), is("https://uaa.url/token_keys"));
+        assertThat(legacyTokenKeyInfo.keyURL(), is("https://uaa.url/token_keys"));
     }
 
     @Test
@@ -27,15 +25,15 @@ public class LegacyTokenKeyTest {
 
         KeyInfo legacyTokenKeyInfo = LegacyTokenKey.getLegacyTokenKeyInfo();
 
-        Assert.assertThat(legacyTokenKeyInfo.keyURL(), is("https://another.uaa.url/token_keys"));
+        assertThat(legacyTokenKeyInfo.keyURL(), is("https://another.uaa.url/token_keys"));
     }
 
     @Test
     public void buildLegacyTokenKey_withInvalidKeyUrl() {
-        expectedException.expect(IllegalArgumentException.class);
-        expectedException.expectMessage("Invalid Key URL");
+        Throwable exception = assertThrows(IllegalArgumentException.class, () ->
 
-        LegacyTokenKey.setLegacySigningKey("secret", "not a valid url");
+                LegacyTokenKey.setLegacySigningKey("secret", "not a valid url"));
+        assertTrue(exception.getMessage().contains("Invalid Key URL"));
     }
 
 }

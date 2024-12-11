@@ -1,18 +1,5 @@
 package org.cloudfoundry.identity.uaa.oauth.client;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.net.URI;
-import java.util.Collections;
-import java.util.Date;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import org.cloudfoundry.identity.uaa.oauth.client.http.AccessTokenRequiredException;
 import org.cloudfoundry.identity.uaa.oauth.client.resource.BaseOAuth2ProtectedResourceDetails;
 import org.cloudfoundry.identity.uaa.oauth.client.resource.OAuth2ProtectedResourceDetails;
@@ -23,8 +10,8 @@ import org.cloudfoundry.identity.uaa.oauth.common.OAuth2RefreshToken;
 import org.cloudfoundry.identity.uaa.oauth.token.AccessTokenProvider;
 import org.cloudfoundry.identity.uaa.oauth.token.AccessTokenProviderChain;
 import org.cloudfoundry.identity.uaa.oauth.token.AccessTokenRequest;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -33,11 +20,25 @@ import org.springframework.http.client.ClientHttpRequest;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.security.access.AccessDeniedException;
-
 import org.springframework.util.ReflectionUtils;
 import org.springframework.web.client.RequestCallback;
 import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.util.UriTemplate;
+
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.net.URI;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
@@ -55,7 +56,7 @@ public class OAuth2RestTemplateTests {
 
     private HttpHeaders headers;
 
-    @Before
+    @BeforeEach
     public void open() throws Exception {
         resource = new BaseOAuth2ProtectedResourceDetails();
         // Facebook and older specs:
@@ -162,16 +163,18 @@ public class OAuth2RestTemplateTests {
         assertEquals("https://graph.facebook.com/search?bearer_token=1+qI%2Bx%3Ay%3Dz", appended.toString());
     }
 
-    @Test(expected = AccessTokenRequiredException.class)
-    public void testNoRetryAccessDeniedExceptionForNoExistingToken() throws Exception {
-        restTemplate.setAccessTokenProvider(new StubAccessTokenProvider());
-        restTemplate.setRequestFactory(new ClientHttpRequestFactory() {
-            public ClientHttpRequest createRequest(URI uri, HttpMethod httpMethod) throws IOException {
-                throw new AccessTokenRequiredException(resource);
-            }
+    @Test
+    public void testNoRetryAccessDeniedExceptionForNoExistingToken() {
+        assertThrows(AccessTokenRequiredException.class, () -> {
+            restTemplate.setAccessTokenProvider(new StubAccessTokenProvider());
+            restTemplate.setRequestFactory(new ClientHttpRequestFactory() {
+                public ClientHttpRequest createRequest(URI uri, HttpMethod httpMethod) throws IOException {
+                    throw new AccessTokenRequiredException(resource);
+                }
+            });
+            restTemplate.doExecute(new URI("https://foo"), HttpMethod.GET, new NullRequestCallback(),
+                    new SimpleResponseExtractor());
         });
-        restTemplate.doExecute(new URI("https://foo"), HttpMethod.GET, new NullRequestCallback(),
-                new SimpleResponseExtractor());
     }
 
     @Test
@@ -208,7 +211,7 @@ public class OAuth2RestTemplateTests {
     @Test
     public void testNewTokenAcquiredWithDefaultClockSkew() {
         DefaultOAuth2AccessToken token = new DefaultOAuth2AccessToken("TEST");
-        token.setExpiration(new Date(System.currentTimeMillis() + 29000));	// Default clock skew is 30 secs
+        token.setExpiration(new Date(System.currentTimeMillis() + 29000));    // Default clock skew is 30 secs
         restTemplate.getOAuth2ClientContext().setAccessToken(token);
         restTemplate.setAccessTokenProvider(new StubAccessTokenProvider());
         OAuth2AccessToken newToken = restTemplate.getAccessToken();
@@ -243,35 +246,36 @@ public class OAuth2RestTemplateTests {
     }
 
     // gh-1478
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testNegativeClockSkew() {
-        restTemplate.setClockSkew(-1);
+        assertThrows(IllegalArgumentException.class, () ->
+                restTemplate.setClockSkew(-1));
     }
 
     // gh-1909
     @Test
     public void testClockSkewPropagationIntoAccessTokenProviderChain() {
-        AccessTokenProvider accessTokenProvider = new AccessTokenProviderChain(Collections.<AccessTokenProvider>emptyList());
-        restTemplate.setAccessTokenProvider(accessTokenProvider);
+        AccessTokenProvider provider = new AccessTokenProviderChain(List.of());
+        restTemplate.setAccessTokenProvider(provider);
         restTemplate.setClockSkew(5);
 
-        Field field = ReflectionUtils.findField(accessTokenProvider.getClass(), "clockSkew");
+        Field field = ReflectionUtils.findField(provider.getClass(), "clockSkew");
         field.setAccessible(true);
 
-        assertEquals(5, ReflectionUtils.getField(field, accessTokenProvider));
+        assertEquals(5, ReflectionUtils.getField(field, provider));
     }
 
     // gh-1909
     @Test
     public void testApplyClockSkewOnProvidedAccessTokenProviderChain() {
-        AccessTokenProvider accessTokenProvider = new AccessTokenProviderChain(Collections.<AccessTokenProvider>emptyList());
+        AccessTokenProvider provider = new AccessTokenProviderChain(List.of());
         restTemplate.setClockSkew(5);
-        restTemplate.setAccessTokenProvider(accessTokenProvider);
+        restTemplate.setAccessTokenProvider(provider);
 
-        Field field = ReflectionUtils.findField(accessTokenProvider.getClass(), "clockSkew");
+        Field field = ReflectionUtils.findField(provider.getClass(), "clockSkew");
         field.setAccessible(true);
 
-        assertEquals(5, ReflectionUtils.getField(field, accessTokenProvider));
+        assertEquals(5, ReflectionUtils.getField(field, provider));
     }
 
     // gh-1909
@@ -292,7 +296,7 @@ public class OAuth2RestTemplateTests {
         restTemplate.setAccessTokenProvider(new StubAccessTokenProvider() {
             @Override
             public OAuth2AccessToken obtainAccessToken(OAuth2ProtectedResourceDetails details,
-                    AccessTokenRequest parameters) throws UserRedirectRequiredException, AccessDeniedException {
+                                                       AccessTokenRequest parameters) throws UserRedirectRequiredException, AccessDeniedException {
                 throw new UserRedirectRequiredException("https://www.foo.com/", Collections.<String, String>emptyMap());
             }
         });
@@ -300,8 +304,7 @@ public class OAuth2RestTemplateTests {
             OAuth2AccessToken newToken = restTemplate.getAccessToken();
             assertNotNull(newToken);
             fail("Expected UserRedirectRequiredException");
-        }
-        catch (UserRedirectRequiredException e) {
+        } catch (UserRedirectRequiredException e) {
             // planned
         }
         // context token should be reset as it clearly is invalid at this point
@@ -330,7 +333,7 @@ public class OAuth2RestTemplateTests {
         }
 
         public OAuth2AccessToken refreshAccessToken(OAuth2ProtectedResourceDetails resource,
-                OAuth2RefreshToken refreshToken, AccessTokenRequest request) throws UserRedirectRequiredException {
+                                                    OAuth2RefreshToken refreshToken, AccessTokenRequest request) throws UserRedirectRequiredException {
             return null;
         }
 

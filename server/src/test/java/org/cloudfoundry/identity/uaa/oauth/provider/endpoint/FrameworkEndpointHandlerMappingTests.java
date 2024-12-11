@@ -1,7 +1,7 @@
 package org.cloudfoundry.identity.uaa.oauth.provider.endpoint;
 
 import org.cloudfoundry.identity.uaa.oauth.UaaAuthorizationEndpoint;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.web.bind.support.SessionStatus;
 
 import javax.servlet.http.HttpServletRequest;
@@ -10,10 +10,10 @@ import java.security.Principal;
 import java.util.Collections;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
@@ -32,13 +32,13 @@ public class FrameworkEndpointHandlerMappingTests {
     }
 
     @Test
-    public void mappings() throws Exception {
+    public void mappings() {
         mapping.setMappings(Collections.singletonMap("/oauth/token", "/token"));
         assertEquals("/token", mapping.getPath("/oauth/token"));
     }
 
     @Test
-    public void forward() throws Exception {
+    public void forward() {
         mapping.setMappings(Collections.singletonMap("/oauth/confirm_access", "forward:/approve"));
         assertEquals("/approve", mapping.getPath("/oauth/confirm_access"));
     }
@@ -58,7 +58,7 @@ public class FrameworkEndpointHandlerMappingTests {
     }
 
     @Test
-    public void getPath() throws Exception {
+    public void getPath() {
         assertNotNull(mapping.getPaths());
     }
 

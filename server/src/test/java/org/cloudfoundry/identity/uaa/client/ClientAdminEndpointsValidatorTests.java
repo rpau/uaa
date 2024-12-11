@@ -14,19 +14,17 @@
 
 package org.cloudfoundry.identity.uaa.client;
 
+import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetails;
 import org.cloudfoundry.identity.uaa.resources.QueryableResourceManager;
 import org.cloudfoundry.identity.uaa.security.beans.SecurityContextAccessor;
 import org.cloudfoundry.identity.uaa.zone.ClientSecretPolicy;
 import org.cloudfoundry.identity.uaa.zone.ClientSecretValidator;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneHolder;
 import org.cloudfoundry.identity.uaa.zone.ZoneAwareClientSecretPolicyValidator;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetails;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,9 +38,11 @@ import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYP
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_JWT_BEARER;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_SAML2_BEARER;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_USER_TOKEN;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -54,8 +54,8 @@ public class ClientAdminEndpointsValidatorTests {
     ClientAdminEndpointsValidator validator;
     ClientSecretValidator secretValidator;
 
-    private final List wildCardUrls = Arrays.asList("*", "**", "*/**", "**/*", "*/*", "**/**");
-    private final List httpWildCardUrls = Arrays.asList(
+    private final List<String> wildCardUrls = Arrays.asList("*", "**", "*/**", "**/*", "*/*", "**/**");
+    private final List<String> httpWildCardUrls = Arrays.asList(
             "http://*",
             "http://**",
             "http://*/**",
@@ -67,10 +67,7 @@ public class ClientAdminEndpointsValidatorTests {
             "http://*domain/path",
             "http://**/path");
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
-    @Before
+    @BeforeEach
     public void createClient() {
         client = new UaaClientDetails("newclient", "", "", "client_credentials", "");
         client.setClientSecret("secret");
@@ -137,20 +134,22 @@ public class ClientAdminEndpointsValidatorTests {
 
     @Test
     public void test_validate_jwt_bearer_grant_type_without_secret() {
-        client.setAuthorizedGrantTypes(Collections.singletonList(GRANT_TYPE_JWT_BEARER));
-        client.setScope(Collections.singleton(caller.getClientId() + ".write"));
-        client.setClientSecret("");
-        expectedException.expect(InvalidClientDetailsException.class);
-        expectedException.expectMessage("Client secret is required for grant type " + GRANT_TYPE_JWT_BEARER);
-        validator.validate(client, true, true);
+        Throwable exception = assertThrows(InvalidClientDetailsException.class, () -> {
+            client.setAuthorizedGrantTypes(Collections.singletonList(GRANT_TYPE_JWT_BEARER));
+            client.setScope(Collections.singleton(caller.getClientId() + ".write"));
+            client.setClientSecret("");
+            validator.validate(client, true, true);
+        });
+        assertTrue(exception.getMessage().contains("Client secret is required for grant type " + GRANT_TYPE_JWT_BEARER));
     }
 
     @Test
     public void test_validate_jwt_bearer_grant_type_without_scopes() {
-        client.setAuthorizedGrantTypes(Collections.singletonList(GRANT_TYPE_JWT_BEARER));
-        expectedException.expect(InvalidClientDetailsException.class);
-        expectedException.expectMessage("Scope cannot be empty for grant_type " + GRANT_TYPE_JWT_BEARER);
-        validator.validate(client, true, true);
+        Throwable exception = assertThrows(InvalidClientDetailsException.class, () -> {
+            client.setAuthorizedGrantTypes(Collections.singletonList(GRANT_TYPE_JWT_BEARER));
+            validator.validate(client, true, true);
+        });
+        assertTrue(exception.getMessage().contains("Scope cannot be empty for grant_type " + GRANT_TYPE_JWT_BEARER));
     }
 
     @Test
@@ -175,7 +174,7 @@ public class ClientAdminEndpointsValidatorTests {
         invalidRedirectUris.addAll(httpWildCardUrls);
         invalidRedirectUris.addAll(convertToHttps(httpWildCardUrls));
 
-        for (String s : Arrays.asList(new String[]{GRANT_TYPE_AUTHORIZATION_CODE, GRANT_TYPE_IMPLICIT})) {
+        for (String s : new String[]{GRANT_TYPE_AUTHORIZATION_CODE, GRANT_TYPE_IMPLICIT}) {
             client.setAuthorizedGrantTypes(Collections.singleton(s));
             for (String url : invalidRedirectUris) {
                 testValidatorForInvalidURL(url);
@@ -191,7 +190,7 @@ public class ClientAdminEndpointsValidatorTests {
         redirectUris.addAll(httpWildCardUrls);
         redirectUris.addAll(convertToHttps(httpWildCardUrls));
 
-        for (String s : Arrays.asList(new String[]{"client_credentials", "password"})) {
+        for (String s : new String[]{"client_credentials", "password"}) {
             client.setAuthorizedGrantTypes(Collections.singleton(s));
             for (String url : redirectUris) {
                 testValidatorForURL(url);
@@ -200,25 +199,29 @@ public class ClientAdminEndpointsValidatorTests {
         }
     }
 
-    @Test(expected = InvalidClientDetailsException.class)
+    @Test
     public void testValidateOneValidOneInvalidURL() {
-        Set<String> urls = new HashSet<>();
-        urls.add("http://valid.com");
-        urls.add("http://valid.com/with/path*");
-        urls.add("http://invalid*");
-        client.setAuthorizedGrantTypes(Collections.singleton(GRANT_TYPE_AUTHORIZATION_CODE));
-        client.setRegisteredRedirectUri(urls);
-        validator.validateClientRedirectUri(client);
+        assertThrows(InvalidClientDetailsException.class, () -> {
+            Set<String> urls = new HashSet<>();
+            urls.add("http://valid.com");
+            urls.add("http://valid.com/with/path*");
+            urls.add("http://invalid*");
+            client.setAuthorizedGrantTypes(Collections.singleton(GRANT_TYPE_AUTHORIZATION_CODE));
+            client.setRegisteredRedirectUri(urls);
+            validator.validateClientRedirectUri(client);
+        });
     }
 
-    @Test(expected = InvalidClientDetailsException.class)
+    @Test
     public void testAnotherOptionOneInvalidURL() {
-        Set<String> urls = new HashSet<>();
-        urls.add("http://valid.com");
-        urls.add("http://invalid.com/with/path,subpath");
-        client.setAuthorizedGrantTypes(Collections.singleton(GRANT_TYPE_AUTHORIZATION_CODE));
-        client.setRegisteredRedirectUri(urls);
-        validator.validateClientRedirectUri(client);
+        assertThrows(InvalidClientDetailsException.class, () -> {
+            Set<String> urls = new HashSet<>();
+            urls.add("http://valid.com");
+            urls.add("http://invalid.com/with/path,subpath");
+            client.setAuthorizedGrantTypes(Collections.singleton(GRANT_TYPE_AUTHORIZATION_CODE));
+            client.setRegisteredRedirectUri(urls);
+            validator.validateClientRedirectUri(client);
+        });
     }
 
     @Test
@@ -240,7 +243,7 @@ public class ClientAdminEndpointsValidatorTests {
         } catch (InvalidClientDetailsException e) {
             return;
         }
-        Assert.fail("Url %s should not be allowed".formatted(url));
+        Assertions.fail("Url %s should not be allowed".formatted(url));
     }
 
     private void testValidatorForURL(String url) {

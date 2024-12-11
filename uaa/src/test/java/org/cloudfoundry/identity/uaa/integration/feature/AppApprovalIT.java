@@ -13,22 +13,22 @@
  *******************************************************************************/
 package org.cloudfoundry.identity.uaa.integration.feature;
 
-import org.cloudfoundry.identity.uaa.ServerRunning;
+import org.cloudfoundry.identity.uaa.ServerRunningExtension;
 import org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils;
 import org.cloudfoundry.identity.uaa.oauth.client.test.OAuth2ContextConfiguration;
-import org.cloudfoundry.identity.uaa.oauth.client.test.OAuth2ContextSetup;
+import org.cloudfoundry.identity.uaa.oauth.client.test.OAuth2ContextExtension;
 import org.cloudfoundry.identity.uaa.resources.SearchResults;
 import org.cloudfoundry.identity.uaa.scim.ScimGroup;
 import org.cloudfoundry.identity.uaa.scim.ScimUser;
-import org.cloudfoundry.identity.uaa.test.TestAccountSetup;
+import org.cloudfoundry.identity.uaa.test.TestAccountExtension;
 import org.cloudfoundry.identity.uaa.test.UaaTestAccounts;
+import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,35 +38,32 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.web.client.RestOperations;
 
 import static org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils.createUnapprovedUser;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = DefaultIntegrationTestConfig.class)
+@SpringJUnitConfig(classes = DefaultIntegrationTestConfig.class)
 @OAuth2ContextConfiguration(OAuth2ContextConfiguration.ClientCredentials.class)
-public class AppApprovalIT {
+class AppApprovalIT {
 
-    @Rule
-    public ServerRunning serverRunning = ServerRunning.isRunning();
+    @RegisterExtension
+    private static final ServerRunningExtension serverRunning = ServerRunningExtension.connect();
 
-    UaaTestAccounts testAccounts = UaaTestAccounts.standard(serverRunning);
+    private static final UaaTestAccounts testAccounts = UaaTestAccounts.standard(serverRunning);
 
-    @Rule
-    public TestAccountSetup testAccountSetup = TestAccountSetup.standard(serverRunning, testAccounts);
+    @RegisterExtension
+    private static final TestAccountExtension testAccountSetup = TestAccountExtension.standard(serverRunning, testAccounts);
 
-    @Rule
-    public OAuth2ContextSetup context = OAuth2ContextSetup.withTestAccounts(serverRunning, testAccountSetup);
+    @RegisterExtension
+    private static final OAuth2ContextExtension context = OAuth2ContextExtension.withTestAccounts(serverRunning, testAccountSetup);
 
     public RestOperations restTemplate;
 
-
     @Autowired
-    @Rule
-    public IntegrationTestRule integrationTestRule;
+    @RegisterExtension
+    private IntegrationTestExtension integrationTestExtension;
 
     @Autowired
     WebDriver webDriver;
@@ -77,8 +74,8 @@ public class AppApprovalIT {
     @Value("${integration.test.app_url}")
     String appUrl;
 
-    @Before
-    @After
+    @BeforeEach
+    @AfterEach
     public void logout_and_clear_cookies() {
         restTemplate = serverRunning.getRestTemplate();
 
@@ -119,7 +116,7 @@ public class AppApprovalIT {
         webDriver.findElement(By.xpath("//input[@value='Sign in']")).click();
 
         // Authorize the app for some scopes
-        Assert.assertEquals("Application Authorization", webDriver.findElement(By.cssSelector("h1")).getText());
+        Assertions.assertEquals("Application Authorization", webDriver.findElement(By.cssSelector("h1")).getText());
 
         webDriver.findElement(By.xpath("//label[text()='Change your password']/preceding-sibling::input")).click();
         webDriver.findElement(By.xpath("//label[text()='Read user IDs and retrieve users by ID']/preceding-sibling::input")).click();
@@ -127,15 +124,15 @@ public class AppApprovalIT {
 
         webDriver.findElement(By.xpath("//button[text()='Authorize']")).click();
 
-        Assert.assertEquals("Sample Home Page", webDriver.findElement(By.cssSelector("h1")).getText());
+        Assertions.assertEquals("Sample Home Page", webDriver.findElement(By.cssSelector("h1")).getText());
 
         // View profile on the login server
         webDriver.get(baseUrl + "/profile");
 
-        Assert.assertFalse(webDriver.findElement(By.xpath("//input[@value='app-password.write']")).isSelected());
-        Assert.assertFalse(webDriver.findElement(By.xpath("//input[@value='app-scim.userids']")).isSelected());
-        Assert.assertTrue(webDriver.findElement(By.xpath("//input[@value='app-cloud_controller.read']")).isSelected());
-        Assert.assertTrue(webDriver.findElement(By.xpath("//input[@value='app-cloud_controller.write']")).isSelected());
+        Assertions.assertFalse(webDriver.findElement(By.xpath("//input[@value='app-password.write']")).isSelected());
+        Assertions.assertFalse(webDriver.findElement(By.xpath("//input[@value='app-scim.userids']")).isSelected());
+        Assertions.assertTrue(webDriver.findElement(By.xpath("//input[@value='app-cloud_controller.read']")).isSelected());
+        Assertions.assertTrue(webDriver.findElement(By.xpath("//input[@value='app-cloud_controller.write']")).isSelected());
 
         // Add approvals
         webDriver.findElement(By.xpath("//input[@value='app-password.write']")).click();
@@ -143,15 +140,15 @@ public class AppApprovalIT {
 
         webDriver.findElement(By.xpath("//button[text()='Update']")).click();
 
-        Assert.assertTrue(webDriver.findElement(By.xpath("//input[@value='app-password.write']")).isSelected());
-        Assert.assertTrue(webDriver.findElement(By.xpath("//input[@value='app-scim.userids']")).isSelected());
-        Assert.assertTrue(webDriver.findElement(By.xpath("//input[@value='app-cloud_controller.read']")).isSelected());
-        Assert.assertTrue(webDriver.findElement(By.xpath("//input[@value='app-cloud_controller.write']")).isSelected());
+        Assertions.assertTrue(webDriver.findElement(By.xpath("//input[@value='app-password.write']")).isSelected());
+        Assertions.assertTrue(webDriver.findElement(By.xpath("//input[@value='app-scim.userids']")).isSelected());
+        Assertions.assertTrue(webDriver.findElement(By.xpath("//input[@value='app-cloud_controller.read']")).isSelected());
+        Assertions.assertTrue(webDriver.findElement(By.xpath("//input[@value='app-cloud_controller.write']")).isSelected());
 
         // Revoke app
         webDriver.findElement(By.linkText("Revoke Access")).click();
 
-        Assert.assertEquals("Are you sure you want to revoke access to The Ultimate Oauth App?", webDriver.findElement(By.cssSelector(".revocation-modal p")).getText());
+        Assertions.assertEquals("Are you sure you want to revoke access to The Ultimate Oauth App?", webDriver.findElement(By.cssSelector(".revocation-modal p")).getText());
 
         // click cancel
         webDriver.findElement(By.cssSelector("#app-form .revocation-cancel")).click();
@@ -161,7 +158,7 @@ public class AppApprovalIT {
         // click confirm
         webDriver.findElement(By.cssSelector("#app-form .revocation-confirm")).click();
 
-        Assert.assertThat(webDriver.findElements(By.xpath("//input[@value='app-password.write']")), Matchers.empty());
+        MatcherAssert.assertThat(webDriver.findElements(By.xpath("//input[@value='app-password.write']")), Matchers.empty());
     }
 
     @Test
@@ -191,7 +188,7 @@ public class AppApprovalIT {
         webDriver.findElement(By.xpath("//input[@value='Sign in']")).click();
 
         // Authorize the app for some scopes
-        Assert.assertEquals("Application Authorization", webDriver.findElement(By.cssSelector("h1")).getText());
+        Assertions.assertEquals("Application Authorization", webDriver.findElement(By.cssSelector("h1")).getText());
 
         webDriver.findElement(By.xpath("//label[text()='Read about <b>your</b> clouds.']/preceding-sibling::input"));
     }

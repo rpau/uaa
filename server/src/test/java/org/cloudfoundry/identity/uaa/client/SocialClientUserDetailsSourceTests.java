@@ -15,16 +15,15 @@
 
 package org.cloudfoundry.identity.uaa.client;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.ArgumentMatchers;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -51,7 +50,7 @@ public class SocialClientUserDetailsSourceTests {
     SocialClientUserDetailsSource source;
     Map<String, String> map;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         restTemplate = mock(RestTemplate.class);
         source = new SocialClientUserDetailsSource();

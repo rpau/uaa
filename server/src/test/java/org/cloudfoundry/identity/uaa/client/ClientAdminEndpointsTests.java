@@ -11,6 +11,8 @@ import org.cloudfoundry.identity.uaa.oauth.client.ClientDetailsCreation;
 import org.cloudfoundry.identity.uaa.oauth.client.ClientDetailsModification;
 import org.cloudfoundry.identity.uaa.oauth.client.ClientJwtChangeRequest;
 import org.cloudfoundry.identity.uaa.oauth.client.SecretChangeRequest;
+import org.cloudfoundry.identity.uaa.oauth.common.exceptions.BadClientCredentialsException;
+import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetails;
 import org.cloudfoundry.identity.uaa.provider.ClientAlreadyExistsException;
 import org.cloudfoundry.identity.uaa.provider.NoSuchClientException;
 import org.cloudfoundry.identity.uaa.resources.ActionResult;
@@ -39,8 +41,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.AuthorityUtils;
-import org.cloudfoundry.identity.uaa.oauth.common.exceptions.BadClientCredentialsException;
-import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetails;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -61,14 +61,14 @@ import static org.cloudfoundry.identity.uaa.util.AssertThrowsWithMessage.assertT
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.anyString;
@@ -88,11 +88,11 @@ class ClientAdminEndpointsTests {
 
     private UaaClientDetails input;
 
-    private ClientDetailsModification[] inputs = new ClientDetailsModification[5];
+    private final ClientDetailsModification[] inputs = new ClientDetailsModification[5];
 
     private UaaClientDetails detail;
 
-    private UaaClientDetails[] details = new UaaClientDetails[inputs.length];
+    private final UaaClientDetails[] details = new UaaClientDetails[inputs.length];
 
     private QueryableResourceManager<ClientDetails> clientDetailsService;
 
@@ -106,7 +106,7 @@ class ClientAdminEndpointsTests {
 
     private static final Set<String> SINGLE_REDIRECT_URL = Collections.singleton("http://redirect.url");
 
-    private IdentityZone testZone = new IdentityZone();
+    private final IdentityZone testZone = new IdentityZone();
 
     private abstract static class NoOpClientDetailsResourceManager implements QueryableResourceManager<ClientDetails> {
         @Override
@@ -208,7 +208,7 @@ class ClientAdminEndpointsTests {
         input.setAutoApproveScopes(new HashSet<>(scopes));
         ClientDetails test = clientDetailsValidator.validate(input, Mode.CREATE);
         for (String scope : scopes) {
-            assertTrue("Client should have " + scope + " autoapprove.", test.isAutoApprove(scope));
+            assertTrue(test.isAutoApprove(scope), "Client should have " + scope + " autoapprove.");
         }
     }
 
@@ -410,7 +410,7 @@ class ClientAdminEndpointsTests {
     @Test
     void testMultipleCreateClientDetails() {
         ClientDetails[] results = endpoints.createClientDetailsTx(inputs);
-        assertEquals("We should have created " + inputs.length + " clients.", inputs.length, results.length);
+        assertEquals(inputs.length, results.length, "We should have created " + inputs.length + " clients.");
         for (int i = 0; i < inputs.length; i++) {
             ClientDetails result = results[i];
             assertNull(result.getClientSecret());
@@ -543,7 +543,7 @@ class ClientAdminEndpointsTests {
         assertEquals(5, result.getResources().size());
         for (String s : attributes) {
             result.getResources().forEach(map ->
-                    assertTrue("Expecting attribute " + s + " to be present", map.containsKey(s))
+                    assertTrue(map.containsKey(s), "Expecting attribute " + s + " to be present")
             );
         }
     }
@@ -976,7 +976,7 @@ class ClientAdminEndpointsTests {
     }
 
     private static void assertSetEquals(Collection<?> a, Collection<?> b) {
-        assertTrue("expected " + a + " but was " + b, a == null && b == null || a != null && b != null && a.containsAll(b) && b.containsAll(a));
+        assertTrue(a == null && b == null || a != null && b != null && a.containsAll(b) && b.containsAll(a), "expected " + a + " but was " + b);
     }
 
     @Test

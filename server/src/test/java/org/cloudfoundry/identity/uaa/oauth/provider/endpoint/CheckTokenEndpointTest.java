@@ -7,13 +7,13 @@ import org.cloudfoundry.identity.uaa.oauth.provider.token.AccessTokenConverter;
 import org.cloudfoundry.identity.uaa.oauth.provider.token.ResourceServerTokenServices;
 import org.cloudfoundry.identity.uaa.oauth.token.Claims;
 import org.cloudfoundry.identity.uaa.util.TimeServiceImpl;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 import java.util.HashMap;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -25,7 +25,7 @@ import static org.mockito.Mockito.when;
 public class CheckTokenEndpointTest {
     private CheckTokenEndpoint checkTokenEndpoint;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         ResourceServerTokenServices resourceServerTokenServices = mock(ResourceServerTokenServices.class);
         OAuth2AccessToken accessToken = mock(OAuth2AccessToken.class);

@@ -22,8 +22,8 @@ import org.cloudfoundry.identity.uaa.scim.exception.ScimResourceNotFoundExceptio
 import org.cloudfoundry.identity.uaa.scim.validate.PasswordValidator;
 import org.cloudfoundry.identity.uaa.test.MockAuthentication;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneHolder;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -31,8 +31,8 @@ import java.util.Collections;
 import java.util.List;
 
 import static java.util.Collections.emptyList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
@@ -40,12 +40,12 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class UaaChangePasswordServiceTest {
+class UaaChangePasswordServiceTest {
     private UaaChangePasswordService subject;
     private ScimUserProvisioning scimUserProvisioning;
     private PasswordValidator passwordValidator;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         SecurityContextHolder.clearContext();
         SecurityContextHolder.getContext().setAuthentication(new MockAuthentication());
@@ -54,28 +54,31 @@ public class UaaChangePasswordServiceTest {
         subject = new UaaChangePasswordService(scimUserProvisioning, passwordValidator);
     }
 
-    @Test(expected = BadCredentialsException.class)
-    public void testChangePasswordWithNoCurrentPasswordOrUsername() {
-        subject.changePassword(null, null, "newPassword");
-    }
-
-    @Test(expected = InvalidPasswordException.class)
-    public void testChangePasswordWithInvalidNewPassword() {
-        doThrow(new InvalidPasswordException("")).when(passwordValidator).validate("invPawd");
-        subject.changePassword("username", "currentPassword", "invPawd");
-    }
-
-    @Test(expected = ScimResourceNotFoundException.class)
-    public void testChangePasswordWithUserNotFound() {
-        String zoneId = IdentityZoneHolder.get().getId();
-        when(scimUserProvisioning.query(anyString(), eq(zoneId))).thenReturn(emptyList());
-        subject.changePassword("username", "currentPassword", "validPassword");
-        verify(passwordValidator).validate("validPassword");
-        verify(scimUserProvisioning).query(anyString(), zoneId);
+    @Test
+    void testChangePasswordWithNoCurrentPasswordOrUsername() {
+        assertThrows(BadCredentialsException.class, () ->
+                subject.changePassword(null, null, "newPassword"));
     }
 
     @Test
-    public void changePassword_ReturnsUnprocessableEntity_PasswordNoveltyViolation() {
+    void testChangePasswordWithInvalidNewPassword() {
+        doThrow(new InvalidPasswordException("")).when(passwordValidator).validate("invPawd");
+        assertThrows(InvalidPasswordException.class, () ->
+                subject.changePassword("username", "currentPassword", "invPawd"));
+    }
+
+    @Test
+    void testChangePasswordWithUserNotFound() {
+        String zoneId = IdentityZoneHolder.get().getId();
+        when(scimUserProvisioning.query(anyString(), eq(zoneId))).thenReturn(emptyList());
+        assertThrows(ScimResourceNotFoundException.class, () ->
+                subject.changePassword("username", "currentPassword", "validPassword"));
+        verify(passwordValidator).validate("validPassword");
+        verify(scimUserProvisioning).retrieveByUsernameAndOriginAndZone(anyString(), eq(OriginKeys.UAA), eq(zoneId));
+    }
+
+    @Test
+    void changePassword_ReturnsUnprocessableEntity_PasswordNoveltyViolation() {
         List<ScimUser> results = getScimUsers();
         when(scimUserProvisioning.retrieveByUsernameAndOriginAndZone(
                 anyString(),
@@ -84,12 +87,9 @@ public class UaaChangePasswordServiceTest {
         ).thenReturn(results);
 
         when(scimUserProvisioning.checkPasswordMatches("id", "samePassword1", IdentityZoneHolder.get().getId())).thenReturn(true);
-        try {
-            subject.changePassword("username", "samePassword1", "samePassword1");
-            fail();
-        } catch (InvalidPasswordException e) {
-            assertEquals("Your new password cannot be the same as the old password.", e.getLocalizedMessage());
-        }
+        InvalidPasswordException e = assertThrows(InvalidPasswordException.class, () ->
+                subject.changePassword("username", "samePassword1", "samePassword1"));
+        assertEquals("Your new password cannot be the same as the old password.", e.getLocalizedMessage());
     }
 
     @Test

@@ -8,14 +8,14 @@ import org.cloudfoundry.identity.uaa.oauth.common.OAuth2RefreshToken;
 import org.cloudfoundry.identity.uaa.oauth.provider.OAuth2Authentication;
 import org.cloudfoundry.identity.uaa.oauth.provider.RequestTokenFactory;
 import org.cloudfoundry.identity.uaa.oauth.provider.TokenRequest;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 import java.util.Date;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
@@ -24,15 +24,13 @@ import static org.junit.Assert.assertTrue;
 public abstract class AbstractPersistentDefaultTokenServicesTests extends AbstractDefaultTokenServicesTests {
 
     @Test
-    public void testTokenEnhancerUpdatesStoredTokens() throws Exception {
+    public void testTokenEnhancerUpdatesStoredTokens() {
         final ExpiringOAuth2RefreshToken refreshToken = new DefaultExpiringOAuth2RefreshToken("testToken", new Date(
                 System.currentTimeMillis() + 100000));
-        getTokenServices().setTokenEnhancer(new TokenEnhancer() {
-            public OAuth2AccessToken enhance(OAuth2AccessToken accessToken, OAuth2Authentication authentication) {
-                DefaultOAuth2AccessToken result = new DefaultOAuth2AccessToken(accessToken);
-                result.setRefreshToken(refreshToken);
-                return result;
-            }
+        getTokenServices().setTokenEnhancer((accessToken, authentication) -> {
+            DefaultOAuth2AccessToken result = new DefaultOAuth2AccessToken(accessToken);
+            result.setRefreshToken(refreshToken);
+            return result;
         });
         OAuth2Authentication authentication = createAuthentication();
         OAuth2AccessToken original = getTokenServices().createAccessToken(authentication);
@@ -44,13 +42,11 @@ public abstract class AbstractPersistentDefaultTokenServicesTests extends Abstra
     }
 
     @Test
-    public void testRefreshedTokenIsEnhanced() throws Exception {
-        getTokenServices().setTokenEnhancer(new TokenEnhancer() {
-            public OAuth2AccessToken enhance(OAuth2AccessToken accessToken, OAuth2Authentication authentication) {
-                DefaultOAuth2AccessToken result = new DefaultOAuth2AccessToken(accessToken);
-                result.setValue("I'mEnhanced");
-                return result;
-            }
+    public void testRefreshedTokenIsEnhanced() {
+        getTokenServices().setTokenEnhancer((accessToken, authentication) -> {
+            DefaultOAuth2AccessToken result = new DefaultOAuth2AccessToken(accessToken);
+            result.setValue("I'mEnhanced");
+            return result;
         });
 
         OAuth2AccessToken accessToken = getTokenServices().createAccessToken(createAuthentication());
@@ -62,7 +58,7 @@ public abstract class AbstractPersistentDefaultTokenServicesTests extends Abstra
     }
 
     @Test
-    public void testOneAccessTokenPerAuthentication() throws Exception {
+    public void testOneAccessTokenPerAuthentication() {
         OAuth2Authentication authentication = createAuthentication();
         OAuth2AccessToken first = getTokenServices().createAccessToken(authentication);
         assertEquals(1, getAccessTokenCount());
@@ -74,7 +70,7 @@ public abstract class AbstractPersistentDefaultTokenServicesTests extends Abstra
     }
 
     @Test
-    public void testOneAccessTokenPerUniqueAuthentication() throws Exception {
+    public void testOneAccessTokenPerUniqueAuthentication() {
         getTokenServices()
                 .createAccessToken(
                         new OAuth2Authentication(RequestTokenFactory.createOAuth2Request("id", false,
@@ -90,7 +86,7 @@ public abstract class AbstractPersistentDefaultTokenServicesTests extends Abstra
     }
 
     @Test
-    public void testRefreshTokenMaintainsState() throws Exception {
+    public void testRefreshTokenMaintainsState() {
         getTokenServices().setSupportRefreshToken(true);
         OAuth2AccessToken accessToken = getTokenServices().createAccessToken(createAuthentication());
         OAuth2RefreshToken expectedExpiringRefreshToken = accessToken.getRefreshToken();
@@ -102,7 +98,7 @@ public abstract class AbstractPersistentDefaultTokenServicesTests extends Abstra
     }
 
     @Test
-    public void testNotReuseRefreshTokenMaintainsState() throws Exception {
+    public void testNotReuseRefreshTokenMaintainsState() {
         getTokenServices().setSupportRefreshToken(true);
         getTokenServices().setReuseRefreshToken(false);
         OAuth2AccessToken accessToken = getTokenServices().createAccessToken(createAuthentication());

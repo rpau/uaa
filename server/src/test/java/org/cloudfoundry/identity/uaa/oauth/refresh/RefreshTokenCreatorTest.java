@@ -6,19 +6,23 @@ import com.google.common.collect.Sets;
 import org.cloudfoundry.identity.uaa.oauth.KeyInfoService;
 import org.cloudfoundry.identity.uaa.oauth.TokenEndpointBuilder;
 import org.cloudfoundry.identity.uaa.oauth.TokenValidityResolver;
+import org.cloudfoundry.identity.uaa.oauth.common.ExpiringOAuth2RefreshToken;
+import org.cloudfoundry.identity.uaa.oauth.common.exceptions.InsufficientScopeException;
 import org.cloudfoundry.identity.uaa.user.UaaUser;
 import org.cloudfoundry.identity.uaa.user.UaaUserPrototype;
 import org.cloudfoundry.identity.uaa.util.TimeServiceImpl;
 import org.cloudfoundry.identity.uaa.util.UaaTokenUtils;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneHolder;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.cloudfoundry.identity.uaa.oauth.common.exceptions.InsufficientScopeException;
-import org.cloudfoundry.identity.uaa.oauth.common.ExpiringOAuth2RefreshToken;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static com.jayway.jsonassert.impl.matcher.IsMapContainingKey.hasKey;
 import static org.cloudfoundry.identity.uaa.oauth.token.ClaimConstants.ACR;
@@ -35,19 +39,17 @@ import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class RefreshTokenCreatorTest {
     private RefreshTokenCreator refreshTokenCreator;
-
-    @Rule
-    public ExpectedException expectedEx = ExpectedException.none();
     private TokenValidityResolver validityResolver;
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         validityResolver = mock(TokenValidityResolver.class);
         when(validityResolver.resolve("someclient")).thenReturn(new Date());
@@ -59,11 +61,12 @@ public class RefreshTokenCreatorTest {
 
     @Test
     public void whenRefreshGrantRestricted_throwsExceptionIfOfflineScopeMissing() {
-        expectedEx.expect(InsufficientScopeException.class);
-        expectedEx.expectMessage("Expected scope uaa.offline_token is missing");
+        Throwable exception = assertThrows(InsufficientScopeException.class, () -> {
 
-        refreshTokenCreator.setRestrictRefreshGrant(true);
-        refreshTokenCreator.ensureRefreshTokenCreationNotRestricted(Lists.newArrayList("openid"));
+            refreshTokenCreator.setRestrictRefreshGrant(true);
+            refreshTokenCreator.ensureRefreshTokenCreationNotRestricted(Lists.newArrayList("openid"));
+        });
+        assertTrue(exception.getMessage().contains("Expected scope uaa.offline_token is missing"));
     }
 
     @Test

@@ -1,18 +1,5 @@
 package org.cloudfoundry.identity.uaa.provider;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.cloudfoundry.identity.uaa.constants.OriginKeys.KEYSTONE;
-import static org.cloudfoundry.identity.uaa.constants.OriginKeys.LDAP;
-import static org.cloudfoundry.identity.uaa.constants.OriginKeys.OIDC10;
-import static org.cloudfoundry.identity.uaa.constants.OriginKeys.UAA;
-import static org.cloudfoundry.identity.uaa.constants.OriginKeys.UNKNOWN;
-import static org.cloudfoundry.identity.uaa.provider.IdentityProviderAliasHandler.IDP_TYPES_ALIAS_SUPPORTED;
-import static org.mockito.Mockito.when;
-
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Stream;
-
 import org.cloudfoundry.identity.uaa.alias.EntityAliasHandler;
 import org.cloudfoundry.identity.uaa.alias.EntityAliasHandlerValidationTest;
 import org.cloudfoundry.identity.uaa.zone.IdentityZone;
@@ -27,6 +14,20 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
+
+import java.util.Arrays;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Stream;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.cloudfoundry.identity.uaa.constants.OriginKeys.KEYSTONE;
+import static org.cloudfoundry.identity.uaa.constants.OriginKeys.LDAP;
+import static org.cloudfoundry.identity.uaa.constants.OriginKeys.OIDC10;
+import static org.cloudfoundry.identity.uaa.constants.OriginKeys.UAA;
+import static org.cloudfoundry.identity.uaa.constants.OriginKeys.UNKNOWN;
+import static org.cloudfoundry.identity.uaa.provider.IdentityProviderAliasHandler.IDP_TYPES_ALIAS_SUPPORTED;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class IdentityProviderAliasHandlerValidationTest extends EntityAliasHandlerValidationTest<IdentityProvider<?>> {
@@ -104,7 +105,7 @@ public class IdentityProviderAliasHandlerValidationTest extends EntityAliasHandl
 
             private static Stream<Arguments> shouldReturnFalse_AliasNotSupportedForIdpType() {
                 final Set<String> typesAliasNotSupported = Set.of(UNKNOWN, LDAP, UAA, KEYSTONE);
-                return existingEntityArgNoAlias().flatMap(existingEntityArgument ->
+                return Arrays.stream(ExistingEntityArgument.values()).flatMap(existingEntityArgument ->
                         typesAliasNotSupported.stream().map(typeAliasNotSupported ->
                                 Arguments.of(existingEntityArgument, typeAliasNotSupported)
                         ));
@@ -127,7 +128,7 @@ public class IdentityProviderAliasHandlerValidationTest extends EntityAliasHandl
             }
 
             private static Stream<Arguments> shouldReturnTrue_AliasSupportedForIdpType() {
-                return existingEntityArgNoAlias().flatMap(existingEntityArgument ->
+                return Arrays.stream(ExistingEntityArgument.values()).flatMap(existingEntityArgument ->
                         IDP_TYPES_ALIAS_SUPPORTED.stream().map(typeAliasSupported ->
                                 Arguments.of(existingEntityArgument, typeAliasSupported)
                         ));

@@ -2,23 +2,24 @@ package org.cloudfoundry.identity.uaa.user;
 
 import org.cloudfoundry.identity.uaa.constants.OriginKeys;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneHolder;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import java.util.Collections;
 import java.util.Date;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class InMemoryUaaUserDatabaseTests {
 
     UaaUser user = new UaaUser("test-id", "username", "password", "email", UaaAuthority.USER_AUTHORITIES, "givenname", "familyname", new Date(), new Date(), OriginKeys.UAA, "externalID", false, IdentityZoneHolder.get().getId(), "test-id", new Date());
     InMemoryUaaUserDatabase db;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         db = new InMemoryUaaUserDatabase(Collections.singleton(user));
     }
@@ -34,14 +35,16 @@ public class InMemoryUaaUserDatabaseTests {
         assertSame(user.getUsername(), db.retrieveUserPrototypeByName(user.getUsername(), user.getOrigin()).getUsername());
     }
 
-    @Test(expected = UsernameNotFoundException.class)
+    @Test
     public void testRetrieveUserByNameInvalidOrigin() {
-        db.retrieveUserByName(user.getUsername(), OriginKeys.LDAP);
+        assertThrows(UsernameNotFoundException.class, () ->
+                db.retrieveUserByName(user.getUsername(), OriginKeys.LDAP));
     }
 
-    @Test(expected = UsernameNotFoundException.class)
+    @Test
     public void testRetrieveUserByNameInvalidUsername() {
-        db.retrieveUserByName(user.getUsername() + "1", OriginKeys.UAA);
+        assertThrows(UsernameNotFoundException.class, () ->
+                db.retrieveUserByName(user.getUsername() + "1", OriginKeys.UAA));
     }
 
     @Test
@@ -54,9 +57,10 @@ public class InMemoryUaaUserDatabaseTests {
         assertSame(user.getId(), db.retrieveUserById(user.getId()).getId());
     }
 
-    @Test(expected = UsernameNotFoundException.class)
+    @Test
     public void testRetrieveUserByInvalidId() {
-        db.retrieveUserById(user.getId() + "1");
+        assertThrows(UsernameNotFoundException.class, () ->
+                db.retrieveUserById(user.getId() + "1"));
     }
 
     @Test

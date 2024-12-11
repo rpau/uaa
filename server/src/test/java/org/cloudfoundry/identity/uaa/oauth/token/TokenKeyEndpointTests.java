@@ -41,11 +41,11 @@ import java.util.stream.Collectors;
 import static org.cloudfoundry.identity.uaa.oauth.jwt.JwtHelperX5tTest.CERTIFICATE_1;
 import static org.cloudfoundry.identity.uaa.oauth.jwt.JwtHelperX5tTest.SIGNING_KEY_1;
 import static org.cloudfoundry.identity.uaa.util.UaaStringUtils.DEFAULT_UAA_URL;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -184,9 +184,9 @@ class TokenKeyEndpointTests {
         //ensure that none of the keys are padded
         keys.forEach(
                 key ->
-                        assertFalse("Invalid padding for key:" + key.getKid(),
-                                key.getExponent().endsWith("=") ||
-                                        key.getModulus().endsWith("="))
+                        assertFalse(key.getExponent().endsWith("=") ||
+                                        key.getModulus().endsWith("="),
+                                "Invalid padding for key:" + key.getKid())
         );
     }
 

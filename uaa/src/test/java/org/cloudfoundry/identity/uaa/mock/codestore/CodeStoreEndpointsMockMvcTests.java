@@ -21,7 +21,7 @@ import java.sql.Timestamp;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -43,9 +43,9 @@ class CodeStoreEndpointsMockMvcTests {
 
     @BeforeEach
     void setUp(@Autowired JdbcTemplate jdbcTemplate,
-            @Autowired JdbcExpiringCodeStore jdbcExpiringCodeStore,
-            @Autowired MockMvc mockMvc,
-            @Autowired TestClient testClient) throws Exception {
+               @Autowired JdbcExpiringCodeStore jdbcExpiringCodeStore,
+               @Autowired MockMvc mockMvc,
+               @Autowired TestClient testClient) throws Exception {
         this.jdbcTemplate = jdbcTemplate;
         this.jdbcExpiringCodeStore = jdbcExpiringCodeStore;
         this.mockMvc = mockMvc;

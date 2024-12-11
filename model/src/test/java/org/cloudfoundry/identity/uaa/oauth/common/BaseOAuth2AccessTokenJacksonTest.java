@@ -1,12 +1,9 @@
 package org.cloudfoundry.identity.uaa.oauth.common;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
-
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Collections;
 import java.util.Date;
@@ -19,7 +16,7 @@ import java.util.TreeSet;
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 abstract class BaseOAuth2AccessTokenJacksonTest {
     protected static final String ACCESS_TOKEN_EMPTYSCOPE = "{\"access_token\":\"token-value\",\"token_type\":\"bearer\",\"refresh_token\":\"refresh-value\",\"expires_in\":10,\"scope\":\"\"}";
 
@@ -39,9 +36,6 @@ abstract class BaseOAuth2AccessTokenJacksonTest {
 
     protected static final String ACCESS_TOKEN_ZERO_EXPIRES = "{\"access_token\":\"token-value\",\"token_type\":\"bearer\",\"expires_in\":0}";
 
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
-
     @Mock
     protected Date expiration;
 
@@ -53,7 +47,7 @@ abstract class BaseOAuth2AccessTokenJacksonTest {
         super();
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
         accessToken = new DefaultOAuth2AccessToken("token-value");
         accessToken.setExpiration(expiration);

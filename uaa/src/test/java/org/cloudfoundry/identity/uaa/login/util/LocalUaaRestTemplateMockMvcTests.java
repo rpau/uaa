@@ -14,9 +14,12 @@ import org.springframework.util.ReflectionUtils;
 import java.lang.reflect.Method;
 import java.net.URI;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.startsWith;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DefaultTestContext
 class LocalUaaRestTemplateMockMvcTests {
@@ -28,9 +31,9 @@ class LocalUaaRestTemplateMockMvcTests {
     @Test
     void localUaaRestTemplateAcquireToken() {
         OAuth2AccessToken token = localUaaRestTemplate.acquireAccessToken(new DefaultOAuth2ClientContext());
-        assertTrue("Scopes should contain oauth.login", token.getScope().contains("oauth.login"));
-        assertTrue("Scopes should contain notifications.write", token.getScope().contains("notifications.write"));
-        assertTrue("Scopes should contain critical_notifications.write", token.getScope().contains("critical_notifications.write"));
+        assertTrue(token.getScope().contains("oauth.login"), "Scopes should contain oauth.login");
+        assertTrue(token.getScope().contains("notifications.write"), "Scopes should contain notifications.write");
+        assertTrue(token.getScope().contains("critical_notifications.write"), "Scopes should contain critical_notifications.write");
     }
 
     @Test
@@ -39,8 +42,8 @@ class LocalUaaRestTemplateMockMvcTests {
         Method createRequest = OAuth2RestTemplate.class.getDeclaredMethod("createRequest", URI.class, HttpMethod.class);
         ReflectionUtils.makeAccessible(createRequest);
         ClientHttpRequest request = (ClientHttpRequest) createRequest.invoke(localUaaRestTemplate, new URI("http://localhost/oauth/token"), HttpMethod.POST);
-        assertEquals("authorization bearer header should be present", 1, request.getHeaders().get("Authorization").size());
-        assertNotNull("authorization bearer header should be present", request.getHeaders().get("Authorization").get(0));
+        assertEquals(1, request.getHeaders().get("Authorization").size(), "authorization bearer header should be present");
+        assertNotNull(request.getHeaders().get("Authorization").get(0), "authorization bearer header should be present");
         assertThat(request.getHeaders().get("Authorization").get(0).toLowerCase(), startsWith("bearer "));
         assertThat(request.getHeaders().get("Authorization").get(0), endsWith(token.getValue()));
     }

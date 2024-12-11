@@ -13,14 +13,14 @@
  *******************************************************************************/
 package org.cloudfoundry.identity.uaa.user;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 /**
  * @author Dave Syer
- *
  */
 public class UaaAuthorityTests {
 

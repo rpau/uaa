@@ -1,6 +1,6 @@
 /*
  * *****************************************************************************
- *     Cloud Foundry 
+ *     Cloud Foundry
  *     Copyright (c) [2009-2016] Pivotal Software, Inc. All Rights Reserved.
  *
  *     This product is licensed to you under the Apache License, Version 2.0 (the "License").
@@ -13,19 +13,20 @@
  *******************************************************************************/
 package org.cloudfoundry.identity.uaa.config;
 
+import org.cloudfoundry.identity.uaa.impl.config.NestedMapPropertySource;
+import org.junit.jupiter.api.Test;
+import org.yaml.snakeyaml.Yaml;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
-import org.cloudfoundry.identity.uaa.impl.config.NestedMapPropertySource;
-import org.junit.Test;
-import org.yaml.snakeyaml.Yaml;
-
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Dave Syer
- * 
  */
 public class NestedMapPropertySourceTests {
 

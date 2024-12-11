@@ -24,7 +24,6 @@ import org.cloudfoundry.identity.uaa.zone.IdentityZoneHolder;
 import org.cloudfoundry.identity.uaa.zone.JdbcIdentityZoneProvisioning;
 import org.cloudfoundry.identity.uaa.zone.MultitenancyFixture;
 import org.cloudfoundry.identity.uaa.zone.beans.IdentityZoneManagerImpl;
-import org.junit.Assert;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -676,7 +675,7 @@ class JdbcScimGroupMembershipManagerTests {
                 count++;
             }
         }
-        Assert.assertEquals(i, count);
+        Assertions.assertEquals(i, count);
     }
 
     private static void mapExternalGroup(

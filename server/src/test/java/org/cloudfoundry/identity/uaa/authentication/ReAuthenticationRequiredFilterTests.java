@@ -15,16 +15,23 @@
 
 package org.cloudfoundry.identity.uaa.authentication;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletResponse;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.matches;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.same;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class ReAuthenticationRequiredFilterTests {
 
@@ -34,7 +41,7 @@ public class ReAuthenticationRequiredFilterTests {
     private HttpServletResponse response;
     private FilterChain chain;
 
-    @Before
+    @BeforeEach
     public void setup() {
         filter = new ReAuthenticationRequiredFilter("cloudfoundry-login");
         authentication = mock(UaaAuthentication.class);
@@ -44,7 +51,7 @@ public class ReAuthenticationRequiredFilterTests {
         request.setContextPath("");
     }
 
-    @After
+    @AfterEach
     public void clear() {
         SecurityContextHolder.clearContext();
     }

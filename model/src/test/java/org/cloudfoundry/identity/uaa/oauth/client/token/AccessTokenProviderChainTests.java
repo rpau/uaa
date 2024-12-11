@@ -18,8 +18,8 @@ import org.cloudfoundry.identity.uaa.oauth.token.AccessTokenProviderChain;
 import org.cloudfoundry.identity.uaa.oauth.token.AccessTokenRequest;
 import org.cloudfoundry.identity.uaa.oauth.token.ClientTokenServices;
 import org.cloudfoundry.identity.uaa.oauth.token.DefaultAccessTokenRequest;
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -33,9 +33,10 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
@@ -63,7 +64,7 @@ public class AccessTokenProviderChainTests {
         resource.setId("resource");
     }
 
-    @After
+    @AfterEach
     public void close() {
         SecurityContextHolder.clearContext();
     }
@@ -176,18 +177,20 @@ public class AccessTokenProviderChainTests {
         assertEquals(accessToken, token);
     }
 
-    @Test(expected = InvalidTokenException.class)
-    public void testSunnyDayWithExpiredTokenAndExpiredRefreshToken() throws Exception {
-        AccessTokenProviderChain chain = new AccessTokenProviderChain(Arrays.asList(new StubAccessTokenProvider()));
-        accessToken.setExpiration(new Date(System.currentTimeMillis() - 1000));
-        DefaultOAuth2RefreshToken refreshToken = new DefaultExpiringOAuth2RefreshToken("EXP",
-                new Date(System.currentTimeMillis() - 1000));
-        accessToken.setRefreshToken(refreshToken);
-        AccessTokenRequest request = new DefaultAccessTokenRequest();
-        request.setExistingToken(accessToken);
-        SecurityContextHolder.getContext().setAuthentication(user);
-        OAuth2AccessToken token = chain.obtainAccessToken(resource, request);
-        assertNotNull(token);
+    @Test
+    public void testSunnyDayWithExpiredTokenAndExpiredRefreshToken() {
+        assertThrows(InvalidTokenException.class, () -> {
+            AccessTokenProviderChain chain = new AccessTokenProviderChain(Arrays.asList(new StubAccessTokenProvider()));
+            accessToken.setExpiration(new Date(System.currentTimeMillis() - 1000));
+            DefaultOAuth2RefreshToken refreshToken = new DefaultExpiringOAuth2RefreshToken("EXP",
+                    new Date(System.currentTimeMillis() - 1000));
+            accessToken.setRefreshToken(refreshToken);
+            AccessTokenRequest request = new DefaultAccessTokenRequest();
+            request.setExistingToken(accessToken);
+            SecurityContextHolder.getContext().setAuthentication(user);
+            OAuth2AccessToken token = chain.obtainAccessToken(resource, request);
+            assertNotNull(token);
+        });
     }
 
     @Test
@@ -218,28 +221,32 @@ public class AccessTokenProviderChainTests {
         // possible
     }
 
-    @Test(expected = InsufficientAuthenticationException.class)
-    public void testAnonymousUser() throws Exception {
-        AccessTokenProviderChain chain = new AccessTokenProviderChain(Arrays.asList(new StubAccessTokenProvider()));
-        SecurityContextHolder.getContext()
-                .setAuthentication(new AnonymousAuthenticationToken("foo", "bar", user.getAuthorities()));
-        AccessTokenRequest request = new DefaultAccessTokenRequest();
-        OAuth2AccessToken token = chain.obtainAccessToken(resource, request);
-        assertNotNull(token);
+    @Test
+    public void testAnonymousUser() {
+        assertThrows(InsufficientAuthenticationException.class, () -> {
+            AccessTokenProviderChain chain = new AccessTokenProviderChain(Arrays.asList(new StubAccessTokenProvider()));
+            SecurityContextHolder.getContext()
+                    .setAuthentication(new AnonymousAuthenticationToken("foo", "bar", user.getAuthorities()));
+            AccessTokenRequest request = new DefaultAccessTokenRequest();
+            OAuth2AccessToken token = chain.obtainAccessToken(resource, request);
+            assertNotNull(token);
+        });
     }
 
-    @Test(expected = UserRedirectRequiredException.class)
-    public void testRequiresAuthenticationButRedirected() throws Exception {
-        final AccessTokenRequest request = new DefaultAccessTokenRequest();
-        AccessTokenProviderChain chain = new AccessTokenProviderChain(Arrays.asList(new StubAccessTokenProvider() {
-            @Override
-            public OAuth2AccessToken obtainAccessToken(OAuth2ProtectedResourceDetails details,
-                    AccessTokenRequest parameters) throws UserRedirectRequiredException, AccessDeniedException {
-                throw new UserRedirectRequiredException("redirect test", request.toSingleValueMap());
-            }
-        }));
-        OAuth2AccessToken token = chain.obtainAccessToken(resource, request);
-        assertNotNull(token);
+    @Test
+    public void testRequiresAuthenticationButRedirected() {
+        assertThrows(UserRedirectRequiredException.class, () -> {
+            final AccessTokenRequest request = new DefaultAccessTokenRequest();
+            AccessTokenProviderChain chain = new AccessTokenProviderChain(Arrays.asList(new StubAccessTokenProvider() {
+                @Override
+                public OAuth2AccessToken obtainAccessToken(OAuth2ProtectedResourceDetails details,
+                                                           AccessTokenRequest parameters) throws UserRedirectRequiredException, AccessDeniedException {
+                    throw new UserRedirectRequiredException("redirect test", request.toSingleValueMap());
+                }
+            }));
+            OAuth2AccessToken token = chain.obtainAccessToken(resource, request);
+            assertNotNull(token);
+        });
     }
 
     @Test
@@ -321,7 +328,7 @@ public class AccessTokenProviderChainTests {
     }
 
     private AccessTokenProviderChain getTokenProvider(DefaultOAuth2AccessToken accessToken,
-            DefaultOAuth2AccessToken refreshedAccessToken) {
+                                                      DefaultOAuth2AccessToken refreshedAccessToken) {
         AccessTokenProvider accessTokenProvider = new AuthorizationCodeAccessTokenProvider();
         accessTokenProvider = spy(accessTokenProvider);
         doReturn(accessToken).when(accessTokenProvider).obtainAccessToken(any(OAuth2ProtectedResourceDetails.class),
@@ -334,7 +341,7 @@ public class AccessTokenProviderChainTests {
 
     private class StubAccessTokenProvider implements AccessTokenProvider {
         public OAuth2AccessToken obtainAccessToken(OAuth2ProtectedResourceDetails details,
-                AccessTokenRequest parameters) throws UserRedirectRequiredException, AccessDeniedException {
+                                                   AccessTokenRequest parameters) throws UserRedirectRequiredException, AccessDeniedException {
             return accessToken;
         }
 
@@ -343,7 +350,7 @@ public class AccessTokenProviderChainTests {
         }
 
         public OAuth2AccessToken refreshAccessToken(OAuth2ProtectedResourceDetails resource,
-                OAuth2RefreshToken refreshToken, AccessTokenRequest request) throws UserRedirectRequiredException {
+                                                    OAuth2RefreshToken refreshToken, AccessTokenRequest request) throws UserRedirectRequiredException {
             if (refreshToken instanceof ExpiringOAuth2RefreshToken token) {
                 if (token.getExpiration().getTime() < System
                         .currentTimeMillis()) {

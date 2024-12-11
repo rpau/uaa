@@ -6,8 +6,8 @@ import org.cloudfoundry.identity.uaa.oauth.client.resource.OAuth2AccessDeniedExc
 import org.cloudfoundry.identity.uaa.oauth.common.AuthenticationScheme;
 import org.cloudfoundry.identity.uaa.oauth.common.DefaultOAuth2AccessToken;
 import org.cloudfoundry.identity.uaa.oauth.common.OAuth2AccessToken;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -28,7 +28,8 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.util.Arrays;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
@@ -52,10 +53,10 @@ public class OAuth2AccessTokenSupportTests {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private final OAuth2AccessTokenSupport support = new OAuth2AccessTokenSupport(){
+    private final OAuth2AccessTokenSupport support = new OAuth2AccessTokenSupport() {
     };
 
-    @Before
+    @BeforeEach
     public void init() throws Exception {
         resource.setClientId("client");
         resource.setClientSecret("secret");
@@ -68,11 +69,13 @@ public class OAuth2AccessTokenSupportTests {
         });
     }
 
-    @Test(expected = OAuth2AccessDeniedException.class)
+    @Test
     public void testRetrieveTokenFailsWhenTokenEndpointNotAvailable() {
-        error = new IOException("Planned");
-        response.setStatus(HttpStatus.BAD_REQUEST);
-        support.retrieveToken(request, resource, form, requestHeaders);
+        assertThrows(OAuth2AccessDeniedException.class, () -> {
+            error = new IOException("Planned");
+            response.setStatus(HttpStatus.BAD_REQUEST);
+            support.retrieveToken(request, resource, form, requestHeaders);
+        });
     }
 
     @Test

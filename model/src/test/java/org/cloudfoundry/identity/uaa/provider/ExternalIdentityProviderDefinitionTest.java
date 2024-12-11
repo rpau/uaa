@@ -1,15 +1,17 @@
 package org.cloudfoundry.identity.uaa.provider;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ExternalIdentityProviderDefinitionTest {
 
     ExternalIdentityProviderDefinition definition;
 
-    @Before
+    @BeforeEach
     public void createDefinition() {
         definition = new ExternalIdentityProviderDefinition();
     }

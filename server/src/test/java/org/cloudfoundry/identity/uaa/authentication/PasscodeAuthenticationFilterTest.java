@@ -5,8 +5,8 @@ import org.cloudfoundry.identity.uaa.authentication.PasscodeAuthenticationFilter
 import org.cloudfoundry.identity.uaa.codestore.ExpiringCodeStore;
 import org.cloudfoundry.identity.uaa.codestore.InMemoryExpiringCodeStore;
 import org.cloudfoundry.identity.uaa.util.MockTimeService;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
@@ -38,7 +38,7 @@ public class PasscodeAuthenticationFilterTest {
         }
     }
 
-    @Before
+    @BeforeEach
     public void setup() {
         Logger logger = LoggerFactory.getLogger(ExpiringCodeAuthenticationManager.class);
         ExpiringCodeStore expiringCodeStore = new InMemoryExpiringCodeStore(new MockTimeService());

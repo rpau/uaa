@@ -17,9 +17,9 @@ package org.cloudfoundry.identity.uaa.web;
 
 import org.cloudfoundry.identity.uaa.util.SessionUtils;
 import org.cloudfoundry.identity.uaa.web.UaaSavedRequestCache.ClientRedirectSavedRequest;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -38,11 +38,11 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import static org.cloudfoundry.identity.uaa.web.UaaSavedRequestAwareAuthenticationSuccessHandler.FORM_REDIRECT_PARAMETER;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -62,7 +62,7 @@ public class UaaSavedRequestCacheTests {
     private MockHttpServletRequest request;
     private String redirectUri;
 
-    @Before
+    @BeforeEach
     public void setup() {
         cache = new UaaSavedRequestCache();
         session = new MockHttpSession();
@@ -71,7 +71,7 @@ public class UaaSavedRequestCacheTests {
         spy = spy(cache);
     }
 
-    @After
+    @AfterEach
     public void reset() {
         SecurityContextHolder.clearContext();
     }

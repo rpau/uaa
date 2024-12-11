@@ -21,9 +21,9 @@ import org.cloudfoundry.identity.uaa.user.UaaUser;
 import org.cloudfoundry.identity.uaa.user.UaaUserDatabase;
 import org.cloudfoundry.identity.uaa.zone.IdentityZone;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneHolder;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -62,7 +62,7 @@ public class SessionResetFilterTests {
     UaaUser user;
     UaaUser userWithNoPasswordModification;
 
-    @Before
+    @BeforeEach
     public void setUpFilter() {
 
         yesterday = new Date(System.currentTimeMillis() - (1000 * 60 * 60 * 24));
@@ -124,7 +124,7 @@ public class SessionResetFilterTests {
         userDatabase = new InMemoryUaaUserDatabase(users);
     }
 
-    @After
+    @AfterEach
     public void clearThingsUp() {
         SecurityContextHolder.clearContext();
         IdentityZoneHolder.clear();

@@ -1,13 +1,13 @@
 package org.cloudfoundry.identity.uaa.oauth;
 
 import org.cloudfoundry.identity.uaa.util.TimeService;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Date;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -16,7 +16,7 @@ public class TokenValidityResolverTest {
     private TokenValidityResolver resolver;
     private ClientTokenValidity clientTokenValidity;
 
-    @Before
+    @BeforeEach
     public void setup() {
         int globalAccessTokenValiditySeconds = 120;
 

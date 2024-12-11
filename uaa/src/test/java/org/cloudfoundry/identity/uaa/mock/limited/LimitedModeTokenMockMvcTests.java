@@ -28,9 +28,11 @@ import org.springframework.security.crypto.codec.Base64;
 
 import java.io.File;
 
-import static org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils.*;
+import static org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils.getLimitedModeStatusFile;
+import static org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils.resetLimitedModeStatusFile;
+import static org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils.setLimitedModeStatusFile;
 import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -67,12 +69,12 @@ public class LimitedModeTokenMockMvcTests extends TokenMvcMockTests {
                 true);
         String token = MockMvcUtils.getClientCredentialsOAuthAccessToken(mockMvc, client.getClientId(), SECRET, null, null, true);
         mockMvc.perform(
-                post("/check_token")
-                        .param("token", token)
-                        .header(AUTHORIZATION,
-                                "Basic " + new String(Base64.encode((client.getClientId() + ":" + SECRET).getBytes())))
-        )
-        .andExpect(status().isOk())
+                        post("/check_token")
+                                .param("token", token)
+                                .header(AUTHORIZATION,
+                                        "Basic " + new String(Base64.encode((client.getClientId() + ":" + SECRET).getBytes())))
+                )
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.scope").value(containsInAnyOrder("clients.read", "uaa.resource")))
                 .andExpect(jsonPath("$.client_id").value(client.getClientId()))
                 .andExpect(jsonPath("$.jti").value(token));

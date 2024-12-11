@@ -15,28 +15,28 @@
 
 package org.cloudfoundry.identity.uaa.metrics;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class QueryFilterTests {
 
     private RequestMetric metric;
     private QueryFilter filter;
 
-    @Before
+    @BeforeEach
     public void setup() {
         metric = new RequestMetric();
         MetricsAccessor.setCurrent(metric);
         filter = new QueryFilter();
     }
 
-    @After
+    @AfterEach
     public void clear() {
         MetricsAccessor.clear();
     }

@@ -1,6 +1,6 @@
 /*
  * *****************************************************************************
- *     Cloud Foundry 
+ *     Cloud Foundry
  *     Copyright (c) [2009-2016] Pivotal Software, Inc. All Rights Reserved.
  *
  *     This product is licensed to you under the Apache License, Version 2.0 (the "License").
@@ -15,18 +15,18 @@ package org.cloudfoundry.identity.api.web;
 
 import org.cloudfoundry.identity.uaa.oauth.client.test.OAuth2ContextConfiguration;
 import org.cloudfoundry.identity.uaa.oauth.common.OAuth2AccessToken;
-import org.cloudfoundry.identity.uaa.test.TestAccountSetup;
+import org.cloudfoundry.identity.uaa.test.TestAccountExtension;
 import org.cloudfoundry.identity.uaa.test.UaaTestAccounts;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestOperations;
+import org.springframework.web.client.RestTemplate;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Dave Syer
@@ -34,36 +34,33 @@ import static org.junit.Assert.assertTrue;
 @OAuth2ContextConfiguration
 public class AppsIntegrationTests {
 
-    @Rule
-    public ServerRunning serverRunning = ServerRunning.isRunning();
+    @RegisterExtension
+    private static final ServerRunningExtension serverRunning = ServerRunningExtension.connect();
 
-    private UaaTestAccounts testAccounts = UaaTestAccounts.standard(serverRunning);
+    private static final UaaTestAccounts testAccounts = UaaTestAccounts.standard(serverRunning);
 
-    @Rule
-    public OAuth2ContextSetup context = OAuth2ContextSetup.withTestAccounts(serverRunning, testAccounts);
+    @RegisterExtension
+    private static final TestAccountExtension testAccountSetup = TestAccountExtension.standard(serverRunning, testAccounts);
 
-    @Rule
-    public TestAccountSetup testAccountSetup = TestAccountSetup.standard(serverRunning, testAccounts);
+    @RegisterExtension
+    private static final OAuth2ContextExtension context = OAuth2ContextExtension.withTestAccounts(serverRunning, testAccountSetup);
 
     /**
      * tests a happy-day flow of the native application profile.
      */
     @Test
     public void testHappyDay() {
-
-        RestOperations restTemplate = serverRunning.createRestTemplate();
+        RestTemplate restTemplate = serverRunning.createRestTemplate();
         ResponseEntity<String> response = restTemplate.getForEntity(serverRunning.getUrl("/api/apps"), String.class);
-        // first make sure the resource is actually protected.
+        // first, make sure the resource is actually protected.
         assertNotSame(HttpStatus.OK, response.getStatusCode());
         HttpHeaders approvalHeaders = new HttpHeaders();
         OAuth2AccessToken accessToken = context.getAccessToken();
         approvalHeaders.set("Authorization", "bearer " + accessToken.getValue());
 
-        ResponseEntity<String> result = serverRunning.getForString("/api/apps");
+        ResponseEntity<String> result = serverRunning.getForString("/api/apps", approvalHeaders);
         assertEquals(HttpStatus.OK, result.getStatusCode());
         String body = result.getBody();
-        assertTrue("Wrong response: " + body, body.contains("dsyerapi.cloudfoundry.com"));
-
+        assertTrue(body.contains("dsyerapi.cloudfoundry.com"), "Wrong response: " + body);
     }
-
 }

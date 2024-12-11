@@ -2,12 +2,10 @@ package org.cloudfoundry.identity.uaa.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hamcrest.CoreMatchers;
-import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.hamcrest.collection.IsIterableContainingInOrder;
 import org.hamcrest.collection.IsMapContaining;
 import org.hamcrest.collection.IsMapWithSize;
-import org.junit.Assert;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -22,6 +20,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -49,7 +48,7 @@ class UaaClientDetailsTest {
         void copiesUaaBaseClientDetails() {
             testClient.setClientSecret("secret");
             UaaClientDetails copy = new UaaClientDetails(testClient);
-            MatcherAssert.assertThat(copy, CoreMatchers.is(
+            assertThat(copy, CoreMatchers.is(
                     UaaClientDetailsMatcher.aUaaClientDetails()
                             .withClientId("test")
                             .withClientSecret("secret")
@@ -60,14 +59,14 @@ class UaaClientDetailsTest {
             List<String> authorities = copy.getAuthorities().stream()
                     .map(GrantedAuthority::getAuthority)
                     .toList();
-            MatcherAssert.assertThat(authorities, IsIterableContainingInOrder.contains("test.admin"));
+            assertThat(authorities, IsIterableContainingInOrder.contains("test.admin"));
         }
 
         @Test
         void copiesAdditionalInformation() {
             testClient.setAdditionalInformation(Collections.singletonMap("key", "value"));
             UaaClientDetails copy = new UaaClientDetails(testClient);
-            MatcherAssert.assertThat(copy, CoreMatchers.is(
+            assertThat(copy, CoreMatchers.is(
                     UaaClientDetailsMatcher.aUaaClientDetails()
                             .withAdditionalInformation(Matchers.allOf(IsMapWithSize.aMapWithSize(1), IsMapContaining.hasEntry("key", "value")))
             ));
@@ -110,7 +109,7 @@ class UaaClientDetailsTest {
         void splitsScopesWhichIncludeAComma() {
             UaaClientDetails client = new UaaClientDetails(new UaaClientDetails());
             client.setScope(Collections.singleton("foo,bar"));
-            MatcherAssert.assertThat(client, CoreMatchers.is(
+            assertThat(client, CoreMatchers.is(
                     UaaClientDetailsMatcher.aUaaClientDetails().withScope(Matchers.containsInAnyOrder("foo", "bar"))
             ));
         }
@@ -121,19 +120,19 @@ class UaaClientDetailsTest {
         @Test
         void testBaseClientDetailsDefaultConstructor() {
             UaaClientDetails details = new UaaClientDetails();
-            Assert.assertEquals("[]", details.getResourceIds().toString());
-            Assert.assertEquals("[]", details.getScope().toString());
-            Assert.assertEquals("[]", details.getAuthorizedGrantTypes().toString());
-            Assert.assertEquals("[]", details.getAuthorities().toString());
+            Assertions.assertEquals("[]", details.getResourceIds().toString());
+            Assertions.assertEquals("[]", details.getScope().toString());
+            Assertions.assertEquals("[]", details.getAuthorizedGrantTypes().toString());
+            Assertions.assertEquals("[]", details.getAuthorities().toString());
         }
 
         @Test
         void testBaseClientDetailsConvenienceConstructor() {
             UaaClientDetails details = new UaaClientDetails("foo", "", "foo,bar", "authorization_code", "ROLE_USER");
-            Assert.assertEquals("[]", details.getResourceIds().toString());
-            Assert.assertEquals("[bar, foo]", new TreeSet<String>(details.getScope()).toString());
-            Assert.assertEquals("[authorization_code]", details.getAuthorizedGrantTypes().toString());
-            Assert.assertEquals("[ROLE_USER]", details.getAuthorities().toString());
+            Assertions.assertEquals("[]", details.getResourceIds().toString());
+            Assertions.assertEquals("[bar, foo]", new TreeSet<String>(details.getScope()).toString());
+            Assertions.assertEquals("[authorization_code]", details.getAuthorizedGrantTypes().toString());
+            Assertions.assertEquals("[ROLE_USER]", details.getAuthorities().toString());
         }
 
         @Test
@@ -190,7 +189,7 @@ class UaaClientDetailsTest {
             UaaClientDetails details = new ObjectMapper().readValue(value, UaaClientDetails.class);
             UaaClientDetails expected = new UaaClientDetails("foo", "", "foo,bar", "authorization_code", "ROLE_USER");
             expected.setAdditionalInformation(Collections.singletonMap("foo", (Object) "bar"));
-            Assert.assertEquals(expected, details);
+            Assertions.assertEquals(expected, details);
         }
 
         @Test
@@ -200,7 +199,7 @@ class UaaClientDetailsTest {
             UaaClientDetails details = new ObjectMapper().readValue(value, UaaClientDetails.class);
             UaaClientDetails expected = new UaaClientDetails("foo", "", "foo,bar", "authorization_code", "ROLE_USER,ROLE_ADMIN");
             expected.setAdditionalInformation(Collections.singletonMap("foo", (Object) "bar"));
-            Assert.assertEquals(expected, details);
+            Assertions.assertEquals(expected, details);
         }
 
         @Test
@@ -209,7 +208,7 @@ class UaaClientDetailsTest {
             details.setAccessTokenValiditySeconds(100);
             UaaClientDetails other = new UaaClientDetails();
             other.setAccessTokenValiditySeconds(100);
-            Assert.assertEquals(details, other);
+            Assertions.assertEquals(details, other);
         }
 
         @Test

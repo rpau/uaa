@@ -12,10 +12,10 @@ import org.cloudfoundry.identity.uaa.oauth.common.exceptions.RedirectMismatchExc
 import org.cloudfoundry.identity.uaa.oauth.common.exceptions.UnauthorizedClientException;
 import org.cloudfoundry.identity.uaa.oauth.common.exceptions.UnsupportedGrantTypeException;
 import org.cloudfoundry.identity.uaa.oauth.common.exceptions.UserDeniedAuthorizationException;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
@@ -25,7 +25,7 @@ public class OAuth2ExceptionJackson2DeserializerTests {
     private static final String DETAILS = "some detail";
     private static ObjectMapper mapper;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() {
         mapper = new ObjectMapper();
     }

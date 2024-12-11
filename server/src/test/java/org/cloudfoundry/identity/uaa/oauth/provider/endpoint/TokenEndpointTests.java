@@ -15,12 +15,12 @@ import org.cloudfoundry.identity.uaa.oauth.provider.OAuth2RequestFactory;
 import org.cloudfoundry.identity.uaa.oauth.provider.TokenGranter;
 import org.cloudfoundry.identity.uaa.oauth.provider.TokenRequest;
 import org.cloudfoundry.identity.uaa.oauth.provider.error.DefaultWebResponseExceptionTranslator;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,9 +37,10 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -49,8 +50,8 @@ import static org.mockito.Mockito.when;
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-@RunWith(MockitoJUnitRunner.class)
-public class TokenEndpointTests {
+@ExtendWith(MockitoExtension.class)
+class TokenEndpointTests {
 
     @Mock
     private TokenGranter tokenGranter;
@@ -75,8 +76,8 @@ public class TokenEndpointTests {
                 parameters.get(OAuth2Utils.GRANT_TYPE));
     }
 
-    @Before
-    public void init() throws Exception {
+    @BeforeEach
+    void init() {
         endpoint = new TokenEndpoint();
         endpoint.setTokenGranter(tokenGranter);
         endpoint.setOAuth2RequestFactory(authorizationRequestFactory);
@@ -85,7 +86,7 @@ public class TokenEndpointTests {
     }
 
     @Test
-    public void testSetterAndGetter() throws Exception {
+    void testSetterAndGetter() throws Exception {
         endpoint.setProviderExceptionHandler(new DefaultWebResponseExceptionTranslator());
         assertNotNull(endpoint.getExceptionTranslator());
         endpoint.setOAuth2RequestFactory(null);
@@ -95,8 +96,7 @@ public class TokenEndpointTests {
     }
 
     @Test
-    public void testGetAccessTokenWithNoClientId() throws HttpRequestMethodNotSupportedException {
-
+    void testGetAccessTokenWithNoClientId() {
         HashMap<String, String> parameters = new HashMap<>();
         parameters.put(OAuth2Utils.GRANT_TYPE, "authorization_code");
 
@@ -116,11 +116,11 @@ public class TokenEndpointTests {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         OAuth2AccessToken body = response.getBody();
         assertEquals(body, expectedToken);
-        assertTrue("Wrong body: " + body, body.getTokenType() != null);
+        assertTrue(body.getTokenType() != null, "Wrong body: " + body);
     }
 
     @Test
-    public void testGetAccessTokenWithScope() throws HttpRequestMethodNotSupportedException {
+    void testGetAccessTokenWithScope() {
 
         when(clientDetailsService.loadClientByClientId(clientId)).thenReturn(clientDetails);
 
@@ -145,17 +145,18 @@ public class TokenEndpointTests {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         OAuth2AccessToken body = response.getBody();
         assertEquals(body, expectedToken);
-        assertTrue("Wrong body: " + body, body.getTokenType() != null);
-        assertTrue("Scope of token request not cleared", captor.getValue().getScope().isEmpty());
-    }
-
-    @Test(expected = HttpRequestMethodNotSupportedException.class)
-    public void testGetAccessTokenWithUnsupportedRequestParameters() throws HttpRequestMethodNotSupportedException {
-        endpoint.getAccessToken(clientAuthentication, new HashMap<>());
+        assertTrue(body.getTokenType() != null, "Wrong body: " + body);
+        assertTrue(captor.getValue().getScope().isEmpty(), "Scope of token request not cleared");
     }
 
     @Test
-    public void testGetAccessTokenWithSupportedRequestParametersNotPost() throws HttpRequestMethodNotSupportedException {
+    void testGetAccessTokenWithUnsupportedRequestParameters() {
+        assertThrows(HttpRequestMethodNotSupportedException.class, () ->
+                endpoint.getAccessToken(clientAuthentication, new HashMap<>()));
+    }
+
+    @Test
+    void testGetAccessTokenWithSupportedRequestParametersNotPost() throws HttpRequestMethodNotSupportedException {
         endpoint.setAllowedRequestMethods(new HashSet<>(Arrays.asList(HttpMethod.GET)));
         HashMap<String, String> parameters = new HashMap<>();
         parameters.put("client_id", clientId);
@@ -176,26 +177,28 @@ public class TokenEndpointTests {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         OAuth2AccessToken body = response.getBody();
         assertEquals(body, expectedToken);
-        assertTrue("Wrong body: " + body, body.getTokenType() != null);
+        assertTrue(body.getTokenType() != null, "Wrong body: " + body);
     }
 
-    @Test(expected = InvalidGrantException.class)
-    public void testImplicitGrant() throws HttpRequestMethodNotSupportedException {
-        HashMap<String, String> parameters = new HashMap<>();
-        parameters.put(OAuth2Utils.GRANT_TYPE, "implicit");
-        parameters.put("client_id", clientId);
-        parameters.put("scope", "read");
-        @SuppressWarnings("unchecked")
-        Map<String, String> anyMap = any(Map.class);
-        when(authorizationRequestFactory.createTokenRequest(anyMap, eq(clientDetails))).thenReturn(
-                createFromParameters(parameters));
-        when(clientDetailsService.loadClientByClientId(clientId)).thenReturn(clientDetails);
-        endpoint.postAccessToken(clientAuthentication, parameters);
+    @Test
+    void testImplicitGrant() {
+        assertThrows(InvalidGrantException.class, () -> {
+            HashMap<String, String> parameters = new HashMap<>();
+            parameters.put(OAuth2Utils.GRANT_TYPE, "implicit");
+            parameters.put("client_id", clientId);
+            parameters.put("scope", "read");
+            @SuppressWarnings("unchecked")
+            Map<String, String> anyMap = any(Map.class);
+            when(authorizationRequestFactory.createTokenRequest(anyMap, eq(clientDetails))).thenReturn(
+                    createFromParameters(parameters));
+            when(clientDetailsService.loadClientByClientId(clientId)).thenReturn(clientDetails);
+            endpoint.postAccessToken(clientAuthentication, parameters);
+        });
     }
 
     // gh-1268
     @Test
-    public void testGetAccessTokenReturnsHeaderContentTypeJson() throws Exception {
+    void testGetAccessTokenReturnsHeaderContentTypeJson() {
         when(clientDetailsService.loadClientByClientId(clientId)).thenReturn(clientDetails);
 
         HashMap<String, String> parameters = new HashMap<>();
@@ -218,23 +221,25 @@ public class TokenEndpointTests {
         assertEquals("application/json;charset=UTF-8", response.getHeaders().get("Content-Type").iterator().next());
     }
 
-    @Test(expected = InvalidRequestException.class)
-    public void testRefreshTokenGrantTypeWithoutRefreshTokenParameter() throws Exception {
-        when(clientDetailsService.loadClientByClientId(clientId)).thenReturn(clientDetails);
+    @Test
+    void testRefreshTokenGrantTypeWithoutRefreshTokenParameter() {
+        assertThrows(InvalidRequestException.class, () -> {
+            when(clientDetailsService.loadClientByClientId(clientId)).thenReturn(clientDetails);
 
-        HashMap<String, String> parameters = new HashMap<>();
-        parameters.put("client_id", clientId);
-        parameters.put("scope", "read");
-        parameters.put("grant_type", "refresh_token");
+            HashMap<String, String> parameters = new HashMap<>();
+            parameters.put("client_id", clientId);
+            parameters.put("scope", "read");
+            parameters.put("grant_type", "refresh_token");
 
-        when(authorizationRequestFactory.createTokenRequest(any(Map.class), eq(clientDetails))).thenReturn(
-                createFromParameters(parameters));
+            when(authorizationRequestFactory.createTokenRequest(any(Map.class), eq(clientDetails))).thenReturn(
+                    createFromParameters(parameters));
 
-        endpoint.postAccessToken(clientAuthentication, parameters);
+            endpoint.postAccessToken(clientAuthentication, parameters);
+        });
     }
 
     @Test
-    public void testGetAccessTokenWithRefreshToken() throws Exception {
+    void testGetAccessTokenWithRefreshToken() {
         when(clientDetailsService.loadClientByClientId(clientId)).thenReturn(clientDetails);
 
         HashMap<String, String> parameters = new HashMap<>();
@@ -255,18 +260,20 @@ public class TokenEndpointTests {
         assertEquals(expectedToken, response.getBody());
     }
 
-    @Test(expected = InsufficientAuthenticationException.class)
-    public void testPostAccessException() throws Exception {
-        endpoint.postAccessToken(null, Collections.emptyMap());
-    }
-
-    @Test(expected = InsufficientAuthenticationException.class)
-    public void testGetClientIdException() throws Exception {
-        endpoint.getClientId(new UsernamePasswordAuthenticationToken("FOO", "bar"));
+    @Test
+    void testPostAccessException() {
+        assertThrows(InsufficientAuthenticationException.class, () ->
+                endpoint.postAccessToken(null, Collections.emptyMap()));
     }
 
     @Test
-    public void testGetClientId() throws Exception {
+    void testGetClientIdException() {
+        assertThrows(InsufficientAuthenticationException.class, () ->
+                endpoint.getClientId(new UsernamePasswordAuthenticationToken("FOO", "bar")));
+    }
+
+    @Test
+    void testGetClientId() {
         OAuth2Request oAuth2Request = mock(OAuth2Request.class);
         OAuth2Authentication oAuth2Authentication = mock(OAuth2Authentication.class);
         when(oAuth2Authentication.getOAuth2Request()).thenReturn(oAuth2Request);
@@ -276,23 +283,23 @@ public class TokenEndpointTests {
     }
 
     @Test
-    public void testExceptions() throws Exception {
+    void testExceptions() throws Exception {
         endpoint.setOAuth2RequestValidator(new UaaOauth2RequestValidator());
         assertEquals("server_error", endpoint.handleException(new Exception("exception")).getBody().getOAuth2ErrorCode());
     }
 
     @Test
-    public void testInvalidClient() throws Exception {
+    void testInvalidClient() throws Exception {
         assertEquals("invalid_client", endpoint.handleException(new InvalidClientException("exception")).getBody().getOAuth2ErrorCode());
     }
 
     @Test
-    public void testInvalidClientException() throws Exception {
+    void testInvalidClientException() throws Exception {
         assertEquals("invalid_client", endpoint.handleClientRegistrationException(new InvalidClientException("exception")).getBody().getOAuth2ErrorCode());
     }
 
     @Test
-    public void testNotSupported() throws Exception {
+    void testNotSupported() throws Exception {
         assertEquals("method_not_allowed", endpoint.handleHttpRequestMethodNotSupportedException(new HttpRequestMethodNotSupportedException("exception")).getBody().getOAuth2ErrorCode());
     }
 }

@@ -1,18 +1,26 @@
 package org.cloudfoundry.identity.uaa.login;
 
 import org.cloudfoundry.identity.uaa.TestClassNullifier;
-import org.cloudfoundry.identity.uaa.account.*;
+import org.cloudfoundry.identity.uaa.account.ConflictException;
+import org.cloudfoundry.identity.uaa.account.ForgotPasswordInfo;
+import org.cloudfoundry.identity.uaa.account.NotFoundException;
+import org.cloudfoundry.identity.uaa.account.ResetPasswordController;
+import org.cloudfoundry.identity.uaa.account.ResetPasswordService;
 import org.cloudfoundry.identity.uaa.codestore.ExpiringCode;
 import org.cloudfoundry.identity.uaa.codestore.ExpiringCodeStore;
 import org.cloudfoundry.identity.uaa.codestore.InMemoryExpiringCodeStore;
+import org.cloudfoundry.identity.uaa.extensions.PollutionPreventionExtension;
 import org.cloudfoundry.identity.uaa.home.BuildInfo;
 import org.cloudfoundry.identity.uaa.message.MessageService;
 import org.cloudfoundry.identity.uaa.message.MessageType;
-import org.cloudfoundry.identity.uaa.extensions.PollutionPreventionExtension;
 import org.cloudfoundry.identity.uaa.user.UaaUser;
 import org.cloudfoundry.identity.uaa.user.UaaUserDatabase;
 import org.cloudfoundry.identity.uaa.util.TimeServiceImpl;
-import org.cloudfoundry.identity.uaa.zone.*;
+import org.cloudfoundry.identity.uaa.zone.BrandingInformation;
+import org.cloudfoundry.identity.uaa.zone.IdentityZone;
+import org.cloudfoundry.identity.uaa.zone.IdentityZoneConfiguration;
+import org.cloudfoundry.identity.uaa.zone.IdentityZoneHolder;
+import org.cloudfoundry.identity.uaa.zone.MultitenancyFixture;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,15 +48,25 @@ import org.thymeleaf.TemplateEngine;
 
 import java.sql.Timestamp;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.contains;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.head;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
 @ExtendWith(SpringExtension.class)
 @ExtendWith(PollutionPreventionExtension.class)
@@ -96,8 +114,8 @@ class ResetPasswordControllerTest extends TestClassNullifier {
     @Test
     void testForgotPasswordPage() throws Exception {
         mockMvc.perform(get("/forgot_password")
-                .param("client_id", "example")
-                .param("redirect_uri", "http://example.com"))
+                        .param("client_id", "example")
+                        .param("redirect_uri", "http://example.com"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("forgot_password"))
                 .andExpect(model().attribute("client_id", "example"))
@@ -111,8 +129,8 @@ class ResetPasswordControllerTest extends TestClassNullifier {
         IdentityZoneHolder.set(zone);
 
         mockMvc.perform(get("/forgot_password")
-                .param("client_id", "example")
-                .param("redirect_uri", "http://example.com"))
+                        .param("client_id", "example")
+                        .param("redirect_uri", "http://example.com"))
                 .andExpect(status().isNotFound())
                 .andExpect(view().name("error"))
                 .andExpect(model().attribute("error_message_code", "self_service_disabled"));
@@ -213,10 +231,10 @@ class ResetPasswordControllerTest extends TestClassNullifier {
         IdentityZoneHolder.set(zone);
 
         mockMvc.perform(post("/forgot_password.do")
-                .contentType(APPLICATION_FORM_URLENCODED)
-                .param("username", "user@example.com")
-                .param("client_id", "example")
-                .param("redirect_uri", "redirect.example.com"))
+                        .contentType(APPLICATION_FORM_URLENCODED)
+                        .param("username", "user@example.com")
+                        .param("client_id", "example")
+                        .param("redirect_uri", "redirect.example.com"))
                 .andExpect(status().isNotFound())
                 .andExpect(view().name("error"))
                 .andExpect(model().attribute("error_message_code", "self_service_disabled"));
@@ -362,10 +380,10 @@ class ResetPasswordControllerTest extends TestClassNullifier {
 
         @Bean
         ResetPasswordController resetPasswordController(ResetPasswordService resetPasswordService,
-                MessageService messageService,
-                TemplateEngine mailTemplateEngine,
-                ExpiringCodeStore codeStore,
-                UaaUserDatabase userDatabase) {
+                                                        MessageService messageService,
+                                                        TemplateEngine mailTemplateEngine,
+                                                        ExpiringCodeStore codeStore,
+                                                        UaaUserDatabase userDatabase) {
             return new ResetPasswordController(resetPasswordService, messageService, mailTemplateEngine, codeStore, userDatabase, "http://localhost");
         }
     }

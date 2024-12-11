@@ -1,7 +1,7 @@
 package org.cloudfoundry.identity.uaa.oauth.provider.endpoint;
 
 import org.cloudfoundry.identity.uaa.oauth.provider.AuthorizationRequest;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.web.csrf.DefaultCsrfToken;
@@ -11,7 +11,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
@@ -42,11 +42,11 @@ public class WhitelabelApprovalEndpointTests {
         ModelAndView result = endpoint.getAccessConfirmation(model, request);
         result.getView().render(result.getModel(), request, response);
         String content = response.getContentAsString();
-        assertTrue("Wrong content: " + content, content.contains("<form"));
-        assertTrue("Wrong content: " + content, content.contains("/foo/oauth/authorize"));
-        assertTrue("Wrong content: " + content, !content.contains("${"));
-        assertTrue("Wrong content: " + content, !content.contains("_csrf"));
-        assertTrue("Wrong content: " + content, !content.contains("%"));
+        assertTrue(content.contains("<form"), "Wrong content: " + content);
+        assertTrue(content.contains("/foo/oauth/authorize"), "Wrong content: " + content);
+        assertTrue(!content.contains("${"), "Wrong content: " + content);
+        assertTrue(!content.contains("_csrf"), "Wrong content: " + content);
+        assertTrue(!content.contains("%"), "Wrong content: " + content);
     }
 
     @Test
@@ -59,12 +59,12 @@ public class WhitelabelApprovalEndpointTests {
         ModelAndView result = endpoint.getAccessConfirmation(model, request);
         result.getView().render(result.getModel(), request, response);
         String content = response.getContentAsString();
-        assertTrue("Wrong content: " + content, content.contains("scope.read"));
-        assertTrue("Wrong content: " + content, content.contains("checked"));
-        assertTrue("Wrong content: " + content, content.contains("/foo/oauth/authorize"));
-        assertTrue("Wrong content: " + content, !content.contains("${"));
-        assertTrue("Wrong content: " + content, !content.contains("_csrf"));
-        assertTrue("Wrong content: " + content, !content.contains("%"));
+        assertTrue(content.contains("scope.read"), "Wrong content: " + content);
+        assertTrue(content.contains("checked"), "Wrong content: " + content);
+        assertTrue(content.contains("/foo/oauth/authorize"), "Wrong content: " + content);
+        assertTrue(!content.contains("${"), "Wrong content: " + content);
+        assertTrue(!content.contains("_csrf"), "Wrong content: " + content);
+        assertTrue(!content.contains("%"), "Wrong content: " + content);
     }
 
     @Test
@@ -77,9 +77,9 @@ public class WhitelabelApprovalEndpointTests {
         ModelAndView result = endpoint.getAccessConfirmation(model, request);
         result.getView().render(result.getModel(), request, response);
         String content = response.getContentAsString();
-        assertTrue("Wrong content: " + content, content.contains("_csrf"));
-        assertTrue("Wrong content: " + content, content.contains("/foo/oauth/authorize"));
-        assertTrue("Wrong content: " + content, !content.contains("${"));
+        assertTrue(content.contains("_csrf"), "Wrong content: " + content);
+        assertTrue(content.contains("/foo/oauth/authorize"), "Wrong content: " + content);
+        assertTrue(!content.contains("${"), "Wrong content: " + content);
     }
 
     // gh-1340
@@ -95,8 +95,8 @@ public class WhitelabelApprovalEndpointTests {
         ModelAndView result = endpoint.getAccessConfirmation(model, request);
         result.getView().render(result.getModel(), request, response);
         String content = response.getContentAsString();
-        assertTrue("Wrong content: " + content, !content.contains(scope));
-        assertTrue("Wrong content: " + content, content.contains(escapedScope));
+        assertTrue(!content.contains(scope), "Wrong content: " + content);
+        assertTrue(content.contains(escapedScope), "Wrong content: " + content);
     }
 
     @Test
@@ -116,7 +116,7 @@ public class WhitelabelApprovalEndpointTests {
         ModelAndView result = endpoint.getAccessConfirmation(model, request);
         result.getView().render(result.getModel(), request, response);
         String content = response.getContentAsString();
-        assertTrue("Wrong content: " + content, content.equals(expectedContent));
+        assertTrue(content.equals(expectedContent), "Wrong content: " + content);
     }
 
     @Test
@@ -136,6 +136,6 @@ public class WhitelabelApprovalEndpointTests {
         ModelAndView result = endpoint.getAccessConfirmation(model, request);
         result.getView().render(result.getModel(), request, response);
         String content = response.getContentAsString();
-        assertTrue("Wrong content: " + content, content.equals(expectedContent));
+        assertTrue(content.equals(expectedContent), "Wrong content: " + content);
     }
 }

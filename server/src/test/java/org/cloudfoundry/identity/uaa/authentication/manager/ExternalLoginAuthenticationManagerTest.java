@@ -16,8 +16,8 @@ import org.cloudfoundry.identity.uaa.user.UaaUserDatabase;
 import org.cloudfoundry.identity.uaa.user.UaaUserPrototype;
 import org.cloudfoundry.identity.uaa.user.UserInfo;
 import org.cloudfoundry.identity.uaa.util.AlphanumericRandomValueStringGenerator;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
@@ -30,18 +30,23 @@ import org.springframework.security.ldap.userdetails.LdapUserDetails;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 
 import static org.cloudfoundry.identity.uaa.constants.OriginKeys.LDAP;
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
-import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
@@ -60,7 +65,6 @@ public class ExternalLoginAuthenticationManagerTest {
     private Authentication inputAuth;
     private ExternalLoginAuthenticationManager manager;
     private final String origin = "test";
-    private final String beanName = "ExternalLoginAuthenticationManagerTestBean";
     private UserDetails userDetails;
     private final String userName = "testUserName";
     private final String password = "";
@@ -81,7 +85,7 @@ public class ExternalLoginAuthenticationManagerTest {
         when(userDetails.isEnabled()).thenReturn(true);
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
         userDetails = mock(UserDetails.class);
         mockUserDetails(userDetails);
@@ -120,6 +124,7 @@ public class ExternalLoginAuthenticationManagerTest {
 
     private void setupManager() {
         manager.setOrigin(origin);
+        String beanName = "ExternalLoginAuthenticationManagerTestBean";
         manager.setBeanName(beanName);
         manager.setApplicationEventPublisher(applicationEventPublisher);
         manager.setUserDatabase(uaaUserDatabase);
@@ -212,16 +217,18 @@ public class ExternalLoginAuthenticationManagerTest {
         assertEquals(userId, uaaAuthentication.getPrincipal().getId());
     }
 
-    @Test(expected = BadCredentialsException.class)
+    @Test
     public void testNoUsernameNoEmail() {
-        UaaAuthenticationDetails uaaAuthenticationDetails = mock(UaaAuthenticationDetails.class);
-        when(uaaAuthenticationDetails.getOrigin()).thenReturn(origin);
-        when(uaaAuthenticationDetails.getClientId()).thenReturn(null);
-        when(uaaAuthenticationDetails.getSessionId()).thenReturn(new AlphanumericRandomValueStringGenerator().generate());
-        when(inputAuth.getDetails()).thenReturn(uaaAuthenticationDetails);
-        when(uaaUserDatabase.retrieveUserByName(anyString(), eq(origin))).thenReturn(null);
-        when(userDetails.getUsername()).thenReturn(null);
-        manager.authenticate(inputAuth);
+        assertThrows(BadCredentialsException.class, () -> {
+            UaaAuthenticationDetails uaaAuthenticationDetails = mock(UaaAuthenticationDetails.class);
+            when(uaaAuthenticationDetails.getOrigin()).thenReturn(origin);
+            when(uaaAuthenticationDetails.getClientId()).thenReturn(null);
+            when(uaaAuthenticationDetails.getSessionId()).thenReturn(new AlphanumericRandomValueStringGenerator().generate());
+            when(inputAuth.getDetails()).thenReturn(uaaAuthenticationDetails);
+            when(uaaUserDatabase.retrieveUserByName(anyString(), eq(origin))).thenReturn(null);
+            when(userDetails.getUsername()).thenReturn(null);
+            manager.authenticate(inputAuth);
+        });
     }
 
     @Test
@@ -301,10 +308,12 @@ public class ExternalLoginAuthenticationManagerTest {
         assertEquals(actual, event.getUser().getEmail());
     }
 
-    @Test(expected = BadCredentialsException.class)
+    @Test
     public void testAuthenticateUserInsertFails() {
-        when(uaaUserDatabase.retrieveUserByName(anyString(), anyString())).thenThrow(new UsernameNotFoundException(""));
-        manager.authenticate(inputAuth);
+        assertThrows(BadCredentialsException.class, () -> {
+            when(uaaUserDatabase.retrieveUserByName(anyString(), anyString())).thenThrow(new UsernameNotFoundException(""));
+            manager.authenticate(inputAuth);
+        });
     }
 
     @Test

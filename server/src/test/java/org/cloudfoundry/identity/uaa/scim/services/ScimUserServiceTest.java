@@ -19,7 +19,6 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-
 import java.util.List;
 
 import static java.util.Collections.singletonList;
@@ -64,6 +63,7 @@ class ScimUserServiceTest {
     /**
      * Test cases for both alias entities being enabled and disabled.
      */
+    @Nested
     private abstract class Base {
         @Test
         final void testUpdate_ShouldThrow_WhenAliasPropertiesAreInvalid() {

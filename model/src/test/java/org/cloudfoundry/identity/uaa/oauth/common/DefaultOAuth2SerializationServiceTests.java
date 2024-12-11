@@ -11,15 +11,15 @@ import org.cloudfoundry.identity.uaa.oauth.common.exceptions.UnauthorizedClientE
 import org.cloudfoundry.identity.uaa.oauth.common.exceptions.UnsupportedGrantTypeException;
 import org.cloudfoundry.identity.uaa.oauth.common.exceptions.UnsupportedResponseTypeException;
 import org.cloudfoundry.identity.uaa.oauth.common.exceptions.UserDeniedAuthorizationException;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
@@ -28,7 +28,7 @@ import static org.junit.Assert.assertTrue;
 public class DefaultOAuth2SerializationServiceTests {
 
     @Test
-    public void testDefaultDeserialization() throws Exception {
+    public void testDefaultDeserialization() {
         Map<String, String> accessToken = Map.of("access_token", "FOO", "expires_in", "100", "token_type", "mac", "scope", "test,ok", "refresh_token", "");
         OAuth2AccessToken result = DefaultOAuth2AccessToken.valueOf(accessToken);
         // System.err.println(result);
@@ -38,7 +38,7 @@ public class DefaultOAuth2SerializationServiceTests {
     }
 
     @Test
-    public void testDefaultDeserializationException() throws Exception {
+    public void testDefaultDeserializationException() {
         Map<String, String> accessToken = Map.of("access_token", "FOO", "expires_in", "x");
         DefaultOAuth2AccessToken result = (DefaultOAuth2AccessToken) DefaultOAuth2AccessToken.valueOf(accessToken);
         assertNotEquals(0, result.getExpiration().getTime());
@@ -49,7 +49,7 @@ public class DefaultOAuth2SerializationServiceTests {
     }
 
     @Test
-    public void testDefaultDeserializationEquals() throws Exception {
+    public void testDefaultDeserializationEquals() {
         Map<String, String> accessToken = Map.of("access_token", "FOO", "expires_in", "x");
         DefaultOAuth2AccessToken result = (DefaultOAuth2AccessToken) DefaultOAuth2AccessToken.valueOf(accessToken);
         DefaultOAuth2AccessToken result2 = new DefaultOAuth2AccessToken("bar");
@@ -63,7 +63,7 @@ public class DefaultOAuth2SerializationServiceTests {
     }
 
     @Test
-    public void testExceptionDeserialization() throws Exception {
+    public void testExceptionDeserialization() {
         Map<String, String> exception = MapBuilder.create("error", "invalid_client").add("error_description", "FOO")
                 .build();
         OAuth2Exception result = OAuth2Exception.valueOf(exception);
@@ -74,7 +74,7 @@ public class DefaultOAuth2SerializationServiceTests {
     }
 
     @Test
-    public void testExceptionDeserialization2() throws Exception {
+    public void testExceptionDeserialization2() {
         Map<String, String> exception = Map.of("error", "unauthorized_client", "error_description", "FOO");
         OAuth2Exception result = OAuth2Exception.valueOf(exception);
         assertNotNull(result.getSummary());
@@ -84,7 +84,7 @@ public class DefaultOAuth2SerializationServiceTests {
     }
 
     @Test
-    public void testExceptionDeserializationInvalid_grant() throws Exception {
+    public void testExceptionDeserializationInvalid_grant() {
         Map<String, String> exception = Map.of("error", "invalid_grant", "error_description", "FOO");
         OAuth2Exception result = OAuth2Exception.valueOf(exception);
         result.addAdditionalInformation("hint", "unknown code");
@@ -97,7 +97,7 @@ public class DefaultOAuth2SerializationServiceTests {
 
 
     @Test
-    public void testExceptionInvalidTokenException() throws Exception {
+    public void testExceptionInvalidTokenException() {
         Map<String, String> exception = Map.of("error", "invalid_token", "error_description", "FOO");
         OAuth2Exception result = OAuth2Exception.valueOf(exception);
         assertNotNull(result.getSummary());
@@ -107,7 +107,7 @@ public class DefaultOAuth2SerializationServiceTests {
     }
 
     @Test
-    public void testExceptionInvalidRequestException() throws Exception {
+    public void testExceptionInvalidRequestException() {
         Map<String, String> exception = Map.of("error", "invalid_request", "error_description", "FOO");
         OAuth2Exception result = OAuth2Exception.valueOf(exception);
         assertNotNull(result.getSummary());
@@ -117,7 +117,7 @@ public class DefaultOAuth2SerializationServiceTests {
     }
 
     @Test
-    public void testExceptionUnsupportedGrantTypeException() throws Exception {
+    public void testExceptionUnsupportedGrantTypeException() {
         Map<String, String> exception = Map.of("error", "unsupported_grant_type", "error_description", "FOO");
         OAuth2Exception result = OAuth2Exception.valueOf(exception);
         assertNotNull(result.getSummary());
@@ -127,7 +127,7 @@ public class DefaultOAuth2SerializationServiceTests {
     }
 
     @Test
-    public void testExceptionUnsupportedResponseTypeException() throws Exception {
+    public void testExceptionUnsupportedResponseTypeException() {
         Map<String, String> exception = Map.of("error", "unsupported_response_type", "error_description", "FOO");
         OAuth2Exception result = OAuth2Exception.valueOf(exception);
         assertNotNull(result.getSummary());
@@ -137,7 +137,7 @@ public class DefaultOAuth2SerializationServiceTests {
     }
 
     @Test
-    public void testExceptionRedirectMismatchException() throws Exception {
+    public void testExceptionRedirectMismatchException() {
         Map<String, String> exception = Map.of("error", "redirect_uri_mismatch", "error_description", "FOO");
         OAuth2Exception result = OAuth2Exception.valueOf(exception);
         assertNotNull(result.getSummary());
@@ -147,7 +147,7 @@ public class DefaultOAuth2SerializationServiceTests {
     }
 
     @Test
-    public void testExceptionUserDeniedAuthorizationException() throws Exception {
+    public void testExceptionUserDeniedAuthorizationException() {
         Map<String, String> exception = Map.of("error", "access_denied", "error_description", "FOO");
         OAuth2Exception result = OAuth2Exception.valueOf(exception);
         assertNotNull(result.getSummary());
@@ -157,7 +157,7 @@ public class DefaultOAuth2SerializationServiceTests {
     }
 
     @Test
-    public void testExceptionInvalidScopeException() throws Exception {
+    public void testExceptionInvalidScopeException() {
         Map<String, String> exception = Map.of("error", "invalid_scope", "error_description", "FOO");
         OAuth2Exception result = OAuth2Exception.valueOf(exception);
         assertNotNull(result.getSummary());
@@ -167,7 +167,7 @@ public class DefaultOAuth2SerializationServiceTests {
     }
 
     @Test
-    public void testExceptionBadException() throws Exception {
+    public void testExceptionBadException() {
         Map<String, String> exception = Map.of("errortest", "xx", "bar", "FOO");
         OAuth2Exception result = OAuth2Exception.valueOf(exception);
         assertNotNull(result.getSummary());
@@ -178,7 +178,7 @@ public class DefaultOAuth2SerializationServiceTests {
 
     private static final class MapBuilder {
 
-        private HashMap<String, String> map = new HashMap<>();
+        private final HashMap<String, String> map = new HashMap<>();
 
         private MapBuilder(String key, String value) {
             map.put(key, value);
@@ -197,5 +197,4 @@ public class DefaultOAuth2SerializationServiceTests {
             return map;
         }
     }
-
 }

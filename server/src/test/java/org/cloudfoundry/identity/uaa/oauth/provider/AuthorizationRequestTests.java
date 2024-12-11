@@ -1,21 +1,22 @@
 package org.cloudfoundry.identity.uaa.oauth.provider;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.security.core.authority.AuthorityUtils;
 
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 public class AuthorizationRequestTests {
 
     private AuthorizationRequest authorizationRequest;
     private AuthorizationRequest authorizationRequest2;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         authorizationRequest = new AuthorizationRequest();
         authorizationRequest.setAuthorities(Collections.emptyList());

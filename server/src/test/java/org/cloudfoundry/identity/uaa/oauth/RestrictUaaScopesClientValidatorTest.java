@@ -19,7 +19,7 @@ import org.cloudfoundry.identity.uaa.client.InvalidClientDetailsException;
 import org.cloudfoundry.identity.uaa.client.RestrictUaaScopesClientValidator;
 import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
 import org.cloudfoundry.identity.uaa.client.UaaScopes;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.util.Arrays;
@@ -30,7 +30,7 @@ import java.util.List;
 import static org.cloudfoundry.identity.uaa.client.ClientDetailsValidator.Mode.CREATE;
 import static org.cloudfoundry.identity.uaa.client.ClientDetailsValidator.Mode.DELETE;
 import static org.cloudfoundry.identity.uaa.client.ClientDetailsValidator.Mode.MODIFY;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 
 public class RestrictUaaScopesClientValidatorTest {

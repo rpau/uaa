@@ -18,12 +18,11 @@ import org.apache.http.impl.cookie.BasicClientCookie;
 import org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils;
 import org.cloudfoundry.identity.uaa.test.UaaTestAccounts;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneHolder;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,8 +34,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
@@ -55,15 +53,14 @@ import static org.cloudfoundry.identity.uaa.security.web.CookieBasedCsrfTokenRep
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.startsWith;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = DefaultIntegrationTestConfig.class)
-public class AutologinIT {
+@SpringJUnitConfig(classes = DefaultIntegrationTestConfig.class)
+class AutologinIT {
 
     @Autowired
-    @Rule
-    public IntegrationTestRule integrationTestRule;
+    @RegisterExtension
+    private IntegrationTestExtension integrationTestExtension;
 
     @Autowired
     WebDriver webDriver;
@@ -80,13 +77,12 @@ public class AutologinIT {
     @Autowired
     TestClient testClient;
 
-    private UaaTestAccounts testAccounts = UaaTestAccounts.standard(null);
+    private static final UaaTestAccounts testAccounts = UaaTestAccounts.standard(null);
 
     LinkedMultiValueMap<String, String> map = new LinkedMultiValueMap<>();
 
-
-    @Before
-    @After
+    @BeforeEach
+    @AfterEach
     public void logout_and_clear_cookies() {
         map.add("username", testAccounts.getUserName());
         map.add("password", testAccounts.getPassword());
@@ -102,12 +98,12 @@ public class AutologinIT {
     }
 
     @Test
-    public void testAutologinFlow_FORM() throws Exception {
+    void testAutologinFlow_FORM() {
         testAutologinFlow(MediaType.APPLICATION_FORM_URLENCODED_VALUE, map);
     }
 
     @Test
-    public void testAutologinFlow_JSON() throws Exception {
+    void testAutologinFlow_JSON() {
         testAutologinFlow(MediaType.APPLICATION_JSON_VALUE, map.toSingleValueMap());
     }
 
@@ -136,7 +132,7 @@ public class AutologinIT {
 
         webDriver.get(baseUrl);
 
-        Assert.assertEquals(testAccounts.getUserName(), webDriver.findElement(By.cssSelector(".header .nav")).getText());
+        Assertions.assertEquals(testAccounts.getUserName(), webDriver.findElement(By.cssSelector(".header .nav")).getText());
         IntegrationTestUtils.validateAccountChooserCookie(baseUrl, webDriver, IdentityZoneHolder.get());
     }
 

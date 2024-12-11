@@ -20,10 +20,13 @@ import org.cloudfoundry.identity.uaa.oauth.common.OAuth2AccessToken;
 import org.cloudfoundry.identity.uaa.oauth.token.AccessTokenProvider;
 import org.cloudfoundry.identity.uaa.oauth.token.AccessTokenRequest;
 import org.cloudfoundry.identity.uaa.oauth.token.DefaultAccessTokenRequest;
+import org.cloudfoundry.identity.uaa.test.TestAccountExtension;
 import org.hamcrest.CoreMatchers;
-import org.junit.Assert;
 import org.junit.internal.runners.statements.RunBefores;
-import org.junit.rules.TestWatchman;
+import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.junit.runners.model.TestClass;
@@ -39,16 +42,28 @@ import org.springframework.web.client.RestOperations;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.URI;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public final class OAuth2ContextSetup extends TestWatchman {
+import static org.hamcrest.MatcherAssert.assertThat;
 
-    private static final Log logger = LogFactory.getLog(OAuth2ContextSetup.class);
+/**
+ * Moved class OAuth2ContextSetup implementation of from spring-security-oauth2 into UAA
+ * <p>
+ * The class was taken over from the legacy project with minor refactorings
+ * based on sonar, and Migration to Junit5 extension.
+ * <p>
+ * Scope: Test
+ * <p>
+ * There is a second class in the uaa module that is mostly the same. Should refactor Test Utils for reuse.
+ */
+public final class OAuth2ContextExtension implements BeforeAllCallback, BeforeEachCallback, AfterEachCallback {
+
+    private static final Log logger = LogFactory.getLog(OAuth2ContextExtension.class);
 
     private OAuth2ProtectedResourceDetails resource;
 
@@ -59,6 +74,7 @@ public final class OAuth2ContextSetup extends TestWatchman {
     private final RestTemplateHolder clientHolder;
 
     private final TestAccounts testAccounts;
+    private final TestAccountExtension testAccountSetup;
 
     private OAuth2AccessToken accessToken;
 
@@ -73,39 +89,37 @@ public final class OAuth2ContextSetup extends TestWatchman {
     /**
      * Create a new client that can inject an Environment into its protected resource
      * details.
-     * 
+     *
      * @param clientHolder receives an OAuth2RestTemplate with the authenticated client
-     * for the duration of a test
-     * @param environment a Spring Environment that can be used to initialize the client
-     * 
-     * @return a rule that wraps test methods in an OAuth2 context
+     *                     for the duration of a test
+     * @param environment  a Spring Environment that can be used to initialize the client
+     * @return an Extension that wraps test methods in an OAuth2 context
      */
-    public static OAuth2ContextSetup withEnvironment(RestTemplateHolder clientHolder,
-            Environment environment) {
-        return new OAuth2ContextSetup(clientHolder, null, environment);
+    public static OAuth2ContextExtension withEnvironment(RestTemplateHolder clientHolder,
+                                                         Environment environment) {
+        return new OAuth2ContextExtension(clientHolder, null, environment);
     }
 
     /**
      * Create a new client that can inject a {@link TestAccounts} instance into its
      * protected resource details.
-     * 
-     * @param clientHolder receives an OAuth2RestTemplate with the authenticated client
-     * for the duration of a test
-     * @param testAccounts a test account generator that can be used to initialize the
-     * client
-     * 
-     * @return a rule that wraps test methods in an OAuth2 context
+     *
+     * @param clientHolder     receives an OAuth2RestTemplate with the authenticated client
+     *                         for the duration of a test
+     * @param testAccountSetup a test account generator that can be used to initialize the
+     *                         client
+     * @return an Extension that wraps test methods in an OAuth2 context
      */
-    public static OAuth2ContextSetup withTestAccounts(RestTemplateHolder clientHolder,
-            TestAccounts testAccounts) {
-        return new OAuth2ContextSetup(clientHolder, testAccounts, null);
+    public static OAuth2ContextExtension withTestAccounts(RestTemplateHolder clientHolder,
+                                                          TestAccountExtension testAccountSetup) {
+        return new OAuth2ContextExtension(clientHolder, testAccountSetup, null);
     }
 
     /**
      * Create a new client that knows how to create its protected resource with no
-     * externalization help. Typically it will use resource details which accept an
+     * externalization help. Typically, it will use resource details which accept an
      * instance of the current test case (downcasting it from Object). For example
-     * 
+     *
      * <pre>
      * static class MyClientDetailsResource extends ClientCredentialsProtectedResourceDetails {
      * 	public MyClientDetailsResource(Object target) {
@@ -114,31 +128,31 @@ public final class OAuth2ContextSetup extends TestWatchman {
      *         }
      * }
      * </pre>
-     * 
+     *
      * @param clientHolder receives an OAuth2RestTemplate with the authenticated client
-     * for the duration of a test
-     * 
-     * @return a rule that wraps test methods in an OAuth2 context
+     *                     for the duration of a test
+     * @return an Extension that wraps test methods in an OAuth2 context
      */
-    public static OAuth2ContextSetup standard(RestTemplateHolder clientHolder) {
-        return new OAuth2ContextSetup(clientHolder, null, null);
+    public static OAuth2ContextExtension standard(RestTemplateHolder clientHolder) {
+        return new OAuth2ContextExtension(clientHolder, null, null);
     }
 
-    private OAuth2ContextSetup(RestTemplateHolder clientHolder,
-            TestAccounts testAccounts, Environment environment) {
+    private OAuth2ContextExtension(RestTemplateHolder clientHolder,
+                                   TestAccountExtension testAccountSetup, Environment environment) {
         this.clientHolder = clientHolder;
-        this.testAccounts = testAccounts;
+        this.testAccountSetup = testAccountSetup;
+        this.testAccounts = testAccountSetup.getTestAccounts();
         this.environment = environment;
     }
 
     @Override
-    public Statement apply(Statement base, FrameworkMethod method, Object target) {
-        initializeIfNecessary(method, target);
-        return super.apply(base, method, target);
+    public void beforeAll(ExtensionContext context) {
+        testAccountSetup.beforeAll(context);
     }
 
     @Override
-    public void starting(FrameworkMethod method) {
+    public void beforeEach(ExtensionContext context) {
+        initializeIfNecessary(context);
         if (resource != null) {
             logger.info("Starting OAuth2 context for: " + resource);
             AccessTokenRequest request = new DefaultAccessTokenRequest();
@@ -154,11 +168,60 @@ public final class OAuth2ContextSetup extends TestWatchman {
     }
 
     @Override
-    public void finished(FrameworkMethod method) {
+    public void afterEach(ExtensionContext context) {
         if (resource != null) {
             logger.info("Ending OAuth2 context for: " + resource);
             if (savedClient != null) {
                 clientHolder.setRestTemplate(savedClient);
+            }
+        }
+    }
+
+    private void initializeIfNecessary(ExtensionContext context) {
+        final TestClass testClass = new TestClass(context.getRequiredTestClass());
+        OAuth2ContextConfiguration contextConfiguration = findOAuthContextConfiguration(context.getRequiredTestMethod(), testClass);
+        if (contextConfiguration == null) {
+            // Nothing to do
+            return;
+        }
+
+        this.initializeAccessToken = contextConfiguration.initialize();
+        this.resource = createResource(context.getRequiredTestInstance(), contextConfiguration);
+
+        final List<FrameworkMethod> befores = testClass.getAnnotatedMethods(BeforeOAuth2Context.class);
+        if (!befores.isEmpty()) {
+            logger.debug("Running @BeforeOAuth2Context methods");
+            for (FrameworkMethod before : befores) {
+                RestOperations savedServerClient = clientHolder.getRestTemplate();
+
+                OAuth2ContextConfiguration beforeConfiguration = findOAuthContextConfiguration(before.getMethod(), testClass);
+                if (beforeConfiguration != null) {
+
+                    OAuth2ProtectedResourceDetails resource = createResource(context.getRequiredTestInstance(), beforeConfiguration);
+                    AccessTokenRequest beforeRequest = new DefaultAccessTokenRequest();
+                    beforeRequest.setAll(parameters);
+                    OAuth2RestTemplate client = createRestTemplate(resource, beforeRequest);
+                    clientHolder.setRestTemplate(client);
+                }
+
+                AccessTokenRequest request = new DefaultAccessTokenRequest();
+                request.setAll(parameters);
+                this.client = createRestTemplate(this.resource, request);
+
+                List<FrameworkMethod> list = List.of(before);
+                try {
+                    new RunBefores(new Statement() {
+                        public void evaluate() {
+                        }
+                    }, list, context.getRequiredTestInstance()).evaluate();
+                } catch (RuntimeException | AssertionError e) {
+                    throw e;
+                } catch (Throwable e) {
+                    logger.debug("Exception in befores", e);
+                    assertThat(e, CoreMatchers.not(CoreMatchers.anything()));
+                } finally {
+                    clientHolder.setRestTemplate(savedServerClient);
+                }
             }
         }
     }
@@ -175,7 +238,7 @@ public final class OAuth2ContextSetup extends TestWatchman {
      * Get the current access token. Should be available inside a test method as long as a
      * resource has been setup with {@link OAuth2ContextConfiguration
      * &#64;OAuth2ContextConfiguration}.
-     * 
+     *
      * @return the current access token initializing it if necessary
      */
     public OAuth2AccessToken getAccessToken() {
@@ -190,8 +253,7 @@ public final class OAuth2ContextSetup extends TestWatchman {
         }
         try {
             return client.getAccessToken();
-        }
-        catch (OAuth2AccessDeniedException e) {
+        } catch (OAuth2AccessDeniedException e) {
             Throwable cause = e.getCause();
             if (cause instanceof RuntimeException exception) {
                 throw exception;
@@ -229,75 +291,6 @@ public final class OAuth2ContextSetup extends TestWatchman {
      */
     public OAuth2ClientContext getOAuth2ClientContext() {
         return client.getOAuth2ClientContext();
-    }
-
-    private void initializeIfNecessary(FrameworkMethod method, final Object target) {
-
-        final TestClass testClass = new TestClass(target.getClass());
-        OAuth2ContextConfiguration contextConfiguration = findOAuthContextConfiguration(
-                method, testClass);
-        if (contextConfiguration == null) {
-            // Nothing to do
-            return;
-        }
-
-        this.initializeAccessToken = contextConfiguration.initialize();
-
-        this.resource = creatResource(target, contextConfiguration);
-
-        final List<FrameworkMethod> befores = testClass
-                .getAnnotatedMethods(BeforeOAuth2Context.class);
-        if (!befores.isEmpty()) {
-
-            logger.debug("Running @BeforeOAuth2Context methods");
-
-            for (FrameworkMethod before : befores) {
-
-                RestOperations savedServerClient = clientHolder.getRestTemplate();
-
-                OAuth2ContextConfiguration beforeConfiguration = findOAuthContextConfiguration(
-                        before, testClass);
-                if (beforeConfiguration != null) {
-
-                    OAuth2ProtectedResourceDetails resource = creatResource(target,
-                            beforeConfiguration);
-                    AccessTokenRequest beforeRequest = new DefaultAccessTokenRequest();
-                    beforeRequest.setAll(parameters);
-                    OAuth2RestTemplate client = createRestTemplate(resource,
-                            beforeRequest);
-                    clientHolder.setRestTemplate(client);
-
-                }
-
-                AccessTokenRequest request = new DefaultAccessTokenRequest();
-                request.setAll(parameters);
-                this.client = createRestTemplate(this.resource, request);
-
-                List<FrameworkMethod> list = Arrays.asList(before);
-                try {
-                    new RunBefores(new Statement() {
-                        public void evaluate() {
-                        }
-                    }, list, target).evaluate();
-                }
-                catch (RuntimeException e) {
-                    throw e;
-                }
-                catch (AssertionError e) {
-                    throw e;
-                }
-                catch (Throwable e) {
-                    logger.debug("Exception in befores", e);
-                    Assert.assertThat(e, CoreMatchers.not(CoreMatchers.anything()));
-                }
-                finally {
-                    clientHolder.setRestTemplate(savedServerClient);
-                }
-
-            }
-
-        }
-
     }
 
     private OAuth2RestTemplate createRestTemplate(
@@ -340,7 +333,7 @@ public final class OAuth2ContextSetup extends TestWatchman {
             client.setRequestFactory(new SimpleClientHttpRequestFactory() {
                 @Override
                 protected void prepareConnection(HttpURLConnection connection,
-                        String httpMethod) throws IOException {
+                                                 String httpMethod) throws IOException {
                     super.prepareConnection(connection, httpMethod);
                     connection.setInstanceFollowRedirects(false);
                 }
@@ -348,8 +341,8 @@ public final class OAuth2ContextSetup extends TestWatchman {
         }
     }
 
-    private OAuth2ProtectedResourceDetails creatResource(Object target,
-            OAuth2ContextConfiguration contextLoader) {
+    private OAuth2ProtectedResourceDetails createResource(Object target,
+                                                          OAuth2ContextConfiguration contextLoader) {
         Class<? extends OAuth2ProtectedResourceDetails> type = contextLoader.value();
         if (type == OAuth2ProtectedResourceDetails.class) {
             type = contextLoader.resource();
@@ -371,10 +364,8 @@ public final class OAuth2ContextSetup extends TestWatchman {
         return BeanUtils.instantiate(type);
     }
 
-    private OAuth2ContextConfiguration findOAuthContextConfiguration(
-            FrameworkMethod method, TestClass testClass) {
-        OAuth2ContextConfiguration methodConfiguration = method
-                .getAnnotation(OAuth2ContextConfiguration.class);
+    private OAuth2ContextConfiguration findOAuthContextConfiguration(Method method, TestClass testClass) {
+        OAuth2ContextConfiguration methodConfiguration = method.getAnnotation(OAuth2ContextConfiguration.class);
         if (methodConfiguration != null) {
             return methodConfiguration;
         }
@@ -385,5 +376,4 @@ public final class OAuth2ContextSetup extends TestWatchman {
         }
         return null;
     }
-
 }

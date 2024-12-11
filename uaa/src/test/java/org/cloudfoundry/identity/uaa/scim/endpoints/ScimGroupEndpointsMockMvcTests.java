@@ -64,10 +64,10 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -1354,15 +1354,15 @@ public class ScimGroupEndpointsMockMvcTests {
             final String origin = s.getOrigin();
             boolean found = false;
             for (ScimGroupExternalMember m : actual) {
-                assertNotNull("Display name can not be null", m.getDisplayName());
-                assertNotNull("External ID can not be null", m.getExternalGroup());
+                assertNotNull(m.getDisplayName(), "Display name can not be null");
+                assertNotNull(m.getExternalGroup(), "External ID can not be null");
                 if (m.getDisplayName().equals(displayName) && m.getExternalGroup().equals(externalId) && m.getOrigin().equals(origin)) {
                     found = true;
                     break;
                 }
             }
-            assertTrue("Did not find expected external group mapping:" + s, found);
-            assertEquals("The result set must contain exactly as many items as expected", expected.size(), actual.size());
+            assertTrue(found, "Did not find expected external group mapping:" + s);
+            assertEquals(expected.size(), actual.size(), "The result set must contain exactly as many items as expected");
         }
     }
 

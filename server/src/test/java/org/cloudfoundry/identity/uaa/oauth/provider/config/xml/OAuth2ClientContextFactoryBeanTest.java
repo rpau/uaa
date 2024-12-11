@@ -3,10 +3,11 @@ package org.cloudfoundry.identity.uaa.oauth.provider.config.xml;
 import org.cloudfoundry.identity.uaa.oauth.client.DefaultOAuth2ClientContext;
 import org.cloudfoundry.identity.uaa.oauth.client.OAuth2ClientContext;
 import org.cloudfoundry.identity.uaa.oauth.client.resource.ClientCredentialsResourceDetails;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
@@ -16,7 +17,7 @@ public class OAuth2ClientContextFactoryBeanTest {
 
     private OAuth2ClientContextFactoryBean factoryBean;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         factoryBean = new OAuth2ClientContextFactoryBean();
     }

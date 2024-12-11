@@ -1,8 +1,8 @@
 package org.cloudfoundry.identity.uaa.security.web;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.security.web.SecurityFilterChain;
 
 import javax.servlet.Filter;
@@ -26,7 +26,7 @@ public class SecurityFilterChainPostProcessorTests {
     private final Map<SecurityFilterChainPostProcessor.FilterPosition, Filter> additionalFilters = new HashMap<>();
     private int count;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         List<Filter> filters = new LinkedList<>();
         filters.add(new TestFilter1());
@@ -37,7 +37,7 @@ public class SecurityFilterChainPostProcessorTests {
         count = filters.size() + 1;
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
 
     }

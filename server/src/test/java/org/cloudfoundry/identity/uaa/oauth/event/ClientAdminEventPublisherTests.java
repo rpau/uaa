@@ -5,7 +5,15 @@ import org.cloudfoundry.identity.uaa.audit.AuditEventType;
 import org.cloudfoundry.identity.uaa.authentication.UaaAuthentication;
 import org.cloudfoundry.identity.uaa.authentication.UaaAuthenticationTestFactory;
 import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
-import org.cloudfoundry.identity.uaa.client.event.*;
+import org.cloudfoundry.identity.uaa.client.event.ClientAdminEventPublisher;
+import org.cloudfoundry.identity.uaa.client.event.ClientCreateEvent;
+import org.cloudfoundry.identity.uaa.client.event.ClientDeleteEvent;
+import org.cloudfoundry.identity.uaa.client.event.ClientJwtChangeEvent;
+import org.cloudfoundry.identity.uaa.client.event.ClientJwtFailureEvent;
+import org.cloudfoundry.identity.uaa.client.event.ClientUpdateEvent;
+import org.cloudfoundry.identity.uaa.client.event.SecretChangeEvent;
+import org.cloudfoundry.identity.uaa.client.event.SecretFailureEvent;
+import org.cloudfoundry.identity.uaa.oauth.common.exceptions.InvalidClientException;
 import org.cloudfoundry.identity.uaa.oauth.provider.AuthorizationRequest;
 import org.cloudfoundry.identity.uaa.oauth.provider.OAuth2Authentication;
 import org.cloudfoundry.identity.uaa.oauth.provider.OAuth2Request;
@@ -16,12 +24,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.cloudfoundry.identity.uaa.oauth.common.exceptions.InvalidClientException;
 
 import java.util.Collections;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.isA;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class ClientAdminEventPublisherTests {
 

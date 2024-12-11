@@ -12,7 +12,6 @@ import org.cloudfoundry.identity.uaa.test.UaaTestAccounts;
 import org.cloudfoundry.identity.uaa.user.UaaAuthority;
 import org.cloudfoundry.identity.uaa.util.AlphanumericRandomValueStringGenerator;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneHolder;
-import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,9 +26,15 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 
+import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.CLIENT_ID;
+import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.REDIRECT_URI;
+import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.RESPONSE_TYPE;
+import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.SCOPE;
+import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.STATE;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.ID_TOKEN_HINT_PROMPT;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.ID_TOKEN_HINT_PROMPT_NONE;
 import static org.cloudfoundry.identity.uaa.test.SnippetUtils.parameterWithName;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED;
 import static org.springframework.restdocs.headers.HeaderDocumentation.headerWithName;
@@ -40,11 +45,6 @@ import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuild
 import static org.springframework.restdocs.payload.JsonFieldType.STRING;
 import static org.springframework.restdocs.request.RequestDocumentation.requestParameters;
 import static org.springframework.restdocs.snippet.Attributes.key;
-import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.CLIENT_ID;
-import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.REDIRECT_URI;
-import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.RESPONSE_TYPE;
-import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.SCOPE;
-import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.STATE;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -176,7 +176,7 @@ class AuthorizeEndpointDocs extends EndpointDocs {
                         responseHeaders,
                         requestParameters)).andReturn();
         String location = mvcResult.getResponse().getHeader("Location");
-        Assert.assertThat(location, containsString("access_token="));
+        assertThat(location, containsString("access_token="));
     }
 
     @Test
@@ -241,7 +241,7 @@ class AuthorizeEndpointDocs extends EndpointDocs {
                         responseHeaders,
                         requestParameters)).andReturn();
         String location = mvcResult.getResponse().getHeader("Location");
-        Assert.assertThat(location, containsString("id_token="));
+        assertThat(location, containsString("id_token="));
     }
 
     @Test
@@ -278,8 +278,8 @@ class AuthorizeEndpointDocs extends EndpointDocs {
                         responseHeaders,
                         requestParameters)).andReturn();
         String location = mvcResult.getResponse().getHeader("Location");
-        Assert.assertThat(location, containsString("id_token="));
-        Assert.assertThat(location, containsString("access_token="));
+        assertThat(location, containsString("id_token="));
+        assertThat(location, containsString("access_token="));
     }
 
     @Test
@@ -316,8 +316,8 @@ class AuthorizeEndpointDocs extends EndpointDocs {
                         responseHeaders,
                         requestParameters)).andReturn();
         String location = mvcResult.getResponse().getHeader("Location");
-        Assert.assertThat(location, containsString("id_token="));
-        Assert.assertThat(location, containsString("code="));
+        assertThat(location, containsString("id_token="));
+        assertThat(location, containsString("code="));
     }
 
     private static void resetMarissaPassword(ScimUserProvisioning scimUserProvisioning) {

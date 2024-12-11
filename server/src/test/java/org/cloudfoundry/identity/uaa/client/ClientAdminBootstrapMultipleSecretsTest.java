@@ -1,10 +1,11 @@
 package org.cloudfoundry.identity.uaa.client;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import org.cloudfoundry.identity.uaa.zone.MultitenantClientServices;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.stubbing.Answer;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -13,12 +14,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.cloudfoundry.identity.uaa.zone.MultitenantClientServices;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.stubbing.Answer;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 
 public class ClientAdminBootstrapMultipleSecretsTest {
@@ -35,7 +35,7 @@ public class ClientAdminBootstrapMultipleSecretsTest {
     private UaaClientDetails oneSecretClient;
     private UaaClientDetails twoSecretClient;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         Set<String> clientsToDelete = new HashSet<>();
         boolean defaultOverride = true;
@@ -279,8 +279,8 @@ public class ClientAdminBootstrapMultipleSecretsTest {
     }
 
     private void assertClient(String password) {
-        Assert.assertEquals(clientId, verifyClient.getClientId());
-        Assert.assertEquals(password, verifyClient.getClientSecret());
+        Assertions.assertEquals(clientId, verifyClient.getClientId());
+        Assertions.assertEquals(password, verifyClient.getClientSecret());
     }
 
     private void buildClientSingletonList(String password1) {

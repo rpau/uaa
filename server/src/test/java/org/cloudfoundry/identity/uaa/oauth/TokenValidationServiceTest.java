@@ -4,38 +4,41 @@ import com.google.common.collect.Lists;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSSigner;
 import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
+import org.cloudfoundry.identity.uaa.oauth.common.exceptions.InvalidTokenException;
 import org.cloudfoundry.identity.uaa.oauth.token.RevocableTokenProvisioning;
+import org.cloudfoundry.identity.uaa.provider.NoSuchClientException;
 import org.cloudfoundry.identity.uaa.user.UaaAuthority;
 import org.cloudfoundry.identity.uaa.user.UaaUser;
 import org.cloudfoundry.identity.uaa.user.UaaUserDatabase;
 import org.cloudfoundry.identity.uaa.util.UaaTokenUtils;
-import org.cloudfoundry.identity.uaa.zone.MultitenantClientServices;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneHolder;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.cloudfoundry.identity.uaa.zone.MultitenantClientServices;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.cloudfoundry.identity.uaa.oauth.common.exceptions.InvalidTokenException;
-import org.cloudfoundry.identity.uaa.provider.NoSuchClientException;
 
 import java.text.ParseException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Map;
 
 import static org.cloudfoundry.identity.uaa.config.IdentityZoneConfigurationBootstrapTests.PRIVATE_KEY;
-import static org.cloudfoundry.identity.uaa.oauth.token.ClaimConstants.*;
+import static org.cloudfoundry.identity.uaa.oauth.token.ClaimConstants.CID;
+import static org.cloudfoundry.identity.uaa.oauth.token.ClaimConstants.GRANTED_SCOPES;
+import static org.cloudfoundry.identity.uaa.oauth.token.ClaimConstants.JTI;
+import static org.cloudfoundry.identity.uaa.oauth.token.ClaimConstants.SCOPE;
+import static org.cloudfoundry.identity.uaa.oauth.token.ClaimConstants.USER_ID;
 import static org.cloudfoundry.identity.uaa.util.UaaMapUtils.entry;
 import static org.cloudfoundry.identity.uaa.util.UaaMapUtils.map;
 import static org.cloudfoundry.identity.uaa.util.UaaStringUtils.DEFAULT_UAA_URL;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class TokenValidationServiceTest {
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
     private TokenValidationService tokenValidationService;
     private UaaUserDatabase userDatabase;
     private TokenEndpointBuilder tokenEndpointBuilder;
@@ -47,7 +50,7 @@ public class TokenValidationServiceTest {
     private final String clientId = "myclient";
     private Map<String, Object> content;
 
-    @Before
+    @BeforeEach
     public void setup() throws ParseException, JOSEException {
         header = map(
                 entry("alg", "RS256"),
@@ -81,7 +84,7 @@ public class TokenValidationServiceTest {
         );
     }
 
-    @After
+    @AfterEach
     public void cleanup() {
         IdentityZoneHolder.clear();
     }
@@ -95,36 +98,39 @@ public class TokenValidationServiceTest {
 
     @Test
     public void validation_enforcesKeyId() {
-        expectedException.expect(InvalidTokenException.class);
-        expectedException.expectMessage("Token header claim [kid] references unknown signing key : [testKey]");
+        Throwable exception = assertThrows(InvalidTokenException.class, () -> {
 
-        header.put("kid", "testKey");
+            header.put("kid", "testKey");
 
-        String accessToken = UaaTokenUtils.constructToken(header, content, signer);
+            String accessToken = UaaTokenUtils.constructToken(header, content, signer);
 
-        tokenValidationService.validateToken(accessToken, true);
+            tokenValidationService.validateToken(accessToken, true);
+        });
+        assertTrue(exception.getMessage().contains("Token header claim [kid] references unknown signing key : [testKey]"));
     }
 
     @Test
     public void validationFails_whenUserNotFound() {
-        expectedException.expect(InvalidTokenException.class);
-        expectedException.expectMessage("Token bears a non-existent user ID: " + userId);
+        Throwable exception = assertThrows(InvalidTokenException.class, () -> {
 
-        when(userDatabase.retrieveUserById(userId)).thenThrow(UsernameNotFoundException.class);
-        String accessToken = UaaTokenUtils.constructToken(header, content, signer);
+            when(userDatabase.retrieveUserById(userId)).thenThrow(UsernameNotFoundException.class);
+            String accessToken = UaaTokenUtils.constructToken(header, content, signer);
 
-        tokenValidationService.validateToken(accessToken, true);
+            tokenValidationService.validateToken(accessToken, true);
+        });
+        assertTrue(exception.getMessage().contains("Token bears a non-existent user ID: " + userId));
     }
 
     @Test
     public void validationFails_whenClientNotFound() {
-        expectedException.expect(InvalidTokenException.class);
-        expectedException.expectMessage("Invalid client ID " + clientId);
+        Throwable exception = assertThrows(InvalidTokenException.class, () -> {
 
-        when(mockMultitenantClientServices.loadClientByClientId(clientId, IdentityZoneHolder.get().getId())).thenThrow(NoSuchClientException.class);
-        String accessToken = UaaTokenUtils.constructToken(header, content, signer);
+            when(mockMultitenantClientServices.loadClientByClientId(clientId, IdentityZoneHolder.get().getId())).thenThrow(NoSuchClientException.class);
+            String accessToken = UaaTokenUtils.constructToken(header, content, signer);
 
-        tokenValidationService.validateToken(accessToken, true);
+            tokenValidationService.validateToken(accessToken, true);
+        });
+        assertTrue(exception.getMessage().contains("Invalid client ID " + clientId));
     }
 
     @Test

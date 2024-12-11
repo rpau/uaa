@@ -1,9 +1,12 @@
 package org.cloudfoundry.identity.uaa.ratelimiting.core.config;
 
 import org.cloudfoundry.identity.uaa.ratelimiting.core.config.exception.RateLimitingConfigException;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class RequestsPerWindowSecsTest {
     private static final String NAME = "login";
@@ -29,8 +32,7 @@ public class RequestsPerWindowSecsTest {
         RequestsPerWindowSecs rpw;
         try {
             rpw = RequestsPerWindowSecs.from(NAME, WHAT, data);
-        }
-        catch (RateLimitingConfigException e) {
+        } catch (RateLimitingConfigException e) {
             String msg = e.getMessage();
             int from = 0;
             for (String fragment : exceptionMsgContains) {

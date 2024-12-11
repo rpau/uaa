@@ -15,7 +15,7 @@
 package org.cloudfoundry.identity.api.web;
 
 import org.cloudfoundry.identity.uaa.test.UaaTestAccounts;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -55,5 +55,4 @@ public class ApiControllerTests {
         String content = response.getContentAsString();
         assertThat(content).as("Wrong content: " + content).contains("\n  \"user\": \"" + testAccounts.getUserName() + "\"");
     }
-
 }

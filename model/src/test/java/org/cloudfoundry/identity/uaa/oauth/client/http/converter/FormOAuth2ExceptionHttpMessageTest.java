@@ -3,8 +3,8 @@ package org.cloudfoundry.identity.uaa.oauth.client.http.converter;
 import org.cloudfoundry.identity.uaa.oauth.common.DefaultOAuth2AccessToken;
 import org.cloudfoundry.identity.uaa.oauth.common.exceptions.BadClientCredentialsException;
 import org.cloudfoundry.identity.uaa.oauth.common.exceptions.OAuth2Exception;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpOutputMessage;
 import org.springframework.http.MediaType;
 import org.springframework.mock.http.MockHttpInputMessage;
@@ -13,14 +13,18 @@ import org.springframework.mock.http.MockHttpOutputMessage;
 import java.io.IOException;
 import java.util.Collections;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class FormOAuth2ExceptionHttpMessageTest {
 
     FormOAuth2ExceptionHttpMessageConverter converter;
     FormOAuth2AccessTokenMessageConverter auth2AccessTokenMessageConverter;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         converter = new FormOAuth2ExceptionHttpMessageConverter();
         auth2AccessTokenMessageConverter = new FormOAuth2AccessTokenMessageConverter();
@@ -48,9 +52,10 @@ public class FormOAuth2ExceptionHttpMessageTest {
         assertNotNull(converter.read(new OAuth2Exception("").getClass(), new MockHttpInputMessage("".getBytes())));
     }
 
-    @Test(expected = UnsupportedOperationException.class)
-    public void writeInternal() throws IOException {
-        auth2AccessTokenMessageConverter.writeInternal(new DefaultOAuth2AccessToken(""), new MockHttpOutputMessage());
+    @Test
+    public void writeInternal() {
+        assertThrows(UnsupportedOperationException.class, () ->
+                auth2AccessTokenMessageConverter.writeInternal(new DefaultOAuth2AccessToken(""), new MockHttpOutputMessage()));
     }
 
     @Test

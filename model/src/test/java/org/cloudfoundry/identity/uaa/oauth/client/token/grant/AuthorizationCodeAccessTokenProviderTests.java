@@ -10,19 +10,18 @@ import org.cloudfoundry.identity.uaa.oauth.common.OAuth2AccessToken;
 import org.cloudfoundry.identity.uaa.oauth.common.exceptions.InvalidRequestException;
 import org.cloudfoundry.identity.uaa.oauth.token.AccessTokenRequest;
 import org.cloudfoundry.identity.uaa.oauth.token.DefaultAccessTokenRequest;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import java.util.Collections;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
@@ -30,15 +29,12 @@ import static org.junit.Assert.fail;
  */
 public class AuthorizationCodeAccessTokenProviderTests {
 
-    @Rule
-    public ExpectedException expected = ExpectedException.none();
-
     private final MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
 
     private final AuthorizationCodeAccessTokenProvider provider = new AuthorizationCodeAccessTokenProvider() {
         @Override
         protected OAuth2AccessToken retrieveToken(AccessTokenRequest request, OAuth2ProtectedResourceDetails resource,
-                MultiValueMap<String, String> form, HttpHeaders headers) {
+                                                  MultiValueMap<String, String> form, HttpHeaders headers) {
             params.putAll(form);
             return new DefaultOAuth2AccessToken("FOO");
         }
@@ -68,7 +64,7 @@ public class AuthorizationCodeAccessTokenProviderTests {
     }
 
     @Test
-    public void testGetAccessToken() throws Exception {
+    public void testGetAccessToken() {
         AccessTokenRequest request = new DefaultAccessTokenRequest();
         request.setAuthorizationCode("foo");
         request.setPreservedState(new Object());
@@ -77,50 +73,53 @@ public class AuthorizationCodeAccessTokenProviderTests {
     }
 
     @Test
-    public void testGetCode() throws Exception {
-        AccessTokenRequest request = new DefaultAccessTokenRequest();
-        request.setAuthorizationCode(null);
-        request.setPreservedState(new Object());
-        request.setStateKey("key");
-        resource.setAccessTokenUri("http://localhost/oauth/token");
-        expected.expect(IllegalArgumentException.class);
-        assertEquals("FOO", provider.obtainAccessToken(resource, request).getValue());
+    public void testGetCode() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            AccessTokenRequest request = new DefaultAccessTokenRequest();
+            request.setAuthorizationCode(null);
+            request.setPreservedState(new Object());
+            request.setStateKey("key");
+            resource.setAccessTokenUri("http://localhost/oauth/token");
+            assertEquals("FOO", provider.obtainAccessToken(resource, request).getValue());
+        });
     }
 
     @Test
-    public void testGetAccessTokenFailsWithNoState() throws Exception {
-        AccessTokenRequest request = new DefaultAccessTokenRequest();
-        request.setAuthorizationCode("foo");
-        resource.setAccessTokenUri("http://localhost/oauth/token");
-        expected.expect(InvalidRequestException.class);
-        assertEquals("FOO", provider.obtainAccessToken(resource, request).getValue());
+    public void testGetAccessTokenFailsWithNoState() {
+        assertThrows(InvalidRequestException.class, () -> {
+            AccessTokenRequest request = new DefaultAccessTokenRequest();
+            request.setAuthorizationCode("foo");
+            resource.setAccessTokenUri("http://localhost/oauth/token");
+            assertEquals("FOO", provider.obtainAccessToken(resource, request).getValue());
+        });
     }
 
     @Test
-    public void testRedirectToAuthorizationEndpoint() throws Exception {
+    public void testRedirectToAuthorizationEndpoint() {
         AccessTokenRequest request = new DefaultAccessTokenRequest();
         request.setCurrentUri("/come/back/soon");
         resource.setUserAuthorizationUri("http://localhost/oauth/authorize");
         try {
             provider.obtainAccessToken(resource, request);
             fail("Expected UserRedirectRequiredException");
-        }
-        catch (UserRedirectRequiredException e) {
+        } catch (UserRedirectRequiredException e) {
             assertEquals("http://localhost/oauth/authorize", e.getRedirectUri());
             assertEquals("/come/back/soon", e.getStateToPreserve());
         }
     }
 
     // A missing redirect just means the server has to deal with it
-    @Test(expected = UserRedirectRequiredException.class)
-    public void testRedirectNotSpecified() throws Exception {
-        AccessTokenRequest request = new DefaultAccessTokenRequest();
-        resource.setUserAuthorizationUri("http://localhost/oauth/authorize");
-        provider.obtainAccessToken(resource, request);
+    @Test
+    public void testRedirectNotSpecified() {
+        assertThrows(UserRedirectRequiredException.class, () -> {
+            AccessTokenRequest request = new DefaultAccessTokenRequest();
+            resource.setUserAuthorizationUri("http://localhost/oauth/authorize");
+            provider.obtainAccessToken(resource, request);
+        });
     }
 
     @Test
-    public void testGetAccessTokenRequest() throws Exception {
+    public void testGetAccessTokenRequest() {
         AccessTokenRequest request = new DefaultAccessTokenRequest();
         request.setAuthorizationCode("foo");
         request.setStateKey("bar");
@@ -135,5 +134,4 @@ public class AuthorizationCodeAccessTokenProviderTests {
         // State is not set in token request
         assertEquals(null, params.getFirst("state"));
     }
-
 }

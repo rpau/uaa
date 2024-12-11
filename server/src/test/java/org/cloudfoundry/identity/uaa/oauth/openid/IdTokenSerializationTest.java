@@ -3,9 +3,9 @@ package org.cloudfoundry.identity.uaa.oauth.openid;
 import org.cloudfoundry.identity.uaa.util.JsonUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -23,7 +23,7 @@ public class IdTokenSerializationTest {
 
     private IdToken idToken;
 
-    @Before
+    @BeforeEach
     public void setup() {
         Set<String> amr = new HashSet<>();
         amr.add("amr1");
@@ -47,7 +47,7 @@ public class IdTokenSerializationTest {
                 "azp",
                 "givenname",
                 "familyname",
-                1123l,
+                1123L,
                 "123",
                 new HashSet<>(),
                 new HashMap<>(),
@@ -63,7 +63,7 @@ public class IdTokenSerializationTest {
                 "revSig");
     }
 
-    @After
+    @AfterEach
     public void teardown() {
         DateTimeUtils.setCurrentMillisSystem();
     }
@@ -112,7 +112,7 @@ public class IdTokenSerializationTest {
                 "azp",
                 null,
                 null,
-                1123l,
+                1123L,
                 null,
                 new HashSet<>(),
                 new HashMap<>(),

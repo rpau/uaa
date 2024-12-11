@@ -34,11 +34,20 @@ import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.startsWith;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.springframework.http.HttpHeaders.*;
+import static org.springframework.http.HttpHeaders.ACCEPT;
+import static org.springframework.http.HttpHeaders.ACCEPT_LANGUAGE;
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
+import static org.springframework.http.HttpHeaders.CONTENT_LANGUAGE;
+import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 
 class CorsFilterDefaultZoneTests {
     private final List<String> logEvents = new ArrayList<>();
@@ -380,11 +389,9 @@ class CorsFilterDefaultZoneTests {
 
         corsFilter.initialize();
 
-        @SuppressWarnings("unchecked")
         List<Pattern> allowedUriPatterns = corsFilter.getXhrConfiguration().getAllowedUriPatterns();
         assertEquals(1, allowedUriPatterns.size());
 
-        @SuppressWarnings("unchecked")
         List<Pattern> allowedOriginPatterns = corsFilter.getXhrConfiguration().getAllowedOriginPatterns();
         assertEquals(1, allowedOriginPatterns.size());
 
@@ -432,8 +439,8 @@ class CorsFilterDefaultZoneTests {
 
         corsFilter.initialize();
 
-        assertTrue("Did not find expected error message in log.",
-                logEvents.stream().anyMatch(logMsg -> logMsg.contains("Invalid regular expression pattern in cors.xhr.allowed.origins:"))
+        assertTrue(logEvents.stream().anyMatch(logMsg -> logMsg.contains("Invalid regular expression pattern in cors.xhr.allowed.origins:")),
+                "Did not find expected error message in log."
         );
     }
 

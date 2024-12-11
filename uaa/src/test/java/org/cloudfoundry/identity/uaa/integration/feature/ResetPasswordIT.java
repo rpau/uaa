@@ -19,17 +19,15 @@ import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
 import org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils;
 import org.cloudfoundry.identity.uaa.login.test.UnlessProfileActive;
 import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.web.client.RestTemplate;
 
 import java.security.SecureRandom;
@@ -39,14 +37,13 @@ import java.util.Iterator;
 import static org.apache.commons.lang3.StringUtils.contains;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = DefaultIntegrationTestConfig.class)
+@SpringJUnitConfig(classes = DefaultIntegrationTestConfig.class)
 @UnlessProfileActive(values = "saml")
 public class ResetPasswordIT {
 
     @Autowired
-    @Rule
-    public IntegrationTestRule integrationTestRule;
+    @RegisterExtension
+    private IntegrationTestExtension integrationTestExtension;
 
     @Autowired
     WebDriver webDriver;
@@ -69,8 +66,8 @@ public class ResetPasswordIT {
     private String scimClientId;
     private String authCodeClientId;
 
-    @Before
-    @After
+    @BeforeEach
+    @AfterEach
     public void logoutAndClearCookies() {
         try {
             webDriver.get(baseUrl + "/logout.do");
@@ -81,7 +78,7 @@ public class ResetPasswordIT {
         webDriver.manage().deleteAllCookies();
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
         SecureRandom secureRandom = new SecureRandom();
 
@@ -100,7 +97,7 @@ public class ResetPasswordIT {
         testClient.createUser(scimAccessToken, username, email, "secr3T", true);
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         webDriver.get(baseUrl + "/logout.do");
     }

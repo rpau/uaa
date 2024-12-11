@@ -14,7 +14,7 @@
 package org.cloudfoundry.identity.uaa.integration;
 
 import org.apache.commons.codec.binary.Base64;
-import org.cloudfoundry.identity.uaa.ServerRunning;
+import org.cloudfoundry.identity.uaa.ServerRunningExtension;
 import org.cloudfoundry.identity.uaa.account.PasswordChangeRequest;
 import org.cloudfoundry.identity.uaa.authentication.UaaAuthenticationDetails;
 import org.cloudfoundry.identity.uaa.constants.OriginKeys;
@@ -23,14 +23,14 @@ import org.cloudfoundry.identity.uaa.oauth.client.resource.ClientCredentialsReso
 import org.cloudfoundry.identity.uaa.oauth.client.resource.ImplicitResourceDetails;
 import org.cloudfoundry.identity.uaa.oauth.client.test.BeforeOAuth2Context;
 import org.cloudfoundry.identity.uaa.oauth.client.test.OAuth2ContextConfiguration;
-import org.cloudfoundry.identity.uaa.oauth.client.test.OAuth2ContextSetup;
+import org.cloudfoundry.identity.uaa.oauth.client.test.OAuth2ContextExtension;
 import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
 import org.cloudfoundry.identity.uaa.scim.ScimUser;
-import org.cloudfoundry.identity.uaa.test.TestAccountSetup;
+import org.cloudfoundry.identity.uaa.test.TestAccountExtension;
 import org.cloudfoundry.identity.uaa.test.UaaTestAccounts;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -63,24 +63,25 @@ public class LoginServerSecurityIntegrationTests {
 
     private final String JOE = "joe" + new RandomValueStringGenerator().generate().toLowerCase();
     private final String loginServerJoe = "ls_joe" + new RandomValueStringGenerator().generate().toLowerCase();
-
-    @Rule
-    public ServerRunning serverRunning = ServerRunning.isRunning();
     private ScimUser joe;
-    private final UaaTestAccounts testAccounts = UaaTestAccounts.standard(serverRunning);
 
-    @Rule
-    public TestAccountSetup testAccountSetup = TestAccountSetup.standard(serverRunning, testAccounts);
+    @RegisterExtension
+    private static final ServerRunningExtension serverRunning = ServerRunningExtension.connect();
 
-    @Rule
-    public OAuth2ContextSetup context = OAuth2ContextSetup.withTestAccounts(serverRunning, testAccountSetup);
+    private static final UaaTestAccounts testAccounts = UaaTestAccounts.standard(serverRunning);
+
+    @RegisterExtension
+    private static final TestAccountExtension testAccountSetup = TestAccountExtension.standard(serverRunning, testAccounts);
+
+    @RegisterExtension
+    private static final OAuth2ContextExtension context = OAuth2ContextExtension.withTestAccounts(serverRunning, testAccountSetup);
 
     private final MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
 
     private final HttpHeaders headers = new HttpHeaders();
     private ScimUser userForLoginServer;
 
-    @Before
+    @BeforeEach
     public void init() {
         params.set("source", "login");
         params.set("redirect_uri", "http://localhost:8080/app/");

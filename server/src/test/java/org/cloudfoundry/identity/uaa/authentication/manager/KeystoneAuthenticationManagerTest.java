@@ -1,10 +1,9 @@
 package org.cloudfoundry.identity.uaa.authentication.manager;
 
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -13,54 +12,35 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Stream;
 
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@RunWith(Parameterized.class)
-public class KeystoneAuthenticationManagerTest {
+class KeystoneAuthenticationManagerTest {
 
-    private RestTemplate restTemplate;
     private String remoteUrl;
     private RestAuthenticationManager restAuthenticationManager;
     private UsernamePasswordAuthenticationToken input;
-    private String username = "testUserName";
-    private String password = "testpassword";
-    private Map<String, Object> restResult;
+    private final String username = "testUserName";
 
-    public KeystoneAuthenticationManagerTest(RestAuthenticationManager authzManager, String url) {
-        this.restAuthenticationManager = authzManager;
-        this.remoteUrl = url;
-    }
-
-    @Parameterized.Parameters
-    public static Collection parameters() {
-        return Arrays.asList(new Object[][]{
-                {new KeystoneAuthenticationManager(), "http://this.is.not.used/v3"},
-                {new KeystoneAuthenticationManager(), "http://this.is.not.used/v2.0"},
-                {new RestAuthenticationManager(), "http://this.is.not.used/authenticate"},
-        });
-    }
-
-    @Before
-    public void setUp() {
+    public void initKeystoneAuthenticationManagerTest(RestAuthenticationManager authzManager, String url) {
+        restAuthenticationManager = authzManager;
+        remoteUrl = url;
+        String password = "testpassword";
         input = new UsernamePasswordAuthenticationToken(username, password);
-        setUpRestAuthenticationManager();
-    }
-
-    private void setUpRestAuthenticationManager() {
         setUpRestAuthenticationManager(HttpStatus.OK);
     }
 
     private void setUpRestAuthenticationManager(HttpStatus status) {
-        restResult = new HashMap<>();
+        Map<String, Object> restResult = new HashMap<>();
         if (remoteUrl.contains("/v3")) {
             Map<String, Object> token = new HashMap<>();
             Map<String, Object> user = new HashMap<>();
@@ -77,54 +57,80 @@ public class KeystoneAuthenticationManagerTest {
             restResult.put("username", username);
         }
 
-        restTemplate = mock(RestTemplate.class);
+        RestTemplate restTemplate = mock(RestTemplate.class);
         when(restTemplate.exchange(
                 eq(remoteUrl),
                 eq(HttpMethod.POST),
                 any(HttpEntity.class),
                 eq(Map.class)))
-                .thenReturn(new ResponseEntity<Map>(restResult, status));
-
+                .thenReturn(new ResponseEntity<>(restResult, status));
 
         restAuthenticationManager.setNullPassword(false);
         restAuthenticationManager.setRemoteUrl(remoteUrl);
         restAuthenticationManager.setRestTemplate(restTemplate);
     }
 
-    @Test
-    public void testV3Authentication() {
+    public static Stream<Arguments> parameters() {
+        return Stream.of(
+                arguments(new KeystoneAuthenticationManager(), "http://this.is.not.used/v3"),
+                arguments(new KeystoneAuthenticationManager(), "http://this.is.not.used/v2.0"),
+                arguments(new RestAuthenticationManager(), "http://this.is.not.used/authenticate")
+        );
+    }
+
+    @MethodSource("parameters")
+    @ParameterizedTest
+    void testV3Authentication(RestAuthenticationManager authzManager, String url) {
+        initKeystoneAuthenticationManagerTest(authzManager, url);
         restAuthenticationManager.authenticate(input);
     }
 
-    @Test(expected = UnsupportedOperationException.class)
-    public void testUnknownVersion() {
-        Assume.assumeTrue(restAuthenticationManager instanceof KeystoneAuthenticationManager);
-        remoteUrl = "http://this.is.not.used/v4";
-        setUpRestAuthenticationManager();
-        restAuthenticationManager.authenticate(input);
+    @MethodSource("parameters")
+    @ParameterizedTest
+    void testUnknownVersion(RestAuthenticationManager authzManager, String url) {
+        initKeystoneAuthenticationManagerTest(authzManager, url);
+        Assumptions.assumeTrue(restAuthenticationManager instanceof KeystoneAuthenticationManager);
+        assertThrows(UnsupportedOperationException.class, () -> {
+            remoteUrl = "http://this.is.not.used/v4";
+            setUpRestAuthenticationManager(HttpStatus.OK);
+            restAuthenticationManager.authenticate(input);
+        });
     }
 
-    @Test(expected = BadCredentialsException.class)
-    public void testUnauthorized() {
-        setUpRestAuthenticationManager(HttpStatus.UNAUTHORIZED);
-        restAuthenticationManager.authenticate(input);
+    @MethodSource("parameters")
+    @ParameterizedTest
+    void testUnauthorized(RestAuthenticationManager authzManager, String url) {
+        initKeystoneAuthenticationManagerTest(authzManager, url);
+        assertThrows(BadCredentialsException.class, () -> {
+            setUpRestAuthenticationManager(HttpStatus.UNAUTHORIZED);
+            restAuthenticationManager.authenticate(input);
+        });
     }
 
-    @Test(expected = RuntimeException.class)
-    public void test500Error() {
-        setUpRestAuthenticationManager(HttpStatus.INTERNAL_SERVER_ERROR);
-        restAuthenticationManager.authenticate(input);
+    @MethodSource("parameters")
+    @ParameterizedTest
+    void test500Error(RestAuthenticationManager authzManager, String url) {
+        initKeystoneAuthenticationManagerTest(authzManager, url);
+        assertThrows(RuntimeException.class, () -> {
+            setUpRestAuthenticationManager(HttpStatus.INTERNAL_SERVER_ERROR);
+            restAuthenticationManager.authenticate(input);
+        });
     }
 
-    @Test(expected = RuntimeException.class)
-    public void testUnknownError() {
-        setUpRestAuthenticationManager(HttpStatus.BAD_GATEWAY);
-        restAuthenticationManager.authenticate(input);
+    @MethodSource("parameters")
+    @ParameterizedTest
+    void testUnknownError(RestAuthenticationManager authzManager, String url) {
+        initKeystoneAuthenticationManagerTest(authzManager, url);
+        assertThrows(RuntimeException.class, () -> {
+            setUpRestAuthenticationManager(HttpStatus.BAD_GATEWAY);
+            restAuthenticationManager.authenticate(input);
+        });
     }
 
-    @Test
-    public void checkNullPassword() {
+    @MethodSource("parameters")
+    @ParameterizedTest
+    void checkNullPassword(RestAuthenticationManager authzManager, String url) {
+        initKeystoneAuthenticationManagerTest(authzManager, url);
         assertFalse(restAuthenticationManager.isNullPassword());
     }
-
 }

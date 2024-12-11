@@ -19,38 +19,42 @@ import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
 import org.cloudfoundry.identity.uaa.oauth.UaaOauth2Authentication;
 import org.cloudfoundry.identity.uaa.oauth.common.DefaultOAuth2AccessToken;
 import org.cloudfoundry.identity.uaa.oauth.common.DefaultOAuth2RefreshToken;
+import org.cloudfoundry.identity.uaa.oauth.common.exceptions.InvalidClientException;
+import org.cloudfoundry.identity.uaa.oauth.common.exceptions.InvalidGrantException;
 import org.cloudfoundry.identity.uaa.oauth.provider.OAuth2RequestFactory;
 import org.cloudfoundry.identity.uaa.oauth.provider.TokenRequest;
 import org.cloudfoundry.identity.uaa.oauth.provider.token.AuthorizationServerTokenServices;
-import org.cloudfoundry.identity.uaa.zone.MultitenantClientServices;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneHolder;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.cloudfoundry.identity.uaa.zone.MultitenantClientServices;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.cloudfoundry.identity.uaa.oauth.common.exceptions.InvalidClientException;
-import org.cloudfoundry.identity.uaa.oauth.common.exceptions.InvalidGrantException;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
+import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.CLIENT_ID;
+import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.GRANT_TYPE;
 import static org.cloudfoundry.identity.uaa.oauth.token.ClaimConstants.JTI;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_REFRESH_TOKEN;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_USER_TOKEN;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.USER_TOKEN_REQUESTING_CLIENT_ID;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.CLIENT_ID;
-import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.GRANT_TYPE;
 
 
 public class UserTokenGranterTest {
@@ -67,7 +71,7 @@ public class UserTokenGranterTest {
     private UaaClientDetails receivingClient;
     private RevocableTokenProvisioning tokenStore;
 
-    @Before
+    @BeforeEach
     public void setup() {
         tokenServices = mock(AuthorizationServerTokenServices.class);
         clientDetailsService = mock(MultitenantClientServices.class);
@@ -98,50 +102,62 @@ public class UserTokenGranterTest {
 
     }
 
-    @After
+    @AfterEach
     public void teardown() {
         SecurityContextHolder.clearContext();
     }
 
-    @Test(expected = InsufficientAuthenticationException.class)
+    @Test
     public void test_no_authentication() {
-        SecurityContextHolder.clearContext();
-        granter.validateRequest(tokenRequest);
+        assertThrows(InsufficientAuthenticationException.class, () -> {
+            SecurityContextHolder.clearContext();
+            granter.validateRequest(tokenRequest);
+        });
     }
 
-    @Test(expected = InsufficientAuthenticationException.class)
+    @Test
     public void test_not_authenticated() {
-        when(authentication.isAuthenticated()).thenReturn(false);
-        granter.validateRequest(tokenRequest);
+        assertThrows(InsufficientAuthenticationException.class, () -> {
+            when(authentication.isAuthenticated()).thenReturn(false);
+            granter.validateRequest(tokenRequest);
+        });
     }
 
-    @Test(expected = InsufficientAuthenticationException.class)
+    @Test
     public void test_not_a_user_authentication() {
-        when(authentication.isAuthenticated()).thenReturn(true);
-        when(authentication.getUserAuthentication()).thenReturn(null);
-        granter.validateRequest(tokenRequest);
+        assertThrows(InsufficientAuthenticationException.class, () -> {
+            when(authentication.isAuthenticated()).thenReturn(true);
+            when(authentication.getUserAuthentication()).thenReturn(null);
+            granter.validateRequest(tokenRequest);
+        });
     }
 
-    @Test(expected = InvalidGrantException.class)
+    @Test
     public void test_invalid_grant_type() {
-        missing_parameter(GRANT_TYPE);
+        assertThrows(InvalidGrantException.class, () ->
+                missing_parameter(GRANT_TYPE));
     }
 
-    @Test(expected = InvalidGrantException.class)
+    @Test
     public void test_requesting_client_id_missing() {
-        missing_parameter(USER_TOKEN_REQUESTING_CLIENT_ID);
+        assertThrows(InvalidGrantException.class, () ->
+                missing_parameter(USER_TOKEN_REQUESTING_CLIENT_ID));
     }
 
-    @Test(expected = InvalidClientException.class)
+    @Test
     public void test_wrong_requesting_grant_type() {
-        requestingClient.setAuthorizedGrantTypes(Collections.singletonList("password"));
-        missing_parameter("non existent");
+        assertThrows(InvalidClientException.class, () -> {
+            requestingClient.setAuthorizedGrantTypes(Collections.singletonList("password"));
+            missing_parameter("non existent");
+        });
     }
 
-    @Test(expected = InvalidClientException.class)
+    @Test
     public void test_wrong_receiving_grant_type() {
-        receivingClient.setAuthorizedGrantTypes(Collections.singletonList("password"));
-        missing_parameter("non existent");
+        assertThrows(InvalidClientException.class, () -> {
+            receivingClient.setAuthorizedGrantTypes(Collections.singletonList("password"));
+            missing_parameter("non existent");
+        });
     }
 
     @Test

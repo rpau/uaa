@@ -1,14 +1,13 @@
 package org.cloudfoundry.identity.uaa.test;
 
 import org.cloudfoundry.identity.uaa.oauth.client.test.TestAccounts;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.cloudfoundry.identity.uaa.test.UaaTestAccounts.UAA_TEST_PASSWORD;
 import static org.cloudfoundry.identity.uaa.test.UaaTestAccounts.UAA_TEST_USERNAME;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class UaaTestAccountsTest {
 
@@ -16,14 +15,14 @@ public class UaaTestAccountsTest {
     private String originalUaaTestUsername;
     private String originalUaaTestPassword;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         testAccounts = UaaTestAccounts.standard(null);
         originalUaaTestUsername = System.getProperty(UAA_TEST_USERNAME);
         originalUaaTestPassword = System.getProperty(UAA_TEST_PASSWORD);
     }
 
-    @After
+    @AfterEach
     public void restoreProperties() {
         if (originalUaaTestUsername == null) {
             System.clearProperty(UAA_TEST_USERNAME);

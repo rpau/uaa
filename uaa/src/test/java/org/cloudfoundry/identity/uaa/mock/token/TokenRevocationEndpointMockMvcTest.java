@@ -23,12 +23,12 @@ import java.util.Map;
 
 import static org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils.getClientCredentialsOAuthAccessToken;
 import static org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils.getUserOAuthAccessToken;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -56,7 +56,7 @@ public class TokenRevocationEndpointMockMvcTest extends AbstractTokenMockMvcTest
                     "clients.write",
                     "openid",
                     "client_credentials,password"
-            , true
+                    , true
             );
 
 
@@ -77,7 +77,7 @@ public class TokenRevocationEndpointMockMvcTest extends AbstractTokenMockMvcTest
 
             assertEquals(0, tokenRevocationEventListener.getEventCount());
             mockMvc.perform(delete("/oauth/token/revoke/" + jti)
-                    .header("Authorization", "Bearer " + clientToken))
+                            .header("Authorization", "Bearer " + clientToken))
                     .andExpect(status().isOk());
 
             assertEquals(1, tokenRevocationEventListener.getEventCount());
@@ -141,7 +141,7 @@ public class TokenRevocationEndpointMockMvcTest extends AbstractTokenMockMvcTest
                 );
 
         mockMvc.perform(delete("/oauth/token/revoke/" + tokenToBeRevoked)
-                .header("Authorization", "Bearer " + revokeAccessToken))
+                        .header("Authorization", "Bearer " + revokeAccessToken))
                 .andExpect(status().isOk());
 
 
@@ -207,7 +207,7 @@ public class TokenRevocationEndpointMockMvcTest extends AbstractTokenMockMvcTest
                 );
 
         mockMvc.perform(delete("/oauth/token/revoke/client/" + resourceClientId)
-                .header("Authorization", "Bearer " + revokeAccessToken))
+                        .header("Authorization", "Bearer " + revokeAccessToken))
                 .andExpect(status().isOk());
 
 
@@ -261,7 +261,7 @@ public class TokenRevocationEndpointMockMvcTest extends AbstractTokenMockMvcTest
                 );
 
         mockMvc.perform(delete("/oauth/token/revoke/" + tokenToBeRevoked)
-                .header("Authorization", "Bearer " + revokeAccessToken))
+                        .header("Authorization", "Bearer " + revokeAccessToken))
                 .andExpect(status().isForbidden());
     }
 
@@ -272,7 +272,7 @@ public class TokenRevocationEndpointMockMvcTest extends AbstractTokenMockMvcTest
         String opaqueUserToken = testClient.getUserOAuthAccessToken("app", "appclientsecret", scimUser.getUserName(), "secret", null);
 
         mockMvc.perform(delete("/oauth/token/revoke/" + opaqueUserToken)
-                .header("Authorization", "Bearer " + opaqueUserToken))
+                        .header("Authorization", "Bearer " + opaqueUserToken))
                 .andExpect(status().isOk());
 
         try {
@@ -337,7 +337,7 @@ public class TokenRevocationEndpointMockMvcTest extends AbstractTokenMockMvcTest
         ).andExpect(status().isOk());
         assertEquals(1, tokenRevocationEventListener.getEventCount());
         assertEquals(client.getClientId(), tokenRevocationEventListener.getEvents().get(0).getClientId());
-        assertNull("Event for client based revocation should not contain userid", tokenRevocationEventListener.getEvents().get(0).getUserId());
+        assertNull(tokenRevocationEventListener.getEvents().get(0).getUserId(), "Event for client based revocation should not contain userid");
         assertThat(tokenRevocationEventListener.getEvents().get(0).getAuditEvent().getData(), containsString(client.getClientId()));
         assertThat(tokenRevocationEventListener.getEvents().get(0).getAuditEvent().getData(), not(containsString("UserID")));
         assertThat(tokenRevocationEventListener.getEvents().get(0).getAuditEvent().getOrigin(), containsString("admin"));
@@ -345,10 +345,10 @@ public class TokenRevocationEndpointMockMvcTest extends AbstractTokenMockMvcTest
 
         //we should fail attempting to use the token
         mockMvc.perform(
-                get("/oauth/clients")
-                        .header("Authorization", "Bearer " + readClientsToken)
-        )
-        .andExpect(status().isUnauthorized())
+                        get("/oauth/clients")
+                                .header("Authorization", "Bearer " + readClientsToken)
+                )
+                .andExpect(status().isUnauthorized())
                 .andExpect(content().string(containsString("\"error\":\"invalid_token\"")));
 
     }
@@ -397,10 +397,10 @@ public class TokenRevocationEndpointMockMvcTest extends AbstractTokenMockMvcTest
         assertThat(tokenRevocationEventListener.getEvents().get(0).getAuditEvent().getOrigin(), containsString("admin"));
         //should fail with 401
         mockMvc.perform(
-                get("/userinfo")
-                        .header("Authorization", "Bearer " + userInfoToken)
-        )
-        .andExpect(status().isUnauthorized())
+                        get("/userinfo")
+                                .header("Authorization", "Bearer " + userInfoToken)
+                )
+                .andExpect(status().isUnauthorized())
                 .andExpect(content().string(containsString("\"error\":\"invalid_token\"")));
     }
 
@@ -438,9 +438,9 @@ public class TokenRevocationEndpointMockMvcTest extends AbstractTokenMockMvcTest
 
         //should fail with 401
         mockMvc.perform(
-                get("/userinfo").header("Authorization", "Bearer " + userInfoToken)
-        )
-        .andExpect(status().isUnauthorized())
+                        get("/userinfo").header("Authorization", "Bearer " + userInfoToken)
+                )
+                .andExpect(status().isUnauthorized())
                 .andExpect(content().string(containsString("\"error\":\"invalid_token\"")));
     }
 
@@ -520,10 +520,10 @@ public class TokenRevocationEndpointMockMvcTest extends AbstractTokenMockMvcTest
 
         //should fail with 401
         mockMvc.perform(
-                get("/userinfo")
-                        .header("Authorization", "Bearer " + client1UserToken)
-        )
-        .andExpect(status().isUnauthorized())
+                        get("/userinfo")
+                                .header("Authorization", "Bearer " + client1UserToken)
+                )
+                .andExpect(status().isUnauthorized())
                 .andExpect(content().string(containsString("\"error\":\"invalid_token\"")));
 
 

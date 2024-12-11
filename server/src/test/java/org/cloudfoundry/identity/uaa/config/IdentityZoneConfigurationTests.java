@@ -27,8 +27,8 @@ import org.cloudfoundry.identity.uaa.zone.SamlConfig;
 import org.cloudfoundry.identity.uaa.zone.TokenPolicy;
 import org.cloudfoundry.identity.uaa.zone.UserConfig;
 import org.cloudfoundry.identity.uaa.zone.ZoneManagementScopes;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -44,7 +44,7 @@ public class IdentityZoneConfigurationTests {
 
     private IdentityZoneConfiguration definition;
 
-    @Before
+    @BeforeEach
     public void configure() {
         definition = new IdentityZoneConfiguration();
     }

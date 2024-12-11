@@ -1,16 +1,13 @@
 package org.cloudfoundry.identity.uaa.oauth.pkce.verifiers;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import org.cloudfoundry.identity.uaa.oauth.pkce.verifiers.S256PkceVerifier;
-import org.junit.Before;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * 
  * @author Zoltan Maradics
- *
  */
 public class S256PkceVerifierTest {
 
@@ -19,7 +16,7 @@ public class S256PkceVerifierTest {
     private final String validCodeChallenge = "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM";
     private final String validCodeVerifier = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk";
 
-    @Before
+    @BeforeEach
     public void createS256CodeChallengeMethod() throws Exception {
         s256CodeChallengeMethod = new S256PkceVerifier();
     }

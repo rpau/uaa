@@ -14,14 +14,13 @@
 
 package org.cloudfoundry.identity.uaa.mock;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 
 public class UaaBaseSuite {
     private static volatile boolean suiteActive;
 
     /**
-     *
      * @return false if the test has been invoked within gradle (based on system property)
      * and the test is not running while the test suite is running.
      */
@@ -34,12 +33,12 @@ public class UaaBaseSuite {
         }
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void suiteIsActive() {
         suiteActive = true;
     }
 
-    @AfterClass
+    @AfterAll
     public static void suiteIsNotActive() {
         suiteActive = false;
     }

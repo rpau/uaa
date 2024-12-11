@@ -25,7 +25,7 @@ import org.springframework.web.context.WebApplicationContext;
 
 import java.io.File;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class LimitedModeLoginMockMvcTests extends LoginMockMvcTests {
     private File originalLimitedModeStatusFile;

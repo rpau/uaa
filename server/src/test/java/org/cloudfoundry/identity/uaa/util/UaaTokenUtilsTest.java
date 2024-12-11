@@ -1,13 +1,13 @@
 package org.cloudfoundry.identity.uaa.util;
 
 import com.nimbusds.jose.KeyLengthException;
+import org.cloudfoundry.identity.uaa.oauth.common.exceptions.InvalidTokenException;
 import org.cloudfoundry.identity.uaa.oauth.jwt.UaaMacSigner;
 import org.cloudfoundry.identity.uaa.oauth.token.ClaimConstants;
 import org.cloudfoundry.identity.uaa.oauth.token.Claims;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.cloudfoundry.identity.uaa.oauth.common.exceptions.InvalidTokenException;
 import org.springframework.util.StringUtils;
 
 import java.util.Arrays;
@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 import static java.util.Collections.emptySet;
+import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.GRANT_TYPE;
 import static org.cloudfoundry.identity.uaa.oauth.token.ClaimConstants.CID;
 import static org.cloudfoundry.identity.uaa.oauth.token.ClaimConstants.SUB;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_AUTHORIZATION_CODE;
@@ -24,11 +25,11 @@ import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYP
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_PASSWORD;
 import static org.cloudfoundry.identity.uaa.util.UaaTokenUtils.hasRequiredUserAuthorities;
 import static org.cloudfoundry.identity.uaa.util.UaaTokenUtils.isUserToken;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.GRANT_TYPE;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class UaaTokenUtilsTest {
 
@@ -40,8 +41,8 @@ public class UaaTokenUtilsTest {
         }
         String hash1 = UaaTokenUtils.getRevocationHash(salts);
         String hash2 = UaaTokenUtils.getRevocationHash(salts);
-        assertFalse("Hash 1 should not be empty", StringUtils.isEmpty(hash1));
-        assertFalse("Hash 2 should not be empty", StringUtils.isEmpty(hash2));
+        assertFalse(StringUtils.isEmpty(hash1), "Hash 1 should not be empty");
+        assertFalse(StringUtils.isEmpty(hash2), "Hash 2 should not be empty");
         assertEquals(hash1, hash2);
     }
 
@@ -154,9 +155,10 @@ public class UaaTokenUtilsTest {
         assertEquals(claims.get("aud"), claimObject.getAud());
     }
 
-    @Test(expected = InvalidTokenException.class)
+    @Test
     public void getClaims_throwsExceptionWhenJwtIsMalformed() {
-        UaaTokenUtils.getClaims("not.a.jwt", Map.class);
+        assertThrows(InvalidTokenException.class, () ->
+                UaaTokenUtils.getClaims("not.a.jwt", Map.class));
     }
 
     @Test

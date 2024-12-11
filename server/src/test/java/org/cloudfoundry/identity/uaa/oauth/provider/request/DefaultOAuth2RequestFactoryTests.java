@@ -5,8 +5,8 @@ import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetails;
 import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetailsService;
 import org.cloudfoundry.identity.uaa.security.beans.DefaultSecurityContextAccessor;
 import org.cloudfoundry.identity.uaa.security.beans.SecurityContextAccessor;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 
@@ -14,7 +14,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -27,14 +28,13 @@ import static org.mockito.Mockito.when;
 public class DefaultOAuth2RequestFactoryTests {
 
     private DefaultOAuth2RequestFactory defaultOAuth2RequestFactory;
-    private ClientDetailsService clientDetailsService;
     private ClientDetails clientDetails;
     private Map<String, String> requestParameters;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         clientDetails = mock(ClientDetails.class);
-        clientDetailsService = mock(ClientDetailsService.class);
+        ClientDetailsService clientDetailsService = mock(ClientDetailsService.class);
         when(clientDetailsService.loadClientByClientId(any())).thenReturn(clientDetails);
         defaultOAuth2RequestFactory = new DefaultOAuth2RequestFactory(clientDetailsService);
         requestParameters = Map.of("client_id", "id");
@@ -73,10 +73,12 @@ public class DefaultOAuth2RequestFactoryTests {
         assertNotNull(defaultOAuth2RequestFactory.createTokenRequest(requestParameters, clientDetails));
     }
 
-    @Test(expected = InvalidClientException.class)
+    @Test
     public void testCreateTokenRequestDifferentClientId() {
-        when(clientDetails.getClientId()).thenReturn("my-client-id");
-        defaultOAuth2RequestFactory.createTokenRequest(requestParameters, clientDetails);
+        assertThrows(InvalidClientException.class, () -> {
+            when(clientDetails.getClientId()).thenReturn("my-client-id");
+            defaultOAuth2RequestFactory.createTokenRequest(requestParameters, clientDetails);
+        });
     }
 
     @Test

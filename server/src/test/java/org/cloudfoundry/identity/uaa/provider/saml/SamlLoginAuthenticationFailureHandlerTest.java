@@ -2,7 +2,7 @@ package org.cloudfoundry.identity.uaa.provider.saml;
 
 import org.apache.http.HttpStatus;
 import org.cloudfoundry.identity.uaa.util.SessionUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockHttpSession;

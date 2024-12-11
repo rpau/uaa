@@ -15,9 +15,9 @@
 
 package org.cloudfoundry.identity.uaa.provider.ldap;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.util.AssertionErrors.fail;
 
 public class DynamicPasswordComparatorTests {
@@ -46,7 +46,7 @@ public class DynamicPasswordComparatorTests {
         byte[] test = getBytes("test");
         for (String s : passwords) {
             try {
-                assertTrue("Password[" + s + "] should match 'test'", comparator.comparePasswords(test, getBytes(s)));
+                assertTrue(comparator.comparePasswords(test, getBytes(s)), "Password[" + s + "] should match 'test'");
             } catch (Exception e) {
                 e.printStackTrace();
                 fail("Unsuccessful on password [" + s + "]");

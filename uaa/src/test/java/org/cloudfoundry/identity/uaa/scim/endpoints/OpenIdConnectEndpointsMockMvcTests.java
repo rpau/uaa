@@ -20,7 +20,10 @@ import static org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils.createOtherId
 import static org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils.deleteIdentityZone;
 import static org.cloudfoundry.identity.uaa.oauth.token.ClaimConstants.ROLES;
 import static org.cloudfoundry.identity.uaa.oauth.token.ClaimConstants.USER_ATTRIBUTES;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -49,11 +52,11 @@ class OpenIdConnectEndpointsMockMvcTests {
         for (String host : Arrays.asList("localhost", "subdomain.localhost")) {
             for (String url : Arrays.asList("/.well-known/openid-configuration", "/oauth/token/.well-known/openid-configuration")) {
                 MockHttpServletResponse response = mockMvc.perform(
-                        get(url)
-                                .header("Host", host)
-                                .servletPath(url)
-                                .with(new SetServerNameRequestPostProcessor(host))
-                                .accept(APPLICATION_JSON))
+                                get(url)
+                                        .header("Host", host)
+                                        .servletPath(url)
+                                        .with(new SetServerNameRequestPostProcessor(host))
+                                        .accept(APPLICATION_JSON))
                         .andExpect(status().isOk())
                         .andReturn().getResponse();
 
@@ -83,11 +86,11 @@ class OpenIdConnectEndpointsMockMvcTests {
         for (String host : Arrays.asList("localhost", "subdomain.localhost")) {
             for (String url : Arrays.asList("/.well-known/openid-configuration", "/oauth/token/.well-known/openid-configuration")) {
                 MockHttpServletResponse response = mockMvc.perform(
-                        get(url)
-                                .header("Host", host)
-                                .servletPath(url)
-                                .with(new SetServerNameRequestPostProcessor(host))
-                                .accept(APPLICATION_JSON))
+                                get(url)
+                                        .header("Host", host)
+                                        .servletPath(url)
+                                        .with(new SetServerNameRequestPostProcessor(host))
+                                        .accept(APPLICATION_JSON))
                         .andExpect(status().isOk())
                         .andReturn().getResponse();
 

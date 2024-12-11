@@ -1,6 +1,6 @@
 /*
  * *****************************************************************************
- *     Cloud Foundry 
+ *     Cloud Foundry
  *     Copyright (c) [2009-2016] Pivotal Software, Inc. All Rights Reserved.
  *
  *     This product is licensed to you under the Apache License, Version 2.0 (the "License").
@@ -13,13 +13,14 @@
  *******************************************************************************/
 package org.cloudfoundry.identity.uaa;
 
-import static org.junit.Assert.assertTrue;
+import org.cloudfoundry.identity.uaa.impl.config.UaaConfiguration;
+import org.cloudfoundry.identity.uaa.impl.config.YamlConfigurationValidator;
+import org.junit.jupiter.api.Test;
 
 import javax.validation.ConstraintViolationException;
 
-import org.cloudfoundry.identity.uaa.impl.config.UaaConfiguration;
-import org.cloudfoundry.identity.uaa.impl.config.YamlConfigurationValidator;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Luke Taylor
@@ -39,37 +40,38 @@ public class UaaConfigurationTests {
     public void validYamlIsOk() throws Exception {
         createValidator(
                 """
-                name: uaa
-                issuer.uri: http://foo.com
-                oauth:
-                  clients:
-                    cf:
-                      id: cf
-                      authorized-grant-types: implicit
-                  user:
-                    authorities:
-                      - openid
-                      - scim.me
-                  openid:
-                    fallbackToAuthcode: false""");
+                        name: uaa
+                        issuer.uri: http://foo.com
+                        oauth:
+                          clients:
+                            cf:
+                              id: cf
+                              authorized-grant-types: implicit
+                          user:
+                            authorities:
+                              - openid
+                              - scim.me
+                          openid:
+                            fallbackToAuthcode: false""");
     }
 
     @Test
     public void validClientIsOk() throws Exception {
         createValidator(
                 """
-                oauth:
-                  clients:
-                    cf:
-                      id: cf
-                      autoapprove: true
-                      authorized-grant-types: implicit
-                """);
+                        oauth:
+                          clients:
+                            cf:
+                              id: cf
+                              autoapprove: true
+                              authorized-grant-types: implicit
+                        """);
         assertTrue(validator.getObject().oauth.clients.containsKey("cf"));
     }
 
-    @Test(expected = ConstraintViolationException.class)
-    public void invalidIssuerUriCausesException() throws Exception {
-        createValidator("name: uaa\nissuer.uri: notauri\n");
+    @Test
+    void invalidIssuerUriCausesException() {
+        assertThrows(ConstraintViolationException.class, () ->
+                createValidator("name: uaa\nissuer.uri: notauri\n"));
     }
 }

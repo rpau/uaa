@@ -1,11 +1,11 @@
 package org.cloudfoundry.identity.uaa.oauth.provider.authentication;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.util.SerializationUtils;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA

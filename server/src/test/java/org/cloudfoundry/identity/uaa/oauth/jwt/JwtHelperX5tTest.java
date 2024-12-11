@@ -2,8 +2,8 @@ package org.cloudfoundry.identity.uaa.oauth.jwt;
 
 import org.cloudfoundry.identity.uaa.oauth.KeyInfo;
 import org.cloudfoundry.identity.uaa.oauth.KeyInfoBuilder;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
@@ -13,6 +13,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class JwtHelperX5tTest {
     public static final String SIGNING_KEY_1 = getResourceAsString(JwtHelperX5tTest.class, "privatekey.pem");
@@ -22,7 +23,7 @@ public class JwtHelperX5tTest {
 
     private KeyInfo keyInfo;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         keyInfo = KeyInfoBuilder.build("testKid", SIGNING_KEY_1, "http://localhost/uaa", "RS256", CERTIFICATE_1);
     }
@@ -53,15 +54,18 @@ public class JwtHelperX5tTest {
         assertThat(keys.get("x5t"), is(THUMBPRINT));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void jwtHeaderShouldFailWithInvalidCert() {
-        KeyInfo keyInfo1 = KeyInfoBuilder.build("testKid", SIGNING_KEY_1, "http://localhost/uaa", "RS256", "X");
-        JwtHelper.encodePlusX5t(Map.of("key", new Object()), keyInfo1, keyInfo1.verifierCertificate().orElse(null));
+        assertThrows(IllegalArgumentException.class, () -> {
+            KeyInfo keyInfo1 = KeyInfoBuilder.build("testKid", SIGNING_KEY_1, "http://localhost/uaa", "RS256", "X");
+            JwtHelper.encodePlusX5t(Map.of("key", new Object()), keyInfo1, keyInfo1.verifierCertificate().orElse(null));
+        });
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void getX509CertThumbprintInvalidAlg() {
-        JwtHelper.getX509CertThumbprint("test".getBytes(), "unknown");
+        assertThrows(IllegalArgumentException.class, () ->
+                JwtHelper.getX509CertThumbprint("test".getBytes(), "unknown"));
     }
 
     @Test

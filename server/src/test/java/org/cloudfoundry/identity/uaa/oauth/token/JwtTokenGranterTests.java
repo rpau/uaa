@@ -5,31 +5,32 @@ import org.cloudfoundry.identity.uaa.authentication.UaaPrincipal;
 import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
 import org.cloudfoundry.identity.uaa.constants.OriginKeys;
 import org.cloudfoundry.identity.uaa.oauth.UaaOauth2Authentication;
+import org.cloudfoundry.identity.uaa.oauth.common.exceptions.InvalidGrantException;
 import org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils;
+import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetails;
 import org.cloudfoundry.identity.uaa.oauth.provider.OAuth2Authentication;
 import org.cloudfoundry.identity.uaa.oauth.provider.OAuth2Request;
 import org.cloudfoundry.identity.uaa.oauth.provider.OAuth2RequestFactory;
 import org.cloudfoundry.identity.uaa.oauth.provider.TokenRequest;
 import org.cloudfoundry.identity.uaa.oauth.provider.token.AuthorizationServerTokenServices;
 import org.cloudfoundry.identity.uaa.user.UaaUser;
-import org.cloudfoundry.identity.uaa.zone.MultitenantClientServices;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneHolder;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.cloudfoundry.identity.uaa.zone.MultitenantClientServices;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.cloudfoundry.identity.uaa.oauth.common.exceptions.InvalidGrantException;
-import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetails;
 
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.GRANT_TYPE;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_JWT_BEARER;
-import static org.junit.Assert.assertSame;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.same;
@@ -38,12 +39,8 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.GRANT_TYPE;
 
 public class JwtTokenGranterTests {
-
-    @Rule
-    public ExpectedException exception = ExpectedException.none();
 
     private JwtTokenGranter granter;
     private TokenRequest tokenRequest;
@@ -55,7 +52,7 @@ public class JwtTokenGranterTests {
     private OAuth2RequestFactory requestFactory;
     private Map<String, String> requestParameters;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         tokenServices = mock(AuthorizationServerTokenServices.class);
         clientDetailsService = mock(MultitenantClientServices.class);
@@ -93,7 +90,7 @@ public class JwtTokenGranterTests {
         tokenRequest.setRequestParameters(requestParameters);
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         IdentityZoneHolder.clear();
         SecurityContextHolder.clearContext();
@@ -101,65 +98,72 @@ public class JwtTokenGranterTests {
 
     @Test
     public void non_authentication_validates_correctly() {
-        exception.expect(InvalidGrantException.class);
-        exception.expectMessage("User authentication not found");
-        SecurityContextHolder.clearContext();
-        granter.validateRequest(tokenRequest);
+        Throwable exception = assertThrows(InvalidGrantException.class, () -> {
+            SecurityContextHolder.clearContext();
+            granter.validateRequest(tokenRequest);
+        });
+        assertTrue(exception.getMessage().contains("User authentication not found"));
     }
 
     @Test
     public void client_authentication_only() {
-        exception.expect(InvalidGrantException.class);
-        exception.expectMessage("User authentication not found");
-        when(authentication.isClientOnly()).thenReturn(true);
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        granter.validateRequest(tokenRequest);
+        Throwable exception = assertThrows(InvalidGrantException.class, () -> {
+            when(authentication.isClientOnly()).thenReturn(true);
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            granter.validateRequest(tokenRequest);
+        });
+        assertTrue(exception.getMessage().contains("User authentication not found"));
     }
 
     @Test
     public void missing_token_request() {
-        SecurityContextHolder.getContext().setAuthentication(uaaAuthentication);
-        exception.expect(InvalidGrantException.class);
-        exception.expectMessage("Missing token request object");
-        granter.validateRequest(null);
+        Throwable exception = assertThrows(InvalidGrantException.class, () -> {
+            SecurityContextHolder.getContext().setAuthentication(uaaAuthentication);
+            granter.validateRequest(null);
+        });
+        assertTrue(exception.getMessage().contains("Missing token request object"));
     }
 
     @Test
     public void missing_request_parameters() {
-        SecurityContextHolder.getContext().setAuthentication(uaaAuthentication);
-        exception.expect(InvalidGrantException.class);
-        exception.expectMessage("Missing token request object");
-        tokenRequest.setRequestParameters(Collections.emptyMap());
-        granter.validateRequest(tokenRequest);
+        Throwable exception = assertThrows(InvalidGrantException.class, () -> {
+            SecurityContextHolder.getContext().setAuthentication(uaaAuthentication);
+            tokenRequest.setRequestParameters(Collections.emptyMap());
+            granter.validateRequest(tokenRequest);
+        });
+        assertTrue(exception.getMessage().contains("Missing token request object"));
     }
 
     @Test
     public void missing_grant_type() {
-        SecurityContextHolder.getContext().setAuthentication(uaaAuthentication);
-        exception.expect(InvalidGrantException.class);
-        exception.expectMessage("Missing grant type");
-        requestParameters.remove(GRANT_TYPE);
-        tokenRequest.setRequestParameters(requestParameters);
-        granter.validateRequest(tokenRequest);
+        Throwable exception = assertThrows(InvalidGrantException.class, () -> {
+            SecurityContextHolder.getContext().setAuthentication(uaaAuthentication);
+            requestParameters.remove(GRANT_TYPE);
+            tokenRequest.setRequestParameters(requestParameters);
+            granter.validateRequest(tokenRequest);
+        });
+        assertTrue(exception.getMessage().contains("Missing grant type"));
     }
 
     @Test
     public void invalid_grant_type() {
-        SecurityContextHolder.getContext().setAuthentication(uaaAuthentication);
-        exception.expect(InvalidGrantException.class);
-        exception.expectMessage("Invalid grant type");
-        requestParameters.put(GRANT_TYPE, "password");
-        tokenRequest.setRequestParameters(requestParameters);
-        granter.validateRequest(tokenRequest);
+        Throwable exception = assertThrows(InvalidGrantException.class, () -> {
+            SecurityContextHolder.getContext().setAuthentication(uaaAuthentication);
+            requestParameters.put(GRANT_TYPE, "password");
+            tokenRequest.setRequestParameters(requestParameters);
+            granter.validateRequest(tokenRequest);
+        });
+        assertTrue(exception.getMessage().contains("Invalid grant type"));
     }
 
     @Test
     public void get_oauth2_authentication_validates_request() {
-        exception.expect(InvalidGrantException.class);
-        exception.expectMessage("User authentication not found");
-        SecurityContextHolder.clearContext();
-        granter.getOAuth2Authentication(client, tokenRequest);
-        verify(granter, times(1)).validateRequest(same(tokenRequest));
+        Throwable exception = assertThrows(InvalidGrantException.class, () -> {
+            SecurityContextHolder.clearContext();
+            granter.getOAuth2Authentication(client, tokenRequest);
+            verify(granter, times(1)).validateRequest(same(tokenRequest));
+        });
+        assertTrue(exception.getMessage().contains("User authentication not found"));
     }
 
     @Test

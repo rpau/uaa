@@ -15,14 +15,14 @@ import org.cloudfoundry.identity.uaa.oauth.common.exceptions.UnauthorizedClientE
 import org.cloudfoundry.identity.uaa.oauth.common.exceptions.UnsupportedGrantTypeException;
 import org.cloudfoundry.identity.uaa.oauth.common.exceptions.UnsupportedResponseTypeException;
 import org.cloudfoundry.identity.uaa.oauth.common.exceptions.UserDeniedAuthorizationException;
-import org.junit.After;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
@@ -34,12 +34,12 @@ public class OAuth2ExceptionSerializerTests {
     private static ObjectMapper mapper;
     private OAuth2Exception oauthException;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() {
         mapper = new ObjectMapper();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         oauthException = null;
     }

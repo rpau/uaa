@@ -1,6 +1,6 @@
 /*
  * *****************************************************************************
- *     Cloud Foundry 
+ *     Cloud Foundry
  *     Copyright (c) [2009-2016] Pivotal Software, Inc. All Rights Reserved.
  *
  *     This product is licensed to you under the Apache License, Version 2.0 (the "License").
@@ -14,12 +14,10 @@
 
 package org.cloudfoundry.identity.uaa.login;
 
-import static org.junit.Assert.assertSame;
-
 import org.cloudfoundry.identity.uaa.authentication.manager.UsernamePasswordExtractingAuthenticationManager;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -29,9 +27,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import static org.junit.jupiter.api.Assertions.assertSame;
+
 /**
  * @author Dave Syer
- * 
  */
 public class UsernamePasswordExtractingAuthenticationManagerTests {
 
@@ -40,12 +39,12 @@ public class UsernamePasswordExtractingAuthenticationManagerTests {
     private final UsernamePasswordExtractingAuthenticationManager manager = new UsernamePasswordExtractingAuthenticationManager(
             delegate);
 
-    @Before
+    @BeforeEach
     public void setUp() {
         SecurityContextHolder.clearContext();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         SecurityContextHolder.clearContext();
     }

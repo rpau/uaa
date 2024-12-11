@@ -1,9 +1,7 @@
 package org.cloudfoundry.identity.uaa.web;
 
-import org.cloudfoundry.identity.uaa.web.ExceptionReport;
-import org.cloudfoundry.identity.uaa.web.ExceptionReportHttpMessageConverter;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpOutputMessage;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
@@ -26,7 +24,7 @@ public class ExceptionReportHttpMessageConverterTest {
     private HttpMessageConverter httpMessageConverter;
     private HttpOutputMessage httpOutputMessage;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         exceptionReportHttpMessageConverter = new ExceptionReportHttpMessageConverter();
 

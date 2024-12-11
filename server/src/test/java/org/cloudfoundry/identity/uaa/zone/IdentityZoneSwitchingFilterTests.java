@@ -14,9 +14,9 @@
 
 package org.cloudfoundry.identity.uaa.zone;
 
-import org.junit.Assert;
-import org.junit.Test;
 import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import static org.mockito.Mockito.mock;
 
@@ -26,11 +26,11 @@ public class IdentityZoneSwitchingFilterTests {
     public void testStripPrefix() {
         String zoneId = new RandomValueStringGenerator().generate();
         IdentityZoneSwitchingFilter filter = new IdentityZoneSwitchingFilter(mock(IdentityZoneProvisioning.class));
-        Assert.assertEquals("zones." + zoneId + ".admin", filter.stripPrefix("zones." + zoneId + ".admin", zoneId));
-        Assert.assertEquals("zones." + zoneId + ".read", filter.stripPrefix("zones." + zoneId + ".read", zoneId));
-        Assert.assertEquals("clients.admin", filter.stripPrefix("zones." + zoneId + ".clients.admin", zoneId));
-        Assert.assertEquals("clients.read", filter.stripPrefix("zones." + zoneId + ".clients.read", zoneId));
-        Assert.assertEquals("idps.read", filter.stripPrefix("zones." + zoneId + ".idps.read", zoneId));
+        Assertions.assertEquals("zones." + zoneId + ".admin", filter.stripPrefix("zones." + zoneId + ".admin", zoneId));
+        Assertions.assertEquals("zones." + zoneId + ".read", filter.stripPrefix("zones." + zoneId + ".read", zoneId));
+        Assertions.assertEquals("clients.admin", filter.stripPrefix("zones." + zoneId + ".clients.admin", zoneId));
+        Assertions.assertEquals("clients.read", filter.stripPrefix("zones." + zoneId + ".clients.read", zoneId));
+        Assertions.assertEquals("idps.read", filter.stripPrefix("zones." + zoneId + ".idps.read", zoneId));
     }
 
 }

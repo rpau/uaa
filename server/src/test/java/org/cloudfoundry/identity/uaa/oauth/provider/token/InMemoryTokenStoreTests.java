@@ -4,12 +4,13 @@ import org.cloudfoundry.identity.uaa.oauth.common.DefaultOAuth2AccessToken;
 import org.cloudfoundry.identity.uaa.oauth.provider.OAuth2Authentication;
 import org.cloudfoundry.identity.uaa.oauth.provider.RequestTokenFactory;
 import org.cloudfoundry.identity.uaa.util.AlphanumericRandomValueStringGenerator;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Date;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
@@ -24,10 +25,10 @@ public class InMemoryTokenStoreTests extends TokenStoreBaseTests {
         return tokenStore;
     }
 
-    @Before
+    @BeforeEach
     public void createStore() {
         AuthenticationKeyGenerator dummyKeyGenerator = new AuthenticationKeyGenerator() {
-            private String key = new AlphanumericRandomValueStringGenerator(10).generate();
+            private final String key = new AlphanumericRandomValueStringGenerator(10).generate();
 
             @Override
             public String extractKey(OAuth2Authentication authentication) {
@@ -40,7 +41,7 @@ public class InMemoryTokenStoreTests extends TokenStoreBaseTests {
     }
 
     @Test
-    public void testTokenCountConsistency() throws Exception {
+    public void testTokenCountConsistency() {
         for (int i = 0; i <= 10; i++) {
             OAuth2Authentication expectedAuthentication = new OAuth2Authentication(RequestTokenFactory.createOAuth2Request("id" + i, false), new TestAuthentication("test", false));
             DefaultOAuth2AccessToken expectedOAuth2AccessToken = new DefaultOAuth2AccessToken("testToken" + i);
@@ -51,7 +52,7 @@ public class InMemoryTokenStoreTests extends TokenStoreBaseTests {
     }
 
     @Test
-    public void testTokenCountConsistentWithExpiryQueue() throws Exception {
+    public void testTokenCountConsistentWithExpiryQueue() {
         OAuth2Authentication expectedAuthentication = new OAuth2Authentication(RequestTokenFactory.createOAuth2Request("id", false), new TestAuthentication("test", false));
         DefaultOAuth2AccessToken expectedOAuth2AccessToken = new DefaultOAuth2AccessToken("testToken");
         expectedOAuth2AccessToken.setExpiration(new Date(System.currentTimeMillis() + 10000));
@@ -63,7 +64,7 @@ public class InMemoryTokenStoreTests extends TokenStoreBaseTests {
     }
 
     @Test
-    public void testAutoFlush() throws Exception {
+    public void testAutoFlush() {
         getTokenStore().setFlushInterval(3);
         assertEquals(3, getTokenStore().getFlushInterval());
         for (int i = 0; i <= 10; i++) {

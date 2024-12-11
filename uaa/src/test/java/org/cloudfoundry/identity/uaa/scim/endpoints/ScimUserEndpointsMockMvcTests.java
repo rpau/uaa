@@ -1,45 +1,7 @@
 package org.cloudfoundry.identity.uaa.scim.endpoints;
 
-import static org.cloudfoundry.identity.uaa.codestore.ExpiringCodeType.REGISTRATION;
-import static org.cloudfoundry.identity.uaa.invitations.InvitationsEndpoint.USER_ID;
-import static org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils.CookieCsrfPostProcessor.cookieCsrf;
-import static org.cloudfoundry.identity.uaa.zone.IdentityZoneSwitchingFilter.HEADER;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.CoreMatchers.startsWith;
-import static org.hamcrest.Matchers.greaterThan;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
-import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.CLIENT_ID;
-import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.REDIRECT_URI;
-import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.authenticated;
-import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.unauthenticated;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.util.StringUtils.hasText;
-
-import java.nio.charset.Charset;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.collect.Lists;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
@@ -48,10 +10,13 @@ import org.cloudfoundry.identity.uaa.DefaultTestContext;
 import org.cloudfoundry.identity.uaa.account.UserAccountStatus;
 import org.cloudfoundry.identity.uaa.approval.Approval;
 import org.cloudfoundry.identity.uaa.approval.ApprovalStore;
+import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
 import org.cloudfoundry.identity.uaa.codestore.ExpiringCode;
 import org.cloudfoundry.identity.uaa.codestore.ExpiringCodeStore;
 import org.cloudfoundry.identity.uaa.constants.OriginKeys;
 import org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils;
+import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
+import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetails;
 import org.cloudfoundry.identity.uaa.provider.IdentityProvider;
 import org.cloudfoundry.identity.uaa.provider.JdbcIdentityProviderProvisioning;
 import org.cloudfoundry.identity.uaa.provider.OIDCIdentityProviderDefinition;
@@ -82,9 +47,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
-import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetails;
-import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
@@ -92,8 +54,45 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.google.common.collect.Lists;
+import java.nio.charset.Charset;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import static org.cloudfoundry.identity.uaa.codestore.ExpiringCodeType.REGISTRATION;
+import static org.cloudfoundry.identity.uaa.invitations.InvitationsEndpoint.USER_ID;
+import static org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils.CookieCsrfPostProcessor.cookieCsrf;
+import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.CLIENT_ID;
+import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.REDIRECT_URI;
+import static org.cloudfoundry.identity.uaa.zone.IdentityZoneSwitchingFilter.HEADER;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.startsWith;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.core.Is.is;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
+import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.authenticated;
+import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.unauthenticated;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.util.StringUtils.hasText;
 
 @ExtendWith(ZoneSeederExtension.class)
 @DefaultTestContext
@@ -142,14 +141,14 @@ class ScimUserEndpointsMockMvcTests {
     @Test
     void unauthorized_put_returns_401() throws Exception {
         mockMvc.perform(
-                put("/Users/some-user")
-        )
-        .andExpect(status().isUnauthorized());
+                        put("/Users/some-user")
+                )
+                .andExpect(status().isUnauthorized());
 
         mockMvc.perform(
-                put("/Users")
-        )
-        .andExpect(status().isUnauthorized());
+                        put("/Users")
+                )
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -367,9 +366,9 @@ class ScimUserEndpointsMockMvcTests {
         user.setPrimaryEmail("test@test.org");
 
         mockMvc.perform(post("/Users")
-                .header("Authorization", "Bearer " + scimReadWriteToken)
-                .contentType(APPLICATION_JSON)
-                .content(JsonUtils.writeValueAsString(user)))
+                        .header("Authorization", "Bearer " + scimReadWriteToken)
+                        .contentType(APPLICATION_JSON)
+                        .content(JsonUtils.writeValueAsString(user)))
                 .andExpect(status().isBadRequest())
                 .andExpect(content()
                         .string(JsonObjectMatcherUtils.matchesJsonObject(
@@ -385,9 +384,9 @@ class ScimUserEndpointsMockMvcTests {
         user.setPassword("password");
 
         mockMvc.perform(post("/Users")
-                .header("Authorization", "Bearer " + scimReadWriteToken)
-                .contentType(APPLICATION_JSON)
-                .content(JsonUtils.writeValueAsString(user)))
+                        .header("Authorization", "Bearer " + scimReadWriteToken)
+                        .contentType(APPLICATION_JSON)
+                        .content(JsonUtils.writeValueAsString(user)))
                 .andExpect(status().isBadRequest())
                 .andExpect(content()
                         .string(JsonObjectMatcherUtils.matchesJsonObject(
@@ -403,10 +402,10 @@ class ScimUserEndpointsMockMvcTests {
         user.setEmails(null);
 
         mockMvc.perform(put("/Users/" + user.getId())
-                .header("Authorization", "Bearer " + scimReadWriteToken)
-                .header("If-Match", "\"" + user.getVersion() + "\"")
-                .contentType(APPLICATION_JSON)
-                .content(JsonUtils.writeValueAsString(user)))
+                        .header("Authorization", "Bearer " + scimReadWriteToken)
+                        .header("If-Match", "\"" + user.getVersion() + "\"")
+                        .contentType(APPLICATION_JSON)
+                        .content(JsonUtils.writeValueAsString(user)))
                 .andExpect(status().isBadRequest())
                 .andExpect(content()
                         .string(JsonObjectMatcherUtils.matchesJsonObject(
@@ -867,12 +866,12 @@ class ScimUserEndpointsMockMvcTests {
                 adminUser.setUserName(newAdminUsername);
 
                 mockMvc.perform(requestBuilder
-                        .headers(zoneSeeder.getZoneSubdomainRequestHeader())
-                        .header("Authorization", "Bearer " + accessToken)
-                        .header("If-Match", "\"" + adminUser.getVersion() + "\"")
-                        .accept(APPLICATION_JSON)
-                        .contentType(APPLICATION_JSON)
-                        .content(JsonUtils.writeValueAsBytes(adminUser)))
+                                .headers(zoneSeeder.getZoneSubdomainRequestHeader())
+                                .header("Authorization", "Bearer " + accessToken)
+                                .header("If-Match", "\"" + adminUser.getVersion() + "\"")
+                                .accept(APPLICATION_JSON)
+                                .contentType(APPLICATION_JSON)
+                                .content(JsonUtils.writeValueAsBytes(adminUser)))
                         .andDo(print())
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.userName").value(newAdminUsername));
@@ -991,12 +990,12 @@ class ScimUserEndpointsMockMvcTests {
                 @Test
                 void put_updateNothing_shouldFail() throws Exception {
                     mockMvc.perform(put("/Users/" + regularUser.getId())
-                            .headers(zoneSeeder.getZoneIdRequestHeader())
-                            .header("Authorization", "Bearer " + uaaAdminToken)
-                            .header("If-Match", "\"" + regularUser.getVersion() + "\"")
-                            .accept(APPLICATION_JSON)
-                            .contentType(APPLICATION_JSON)
-                            .content(JsonUtils.writeValueAsBytes(regularUser)))
+                                    .headers(zoneSeeder.getZoneIdRequestHeader())
+                                    .header("Authorization", "Bearer " + uaaAdminToken)
+                                    .header("If-Match", "\"" + regularUser.getVersion() + "\"")
+                                    .accept(APPLICATION_JSON)
+                                    .contentType(APPLICATION_JSON)
+                                    .content(JsonUtils.writeValueAsBytes(regularUser)))
                             .andDo(print())
                             .andExpect(status().is(403))
                             .andExpect(content().string(JsonObjectMatcherUtils.matchesJsonObject(
@@ -1092,11 +1091,11 @@ class ScimUserEndpointsMockMvcTests {
         user.setName(new ScimUser.Name("changed", "name"));
 
         mockMvc.perform(put("/Users/" + user.getId())
-                .header("Authorization", "Bearer " + uaaAdminToken)
-                .header(HEADER, identityZone.getId())
-                .header("If-Match", "\"" + user.getVersion() + "\"")
-                .contentType(APPLICATION_JSON)
-                .content(JsonUtils.writeValueAsBytes(user)))
+                        .header("Authorization", "Bearer " + uaaAdminToken)
+                        .header(HEADER, identityZone.getId())
+                        .header("If-Match", "\"" + user.getVersion() + "\"")
+                        .contentType(APPLICATION_JSON)
+                        .content(JsonUtils.writeValueAsBytes(user)))
                 .andExpect(status().isOk())
                 .andExpect(header().string("ETag", "\"1\""))
                 .andExpect(jsonPath("$.userName").value(user.getUserName()))
@@ -1119,9 +1118,9 @@ class ScimUserEndpointsMockMvcTests {
         store.addApproval(approval, IdentityZoneHolder.get().getId());
         assertEquals(1, (long) template.queryForObject("select count(*) from authz_approvals where user_id=?", Integer.class, user.getId()));
         mockMvc.perform((delete("/Users/" + user.getId()))
-                .header("Authorization", "Bearer " + uaaAdminToken)
-                .contentType(APPLICATION_JSON)
-                .content(JsonUtils.writeValueAsBytes(user)))
+                        .header("Authorization", "Bearer " + uaaAdminToken)
+                        .contentType(APPLICATION_JSON)
+                        .content(JsonUtils.writeValueAsBytes(user)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userName").value(user.getUserName()))
                 .andExpect(jsonPath("$.emails[0].value").value(user.getPrimaryEmail()))
@@ -1134,9 +1133,9 @@ class ScimUserEndpointsMockMvcTests {
     void testDeleteUserWithUaaAdminToken() throws Exception {
         ScimUser user = setUpScimUser();
         mockMvc.perform((delete("/Users/" + user.getId()))
-                .header("Authorization", "Bearer " + uaaAdminToken)
-                .contentType(APPLICATION_JSON)
-                .content(JsonUtils.writeValueAsBytes(user)))
+                        .header("Authorization", "Bearer " + uaaAdminToken)
+                        .contentType(APPLICATION_JSON)
+                        .content(JsonUtils.writeValueAsBytes(user)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userName").value(user.getUserName()))
                 .andExpect(jsonPath("$.emails[0].value").value(user.getPrimaryEmail()))
@@ -1150,10 +1149,10 @@ class ScimUserEndpointsMockMvcTests {
         ScimUser user = setUpScimUser(identityZone);
 
         mockMvc.perform((delete("/Users/" + user.getId()))
-                .header("Authorization", "Bearer " + uaaAdminToken)
-                .header(HEADER, identityZone.getId())
-                .contentType(APPLICATION_JSON)
-                .content(JsonUtils.writeValueAsBytes(user)))
+                        .header("Authorization", "Bearer " + uaaAdminToken)
+                        .header(HEADER, identityZone.getId())
+                        .contentType(APPLICATION_JSON)
+                        .content(JsonUtils.writeValueAsBytes(user)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userName").value(user.getUserName()))
                 .andExpect(jsonPath("$.emails[0].value").value(user.getPrimaryEmail()))
@@ -1434,11 +1433,11 @@ class ScimUserEndpointsMockMvcTests {
 
     private void performAuthentication(ScimUser user, boolean success) throws Exception {
         mockMvc.perform(
-                post("/login.do")
-                        .accept("text/html")
-                        .with(cookieCsrf())
-                        .param("username", user.getUserName())
-                        .param("password", USER_PASSWORD))
+                        post("/login.do")
+                                .accept("text/html")
+                                .with(cookieCsrf())
+                                .param("username", user.getUserName())
+                                .param("password", USER_PASSWORD))
                 .andDo(print())
                 .andExpect(success ? authenticated() : unauthenticated());
     }

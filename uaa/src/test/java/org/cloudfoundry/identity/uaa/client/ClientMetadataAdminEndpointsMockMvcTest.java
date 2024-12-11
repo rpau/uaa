@@ -21,11 +21,11 @@ import org.springframework.web.context.WebApplicationContext;
 import java.net.URL;
 import java.util.ArrayList;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.http.MediaType.TEXT_PLAIN;
@@ -40,7 +40,7 @@ public class ClientMetadataAdminEndpointsMockMvcTest {
     public WebApplicationContext webApplicationContext;
     private String adminClientTokenWithClientsWrite;
     private MultitenantJdbcClientDetailsService clients;
-    private AlphanumericRandomValueStringGenerator generator = new AlphanumericRandomValueStringGenerator(8);
+    private final AlphanumericRandomValueStringGenerator generator = new AlphanumericRandomValueStringGenerator(8);
     private String adminClientTokenWithClientsRead;
     @Autowired
     private MockMvc mockMvc;
@@ -140,15 +140,15 @@ public class ClientMetadataAdminEndpointsMockMvcTest {
     @Test
     void missingAcceptHeader_isOk() throws Exception {
         mockMvc.perform(get("/oauth/clients/meta")
-                .header("Authorization", "Bearer " + getUserAccessToken(generator.generate())))
+                        .header("Authorization", "Bearer " + getUserAccessToken(generator.generate())))
                 .andExpect(status().isOk());
     }
 
     @Test
     void wrongAcceptHeader_isNotAcceptable() throws Exception {
         mockMvc.perform(get("/oauth/clients/meta")
-                .header("Authorization", "Bearer " + getUserAccessToken(generator.generate()))
-                .accept(TEXT_PLAIN))
+                        .header("Authorization", "Bearer " + getUserAccessToken(generator.generate()))
+                        .accept(TEXT_PLAIN))
                 .andExpect(status().isNotAcceptable());
     }
 

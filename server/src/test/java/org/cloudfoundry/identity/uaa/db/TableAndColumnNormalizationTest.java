@@ -111,5 +111,4 @@ class TableAndColumnNormalizationTest {
             assertTrue(hadSomeResults, "Getting columns from db metadata should have returned some results");
         }
     }
-
 }

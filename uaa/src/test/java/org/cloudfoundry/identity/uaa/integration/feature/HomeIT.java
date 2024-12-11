@@ -15,29 +15,28 @@ package org.cloudfoundry.identity.uaa.integration.feature;
 
 import org.cloudfoundry.identity.uaa.oauth.client.test.TestAccounts;
 import org.hamcrest.Matchers;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = DefaultIntegrationTestConfig.class)
+import static org.hamcrest.MatcherAssert.assertThat;
+
+@SpringJUnitConfig(classes = DefaultIntegrationTestConfig.class)
 public class HomeIT {
     @Autowired
     TestAccounts testAccounts;
 
     @Autowired
-    @Rule
-    public IntegrationTestRule integrationTestRule;
+    @RegisterExtension
+    private IntegrationTestExtension integrationTestExtension;
 
     @Autowired
     WebDriver webDriver;
@@ -47,7 +46,7 @@ public class HomeIT {
 
     private HomePagePerspective asOnHomePage;
 
-    @After
+    @AfterEach
     public void logout_and_clear_cookies() {
         try {
             webDriver.get(baseUrl + "/logout.do");
@@ -58,7 +57,7 @@ public class HomeIT {
         webDriver.manage().deleteAllCookies();
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
         logout_and_clear_cookies();
         webDriver.get(baseUrl + "/login");
@@ -71,23 +70,23 @@ public class HomeIT {
 
     @Test
     public void testMessage() {
-        Assert.assertEquals("Where to?", webDriver.findElement(By.tagName("h1")).getText());
+        Assertions.assertEquals("Where to?", webDriver.findElement(By.tagName("h1")).getText());
     }
 
     @Test
     public void theHeaderDropdown() {
-        Assert.assertNotNull(asOnHomePage.getUsernameElement());
-        Assert.assertFalse(asOnHomePage.getAccountSettingsElement().isDisplayed());
-        Assert.assertFalse(asOnHomePage.getSignOutElement().isDisplayed());
+        Assertions.assertNotNull(asOnHomePage.getUsernameElement());
+        Assertions.assertFalse(asOnHomePage.getAccountSettingsElement().isDisplayed());
+        Assertions.assertFalse(asOnHomePage.getSignOutElement().isDisplayed());
 
         asOnHomePage.getUsernameElement().click();
 
-        Assert.assertTrue(asOnHomePage.getAccountSettingsElement().isDisplayed());
-        Assert.assertTrue(asOnHomePage.getSignOutElement().isDisplayed());
+        Assertions.assertTrue(asOnHomePage.getAccountSettingsElement().isDisplayed());
+        Assertions.assertTrue(asOnHomePage.getSignOutElement().isDisplayed());
 
         asOnHomePage.getAccountSettingsElement().click();
 
-        Assert.assertThat(webDriver.findElement(By.cssSelector("h1")).getText(), Matchers.containsString("Account Settings"));
+        assertThat(webDriver.findElement(By.cssSelector("h1")).getText(), Matchers.containsString("Account Settings"));
     }
 
     static class HomePagePerspective {

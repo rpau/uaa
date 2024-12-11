@@ -18,43 +18,42 @@ package org.cloudfoundry.identity.uaa.oauth.jwt;
 import org.cloudfoundry.identity.uaa.oauth.InvalidSignatureException;
 import org.cloudfoundry.identity.uaa.oauth.KeyInfo;
 import org.cloudfoundry.identity.uaa.oauth.KeyInfoBuilder;
+import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
 import org.cloudfoundry.identity.uaa.oauth.jwk.JsonWebKey;
 import org.cloudfoundry.identity.uaa.oauth.jwk.JsonWebKeySet;
 import org.cloudfoundry.identity.uaa.util.JsonUtils;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static java.util.Collections.singletonMap;
 import static org.cloudfoundry.identity.uaa.oauth.jwk.JsonWebKey.KeyType.MAC;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
 public class ChainedSignatureVerifierTests {
     private Signer signer;
-    private Signer invalidSigner;
 
-    private String rsaSigningKey;
-    private String invalidRsaSigningKey;
-
-    private String content;
     private Jwt signedValidContent;
 
     private JsonWebKey validKey;
     private JsonWebKey invalidKey;
     private ChainedSignatureVerifier verifier;
-    private KeyInfo keyInfo;
 
-
-    @Before
+    @BeforeEach
     public void setup() {
-        rsaSigningKey = """
+        String rsaSigningKey = """
                 -----BEGIN RSA PRIVATE KEY-----
                 MIIBOQIBAAJAcjAgsHEfrUxeTFwQPb17AkZ2Im4SfZdpY8Ada9pZfxXz1PZSqv9T
                 PTMAzNx+EkzMk2IMYN+uNm1bfDzaxVdz+QIDAQABAkBoR39y4rw0/QsY3PKQD5xo
@@ -65,7 +64,7 @@ public class ChainedSignatureVerifierTests {
                 2JGEulMY3bK1PVGYmtsXF1gq6zbRMoollMCRSMg=
                 -----END RSA PRIVATE KEY-----""";
 
-        invalidRsaSigningKey = """
+        String invalidRsaSigningKey = """
                 -----BEGIN RSA PRIVATE KEY-----
                 MIIBOgIBAAJBAJnlBG4lLmUiHslsKDODfd0MqmGZRNUOhn7eO3cKobsFljUKzRQe
                 GB7LYMjPavnKccm6+jWSXutpzfAc9A9wXG8CAwEAAQJADwwdiseH6cuURw2UQLUy
@@ -76,10 +75,10 @@ public class ChainedSignatureVerifierTests {
                 z1jr3KEcaq9zjNJd9sKBkqpkVSqj8Mv+Amq+YjBA
                 -----END RSA PRIVATE KEY-----""";
 
-        invalidSigner = new CommonSigner("invalid", invalidRsaSigningKey, "http://localhost/uaa");
+        Signer invalidSigner = new CommonSigner("invalid", invalidRsaSigningKey, "http://localhost/uaa");
 
-        content = "{\"sub\": \"" + new RandomValueStringGenerator(1024 * 4).generate() + "\"}";
-        keyInfo = KeyInfoBuilder.build("valid", rsaSigningKey, "http://localhost/uaa");
+        String content = "{\"sub\": \"" + new RandomValueStringGenerator(1024 * 4).generate() + "\"}";
+        KeyInfo keyInfo = KeyInfoBuilder.build("valid", rsaSigningKey, "http://localhost/uaa");
 
         signedValidContent = JwtHelper.encode(JsonUtils.readValue(content, HashMap.class), keyInfo);
 
@@ -93,10 +92,12 @@ public class ChainedSignatureVerifierTests {
         JwtHelper.decode(signedValidContent.getEncoded()).verifySignature(verifier);
     }
 
-    @Test(expected = InvalidSignatureException.class)
+    @Test
     public void test_single_key_invalid() {
-        verifier = new ChainedSignatureVerifier(new JsonWebKeySet<>(Collections.singletonList(invalidKey)));
-        JwtHelper.decode(signedValidContent.getEncoded()).verifySignature(verifier);
+        assertThrows(InvalidSignatureException.class, () -> {
+            verifier = new ChainedSignatureVerifier(new JsonWebKeySet<>(Collections.singletonList(invalidKey)));
+            JwtHelper.decode(signedValidContent.getEncoded()).verifySignature(verifier);
+        });
     }
 
     @Test
@@ -111,10 +112,12 @@ public class ChainedSignatureVerifierTests {
         JwtHelper.decode(signedValidContent.getEncoded()).verifySignature(verifier);
     }
 
-    @Test(expected = InvalidSignatureException.class)
+    @Test
     public void test_multi_key_invalid() {
-        verifier = new ChainedSignatureVerifier(new JsonWebKeySet<>(Arrays.asList(invalidKey, invalidKey)));
-        JwtHelper.decode(signedValidContent.getEncoded()).verifySignature(verifier);
+        assertThrows(InvalidSignatureException.class, () -> {
+            verifier = new ChainedSignatureVerifier(new JsonWebKeySet<>(Arrays.asList(invalidKey, invalidKey)));
+            JwtHelper.decode(signedValidContent.getEncoded()).verifySignature(verifier);
+        });
     }
 
     @Test
@@ -130,7 +133,7 @@ public class ChainedSignatureVerifierTests {
         assertEquals(3, delegates.size());
         int pos = 0;
         for (SignatureVerifier v : delegates) {
-            assertTrue("Checking " + (pos++), v instanceof SignatureVerifier);
+            assertTrue(v instanceof SignatureVerifier, "Checking " + (pos++));
         }
     }
 
@@ -153,24 +156,26 @@ public class ChainedSignatureVerifierTests {
         assertEquals(1, delegates.size());
         int pos = 0;
         for (SignatureVerifier v : delegates) {
-            assertTrue("Checking " + (pos++), v instanceof SignatureVerifier);
+            assertTrue(v instanceof SignatureVerifier, "Checking " + (pos++));
         }
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void no_supported_key_types_causes_error() {
-        Map<String, Object> p = new HashMap<>();
-        p.put("kty", "EC");
-        p.put("kid", "ecid");
-        p.put("x", "test-ec-key-x");
-        p.put("y", "test-ec-key-y");
-        p.put("use", "sig");
-        p.put("crv", "test-crv");
-        Map<String, Object> q = new HashMap<>();
-        q.put("kty", "oct");
-        q.put("k", "octkeyvalue");
-        JsonWebKeySet keySet = JsonUtils.convertValue(singletonMap("keys", Arrays.asList(p, q)), JsonWebKeySet.class);
-        verifier = new ChainedSignatureVerifier(keySet);
+        assertThrows(IllegalArgumentException.class, () -> {
+            Map<String, Object> p = new HashMap<>();
+            p.put("kty", "EC");
+            p.put("kid", "ecid");
+            p.put("x", "test-ec-key-x");
+            p.put("y", "test-ec-key-y");
+            p.put("use", "sig");
+            p.put("crv", "test-crv");
+            Map<String, Object> q = new HashMap<>();
+            q.put("kty", "oct");
+            q.put("k", "octkeyvalue");
+            JsonWebKeySet keySet = JsonUtils.convertValue(singletonMap("keys", Arrays.asList(p, q)), JsonWebKeySet.class);
+            verifier = new ChainedSignatureVerifier(keySet);
+        });
     }
 
     @Test

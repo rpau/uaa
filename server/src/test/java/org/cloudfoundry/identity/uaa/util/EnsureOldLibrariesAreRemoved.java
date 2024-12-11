@@ -14,10 +14,10 @@
 
 package org.cloudfoundry.identity.uaa.util;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.util.ClassUtils;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class EnsureOldLibrariesAreRemoved {
 

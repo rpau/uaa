@@ -14,8 +14,8 @@
  */
 package org.cloudfoundry.identity.uaa.util;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.util.MultiValueMap;
 
 import java.util.ArrayList;
@@ -25,10 +25,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Arjen Poutsma
@@ -39,7 +39,7 @@ public class LinkedMaskingMultiValueMapTests {
     private LinkedMaskingMultiValueMap<String, String> map;
     private LinkedMaskingMultiValueMap<Object, Object> objectMap;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         map = new LinkedMaskingMultiValueMap<>("password");
         objectMap = new LinkedMaskingMultiValueMap<>("password");
@@ -137,9 +137,9 @@ public class LinkedMaskingMultiValueMapTests {
     @Test
     public void doNotPrintPasswordWhenArrayConstructorIsUsed() {
         for (LinkedMaskingMultiValueMap<String, Object> map :
-            Arrays.asList(
-                new LinkedMaskingMultiValueMap<>("password", "code"),
-                new LinkedMaskingMultiValueMap<>(new String[]{"password", "code"}))) {
+                Arrays.asList(
+                        new LinkedMaskingMultiValueMap<>("password", "code"),
+                        new LinkedMaskingMultiValueMap<>(new String[]{"password", "code"}))) {
             map.add("password", "password-value");
             map.add("code", "code-value");
             String s = map.toString();

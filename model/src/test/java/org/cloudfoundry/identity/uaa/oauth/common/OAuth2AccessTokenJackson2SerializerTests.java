@@ -3,26 +3,28 @@ package org.cloudfoundry.identity.uaa.oauth.common;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class OAuth2AccessTokenJackson2SerializerTests extends BaseOAuth2AccessTokenJacksonTest {
 
     protected ObjectMapper mapper;
 
-    @Before
+    @BeforeEach
     public void createObjectMapper() {
         mapper = new ObjectMapper();
     }
@@ -57,30 +59,30 @@ public class OAuth2AccessTokenJackson2SerializerTests extends BaseOAuth2AccessTo
     }
 
     @Test
-    public void writeValueAsStringWithNullScope() throws JsonGenerationException, JsonMappingException, IOException {
-        thrown.expect(JsonMappingException.class);
-        thrown.expectMessage("Scopes cannot be null or empty. Got [null]");
+    public void writeValueAsStringWithNullScope() {
+        Throwable exception = assertThrows(JsonMappingException.class, () -> {
 
-        accessToken.getScope().clear();
-        try {
-            accessToken.getScope().add(null);
-        }
-        catch (NullPointerException e) {
-            // short circuit NPE from Java 7 (which is correct but only relevant for this test)
-            throw new JsonMappingException("Scopes cannot be null or empty. Got [null]");
-        }
-        mapper.writeValueAsString(accessToken);
+            accessToken.getScope().clear();
+            try {
+                accessToken.getScope().add(null);
+            } catch (NullPointerException e) {
+                // short circuit NPE from Java 7 (which is correct but only relevant for this test)
+                throw new JsonMappingException("Scopes cannot be null or empty. Got [null]");
+            }
+            mapper.writeValueAsString(accessToken);
+        });
+        assertTrue(exception.getMessage().contains("Scopes cannot be null or empty. Got [null]"));
     }
 
     @Test
-    public void writeValueAsStringWithEmptyStringScope() throws JsonGenerationException, JsonMappingException,
-            IOException {
-        thrown.expect(JsonMappingException.class);
-        thrown.expectMessage("Scopes cannot be null or empty. Got []");
+    public void writeValueAsStringWithEmptyStringScope() {
+        Throwable exception = assertThrows(JsonMappingException.class, () -> {
 
-        accessToken.getScope().clear();
-        accessToken.getScope().add("");
-        mapper.writeValueAsString(accessToken);
+            accessToken.getScope().clear();
+            accessToken.getScope().add("");
+            mapper.writeValueAsString(accessToken);
+        });
+        assertTrue(exception.getMessage().contains("Scopes cannot be null or empty. Got []"));
     }
 
     @Test

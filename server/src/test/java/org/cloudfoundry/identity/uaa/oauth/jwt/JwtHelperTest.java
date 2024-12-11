@@ -4,13 +4,13 @@ import com.nimbusds.jose.jwk.JWKParameterNames;
 import org.cloudfoundry.identity.uaa.oauth.InvalidSignatureException;
 import org.cloudfoundry.identity.uaa.oauth.KeyInfo;
 import org.cloudfoundry.identity.uaa.oauth.KeyInfoBuilder;
+import org.cloudfoundry.identity.uaa.oauth.common.exceptions.InvalidTokenException;
 import org.cloudfoundry.identity.uaa.oauth.jwk.JsonWebKey;
 import org.cloudfoundry.identity.uaa.oauth.token.Claims;
 import org.cloudfoundry.identity.uaa.util.UaaTokenUtils;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
-import org.cloudfoundry.identity.uaa.oauth.common.exceptions.InvalidTokenException;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -18,10 +18,10 @@ import java.util.Map;
 
 import static org.cloudfoundry.identity.uaa.test.ModelTestUtils.getResourceAsString;
 import static org.cloudfoundry.identity.uaa.util.UaaStringUtils.DEFAULT_UAA_URL;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class JwtHelperTest {
     private KeyInfo keyInfo;
@@ -29,7 +29,7 @@ public class JwtHelperTest {
     private static final String certificate = getResourceAsString(JwtHelperTest.class, "certificate.pem");
     private static final String privatekey = getResourceAsString(JwtHelperTest.class, "privatekey.pem");
 
-    @Before
+    @BeforeEach
     public void setUp() {
         keyInfo = KeyInfoBuilder.build("testKid", "symmetricKey", "http://localhost/uaa");
     }

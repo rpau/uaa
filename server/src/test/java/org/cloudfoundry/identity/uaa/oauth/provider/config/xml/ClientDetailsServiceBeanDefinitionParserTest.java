@@ -1,8 +1,8 @@
 package org.cloudfoundry.identity.uaa.oauth.provider.config.xml;
 
 import org.cloudfoundry.identity.uaa.client.InMemoryClientDetailsService;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.xml.ParserContext;
@@ -10,7 +10,7 @@ import org.springframework.beans.factory.xml.XmlReaderContext;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -33,7 +33,7 @@ public class ClientDetailsServiceBeanDefinitionParserTest {
     NodeList nodeList;
     private XmlReaderContext xmlReaderContext;
 
-    @Before
+    @BeforeEach
     public void setup() {
         parser = new ClientDetailsServiceBeanDefinitionParser();
         element = mock(Element.class);

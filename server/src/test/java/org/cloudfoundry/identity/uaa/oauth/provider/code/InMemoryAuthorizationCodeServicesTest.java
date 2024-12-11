@@ -1,10 +1,10 @@
 package org.cloudfoundry.identity.uaa.oauth.provider.code;
 
 import org.cloudfoundry.identity.uaa.oauth.provider.OAuth2Authentication;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 
 public class InMemoryAuthorizationCodeServicesTest {
@@ -13,7 +13,7 @@ public class InMemoryAuthorizationCodeServicesTest {
     private OAuth2Authentication oAuth2Authentication;
 
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         inMemoryAuthorizationCodeServices = new InMemoryAuthorizationCodeServices();
         oAuth2Authentication = mock(OAuth2Authentication.class);

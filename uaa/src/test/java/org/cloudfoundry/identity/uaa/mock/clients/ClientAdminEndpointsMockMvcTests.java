@@ -22,13 +22,14 @@ import org.cloudfoundry.identity.uaa.client.event.ClientJwtFailureEvent;
 import org.cloudfoundry.identity.uaa.client.event.ClientUpdateEvent;
 import org.cloudfoundry.identity.uaa.client.event.SecretChangeEvent;
 import org.cloudfoundry.identity.uaa.client.event.SecretFailureEvent;
-import org.cloudfoundry.identity.uaa.error.UaaException;
 import org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils;
 import org.cloudfoundry.identity.uaa.oauth.client.ClientDetailsCreation;
 import org.cloudfoundry.identity.uaa.oauth.client.ClientDetailsModification;
 import org.cloudfoundry.identity.uaa.oauth.client.ClientJwtChangeRequest;
 import org.cloudfoundry.identity.uaa.oauth.client.SecretChangeRequest;
 import org.cloudfoundry.identity.uaa.oauth.common.exceptions.InvalidClientException;
+import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
+import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetails;
 import org.cloudfoundry.identity.uaa.resources.ActionResult;
 import org.cloudfoundry.identity.uaa.resources.SearchResults;
 import org.cloudfoundry.identity.uaa.scim.ScimGroup;
@@ -58,8 +59,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
-import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
-import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetails;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
@@ -87,17 +86,17 @@ import static org.cloudfoundry.identity.uaa.oauth.client.SecretChangeRequest.Cha
 import static org.cloudfoundry.identity.uaa.oauth.client.SecretChangeRequest.ChangeMode.DELETE;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_AUTHORIZATION_CODE;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_JWT_BEARER;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.iterableWithSize;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -124,7 +123,7 @@ public class ClientAdminEndpointsMockMvcTests {
     private ApplicationEventPublisher originalApplicationEventPublisher;
     private ArgumentCaptor<AbstractUaaEvent> abstractUaaEventCaptor;
     private ScimUser testUser;
-    private RandomValueStringGenerator generator = new RandomValueStringGenerator(7);
+    private final RandomValueStringGenerator generator = new RandomValueStringGenerator(7);
     private static final String SECRET_TOO_LONG = Strings.repeat("a", 300);
     private List<ClientDetails> clientDetails;
     private int clientMaxCount;
@@ -1276,10 +1275,10 @@ public class ClientAdminEndpointsMockMvcTests {
         request.setSecret("password2");
         request.setChangeMode(ADD);
         MockHttpServletResponse response = mockMvc.perform(put("/oauth/clients/{client_id}/secret", client.getClientId())
-                .header("Authorization", "Bearer " + token)
-                .accept(APPLICATION_JSON)
-                .contentType(APPLICATION_JSON)
-                .content(JsonUtils.writeValueAsString(request)))
+                        .header("Authorization", "Bearer " + token)
+                        .accept(APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON)
+                        .content(JsonUtils.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andReturn().getResponse();
 
@@ -1305,18 +1304,18 @@ public class ClientAdminEndpointsMockMvcTests {
         request.setSecret("password2");
         request.setChangeMode(ADD);
         mockMvc.perform(put("/oauth/clients/{client_id}/secret", client.getClientId())
-                .header("Authorization", "Bearer " + token)
-                .accept(APPLICATION_JSON)
-                .contentType(APPLICATION_JSON)
-                .content(JsonUtils.writeValueAsString(request)))
+                        .header("Authorization", "Bearer " + token)
+                        .accept(APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON)
+                        .content(JsonUtils.writeValueAsString(request)))
                 .andExpect(status().isOk());
 
         request.setSecret("password3");
         MockHttpServletResponse response = mockMvc.perform(put("/oauth/clients/{client_id}/secret", client.getClientId())
-                .header("Authorization", "Bearer " + token)
-                .accept(APPLICATION_JSON)
-                .contentType(APPLICATION_JSON)
-                .content(JsonUtils.writeValueAsString(request)))
+                        .header("Authorization", "Bearer " + token)
+                        .accept(APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON)
+                        .content(JsonUtils.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
                 .andReturn().getResponse();
 
@@ -1341,19 +1340,19 @@ public class ClientAdminEndpointsMockMvcTests {
         request.setSecret("password2");
         request.setChangeMode(ADD);
         mockMvc.perform(put("/oauth/clients/{client_id}/secret", client.getClientId())
-                .header("Authorization", "Bearer " + token)
-                .accept(APPLICATION_JSON)
-                .contentType(APPLICATION_JSON)
-                .content(JsonUtils.writeValueAsString(request)))
+                        .header("Authorization", "Bearer " + token)
+                        .accept(APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON)
+                        .content(JsonUtils.writeValueAsString(request)))
                 .andExpect(status().isOk());
 
         request = new SecretChangeRequest();
         request.setChangeMode(DELETE);
         MockHttpServletResponse response = mockMvc.perform(put("/oauth/clients/{client_id}/secret", client.getClientId())
-                .header("Authorization", "Bearer " + token)
-                .accept(APPLICATION_JSON)
-                .contentType(APPLICATION_JSON)
-                .content(JsonUtils.writeValueAsString(request)))
+                        .header("Authorization", "Bearer " + token)
+                        .accept(APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON)
+                        .content(JsonUtils.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andReturn().getResponse();
 
@@ -1380,10 +1379,10 @@ public class ClientAdminEndpointsMockMvcTests {
         SecretChangeRequest request = new SecretChangeRequest();
         request.setChangeMode(DELETE);
         MockHttpServletResponse response = mockMvc.perform(put("/oauth/clients/{client_id}/secret", client.getClientId())
-                .header("Authorization", "Bearer " + token)
-                .accept(APPLICATION_JSON)
-                .contentType(APPLICATION_JSON)
-                .content(JsonUtils.writeValueAsString(request)))
+                        .header("Authorization", "Bearer " + token)
+                        .accept(APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON)
+                        .content(JsonUtils.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
                 .andReturn().getResponse();
 
@@ -1960,10 +1959,10 @@ public class ClientAdminEndpointsMockMvcTests {
         request.setClientId("admin");
         request.setChangeMode(ClientJwtChangeRequest.ChangeMode.ADD);
         MockHttpServletResponse response = mockMvc.perform(put("/oauth/clients/{client_id}/clientjwt", client.getClientId())
-                .header("Authorization", "Bearer " + token)
-                .accept(APPLICATION_JSON)
-                .contentType(APPLICATION_JSON)
-                .content(JsonUtils.writeValueAsString(request)))
+                        .header("Authorization", "Bearer " + token)
+                        .accept(APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON)
+                        .content(JsonUtils.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andReturn().getResponse();
 
@@ -1990,10 +1989,10 @@ public class ClientAdminEndpointsMockMvcTests {
         request.setClientId("admin");
         request.setChangeMode(ClientJwtChangeRequest.ChangeMode.ADD);
         MockHttpServletResponse response = mockMvc.perform(put("/oauth/clients/{client_id}/clientjwt", client.getClientId())
-                .header("Authorization", "Bearer " + token)
-                .accept(APPLICATION_JSON)
-                .contentType(APPLICATION_JSON)
-                .content(JsonUtils.writeValueAsString(request)))
+                        .header("Authorization", "Bearer " + token)
+                        .accept(APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON)
+                        .content(JsonUtils.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andReturn().getResponse();
 
@@ -2009,10 +2008,10 @@ public class ClientAdminEndpointsMockMvcTests {
         request = new ClientJwtChangeRequest("admin", null, "{\"keys\":[{\"kty\":\"RSA\",\"e\":\"AQAB\",\"use\":\"sig\",\"alg\":\"RS256\",\"n\":\"n\"}]}");
         request.setChangeMode(ClientJwtChangeRequest.ChangeMode.UPDATE);
         response = mockMvc.perform(put("/oauth/clients/{client_id}/clientjwt", client.getClientId())
-                .header("Authorization", "Bearer " + token)
-                .accept(APPLICATION_JSON)
-                .contentType(APPLICATION_JSON)
-                .content(JsonUtils.writeValueAsString(request)))
+                        .header("Authorization", "Bearer " + token)
+                        .accept(APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON)
+                        .content(JsonUtils.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
                 .andReturn().getResponse();
 
@@ -2035,10 +2034,10 @@ public class ClientAdminEndpointsMockMvcTests {
         request.setClientId("admin");
         request.setChangeMode(ClientJwtChangeRequest.ChangeMode.ADD);
         MockHttpServletResponse response = mockMvc.perform(put("/oauth/clients/{client_id}/clientjwt", client.getClientId())
-                .header("Authorization", "Bearer " + token)
-                .accept(APPLICATION_JSON)
-                .contentType(APPLICATION_JSON)
-                .content(JsonUtils.writeValueAsString(request)))
+                        .header("Authorization", "Bearer " + token)
+                        .accept(APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON)
+                        .content(JsonUtils.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
                 .andReturn().getResponse();
 

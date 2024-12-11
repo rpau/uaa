@@ -13,16 +13,16 @@
  *******************************************************************************/
 package org.cloudfoundry.identity.uaa.integration;
 
-import org.cloudfoundry.identity.uaa.ServerRunning;
+import org.cloudfoundry.identity.uaa.ServerRunningExtension;
 import org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils;
 import org.cloudfoundry.identity.uaa.oauth.client.resource.AuthorizationCodeResourceDetails;
 import org.cloudfoundry.identity.uaa.oauth.jwt.Jwt;
 import org.cloudfoundry.identity.uaa.oauth.jwt.JwtHelper;
-import org.cloudfoundry.identity.uaa.test.TestAccountSetup;
+import org.cloudfoundry.identity.uaa.test.TestAccountExtension;
 import org.cloudfoundry.identity.uaa.test.UaaTestAccounts;
-import org.junit.Assert;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -34,10 +34,10 @@ import java.net.URI;
 import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Dave Syer
@@ -45,16 +45,16 @@ import static org.junit.Assert.assertTrue;
  */
 public class AuthorizationCodeGrantIntegrationTests {
 
-    @Rule
-    public ServerRunning serverRunning = ServerRunning.isRunning();
+    @RegisterExtension
+    private static final ServerRunningExtension serverRunning = ServerRunningExtension.connect();
 
-    private final UaaTestAccounts testAccounts = UaaTestAccounts.standard(serverRunning);
+    private static final UaaTestAccounts testAccounts = UaaTestAccounts.standard(serverRunning);
 
-    @Rule
-    public TestAccountSetup testAccountSetup = TestAccountSetup.standard(serverRunning, testAccounts);
+    @RegisterExtension
+    private static final TestAccountExtension testAccountSetup = TestAccountExtension.standard(serverRunning, testAccounts);
 
     @Test
-    public void testSuccessfulAuthorizationCodeFlow() throws Exception {
+    void testSuccessfulAuthorizationCodeFlow() {
         testSuccessfulAuthorizationCodeFlow_Internal();
         testSuccessfulAuthorizationCodeFlow_Internal();
     }
@@ -152,7 +152,7 @@ public class AuthorizationCodeGrantIntegrationTests {
 
     @Test
     public void testZoneDoesNotExist() {
-        ServerRunning.UriBuilder builder = serverRunning.buildUri(serverRunning.getAuthorizationUri().replace("localhost", "testzonedoesnotexist.localhost"))
+        ServerRunningExtension.UriBuilder builder = serverRunning.buildUri(serverRunning.getAuthorizationUri().replace("localhost", "testzonedoesnotexist.localhost"))
                 .queryParam("response_type", "code")
                 .queryParam("state", "mystateid")
                 .queryParam("client_id", "clientId")
@@ -176,7 +176,7 @@ public class AuthorizationCodeGrantIntegrationTests {
                 .getClientCredentialsTemplate(IntegrationTestUtils.getClientCredentialsResource(serverRunning.getBaseUrl(),
                         new String[]{"zones.write", "zones.read", "scim.zones"}, "identity", "identitysecret"));
         IntegrationTestUtils.createInactiveIdentityZone(identityClient, "http://localhost:8080/uaa");
-        ServerRunning.UriBuilder builder = serverRunning.buildUri(serverRunning.getAuthorizationUri().replace("localhost", "testzoneinactive.localhost"))
+        ServerRunningExtension.UriBuilder builder = serverRunning.buildUri(serverRunning.getAuthorizationUri().replace("localhost", "testzoneinactive.localhost"))
                 .queryParam("response_type", "code")
                 .queryParam("state", "mystateid")
                 .queryParam("client_id", "clientId")
@@ -208,7 +208,7 @@ public class AuthorizationCodeGrantIntegrationTests {
                 null,
                 false);
 
-        assertNotNull("Token not received", body.get("access_token"));
+        assertNotNull(body.get("access_token"), "Token not received");
 
         try {
             IntegrationTestUtils.getAuthorizationCodeTokenMap(serverRunning, "app", "appclientsecret",
@@ -218,7 +218,7 @@ public class AuthorizationCodeGrantIntegrationTests {
             // expected
             return;
         }
-        Assert.fail("Token retrival not allowed");
+        Assertions.fail("Token retrival not allowed");
     }
 
     public void testSuccessfulAuthorizationCodeFlow_Internal() {
@@ -231,8 +231,8 @@ public class AuthorizationCodeGrantIntegrationTests {
                 testAccounts.getUserName(),
                 testAccounts.getPassword());
         Jwt token = JwtHelper.decode(body.get("access_token"));
-        assertTrue("Wrong claims: " + token.getClaims(), token.getClaims().contains("\"aud\""));
-        assertTrue("Wrong claims: " + token.getClaims(), token.getClaims().contains("\"user_id\""));
+        assertTrue(token.getClaims().contains("\"aud\""), "Wrong claims: " + token.getClaims());
+        assertTrue(token.getClaims().contains("\"user_id\""), "Wrong claims: " + token.getClaims());
     }
 
     private void testAuthorizationCodeFlowWithPkce_Internal(String codeChallenge, String codeChallengeMethod, String codeVerifier) throws Exception {
@@ -241,8 +241,8 @@ public class AuthorizationCodeGrantIntegrationTests {
         assertEquals(HttpStatus.OK, tokenResponse.getStatusCode());
         Map<String, String> body = tokenResponse.getBody();
         Jwt token = JwtHelper.decode(body.get("access_token"));
-        assertTrue("Wrong claims: " + token.getClaims(), token.getClaims().contains("\"aud\""));
-        assertTrue("Wrong claims: " + token.getClaims(), token.getClaims().contains("\"user_id\""));
+        assertTrue(token.getClaims().contains("\"aud\""), "Wrong claims: " + token.getClaims());
+        assertTrue(token.getClaims().contains("\"user_id\""), "Wrong claims: " + token.getClaims());
         IntegrationTestUtils.callCheckToken(serverRunning,
                 body.get("access_token"),
                 testAccounts.getDefaultAuthorizationCodeResource().getClientId(),

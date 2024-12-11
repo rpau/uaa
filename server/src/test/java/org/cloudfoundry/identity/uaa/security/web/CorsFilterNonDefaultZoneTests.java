@@ -2,7 +2,6 @@ package org.cloudfoundry.identity.uaa.security.web;
 
 import org.cloudfoundry.identity.uaa.zone.IdentityZone;
 import org.cloudfoundry.identity.uaa.zone.beans.IdentityZoneManager;
-import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -19,11 +18,19 @@ import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
-import static org.springframework.http.HttpMethod.*;
-import static org.springframework.http.HttpStatus.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.springframework.http.HttpMethod.DELETE;
+import static org.springframework.http.HttpMethod.GET;
+import static org.springframework.http.HttpMethod.OPTIONS;
+import static org.springframework.http.HttpMethod.POST;
+import static org.springframework.http.HttpMethod.PUT;
+import static org.springframework.http.HttpStatus.FORBIDDEN;
+import static org.springframework.http.HttpStatus.METHOD_NOT_ALLOWED;
+import static org.springframework.http.HttpStatus.OK;
 
 class CorsFilterNonDefaultZoneTests {
     private IdentityZoneManager mockIdentityZoneManager;
@@ -303,7 +310,7 @@ class CorsFilterNonDefaultZoneTests {
 
         assertEquals("example.com", response.getHeaderValue("Access-Control-Allow-Origin"));
         assertEquals("GET, POST, PUT, DELETE", response.getHeaderValue("Access-Control-Allow-Methods"));
-        MatcherAssert.assertThat(new CorsFilter(mockIdentityZoneManager, false).
+        assertThat(new CorsFilter(mockIdentityZoneManager, false).
                 splitCommaDelimitedString((String) response.getHeaderValue("Access-Control-Allow-Headers")), containsInAnyOrder("Authorization"));
         assertEquals("187000", response.getHeaderValue("Access-Control-Max-Age"));
     }

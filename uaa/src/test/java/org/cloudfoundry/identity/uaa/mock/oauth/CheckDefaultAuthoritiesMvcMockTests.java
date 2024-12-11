@@ -14,7 +14,7 @@
 package org.cloudfoundry.identity.uaa.mock.oauth;
 
 import org.cloudfoundry.identity.uaa.DefaultTestContext;
-import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,9 +52,9 @@ public class CheckDefaultAuthoritiesMvcMockTests {
 
     @Test
     void testDefaultAuthorities() {
-        Assert.assertEquals(14, defaultAuthorities.size());
+        Assertions.assertEquals(14, defaultAuthorities.size());
         for (String s : EXPECTED_DEFAULT_GROUPS) {
-            Assert.assertTrue("Expecting authority to be present:" + s, defaultAuthorities.contains(s));
+            Assertions.assertTrue(defaultAuthorities.contains(s), "Expecting authority to be present:" + s);
         }
     }
 }

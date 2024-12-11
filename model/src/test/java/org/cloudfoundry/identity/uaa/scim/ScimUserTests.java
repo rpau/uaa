@@ -16,9 +16,9 @@ package org.cloudfoundry.identity.uaa.scim;
 import org.cloudfoundry.identity.uaa.approval.Approval;
 import org.cloudfoundry.identity.uaa.scim.ScimUser.Group;
 import org.cloudfoundry.identity.uaa.util.JsonUtils;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 
@@ -33,7 +33,14 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Luke Taylor
@@ -44,7 +51,7 @@ public class ScimUserTests {
     private ScimUser user;
     private ScimUser patch;
 
-    @Before
+    @BeforeEach
     public void createUserToBePatched() {
         user = new ScimUser("id", "uname", "gname", "fname");
         user.setPassword("password");
@@ -90,8 +97,8 @@ public class ScimUserTests {
         String oldJson = "{\"id\":\"78df8903-58e9-4a1e-8e22-b0421f7d6d70\",\"meta\":{\"version\":0,\"created\":\"2015-08-21T15:09:26.830Z\",\"lastModified\":\"2015-08-21T15:09:26.830Z\"},\"userName\":\"jo!!!@foo.com\",\"name\":{\"familyName\":\"User\",\"givenName\":\"Jo\"},\"emails\":[{\"value\":\"jo!!!@foo.com\",\"primary\":false}],\"active\":true,\"verified\":false,\"origin\":\"uaa\",\"zoneId\":\"uaa\",\"passwordLastModified\":null,\"schemas\":[\"urn:scim:schemas:core:1.0\"]}";
         for (String json : Arrays.asList(oldJson, JsonUtils.writeValueAsString(new ScimUser()))) {
             ScimUser user = JsonUtils.readValue(json, ScimUser.class);
-            assertNull(json, user.getPreviousLogonTime());
-            assertNull(json, user.getLastLogonTime());
+            assertNull(user.getPreviousLogonTime(), json);
+            assertNull(user.getLastLogonTime(), json);
         }
     }
 
@@ -337,9 +344,9 @@ public class ScimUserTests {
 
         user.setPrimaryEmail(newEmail.getValue());
 
-        Assert.assertEquals("new@example.com", user.getPrimaryEmail());
+        Assertions.assertEquals("new@example.com", user.getPrimaryEmail());
 
-        Assert.assertEquals(Arrays.asList(newEmail, email2, email3), user.getEmails());
+        Assertions.assertEquals(Arrays.asList(newEmail, email2, email3), user.getEmails());
 
         try {
             user.addEmail("email3@bar.com");

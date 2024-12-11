@@ -1,6 +1,6 @@
 /*
  * *****************************************************************************
- *     Cloud Foundry 
+ *     Cloud Foundry
  *     Copyright (c) [2009-2016] Pivotal Software, Inc. All Rights Reserved.
  *
  *     This product is licensed to you under the Apache License, Version 2.0 (the "License").
@@ -13,18 +13,15 @@
  *******************************************************************************/
 package org.cloudfoundry.identity.uaa;
 
-import org.cloudfoundry.identity.uaa.oauth.client.test.RestTemplateHolder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.cloudfoundry.identity.uaa.oauth.client.test.RestTemplateHolder;
 import org.cloudfoundry.identity.uaa.test.TestProfileEnvironment;
 import org.cloudfoundry.identity.uaa.test.UrlHelper;
-import org.junit.Assume;
-import org.junit.internal.AssumptionViolatedException;
-import org.junit.rules.MethodRule;
-import org.junit.runners.model.FrameworkMethod;
-import org.junit.runners.model.Statement;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -50,43 +47,41 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * <p>
- * A rule that prevents integration tests from failing if the server application
- * is not running or not accessible. If the server is not running in the
- * background all the tests here will simply be skipped because of a violated
- * assumption (showing as successful). Usage:
+ * An Extension that fails integration tests if the server application
+ * is not running or not accessible.
+ * Usage:
  * </p>
- * 
+ *
  * <pre>
- * &#064;Rule public static ServerRunning brokerIsRunning = ServerRunning.isRunning();
- * 
- * &#064;Test public void testSendAndReceive() throws Exception { // ... test using server etc. }
+ * &#064;RegisterExtension
+ * public static final ServerRunningExtension serverRunning = ServerRunningExtension.connect();
+ *
+ * &#064;Test
+ * void testSendAndReceive() {
+ *      ResponseEntity<Void> response = serverRunning.postForResponse(serverRunning.getAuthorizationUri(), headers, params);
+ * }
  * </pre>
+ *
  * <p>
- * The rule can be declared as static so that it only has to check once for all
- * tests in the enclosing test case, but there isn't a lot of overhead in making
- * it non-static.
+ * The Extension can be declared as static so that it only has to check once for all
+ * tests in the enclosing test case.
  * </p>
- * 
- * @see Assume
- * @see AssumptionViolatedException
- * 
+ *
  * @author Dave Syer
- * 
+ * @author Duane May
+ * <p>
+ * There is a second class in the samples module that is mostly the same. Should refactor Test Utils for reuse.
  */
-public final class ServerRunning implements MethodRule, RestTemplateHolder, UrlHelper {
+public final class ServerRunningExtension implements BeforeAllCallback, RestTemplateHolder, UrlHelper {
 
-    private static final Logger logger = LoggerFactory.getLogger(ServerRunning.class);
-
-    private final Environment environment;
+    private static final Logger log = LoggerFactory.getLogger(ServerRunningExtension.class);
 
     // Static so that we only test once on failure: speeds up test suite
     private static final Map<Integer, Boolean> serverOnline = new HashMap<>();
-
-    private final boolean integrationTest;
 
     private static final int DEFAULT_PORT = 8080;
 
@@ -105,17 +100,23 @@ public final class ServerRunning implements MethodRule, RestTemplateHolder, UrlH
     /**
      * @return a new rule that assumes an existing running broker
      */
-    public static ServerRunning isRunning() {
-        return new ServerRunning();
+    public static ServerRunningExtension connect() {
+        return new ServerRunningExtension();
     }
 
-    private ServerRunning() {
-        environment = TestProfileEnvironment.getEnvironment();
-        integrationTest = environment.getProperty("uaa.integration.test", Boolean.class, false);
+    private ServerRunningExtension() {
+        Environment environment = TestProfileEnvironment.getEnvironment();
         client = getRestTemplate();
         setPort(environment.getProperty("uaa.port", Integer.class, DEFAULT_PORT));
         setRootPath(environment.getProperty("uaa.path", DEFAULT_ROOT_PATH));
         setHostName(environment.getProperty("uaa.host", DEFAULT_HOST));
+    }
+
+    @Override
+    public void beforeAll(ExtensionContext context) throws Exception {
+        if (!getStatus()) {
+            fail("The UAA server cannot be reached at %s:%d".formatted(hostName, port));
+        }
     }
 
     /**
@@ -138,7 +139,7 @@ public final class ServerRunning implements MethodRule, RestTemplateHolder, UrlH
 
     /**
      * The context root in the application, e.g. "/uaa" for a local deployment.
-     * 
+     *
      * @param rootPath the rootPath to set
      */
     public void setRootPath(String rootPath) {
@@ -152,12 +153,6 @@ public final class ServerRunning implements MethodRule, RestTemplateHolder, UrlH
         this.rootPath = rootPath;
     }
 
-    @Override
-    public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object o) {
-        assertTrue("Test could not reach the server at " + hostName + ":" + port, getStatus());
-        return statement;
-    }
-
     private synchronized Boolean getStatus() {
         Boolean available = serverOnline.get(port);
         if (available == null) {
@@ -168,13 +163,13 @@ public final class ServerRunning implements MethodRule, RestTemplateHolder, UrlH
     }
 
     private boolean connectionAvailable() {
-        logger.info("Testing connectivity for " + hostName + ":" + port);
+        log.info("Testing connectivity for {}:{}", hostName, port);
         try (Socket socket = new Socket(hostName, port)) {
-            logger.info("Connectivity test succeeded for " + hostName + ":" + port);
+            log.info("Connectivity test succeeded for {}:{}", hostName, port);
             return true;
 
         } catch (IOException e) {
-            logger.warn("Connectivity test failed for " + hostName + ":" + port, e);
+            log.warn("Connectivity test failed for {}:{}", hostName, port, e);
             return false;
         }
     }
@@ -270,8 +265,7 @@ public final class ServerRunning implements MethodRule, RestTemplateHolder, UrlH
         actualHeaders.putAll(headers);
         actualHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-        return client.exchange(getUrl(path), HttpMethod.POST, new HttpEntity<>(params,
-                actualHeaders), Void.class);
+        return client.exchange(getUrl(path), HttpMethod.POST, new HttpEntity<>(params, actualHeaders), Void.class);
     }
 
     public ResponseEntity<Void> postForRedirect(String path, HttpHeaders headers, MultiValueMap<String, String> params) {
@@ -333,11 +327,7 @@ public final class ServerRunning implements MethodRule, RestTemplateHolder, UrlH
     private static class StatelessRequestFactory extends HttpComponentsClientHttpRequestFactory {
         @Override
         public HttpClient getHttpClient() {
-            return HttpClientBuilder.create()
-                    .useSystemProperties()
-                    .disableRedirectHandling()
-                    .disableCookieManagement()
-                    .build();
+            return HttpClientBuilder.create().useSystemProperties().disableRedirectHandling().disableCookieManagement().build();
         }
     }
 
@@ -382,7 +372,5 @@ public final class ServerRunning implements MethodRule, RestTemplateHolder, UrlH
                 throw new IllegalArgumentException("Could not create URI from [" + builder + "]: " + ex, ex);
             }
         }
-
     }
-
 }

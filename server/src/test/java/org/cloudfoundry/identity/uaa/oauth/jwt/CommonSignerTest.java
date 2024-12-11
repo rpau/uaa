@@ -25,8 +25,8 @@ import com.nimbusds.jwt.JWTParser;
 import com.nimbusds.jwt.SignedJWT;
 import org.cloudfoundry.identity.uaa.oauth.KeyInfoBuilder;
 import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
@@ -36,15 +36,16 @@ import java.util.Map;
 
 import static org.cloudfoundry.identity.uaa.util.UaaStringUtils.DEFAULT_UAA_URL;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class CommonSignerTest {
     private String rsaSigningKey;
     private String macSigningKey;
 
-    @Before
+    @BeforeEach
     public void setup() {
         rsaSigningKey = """
                 -----BEGIN RSA PRIVATE KEY-----
@@ -88,9 +89,11 @@ public class CommonSignerTest {
         assertEquals("http://localhost/uaa", signer.keyURL());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void null_key_is_rejected() {
-        new CommonSigner("id", null, "http://localhost/uaa");
+        assertThrows(IllegalArgumentException.class, () -> {
+            new CommonSigner("id", null, "http://localhost/uaa");
+        });
     }
 
     @Test

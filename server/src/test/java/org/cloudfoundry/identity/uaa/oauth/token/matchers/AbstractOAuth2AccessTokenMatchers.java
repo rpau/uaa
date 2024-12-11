@@ -14,13 +14,13 @@ import org.hamcrest.TypeSafeMatcher;
 import java.util.Collections;
 import java.util.Map;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public abstract class AbstractOAuth2AccessTokenMatchers<T> extends TypeSafeMatcher<T> {
 
     protected Matcher<?> value;
     public static ThreadLocal<Map<String, RevocableToken>> revocableTokens = ThreadLocal.withInitial(Collections::emptyMap);
-    private KeyInfoService keyInfoService;
+    private final KeyInfoService keyInfoService;
 
     public AbstractOAuth2AccessTokenMatchers(Matcher<?> value) {
         this();
@@ -43,7 +43,7 @@ public abstract class AbstractOAuth2AccessTokenMatchers<T> extends TypeSafeMatch
     protected abstract boolean matchesSafely(T token);
 
     protected Map<String, Object> getClaims(T token) {
-        String tokenValue = null;
+        String tokenValue;
         if (token instanceof OAuth2AccessToken accessToken) {
             tokenValue = accessToken.getValue();
         } else if (token instanceof OAuth2RefreshToken refreshToken) {
@@ -56,7 +56,7 @@ public abstract class AbstractOAuth2AccessTokenMatchers<T> extends TypeSafeMatch
         assertNotNull(tokenJwt);
         Map<String, Object> claims;
         try {
-            claims = JsonUtils.readValue(tokenJwt.getClaims(), new TypeReference<Map<String, Object>>() {
+            claims = JsonUtils.readValue(tokenJwt.getClaims(), new TypeReference<>() {
             });
         } catch (Exception e) {
             throw new IllegalArgumentException("Unable to decode token", e);

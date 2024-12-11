@@ -1,9 +1,9 @@
 package org.cloudfoundry.identity.uaa.provider.ldap;
 
 import org.cloudfoundry.identity.uaa.provider.ldap.extension.ExtendedLdapUserImpl;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.hamcrest.MatcherAssert;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.ldap.core.DirContextAdapter;
 import org.springframework.ldap.core.NameAwareAttributes;
@@ -19,8 +19,8 @@ import java.util.Map;
 import static java.util.Collections.emptyList;
 import static org.cloudfoundry.identity.uaa.provider.ldap.ExtendedLdapUserMapper.SUBSTITUTE_MAIL_ATTR_NAME;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ExtendedLdapUserMapperTest {
 
@@ -29,7 +29,7 @@ public class ExtendedLdapUserMapperTest {
     private ExtendedLdapUserMapper mapper;
     private Collection<GrantedAuthority> authorities;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         attrs = new NameAwareAttributes();
         authorities = emptyList();
@@ -63,7 +63,7 @@ public class ExtendedLdapUserMapperTest {
         mapper.setGivenNameAttributeName("givenName");
 
         ExtendedLdapUserImpl ldapUserDetails = getExtendedLdapUser();
-        Assert.assertThat(ldapUserDetails.getGivenName(), is("Marissa"));
+        MatcherAssert.assertThat(ldapUserDetails.getGivenName(), is("Marissa"));
     }
 
     @Test
@@ -73,7 +73,7 @@ public class ExtendedLdapUserMapperTest {
         mapper.setFamilyNameAttributeName("lastName");
 
         ExtendedLdapUserImpl ldapUserDetails = getExtendedLdapUser();
-        Assert.assertThat(ldapUserDetails.getFamilyName(), is("Lastnamerton"));
+        MatcherAssert.assertThat(ldapUserDetails.getFamilyName(), is("Lastnamerton"));
     }
 
     @Test
@@ -83,7 +83,7 @@ public class ExtendedLdapUserMapperTest {
         mapper.setPhoneNumberAttributeName("phoneNumber");
 
         ExtendedLdapUserImpl ldapUserDetails = getExtendedLdapUser();
-        Assert.assertThat(ldapUserDetails.getPhoneNumber(), is("8675309"));
+        MatcherAssert.assertThat(ldapUserDetails.getPhoneNumber(), is("8675309"));
     }
 
     private ExtendedLdapUserImpl getExtendedLdapUser() {

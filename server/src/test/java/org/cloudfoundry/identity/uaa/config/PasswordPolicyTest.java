@@ -1,9 +1,10 @@
 package org.cloudfoundry.identity.uaa.config;
 
 import org.cloudfoundry.identity.uaa.provider.PasswordPolicy;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /*******************************************************************************
  * Cloud Foundry

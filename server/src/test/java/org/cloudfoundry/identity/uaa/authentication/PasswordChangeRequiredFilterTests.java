@@ -14,21 +14,20 @@
 
 package org.cloudfoundry.identity.uaa.authentication;
 
-import javax.servlet.FilterChain;
-import java.util.HashSet;
-
 import org.cloudfoundry.identity.uaa.oauth.InteractionRequiredException;
 import org.cloudfoundry.identity.uaa.util.SessionUtils;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneHolder;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.AuthenticationEntryPoint;
+
+import javax.servlet.FilterChain;
+import java.util.HashSet;
 
 import static java.util.Collections.emptyList;
 import static org.mockito.ArgumentMatchers.any;
@@ -46,7 +45,7 @@ public class PasswordChangeRequiredFilterTests {
     private AuthenticationEntryPoint entryPoint;
     private FilterChain chain;
 
-    @Before
+    @BeforeEach
     public void setup() {
         UaaAuthentication authentication = new UaaAuthentication(
                 new UaaPrincipal("fake-id", "fake-username", "email@email.com", "origin", "", "uaa"),
@@ -67,7 +66,7 @@ public class PasswordChangeRequiredFilterTests {
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 
-    @After
+    @AfterEach
     public void teardown() {
         SecurityContextHolder.clearContext();
         IdentityZoneHolder.clear();

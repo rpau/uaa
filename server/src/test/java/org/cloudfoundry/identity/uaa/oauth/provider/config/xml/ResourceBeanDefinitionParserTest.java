@@ -5,8 +5,8 @@ import org.cloudfoundry.identity.uaa.oauth.client.resource.BaseOAuth2ProtectedRe
 import org.cloudfoundry.identity.uaa.oauth.client.resource.ClientCredentialsResourceDetails;
 import org.cloudfoundry.identity.uaa.oauth.client.resource.ImplicitResourceDetails;
 import org.cloudfoundry.identity.uaa.oauth.client.resource.ResourceOwnerPasswordResourceDetails;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.xml.ParserContext;
@@ -15,7 +15,8 @@ import org.w3c.dom.Element;
 
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -35,7 +36,7 @@ public class ResourceBeanDefinitionParserTest {
     private BeanDefinitionBuilder builder;
     private XmlReaderContext xmlReaderContext;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         element = mock(Element.class);
         parserContext = mock(ParserContext.class);

@@ -1,16 +1,16 @@
 package org.cloudfoundry.identity.uaa.zone;
 
 import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.fail;
 
 
 public class BannerValidatorTest {
 
-    @Before
+    @BeforeEach
     public void setup() {
 
     }

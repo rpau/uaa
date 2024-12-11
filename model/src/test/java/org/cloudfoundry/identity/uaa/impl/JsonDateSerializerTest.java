@@ -2,12 +2,11 @@ package org.cloudfoundry.identity.uaa.impl;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -22,7 +21,7 @@ public class JsonDateSerializerTest {
         JsonGenerator gen = new JsonFactory().createGenerator(bos);
         new JsonDateSerializer().serialize(now, gen, null);
         gen.close();
-        Assert.assertEquals("\"%s\"".formatted(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").format(now)),
+        Assertions.assertEquals("\"%s\"".formatted(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").format(now)),
                 bos.toString());
     }
 
@@ -56,7 +55,7 @@ public class JsonDateSerializerTest {
         for (int i = 0; i < 1000; i++) {
             threadArray[i].join();
         }
-        Assert.assertNull(exceptionOccured);
+        Assertions.assertNull(exceptionOccured);
     }
 
 }

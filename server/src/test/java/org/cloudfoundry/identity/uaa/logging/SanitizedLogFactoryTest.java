@@ -1,16 +1,15 @@
 package org.cloudfoundry.identity.uaa.logging;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.logging.log4j.Logger;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import org.apache.commons.lang3.RandomStringUtils;
 
 public class SanitizedLogFactoryTest {
 
@@ -22,7 +21,7 @@ public class SanitizedLogFactoryTest {
     SanitizedLogFactory.SanitizedLog log;
     Exception ex;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         mockLog = mock(Logger.class);
         log = new SanitizedLogFactory.SanitizedLog(mockLog);
@@ -31,7 +30,7 @@ public class SanitizedLogFactoryTest {
 
     @Test
     public void testInit() {
-        Assert.assertNotNull(SanitizedLogFactory.getLog(SanitizedLogFactoryTest.class));
+        Assertions.assertNotNull(SanitizedLogFactory.getLog(SanitizedLogFactoryTest.class));
     }
 
     @Test
@@ -79,7 +78,7 @@ public class SanitizedLogFactoryTest {
         verify(mockLog, never()).debug(cleanMessage);
         log.debug(cleanMessage, ex);
         verify(mockLog, never()).debug(cleanMessage, ex);
-        Assert.assertFalse(log.isDebugEnabled());
+        Assertions.assertFalse(log.isDebugEnabled());
     }
 
 

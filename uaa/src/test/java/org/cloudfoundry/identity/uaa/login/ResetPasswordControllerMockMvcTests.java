@@ -8,6 +8,7 @@ import org.cloudfoundry.identity.uaa.codestore.JdbcExpiringCodeStore;
 import org.cloudfoundry.identity.uaa.message.util.FakeJavaMailSender;
 import org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils;
 import org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils.PredictableGenerator;
+import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
 import org.cloudfoundry.identity.uaa.provider.IdentityProvider;
 import org.cloudfoundry.identity.uaa.provider.JdbcIdentityProviderProvisioning;
 import org.cloudfoundry.identity.uaa.provider.PasswordPolicy;
@@ -28,7 +29,6 @@ import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpSession;
-import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
 import org.springframework.security.web.PortResolverImpl;
 import org.springframework.security.web.savedrequest.DefaultSavedRequest;
 import org.springframework.security.web.savedrequest.SavedRequest;
@@ -48,14 +48,14 @@ import java.util.regex.Pattern;
 import static org.cloudfoundry.identity.uaa.account.UaaResetPasswordService.FORGOT_PASSWORD_INTENT_PREFIX;
 import static org.cloudfoundry.identity.uaa.constants.OriginKeys.UAA;
 import static org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils.CookieCsrfPostProcessor.cookieCsrf;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
@@ -192,12 +192,12 @@ public class ResetPasswordControllerMockMvcTests {
         sender.clearMessage();
         String expectedRedirect = externalLoginUrl + "/reset_password?code=";
         mockMvc.perform(
-                post("/forgot_password.do")
-                        .header("Host", "localhost")
-                        .header("X-Forwarded-Host", "other.host.com")
-                        .param("username", user.getUserName())
-        )
-        .andExpect(redirectedUrl("email_sent?code=reset_password"));
+                        post("/forgot_password.do")
+                                .header("Host", "localhost")
+                                .header("X-Forwarded-Host", "other.host.com")
+                                .param("username", user.getUserName())
+                )
+                .andExpect(redirectedUrl("email_sent?code=reset_password"));
         assertThat(sender.getSentMessages().get(0).getContentString(), containsString(expectedRedirect));
         assertThat(sender.getSentMessages().get(0).getContentString(), not(containsString("other.host.com")));
     }
@@ -229,11 +229,11 @@ public class ResetPasswordControllerMockMvcTests {
         String intent = FORGOT_PASSWORD_INTENT_PREFIX + user.getId();
 
         mockMvc.perform(post("/forgot_password.do")
-                .param("username", user.getUserName()))
+                        .param("username", user.getUserName()))
                 .andExpect(redirectedUrl("email_sent?code=reset_password"));
 
         mockMvc.perform(post("/forgot_password.do")
-                .param("username", user.getUserName()))
+                        .param("username", user.getUserName()))
                 .andExpect(redirectedUrl("email_sent?code=reset_password"));
 
         assertEquals(1, (int) template.queryForObject("select count(*) from expiring_code_store where intent=?", new Object[]{intent}, Integer.class));
@@ -301,20 +301,20 @@ public class ResetPasswordControllerMockMvcTests {
         store.setGenerator(generator);
 
         mockMvc.perform(post("/forgot_password.do")
-                .session(session)
-                .param("username", user.getUserName()))
+                        .session(session)
+                        .param("username", user.getUserName()))
                 .andExpect(redirectedUrl("email_sent?code=reset_password"));
 
         mockMvc.perform(createChangePasswordRequest(user, "test" + generator.counter.get(), true, "secret1", "secret1")
-                .session(session))
+                        .session(session))
                 .andExpect(status().isFound())
                 .andExpect(redirectedUrl("/login?success=password_reset"));
 
         mockMvc.perform(post("/login.do")
-                .session(session)
-                .with(cookieCsrf())
-                .param("username", user.getUserName())
-                .param("password", "secret1"))
+                        .session(session)
+                        .with(cookieCsrf())
+                        .param("username", user.getUserName())
+                        .param("password", "secret1"))
                 .andExpect(redirectedUrl("http://test/redirect/oauth/authorize"));
     }
 

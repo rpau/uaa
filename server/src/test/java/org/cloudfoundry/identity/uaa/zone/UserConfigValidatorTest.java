@@ -1,41 +1,47 @@
 package org.cloudfoundry.identity.uaa.zone;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class UserConfigValidatorTest {
+
+class UserConfigValidatorTest {
 
     @Test
-    public void testDefaultConfig() throws InvalidIdentityZoneConfigurationException {
+    void testDefaultConfig() throws InvalidIdentityZoneConfigurationException {
         UserConfigValidator.validate(new UserConfig()); // defaultGroups not empty, allowedGroups is null
     }
 
     @Test
-    public void testNullConfig() throws InvalidIdentityZoneConfigurationException {
+    void testNullConfig() throws InvalidIdentityZoneConfigurationException {
         UserConfigValidator.validate(null);
     }
 
     @Test
-    public void testAllowedGroupsEmpty() throws InvalidIdentityZoneConfigurationException {
+    void testAllowedGroupsEmpty() throws InvalidIdentityZoneConfigurationException {
         UserConfig userConfig = new UserConfig();
         userConfig.setAllowedGroups(Collections.emptyList());
         UserConfigValidator.validate(userConfig);
     }
 
-    @Test(expected = InvalidIdentityZoneConfigurationException.class)
-    public void testNoGroupsAllowed() throws InvalidIdentityZoneConfigurationException {
-        UserConfig userConfig = new UserConfig();
-        userConfig.setDefaultGroups(Collections.emptyList());
-        userConfig.setAllowedGroups(Collections.emptyList()); // no groups allowed
-        UserConfigValidator.validate(userConfig);
+    @Test
+    void testNoGroupsAllowed() {
+        assertThrows(InvalidIdentityZoneConfigurationException.class, () -> {
+            UserConfig userConfig = new UserConfig();
+            userConfig.setDefaultGroups(Collections.emptyList());
+            userConfig.setAllowedGroups(Collections.emptyList()); // no groups allowed
+            UserConfigValidator.validate(userConfig);
+        });
     }
 
-    @Test(expected = InvalidIdentityZoneConfigurationException.class)
-    public void testNoUsersAllowed() throws InvalidIdentityZoneConfigurationException {
-        UserConfig userConfig = new UserConfig();
-        userConfig.setMaxUsers(0);
-        UserConfigValidator.validate(userConfig);
+    @Test
+    void testNoUsersAllowed() {
+        assertThrows(InvalidIdentityZoneConfigurationException.class, () -> {
+            UserConfig userConfig = new UserConfig();
+            userConfig.setMaxUsers(0);
+            UserConfigValidator.validate(userConfig);
+        });
     }
 }
