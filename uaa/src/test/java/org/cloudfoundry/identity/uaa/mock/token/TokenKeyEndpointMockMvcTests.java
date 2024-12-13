@@ -28,9 +28,6 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.any;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasKey;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -38,7 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DefaultTestContext
 class TokenKeyEndpointMockMvcTests {
 
-    private static final String signKey = """
+    private static final String SIGN_KEY = """
             -----BEGIN RSA PRIVATE KEY-----
             MIIEpQIBAAKCAQEA5JgjYNjLOeWC1Xf/NFcremS9peiQd3esa64KZ0BJue74bEtp
             N8CLmbeTD9NHvKzCg833cF81gkrkP/pkra7WZF+zNlHBDnO68D/tBkEAzPJYlFLL
@@ -67,7 +64,7 @@ class TokenKeyEndpointMockMvcTests {
             Iankyv8txnxsgwWDx3CBaWhFSxzqTNiLDs23aKwzCNiFGqG/H/HlSpw=
             -----END RSA PRIVATE KEY-----
             """;
-    private static final String verifyKey = """
+    private static final String VERIFY_KEY = """
             -----BEGIN PUBLIC KEY-----
             MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA5JgjYNjLOeWC1Xf/NFcr
             emS9peiQd3esa64KZ0BJue74bEtpN8CLmbeTD9NHvKzCg833cF81gkrkP/pkra7W
@@ -77,6 +74,7 @@ class TokenKeyEndpointMockMvcTests {
             FYEQjpphGyQmtsqsOndL9zBvfQCp5oT4hukBc3yIR6GVXDi0UURVjKtlYMMD4O+f
             qwIDAQAB
             -----END PUBLIC KEY-----""";
+
     private UaaClientDetails defaultClient;
     private IdentityZone testZone;
     @Autowired
@@ -86,7 +84,7 @@ class TokenKeyEndpointMockMvcTests {
 
     @BeforeEach
     void setSigningKeyAndDefaultClient() {
-        setSigningKeyAndDefaultClient(signKey);
+        setSigningKeyAndDefaultClient(SIGN_KEY);
     }
 
     @Test
@@ -291,17 +289,17 @@ class TokenKeyEndpointMockMvcTests {
 
     private void validateKey(Map<String, Object> key) {
         Object kty = key.get("kty");
-        assertThat(kty).isNotNull();
-        assertThat(kty instanceof String).isTrue();
-        assertThat(kty).isEqualTo("RSA");
+        assertThat(kty)
+                .isInstanceOf(String.class)
+                .isEqualTo("RSA");
 
         Object use = key.get("use"); //optional
         //values for use are
         //1. sig - key used to verify the signature
         //2. enc - key used to
-        assertThat(use).isNotNull();
-        assertThat(use instanceof String).isTrue();
-        assertThat(use).isEqualTo("sig");
+        assertThat(use)
+                .isInstanceOf(String.class)
+                .isEqualTo("sig");
 
 
         Object keyOps = key.get("key_ops");
@@ -312,9 +310,9 @@ class TokenKeyEndpointMockMvcTests {
 
         Object alg = key.get("alg");
         //optional - algorithm of key
-        assertThat(alg).isNotNull();
-        assertThat(alg instanceof String).isTrue();
-        assertThat(alg).isEqualTo("RS256");
+        assertThat(alg)
+                .isInstanceOf(String.class)
+                .isEqualTo("RS256");
 
         Object kid = key.get("kid");
         //optional - indicates the id for a certain key
@@ -339,20 +337,17 @@ class TokenKeyEndpointMockMvcTests {
         assertThat(x5tHashS256).isNull();
 
         Object actual = key.get("value");
-        assertThat(actual).isNotNull();
-        assertThat(actual instanceof String).isTrue();
-        assertThat(actual).isEqualTo(verifyKey);
+        assertThat(actual).isInstanceOf(String.class)
+                .isEqualTo(VERIFY_KEY);
 
 
         Object e = key.get("e");
-        assertThat(e).isNotNull();
-        assertThat(e instanceof String).isTrue();
-        assertThat(e).isEqualTo("AQAB");
+        assertThat(e).isInstanceOf(String.class)
+                .isEqualTo("AQAB");
         isUrlSafeBase64((String) e);
 
         Object n = key.get("n");
-        assertThat(n).isNotNull();
-        assertThat(n instanceof String).isTrue();
+        assertThat(n).isInstanceOf(String.class);
         isUrlSafeBase64((String) n);
 
     }
@@ -363,7 +358,7 @@ class TokenKeyEndpointMockMvcTests {
 
         Map<String, ? extends Map<String, Object>> keysMap = keys.stream().collect(new MapCollector<>(k -> (String) k.get("kid"), k -> k));
 
-        assertThat(keysMap, hasKey(is("testKey")));
+        assertThat(keysMap).containsKey("testKey");
         validateKey(keysMap.get("testKey"));
     }
 
@@ -372,5 +367,4 @@ class TokenKeyEndpointMockMvcTests {
         java.util.Base64.Decoder decoder = java.util.Base64.getUrlDecoder();
         assertThat(encoder.encodeToString(decoder.decode(base64))).isEqualTo(base64);
     }
-
 }

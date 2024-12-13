@@ -35,9 +35,6 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.startsWith;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpHeaders.ACCEPT;
@@ -387,10 +384,10 @@ class CorsFilterDefaultZoneTests {
         corsFilter.initialize();
 
         List<Pattern> allowedUriPatterns = corsFilter.getXhrConfiguration().getAllowedUriPatterns();
-        assertThat(allowedUriPatterns.size()).isEqualTo(1);
+        assertThat(allowedUriPatterns).hasSize(1);
 
         List<Pattern> allowedOriginPatterns = corsFilter.getXhrConfiguration().getAllowedOriginPatterns();
-        assertThat(allowedOriginPatterns.size()).isEqualTo(1);
+        assertThat(allowedOriginPatterns).hasSize(1);
 
         MockHttpServletRequest request = new MockHttpServletRequest("OPTIONS", "/uaa/userinfo");
         request.addHeader("Access-Control-Request-Method", "GET");
@@ -420,7 +417,7 @@ class CorsFilterDefaultZoneTests {
 
         corsFilter.initialize();
 
-        assertThat(logEvents, hasItem(startsWith("Invalid regular expression pattern in cors.xhr.allowed.uris:")));
+        assertThat(logEvents).anySatisfy(l -> assertThat(l).startsWith("Invalid regular expression pattern in cors.xhr.allowed.uris:"));
     }
 
     @Test

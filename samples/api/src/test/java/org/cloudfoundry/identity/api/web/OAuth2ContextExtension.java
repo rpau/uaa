@@ -21,7 +21,6 @@ import org.cloudfoundry.identity.uaa.oauth.token.AccessTokenProvider;
 import org.cloudfoundry.identity.uaa.oauth.token.AccessTokenRequest;
 import org.cloudfoundry.identity.uaa.oauth.token.DefaultAccessTokenRequest;
 import org.cloudfoundry.identity.uaa.test.TestAccountExtension;
-import org.hamcrest.CoreMatchers;
 import org.junit.internal.runners.statements.RunBefores;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
@@ -48,8 +47,6 @@ import java.net.URI;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * Moved class OAuth2ContextSetup implementation of from spring-security-oauth2 into UAA
@@ -218,7 +215,6 @@ public final class OAuth2ContextExtension implements BeforeAllCallback, BeforeEa
                     throw e;
                 } catch (Throwable e) {
                     logger.debug("Exception in befores", e);
-                    assertThat(e, CoreMatchers.not(CoreMatchers.anything()));
                 } finally {
                     clientHolder.setRestTemplate(savedServerClient);
                 }

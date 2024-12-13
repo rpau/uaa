@@ -35,8 +35,8 @@ import java.util.HashMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
+import static org.assertj.core.api.HamcrestCondition.matching;
 import static org.cloudfoundry.identity.uaa.user.UaaUserMatcher.aUaaUser;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
 
 @ExtendWith(PollutionPreventionExtension.class)
@@ -117,7 +117,6 @@ class LoginAuthenticationManagerTests {
         assertThat(((UaaPrincipal) authentication.getPrincipal()).getId()).isEqualTo(user.getId());
     }
 
-
     @Test
     void unsuccessfulAutoAddButWithNewUser() {
         Mockito.when(userDatabase.retrieveUserByName("foo", OriginKeys.LOGIN_SERVER)).thenThrow(new UsernameNotFoundException("planned"));
@@ -134,7 +133,6 @@ class LoginAuthenticationManagerTests {
         assertThat(publisher.getEventCount()).isEqualTo(1);
         assertThat(publisher.getLatestEvent().getUser().getUsername()).isEqualTo("foo");
     }
-
 
     @Nested
     class GetUser {
@@ -156,7 +154,7 @@ class LoginAuthenticationManagerTests {
             info.put(OriginKeys.ORIGIN, "test-origin");
             UaaUser user = manager.getUser(req1, info);
 
-            assertThat(user, aUaaUser()
+            assertThat(user).is(matching(aUaaUser()
                     .withUsername("user")
                     .withEmail("user@example.com")
                     .withGivenName("Jane")
@@ -165,7 +163,7 @@ class LoginAuthenticationManagerTests {
                     .withAuthorities(Matchers.equalTo(UaaAuthority.USER_AUTHORITIES))
                     .withOrigin("test-origin")
                     .withExternalId("user")
-                    .withZoneId(mockIdentityZoneManager.getCurrentIdentityZoneId()));
+                    .withZoneId(mockIdentityZoneManager.getCurrentIdentityZoneId())));
         }
 
         @Test
@@ -175,14 +173,14 @@ class LoginAuthenticationManagerTests {
             info.put("email", "user@example.com");
             UaaUser user = manager.getUser(req1, info);
 
-            assertThat(user, aUaaUser()
+            assertThat(user).is(matching(aUaaUser()
                     .withUsername("user")
                     .withEmail("user@example.com")
                     .withPassword("")
                     .withAuthorities(Matchers.equalTo(UaaAuthority.USER_AUTHORITIES))
                     .withOrigin(OriginKeys.LOGIN_SERVER)
                     .withExternalId("user")
-                    .withZoneId(mockIdentityZoneManager.getCurrentIdentityZoneId()));
+                    .withZoneId(mockIdentityZoneManager.getCurrentIdentityZoneId())));
         }
     }
 }

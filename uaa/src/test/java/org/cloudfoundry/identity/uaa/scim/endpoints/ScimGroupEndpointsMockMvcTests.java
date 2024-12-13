@@ -31,7 +31,6 @@ import org.cloudfoundry.identity.uaa.zone.IdentityZoneHolder;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneSwitchingFilter;
 import org.cloudfoundry.identity.uaa.zone.UserConfig;
 import org.cloudfoundry.identity.uaa.zone.ZoneManagementScopes;
-import org.hamcrest.Matcher;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -60,8 +59,6 @@ import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.constants.OriginKeys.LDAP;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -496,7 +493,7 @@ class ScimGroupEndpointsMockMvcTests {
                     .andReturn();
 
             SearchResults searchResults = JsonUtils.readValue(mvcResult.getResponse().getContentAsString(), SearchResults.class);
-            assertThat(searchResults.getResources().size()).isEqualTo(getSystemScopes("scim").size());
+            assertThat(searchResults.getResources()).hasSameSizeAs(getSystemScopes("scim"));
 
             get = get("/Groups")
                     .with(new SetServerNameRequestPostProcessor(result.getIdentityZone().getSubdomain() + ".localhost"))
@@ -542,7 +539,7 @@ class ScimGroupEndpointsMockMvcTests {
                 .andReturn();
 
         SearchResults searchResults = JsonUtils.readValue(mvcResult.getResponse().getContentAsString(), SearchResults.class);
-        assertThat(searchResults.getResources().size()).isEqualTo(5);
+        assertThat(searchResults.getResources()).hasSize(5);
         assertThat(searchResults.getItemsPerPage()).isEqualTo(5);
         assertThat(searchResults.getTotalResults()).isGreaterThan(10);
     }
@@ -565,7 +562,7 @@ class ScimGroupEndpointsMockMvcTests {
                 .andReturn();
 
         SearchResults searchResults = JsonUtils.readValue(mvcResult.getResponse().getContentAsString(), SearchResults.class);
-        assertThat(searchResults.getResources().size()).isEqualTo(5);
+        assertThat(searchResults.getResources()).hasSize(5);
         assertThat(searchResults.getItemsPerPage()).isEqualTo(5);
         assertThat(searchResults.getTotalResults()).isGreaterThan(10);
     }
@@ -608,7 +605,7 @@ class ScimGroupEndpointsMockMvcTests {
         String body = mvcResult.getResponse().getContentAsString();
         List<Map<String, Object>> attList = (List) JsonUtils.readValue(body, Map.class).get("resources");
         for (Map<String, Object> attMap : attList) {
-            assertThat(attMap.get(nonexistentAttribute)).isNull();
+            assertThat(attMap).containsEntry(nonexistentAttribute, null);
         }
     }
 
@@ -629,7 +626,7 @@ class ScimGroupEndpointsMockMvcTests {
         ArrayList<String> list = new ArrayList<>(defaultExternalMembers);
         list.add(displayName + "|" + externalGroup);
         defaultExternalMembers = list;
-        assertThat(defaultExternalMembers.size()).isEqualTo(previousSize + 1);
+        assertThat(defaultExternalMembers).hasSize(previousSize + 1);
         checkGetExternalGroups();
     }
 
@@ -672,7 +669,7 @@ class ScimGroupEndpointsMockMvcTests {
         ArrayList<String> list = new ArrayList<>(defaultExternalMembers);
         list.add(displayName + "|" + externalGroup);
         defaultExternalMembers = list;
-        assertThat(defaultExternalMembers.size()).isEqualTo(previousSize + 1);
+        assertThat(defaultExternalMembers).hasSize(previousSize + 1);
         checkGetExternalGroups();
     }
 
@@ -778,7 +775,7 @@ class ScimGroupEndpointsMockMvcTests {
         ArrayList<String> list = new ArrayList<>(defaultExternalMembers);
         assertThat(list.remove(displayName + "|" + externalGroup)).isTrue();
         defaultExternalMembers = list;
-        assertThat(defaultExternalMembers.size()).isEqualTo(previousSize - 1);
+        assertThat(defaultExternalMembers).hasSize(previousSize - 1);
         checkGetExternalGroups();
     }
 
@@ -802,7 +799,7 @@ class ScimGroupEndpointsMockMvcTests {
         ArrayList<String> list = new ArrayList<>(defaultExternalMembers);
         assertThat(list.remove(displayName + "|" + externalGroup)).isTrue();
         defaultExternalMembers = list;
-        assertThat(defaultExternalMembers.size()).isEqualTo(previousSize - 1);
+        assertThat(defaultExternalMembers).hasSize(previousSize - 1);
         checkGetExternalGroups();
     }
 
@@ -840,7 +837,7 @@ class ScimGroupEndpointsMockMvcTests {
         ArrayList<String> list = new ArrayList<>(defaultExternalMembers);
         assertThat(list.remove(displayName + "|" + externalGroup)).isTrue();
         defaultExternalMembers = list;
-        assertThat(defaultExternalMembers.size()).isEqualTo(previousSize - 1);
+        assertThat(defaultExternalMembers).hasSize(previousSize - 1);
         checkGetExternalGroups();
     }
 
@@ -869,7 +866,7 @@ class ScimGroupEndpointsMockMvcTests {
         ArrayList<String> list = new ArrayList<>(defaultExternalMembers);
         assertThat(list.remove(displayName + "|" + externalGroup)).isTrue();
         defaultExternalMembers = list;
-        assertThat(defaultExternalMembers.size()).isEqualTo(previousSize - 1);
+        assertThat(defaultExternalMembers).hasSize(previousSize - 1);
         checkGetExternalGroups();
     }
 
@@ -967,13 +964,11 @@ class ScimGroupEndpointsMockMvcTests {
         });
         Set<String> retrievedMembers = listMembers.stream().map(JsonUtils::writeValueAsString).collect(Collectors.toSet());
 
-        Matcher<Iterable<? extends String>> containsExpectedMembers = containsInAnyOrder(
+        assertThat(retrievedMembers).contains(
                 JsonUtils.writeValueAsString(new ScimGroupMember(innerGroup.getId(), ScimGroupMember.Type.GROUP)),
                 JsonUtils.writeValueAsString(new ScimGroupMember(secondUser.getId(), ScimGroupMember.Type.USER)),
                 JsonUtils.writeValueAsString(new ScimGroupMember(scimUser.getId(), ScimGroupMember.Type.USER))
         );
-
-        assertThat(retrievedMembers, containsExpectedMembers);
     }
 
     @Test
@@ -1001,13 +996,11 @@ class ScimGroupEndpointsMockMvcTests {
         });
         Set<String> retrievedMembers = listMembers.stream().map(JsonUtils::writeValueAsString).collect(Collectors.toSet());
 
-        Matcher<Iterable<? extends String>> containsExpectedMembers = containsInAnyOrder(
+        assertThat(retrievedMembers).contains(
                 JsonUtils.writeValueAsString(new ScimGroupMember(innerGroup)),
                 JsonUtils.writeValueAsString(new ScimGroupMember(secondUser)),
                 JsonUtils.writeValueAsString(new ScimGroupMember(scimUser))
         );
-
-        assertThat(retrievedMembers, containsExpectedMembers);
     }
 
     @Test
@@ -1181,24 +1174,24 @@ class ScimGroupEndpointsMockMvcTests {
         createGroup(null, "internal.read", "external-group-name", "other-origin").andExpect(status().isCreated());
 
         //get all results
-        assertThat(performExternalGroupFilter(getListExternalGroupMethod(), HttpStatus.OK).size()).isEqualTo(6);
+        assertThat(performExternalGroupFilter(getListExternalGroupMethod(), HttpStatus.OK)).hasSize(6);
 
         //filter using origin parameter
-        assertThat(performExternalGroupFilter(getListExternalGroupMethod().param("origin", "other-origin"), HttpStatus.OK).size()).isEqualTo(1);
-        assertThat(performExternalGroupFilter(getListExternalGroupMethod().param("origin", OriginKeys.LDAP), HttpStatus.OK).size()).isEqualTo(5);
+        assertThat(performExternalGroupFilter(getListExternalGroupMethod().param("origin", "other-origin"), HttpStatus.OK)).hasSize(1);
+        assertThat(performExternalGroupFilter(getListExternalGroupMethod().param("origin", OriginKeys.LDAP), HttpStatus.OK)).hasSize(5);
 
         //filter using externalGroup parameter
-        assertThat(performExternalGroupFilter(getListExternalGroupMethod().param("externalGroup", "external-group-name"), HttpStatus.OK).size()).isEqualTo(1);
+        assertThat(performExternalGroupFilter(getListExternalGroupMethod().param("externalGroup", "external-group-name"), HttpStatus.OK)).hasSize(1);
 
         //filter using both
-        assertThat(performExternalGroupFilter(getListExternalGroupMethod().param("externalGroup", "external-group-name").param("origin", OriginKeys.LDAP), HttpStatus.OK).size()).isEqualTo(0);
-        assertThat(performExternalGroupFilter(getListExternalGroupMethod().param("externalGroup", "external-group-name").param("origin", "other-origin"), HttpStatus.OK).size()).isEqualTo(1);
+        assertThat(performExternalGroupFilter(getListExternalGroupMethod().param("externalGroup", "external-group-name").param("origin", OriginKeys.LDAP), HttpStatus.OK)).isEmpty();
+        assertThat(performExternalGroupFilter(getListExternalGroupMethod().param("externalGroup", "external-group-name").param("origin", "other-origin"), HttpStatus.OK)).hasSize(1);
 
         //filter using filter
-        assertThat(performExternalGroupFilter(getListExternalGroupMethod().param("filter", "externalGroup eq \"external-group-name\""), HttpStatus.OK).size()).isEqualTo(1);
-        assertThat(performExternalGroupFilter(getListExternalGroupMethod().param("filter", "origin eq \"ldap\""), HttpStatus.OK).size()).isEqualTo(5);
-        assertThat(performExternalGroupFilter(getListExternalGroupMethod().param("filter", "externalGroup eq \"external-group-name\" and origin eq \"ldap\""), HttpStatus.OK).size()).isEqualTo(0);
-        assertThat(performExternalGroupFilter(getListExternalGroupMethod().param("filter", "externalGroup eq \"external-group-name\" and origin eq \"other-origin\""), HttpStatus.OK).size()).isEqualTo(1);
+        assertThat(performExternalGroupFilter(getListExternalGroupMethod().param("filter", "externalGroup eq \"external-group-name\""), HttpStatus.OK)).hasSize(1);
+        assertThat(performExternalGroupFilter(getListExternalGroupMethod().param("filter", "origin eq \"ldap\""), HttpStatus.OK)).hasSize(5);
+        assertThat(performExternalGroupFilter(getListExternalGroupMethod().param("filter", "externalGroup eq \"external-group-name\" and origin eq \"ldap\""), HttpStatus.OK)).isEmpty();
+        assertThat(performExternalGroupFilter(getListExternalGroupMethod().param("filter", "externalGroup eq \"external-group-name\" and origin eq \"other-origin\""), HttpStatus.OK)).hasSize(1);
 
         //invalid parameter combinations
         performExternalGroupFilter(getListExternalGroupMethod().param("filter", "origin eq \"ldap\"").param("origin", "value"), HttpStatus.BAD_REQUEST);
@@ -1305,7 +1298,7 @@ class ScimGroupEndpointsMockMvcTests {
         }
         members = new SearchResults<>((List<String>) map.get("schemas"), memberList, startIndex, itemsPerPage, totalResults);
         assertThat(members).isNotNull();
-        assertThat(members.getResources().size()).isEqualTo(defaultExternalMembers.size());
+        assertThat(members.getResources()).hasSameSizeAs(defaultExternalMembers);
         validateMembers(defaultExternalMembers, members.getResources());
     }
 
@@ -1326,7 +1319,7 @@ class ScimGroupEndpointsMockMvcTests {
         for (String s : expected) {
             String[] data = s.split("\\|");
             assertThat(data).isNotNull();
-            assertThat(data.length).isEqualTo(2);
+            assertThat(data).hasSize(2);
             String displayName = data[0];
             String externalId = data[1];
             ScimGroupExternalMember mbr = new ScimGroupExternalMember("N/A", externalId);
@@ -1352,7 +1345,7 @@ class ScimGroupEndpointsMockMvcTests {
                 }
             }
             assertThat(found).as("Did not find expected external group mapping:" + s).isTrue();
-            assertThat(actual.size()).as("The result set must contain exactly as many items as expected").isEqualTo(expected.size());
+            assertThat(actual).as("The result set must contain exactly as many items as expected").hasSameSizeAs(expected);
         }
     }
 

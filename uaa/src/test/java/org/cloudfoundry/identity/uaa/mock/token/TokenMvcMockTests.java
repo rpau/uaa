@@ -131,13 +131,8 @@ import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.REQUEST_T
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.TokenFormat.OPAQUE;
 import static org.cloudfoundry.identity.uaa.web.UaaSavedRequestAwareAuthenticationSuccessHandler.FORM_REDIRECT_PARAMETER;
 import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.hasKey;
-import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.startsWith;
-import static org.hamcrest.Matchers.stringContainsInOrder;
 import static org.springframework.http.HttpHeaders.ACCEPT;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED;
@@ -1243,8 +1238,8 @@ public class TokenMvcMockTests extends AbstractTokenMockMvcTests {
         // zone context needs to be set again because MVC calls mutate it
         IdentityZoneHolder.set(testZone);
 
-        assertThat(body).as("Token body must not be null.").isNotNull();
-        assertThat(body, stringContainsInOrder(Arrays.asList(ACCESS_TOKEN, REFRESH_TOKEN)));
+        assertThat(body).as("Token body must not be null.").isNotNull()
+                .contains(ACCESS_TOKEN, REFRESH_TOKEN);
         Map<String, Object> map = JsonUtils.readValue(body, new TypeReference<Map<String, Object>>() {
         });
         String accessToken = (String) map.get("access_token");
@@ -3746,7 +3741,7 @@ public class TokenMvcMockTests extends AbstractTokenMockMvcTests {
         setUpClients(clientId, scopes, scopes, GRANT_TYPES, true);
 
         String body = mockMvc.perform(post("/oauth/token")
-                .accept(MediaType.APPLICATION_JSON_VALUE)
+                .accept(APPLICATION_JSON_VALUE)
                 .with(httpBasic(clientId, SECRET))
                 .param(GRANT_TYPE, GRANT_TYPE_PASSWORD)
                 .param(CLIENT_ID, clientId)
@@ -3762,10 +3757,10 @@ public class TokenMvcMockTests extends AbstractTokenMockMvcTests {
                 JsonUtils.readValue(accessTokenHeaderJson, new TypeReference<Map<String, Object>>() {
                 });
 
-        assertThat(headerMap).containsEntry("jku", "https://localhost:8080/uaa/token_keys");
-        // `enc` and `iv` are not required by JWT or OAuth spec, so should not be set and thus not returned in the token's header
-        assertThat(headerMap, not(hasKey("enc")));
-        assertThat(headerMap, not(hasKey("iv")));
+        assertThat(headerMap).containsEntry("jku", "https://localhost:8080/uaa/token_keys")
+                // `enc` and `iv` are not required by JWT or OAuth spec, so should not be set and thus not returned in the token's header
+                .doesNotContainKey("enc")
+                .doesNotContainKey("iv");
     }
 
     @Test
@@ -3775,7 +3770,7 @@ public class TokenMvcMockTests extends AbstractTokenMockMvcTests {
         setUpClients(clientId, scopes, scopes, GRANT_TYPES, true);
 
         String body = mockMvc.perform(post("/oauth/token")
-                .accept(MediaType.APPLICATION_JSON_VALUE)
+                .accept(APPLICATION_JSON_VALUE)
                 .with(httpBasic(clientId, SECRET))
                 .param(GRANT_TYPE, GRANT_TYPE_PASSWORD)
                 .param(CLIENT_ID, clientId)
@@ -3793,10 +3788,10 @@ public class TokenMvcMockTests extends AbstractTokenMockMvcTests {
                 JsonUtils.readValue(refreshTokenHeaderJson, new TypeReference<Map<String, Object>>() {
                 });
 
-        assertThat(headerMap).containsEntry("jku", "https://localhost:8080/uaa/token_keys");
-        // `enc` and `iv` are not required by JWT or OAuth spec, so should not be set and thus not returned in the token's header
-        assertThat(headerMap, not(hasKey("enc")));
-        assertThat(headerMap, not(hasKey("iv")));
+        assertThat(headerMap).containsEntry("jku", "https://localhost:8080/uaa/token_keys")
+                // `enc` and `iv` are not required by JWT or OAuth spec, so should not be set and thus not returned in the token's header
+                .doesNotContainKey("enc")
+                .doesNotContainKey("iv");
     }
 
     @Test
@@ -3806,7 +3801,7 @@ public class TokenMvcMockTests extends AbstractTokenMockMvcTests {
         setUpClients(clientId, scopes, scopes, GRANT_TYPES, true);
 
         String body = mockMvc.perform(post("/oauth/token")
-                .accept(MediaType.APPLICATION_JSON_VALUE)
+                .accept(APPLICATION_JSON_VALUE)
                 .with(httpBasic(clientId, SECRET))
                 .param(GRANT_TYPE, GRANT_TYPE_PASSWORD)
                 .param(CLIENT_ID, clientId)
@@ -3825,10 +3820,10 @@ public class TokenMvcMockTests extends AbstractTokenMockMvcTests {
                 JsonUtils.readValue(idTokenHeaderJson, new TypeReference<Map<String, Object>>() {
                 });
 
-        assertThat(headerMap).containsEntry("jku", "https://localhost:8080/uaa/token_keys");
-        // `enc` and `iv` are not required by JWT or OAuth spec, so should not be set and thus not returned in the token's header
-        assertThat(headerMap, not(hasKey("enc")));
-        assertThat(headerMap, not(hasKey("iv")));
+        assertThat(headerMap).containsEntry("jku", "https://localhost:8080/uaa/token_keys")
+                // `enc` and `iv` are not required by JWT or OAuth spec, so should not be set and thus not returned in the token's header
+                .doesNotContainKey("enc")
+                .doesNotContainKey("iv");
     }
 
     @Test
@@ -4025,7 +4020,7 @@ public class TokenMvcMockTests extends AbstractTokenMockMvcTests {
         String state = generator.generate();
         MockHttpServletRequestBuilder authRequest = get("/oauth/authorize")
                 .session(session)
-                .param(OAuth2Utils.RESPONSE_TYPE, "token")
+                .param(RESPONSE_TYPE, "token")
                 .param(SCOPE, "openid")
                 .param(OAuth2Utils.STATE, state)
                 .param(OAuth2Utils.CLIENT_ID, clientId)
@@ -4046,8 +4041,8 @@ public class TokenMvcMockTests extends AbstractTokenMockMvcTests {
 
         assertThat(locationUri).isEqualTo(redirectUri.split("#")[0]);
         String[] locationParams = locationToken.split("&");
-        assertThat(Arrays.asList(locationParams), hasItem(is("token_type=bearer")));
-        assertThat(Arrays.asList(locationParams), hasItem(startsWith("access_token=")));
+        assertThat(locationParams).contains("token_type=bearer")
+                .anyMatch(s -> s.startsWith("access_token="));
     }
 
     private static void containsExactlyOneInstance(String string, String substring) {

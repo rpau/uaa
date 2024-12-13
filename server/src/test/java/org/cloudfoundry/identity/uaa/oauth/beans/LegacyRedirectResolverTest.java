@@ -8,9 +8,6 @@ import org.apache.logging.log4j.core.appender.AbstractAppender;
 import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
 import org.cloudfoundry.identity.uaa.oauth.common.exceptions.RedirectMismatchException;
 import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetails;
-import org.hamcrest.Description;
-import org.hamcrest.Matcher;
-import org.hamcrest.TypeSafeMatcher;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -30,9 +27,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_AUTHORIZATION_CODE;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -58,30 +52,14 @@ class LegacyRedirectResolverTest {
         return LegacyRedirectResolver.MSG_TEMPLATE.formatted(clientId, requested, configured);
     }
 
-    private static Matcher<LogEvent> warning(String msg) {
-        return new LogEventMatcher(WARN, msg, "a warning about implicit redirect matching");
-    }
+    private void assertThatMessageWasLogged(
+            final List<LogEvent> logEvents,
+            final Level expectedLevel,
+            final String expectedMessage) {
 
-    private static class LogEventMatcher extends TypeSafeMatcher<LogEvent> {
-        private Level level;
-        private Matcher<String> msgMatcher;
-        private String matchFail;
-
-        LogEventMatcher(Level level, String msg, String matchFail) {
-            this.level = level;
-            this.msgMatcher = is(msg);
-            this.matchFail = matchFail;
-        }
-
-        @Override
-        protected boolean matchesSafely(LogEvent event) {
-            return event.getLevel().equals(level) && msgMatcher.matches(event.getMessage().getFormattedMessage());
-        }
-
-        @Override
-        public void describeTo(Description description) {
-            description.appendText(matchFail);
-        }
+        assertThat(logEvents).filteredOn(l -> l.getLevel().equals(expectedLevel))
+                .extracting(l -> l.getMessage().getFormattedMessage())
+                .contains(expectedMessage);
     }
 
     @Nested
@@ -117,9 +95,7 @@ class LegacyRedirectResolverTest {
             ClientDetails client = createClient("foo", configuredRedirectUri);
 
             resolver.resolveRedirect(requestedRedirectUri, client);
-            assertThat(logEvents, hasItem(
-                    warning(expectedWarning(client.getClientId(), requestedRedirectUri, configuredRedirectUri)))
-            );
+            assertThatMessageWasLogged(logEvents, WARN, expectedWarning(client.getClientId(), requestedRedirectUri, configuredRedirectUri));
         }
 
         @Test
@@ -137,9 +113,7 @@ class LegacyRedirectResolverTest {
             ClientDetails client = createClient("foo", configuredRedirectUri);
 
             resolver.resolveRedirect(requestedRedirectUri, client);
-            assertThat(logEvents, hasItem(
-                    warning(expectedWarning(client.getClientId(), requestedRedirectUri, configuredRedirectUri)))
-            );
+            assertThatMessageWasLogged(logEvents, WARN, expectedWarning(client.getClientId(), requestedRedirectUri, configuredRedirectUri));
         }
 
         @Test
@@ -149,9 +123,7 @@ class LegacyRedirectResolverTest {
             ClientDetails client = createClient("foo", configuredRedirectUri);
 
             resolver.resolveRedirect(requestedRedirectUri, client);
-            assertThat(logEvents, hasItem(
-                    warning(expectedWarning(client.getClientId(), requestedRedirectUri, configuredRedirectUri)))
-            );
+            assertThatMessageWasLogged(logEvents, WARN, expectedWarning(client.getClientId(), requestedRedirectUri, configuredRedirectUri));
         }
 
         @Test
@@ -161,9 +133,7 @@ class LegacyRedirectResolverTest {
             ClientDetails client = createClient("foo", configuredRedirectUri);
 
             resolver.resolveRedirect(requestedRedirectUri, client);
-            assertThat(logEvents, hasItem(
-                    warning(expectedWarning(client.getClientId(), requestedRedirectUri, configuredRedirectUri)))
-            );
+            assertThatMessageWasLogged(logEvents, WARN, expectedWarning(client.getClientId(), requestedRedirectUri, configuredRedirectUri));
         }
 
         @Test
@@ -173,7 +143,7 @@ class LegacyRedirectResolverTest {
             ClientDetails client = createClient("foo", configuredRedirectUri);
 
             resolver.resolveRedirect(requestedRedirectUri, client);
-            assertThat(logEvents, hasItem(warning(expectedWarning(client.getClientId(), requestedRedirectUri, configuredRedirectUri))));
+            assertThatMessageWasLogged(logEvents, WARN, expectedWarning(client.getClientId(), requestedRedirectUri, configuredRedirectUri));
         }
 
         @Test
@@ -183,7 +153,7 @@ class LegacyRedirectResolverTest {
             ClientDetails client = createClient("foo", configuredRedirectUri);
 
             resolver.resolveRedirect(requestedRedirectUri, client);
-            assertThat(logEvents, hasItem(warning(expectedWarning(client.getClientId(), requestedRedirectUri, configuredRedirectUri))));
+            assertThatMessageWasLogged(logEvents, WARN, expectedWarning(client.getClientId(), requestedRedirectUri, configuredRedirectUri));
         }
 
         @Test
@@ -193,9 +163,7 @@ class LegacyRedirectResolverTest {
             ClientDetails client = createClient("foo", configuredRedirectUri);
 
             resolver.resolveRedirect(requestedRedirectUri, client);
-            assertThat(logEvents, hasItem(
-                    warning(expectedWarning(client.getClientId(), requestedRedirectUri, configuredRedirectUri)))
-            );
+            assertThatMessageWasLogged(logEvents, WARN, expectedWarning(client.getClientId(), requestedRedirectUri, configuredRedirectUri));
         }
 
         @Test
@@ -208,8 +176,8 @@ class LegacyRedirectResolverTest {
             ClientDetails client = createClient("foo", configuredExplicitRedirectUri, configuredImplicitRedirectUri);
 
             resolver.resolveRedirect(requestedRedirectUri, client);
-            assertThat(logEvents, hasItem(warning(expectedWarning(client.getClientId(), requestedRedirectUri, configuredImplicitRedirectUri))));
-            assertThat(logEvents, hasItem(warning(expectedWarning(client.getClientId(), requestedRedirectUri, configuredExplicitRedirectUri))));
+            assertThatMessageWasLogged(logEvents, WARN, expectedWarning(client.getClientId(), requestedRedirectUri, configuredImplicitRedirectUri));
+            assertThatMessageWasLogged(logEvents, WARN, expectedWarning(client.getClientId(), requestedRedirectUri, configuredExplicitRedirectUri));
         }
 
         @Test
@@ -222,7 +190,8 @@ class LegacyRedirectResolverTest {
             ClientDetails client = createClient("foo", configuredOtherRedirectUri, requestedRedirectUri, configuredImplicitRedirectUri);
 
             resolver.resolveRedirect(requestedRedirectUri, client);
-            assertThat(logEvents, hasItem(warning(expectedWarning(client.getClientId(), requestedRedirectUri, configuredImplicitRedirectUri))));
+            assertThatMessageWasLogged(logEvents, WARN, expectedWarning(client.getClientId(), requestedRedirectUri, configuredImplicitRedirectUri));
+
             // configured uri which matches both old and new resolvers is not logged
             // and non-matching configured uri is also not logged
             assertThat(logEvents).hasSize(1);
@@ -236,10 +205,7 @@ class LegacyRedirectResolverTest {
             ClientDetails client = createClient("foo", configuredRedirectUri);
 
             resolver.resolveRedirect(requestedRedirectUri, client);
-
-            assertThat(logEvents, hasItem(
-                    warning(expectedWarning(client.getClientId(), "https://example.com/path?foo=REDACTED&foo=REDACTED&baz=REDACTED", configuredRedirectUri)))
-            );
+            assertThatMessageWasLogged(logEvents, WARN, expectedWarning(client.getClientId(), "https://example.com/path?foo=REDACTED&foo=REDACTED&baz=REDACTED", configuredRedirectUri));
         }
 
         @Test
@@ -250,10 +216,7 @@ class LegacyRedirectResolverTest {
             ClientDetails client = createClient("front-end-app", configuredRedirectUri);
 
             resolver.resolveRedirect(requestedRedirectUri, client);
-
-            assertThat(logEvents, hasItem(
-                    warning(expectedWarning(client.getClientId(), "https://example.com/a/b#REDACTED", configuredRedirectUri)))
-            );
+            assertThatMessageWasLogged(logEvents, WARN, expectedWarning(client.getClientId(), "https://example.com/a/b#REDACTED", configuredRedirectUri));
         }
 
         @Test
@@ -264,10 +227,7 @@ class LegacyRedirectResolverTest {
             ClientDetails client = createClient("myAppIsCool", configuredRedirectUri);
 
             resolver.resolveRedirect(requestedRedirectUri, client);
-
-            assertThat(logEvents, hasItem(
-                    warning(expectedWarning(client.getClientId(), "https://REDACTED:REDACTED@example.com/", configuredRedirectUri)))
-            );
+            assertThatMessageWasLogged(logEvents, WARN, expectedWarning(client.getClientId(), "https://REDACTED:REDACTED@example.com/", configuredRedirectUri));
         }
 
         @Test

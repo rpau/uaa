@@ -42,9 +42,6 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.constants.OriginKeys.LDAP;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasKey;
-import static org.hamcrest.Matchers.not;
 
 /**
  * @author Luke Taylor
@@ -116,9 +113,9 @@ class RemoteAuthenticationEndpointTests {
             assertThat(user)
                     .containsKey("id")
                     .containsKey("userName")
-                    .containsKey(OriginKeys.ORIGIN);
-            assertThat(user, not(hasKey("name")));
-            assertThat(user, not(hasKey("emails")));
+                    .containsKey(OriginKeys.ORIGIN)
+                    .doesNotContainKey("name")
+                    .doesNotContainKey("emails");
             if (user.get("userName").equals(username)) {
                 found = true;
                 assertThat(user).containsEntry(OriginKeys.ORIGIN, origin);

@@ -6,9 +6,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThan;
-import static org.hamcrest.Matchers.hasSize;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 
 @DisabledIfProfile({"mysql", "postgresql"})
 class HsqlDbMigrationIntegrationTest extends DbMigrationIntegrationTestParent {
@@ -28,20 +26,19 @@ class HsqlDbMigrationIntegrationTest extends DbMigrationIntegrationTestParent {
             @Override
             public void runAssertions() throws Exception {
                 int count = jdbcTemplate.queryForObject(checkPrimaryKeyExists, Integer.class, getDatabaseCatalog(), "OAUTH_CODE");
-                assertThat(count).as("OAUTH_CODE is missing primary key").isEqualTo(1);
+                assertThat(count).as("OAUTH_CODE is missing primary key").isOne();
 
                 count = jdbcTemplate.queryForObject(checkPrimaryKeyExists, Integer.class, getDatabaseCatalog(), "GROUP_MEMBERSHIP");
-                assertThat(count).as("GROUP_MEMBERSHIP is missing primary key").isEqualTo(1);
+                assertThat(count).as("GROUP_MEMBERSHIP is missing primary key").isOne();
 
                 count = jdbcTemplate.queryForObject(checkPrimaryKeyExists, Integer.class, getDatabaseCatalog(), "SEC_AUDIT");
-                assertThat(count).as("SEC_AUDIT is missing primary key").isEqualTo(1);
+                assertThat(count).as("SEC_AUDIT is missing primary key").isOne();
 
                 count = jdbcTemplate.queryForObject(checkPrimaryKeyExists, Integer.class, getDatabaseCatalog(), "EXTERNAL_GROUP_MAPPING");
-                assertThat(count).as("EXTERNAL_GROUP_MAPPING is missing primary key").isEqualTo(1);
+                assertThat(count).as("EXTERNAL_GROUP_MAPPING is missing primary key").isOne();
 
-                Assertions.assertDoesNotThrow(() -> {
-                    jdbcTemplate.execute(insertNewOauthCodeRecord);
-                }, "oauth_code table should auto increment primary key when inserting data.");
+                assertThatNoException().as("oauth_code table should auto increment primary key when inserting data.")
+                        .isThrownBy(() -> jdbcTemplate.execute(insertNewOauthCodeRecord));
             }
         };
 
@@ -53,10 +50,10 @@ class HsqlDbMigrationIntegrationTest extends DbMigrationIntegrationTestParent {
         flyway.migrate();
 
         List<String> tableNames = jdbcTemplate.queryForList(getAllTableNames, String.class, getDatabaseCatalog());
-        assertThat(tableNames, hasSize(greaterThan(0)));
+        assertThat(tableNames).isNotEmpty();
         for (String tableName : tableNames) {
             int count = jdbcTemplate.queryForObject(checkPrimaryKeyExists, Integer.class, getDatabaseCatalog(), tableName);
-            assertThat(count).as("%s is missing primary key".formatted(tableName)).isGreaterThanOrEqualTo(1);
+            assertThat(count).as("%s is missing primary key".formatted(tableName)).isPositive();
         }
     }
 }

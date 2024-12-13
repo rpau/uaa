@@ -7,12 +7,12 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.HamcrestCondition.matching;
 import static org.cloudfoundry.identity.uaa.test.JsonMatcher.isJsonFile;
 import static org.cloudfoundry.identity.uaa.test.JsonMatcher.isJsonString;
 import static org.cloudfoundry.identity.uaa.test.JsonTranslation.WithAllNullFields.EXPECT_EMPTY_JSON;
 import static org.cloudfoundry.identity.uaa.test.JsonTranslation.WithAllNullFields.EXPECT_NULLS_IN_JSON;
 import static org.cloudfoundry.identity.uaa.test.ModelTestUtils.getResourceAsString;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 public abstract class JsonTranslation<T> {
@@ -64,7 +64,7 @@ public abstract class JsonTranslation<T> {
 
         String actual = objectMapper.writeValueAsString(subject);
 
-        assertThat(actual, isJsonFile(subjectClass, jsonFileName));
+        assertThat(actual).is(matching(isJsonFile(subjectClass, jsonFileName)));
     }
 
     @Test
@@ -86,8 +86,7 @@ public abstract class JsonTranslation<T> {
         validate();
 
         String actual = objectMapper.writeValueAsString(subjectClass.newInstance());
-
-        assertThat(actual, isJsonString("{}"));
+        assertThat(actual).is(matching(isJsonString("{}")));
     }
 
     @Test
@@ -101,6 +100,6 @@ public abstract class JsonTranslation<T> {
         assertThat(subjectClass.getResourceAsStream(fileName)).as("file <%s/%s> must exist on classpath, or choose a different %s".formatted(subjectClass.getPackage().getName().replace(".", "/"), fileName, WithAllNullFields.class.getSimpleName())).isNotNull();
 
         String actual = objectMapper.writeValueAsString(subjectClass.newInstance());
-        assertThat(actual, isJsonFile(this.getClass(), fileName));
+        assertThat(actual).is(matching(isJsonFile(this.getClass(), fileName)));
     }
 }

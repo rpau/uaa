@@ -6,7 +6,6 @@ import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
 import org.cloudfoundry.identity.uaa.codestore.ExpiringCode;
 import org.cloudfoundry.identity.uaa.codestore.ExpiringCodeStore;
 import org.cloudfoundry.identity.uaa.codestore.ExpiringCodeType;
-import org.cloudfoundry.identity.uaa.constants.OriginKeys;
 import org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils;
 import org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils;
 import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetails;
@@ -361,8 +360,8 @@ class InvitationsEndpointMockMvcTests {
 
         String userToken = MockMvcUtils.getScimInviteUserToken(mockMvc, clientId, clientSecret, null, "admin", "adminsecret");
         InvitationsResponse response = sendRequestWithTokenAndReturnResponse(webApplicationContext, mockMvc, userToken, null, clientId, "example.com", email);
-        assertThat(response.getNewInvites().size()).isEqualTo(0);
-        assertThat(response.getFailedInvites().size()).isEqualTo(1);
+        assertThat(response.getNewInvites()).isEmpty();
+        assertThat(response.getFailedInvites()).hasSize(1);
         assertThat(response.getFailedInvites().get(0).getErrorCode()).isEqualTo("user.ambiguous");
     }
 
@@ -373,8 +372,8 @@ class InvitationsEndpointMockMvcTests {
         String invalidEmail3 = "user1example@invalid";
         String redirectUrl = "test.com";
         InvitationsResponse response = sendRequestWithTokenAndReturnResponse(webApplicationContext, mockMvc, scimInviteToken, null, clientId, redirectUrl, invalidEmail1, invalidEmail2, invalidEmail3);
-        assertThat(response.getNewInvites().size()).isEqualTo(0);
-        assertThat(response.getFailedInvites().size()).isEqualTo(3);
+        assertThat(response.getNewInvites()).isEmpty();
+        assertThat(response.getFailedInvites()).hasSize(3);
 
         assertThat(response.getFailedInvites().get(0).getErrorCode()).isEqualTo("email.invalid");
         assertThat(response.getFailedInvites().get(1).getErrorCode()).isEqualTo("email.invalid");
@@ -443,15 +442,15 @@ class InvitationsEndpointMockMvcTests {
 
     private static void sendRequestWithToken(WebApplicationContext webApplicationContext, MockMvc mockMvc, String token, String clientId, String... emails) throws Exception {
         InvitationsResponse response = sendRequestWithTokenAndReturnResponse(webApplicationContext, mockMvc, token, null, clientId, "example.com", emails);
-        assertThat(response.getNewInvites().size()).isEqualTo(emails.length);
-        assertThat(response.getFailedInvites().size()).isEqualTo(0);
+        assertThat(response.getNewInvites()).hasSameSizeAs(emails);
+        assertThat(response.getFailedInvites()).isEmpty();
     }
 
     private static void assertResponseAndCodeCorrect(ExpiringCodeStore expiringCodeStore, String[] emails, String redirectUrl, IdentityZone zone, InvitationsResponse response, ClientDetails clientDetails) {
         for (int i = 0; i < emails.length; i++) {
-            assertThat(response.getNewInvites().size()).isEqualTo(emails.length);
+            assertThat(response.getNewInvites()).hasSameSizeAs(emails);
             assertThat(response.getNewInvites().get(i).getEmail()).isEqualTo(emails[i]);
-            assertThat(response.getNewInvites().get(i).getOrigin()).isEqualTo(OriginKeys.UAA);
+            assertThat(response.getNewInvites().get(i).getOrigin()).isEqualTo(UAA);
             assertThat(response.getNewInvites().get(i).getUserId()).isNotNull();
             assertThat(response.getNewInvites().get(i).getErrorCode()).isNull();
             assertThat(response.getNewInvites().get(i).getErrorMessage()).isNull();
@@ -475,12 +474,12 @@ class InvitationsEndpointMockMvcTests {
             assertThat(expiringCode.getIntent()).isEqualTo(ExpiringCodeType.INVITATION.name());
             Map<String, String> data = readValue(expiringCode.getData(), new TypeReference<Map<String, String>>() {
             });
-            assertThat(data).isNotNull();
-            assertThat(data.get(USER_ID)).isNotNull();
-            assertThat(data.get(EMAIL)).isEqualTo(emails[i]);
-            assertThat(data.get(ORIGIN)).isEqualTo(OriginKeys.UAA);
-            assertThat(data.get(CLIENT_ID)).isEqualTo(clientDetails.getClientId());
-            assertThat(data.get(REDIRECT_URI)).isEqualTo(redirectUrl);
+            assertThat(data).isNotNull()
+                    .containsKey(USER_ID)
+                    .containsEntry(EMAIL, emails[i])
+                    .containsEntry(ORIGIN, UAA)
+                    .containsEntry(CLIENT_ID, clientDetails.getClientId())
+                    .containsEntry(REDIRECT_URI, redirectUrl);
         }
     }
 

@@ -9,7 +9,6 @@ import org.cloudfoundry.identity.uaa.scim.ScimGroup;
 import org.cloudfoundry.identity.uaa.scim.ScimGroupProvisioning;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneHolder;
 import org.cloudfoundry.identity.uaa.zone.InMemoryMultitenantClientServices;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -24,9 +23,6 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasEntry;
-import static org.hamcrest.Matchers.not;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -66,8 +62,8 @@ class AccessControllerTests {
         Authentication auth = UaaAuthenticationTestFactory.getAuthentication("foo@bar.com", "Foo Bar", "foo@bar.com");
         controller.confirm(model, request, auth, new SimpleSessionStatus());
         Map<String, Object> options = (Map<String, Object>) ((Map<String, Object>) model.get("options")).get("confirm");
-        assertThat(options.get("location")).isEqualTo("https://foo/oauth/authorize");
-        assertThat(options.get("path")).isEqualTo("/oauth/authorize");
+        assertThat(options).containsEntry("location", "https://foo/oauth/authorize")
+                .containsEntry("path", "/oauth/authorize");
     }
 
     @Test
@@ -82,7 +78,7 @@ class AccessControllerTests {
 
         controller.confirm(model, new MockHttpServletRequest(), auth, new SimpleSessionStatus());
 
-        assertThat(model.get("client_display_name")).isEqualTo("The Client Name");
+        assertThat(model).containsEntry("client_display_name", "The Client Name");
     }
 
     @Test
@@ -113,7 +109,7 @@ class AccessControllerTests {
 
         controller.confirm(model, new MockHttpServletRequest(), auth, new SimpleSessionStatus());
         List<Map<String, String>> undecidedScopeDetails = (List<Map<String, String>>) model.get("undecided_scopes");
-        assertThat(undecidedScopeDetails, not(Matchers.hasItem(hasEntry("text", "resource.scope1"))));
-        assertThat(undecidedScopeDetails, not(Matchers.hasItem(hasEntry("text", "resource.scope2"))));
+        assertThat(undecidedScopeDetails).noneSatisfy(e -> assertThat(e).containsEntry("text", "resource.scope1"))
+                .noneSatisfy(e -> assertThat(e).containsEntry("text", "resource.scope2"));
     }
 }

@@ -8,9 +8,6 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThan;
-import static org.hamcrest.Matchers.hasSize;
 
 @EnabledIfProfile("mysql")
 class MySqlDbMigrationIntegrationTest extends DbMigrationIntegrationTestParent {
@@ -91,10 +88,10 @@ class MySqlDbMigrationIntegrationTest extends DbMigrationIntegrationTestParent {
         flyway.migrate();
 
         List<String> tableNames = jdbcTemplate.queryForList(getAllTableNames, String.class, getDatabaseCatalog());
-        assertThat(tableNames, hasSize(greaterThan(0)));
+        assertThat(tableNames).isNotEmpty();
         for (String tableName : tableNames) {
             int count = jdbcTemplate.queryForObject(checkPrimaryKeyExists, Integer.class, getDatabaseCatalog(), tableName);
-            assertThat(count).as("%s is missing primary key".formatted(tableName)).isGreaterThanOrEqualTo(1);
+            assertThat(count).as("%s is missing primary key".formatted(tableName)).isPositive();
         }
     }
 }

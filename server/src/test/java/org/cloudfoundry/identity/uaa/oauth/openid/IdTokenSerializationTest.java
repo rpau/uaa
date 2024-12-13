@@ -6,20 +6,18 @@ import org.joda.time.DateTimeUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.json.BasicJsonTester;
+import org.springframework.boot.test.json.JsonContentAssert;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
-import static com.google.common.collect.Lists.newArrayList;
-import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
-import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasNoJsonPath;
-import static org.hamcrest.CoreMatchers.hasItem;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasItems;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class IdTokenSerializationTest {
+    private final BasicJsonTester json = new BasicJsonTester(getClass());
 
     private IdToken idToken;
 
@@ -37,7 +35,7 @@ class IdTokenSerializationTest {
 
         idToken = new IdToken(
                 "sub",
-                newArrayList("aud"),
+                List.of("aud"),
                 "iss",
                 DateTime.now().toDate(),
                 DateTime.now().toDate(),
@@ -71,38 +69,41 @@ class IdTokenSerializationTest {
     @Test
     void serializingIdToken() {
         String idTokenJsonString = JsonUtils.writeValueAsString(idToken);
-        assertThat(idTokenJsonString, hasJsonPath("acr.values", hasItems("acr1", "acr2")));
-        assertThat(idTokenJsonString, hasJsonPath("amr", hasItems("amr1", "amr2")));
-        assertThat(idTokenJsonString, hasJsonPath("sub"));
-        assertThat(idTokenJsonString, hasJsonPath("given_name"));
-        assertThat(idTokenJsonString, hasJsonPath("family_name"));
-        assertThat(idTokenJsonString, hasJsonPath("phone_number"));
-        assertThat(idTokenJsonString, hasJsonPath("user_attributes"));
-        assertThat(idTokenJsonString, hasJsonPath("previous_logon_time", is(1123)));
-        assertThat(idTokenJsonString, hasJsonPath("iat", is(1)));
-        assertThat(idTokenJsonString, hasJsonPath("exp", is(1)));
-        assertThat(idTokenJsonString, hasJsonPath("auth_time", is(1)));
-        assertThat(idTokenJsonString, hasNoJsonPath("authTime"));
-        assertThat(idTokenJsonString, hasJsonPath("scope", hasItem("openid")));
-        assertThat(idTokenJsonString, hasJsonPath("email_verified", is(true)));
-        assertThat(idTokenJsonString, hasJsonPath("nonce", is("nonce")));
-        assertThat(idTokenJsonString, hasJsonPath("email", is("email")));
-        assertThat(idTokenJsonString, hasJsonPath("cid", is("client_id")));
-        assertThat(idTokenJsonString, hasJsonPath("client_id", is("client_id")));
-        assertThat(idTokenJsonString, hasJsonPath("user_id", is("sub")));
-        assertThat(idTokenJsonString, hasJsonPath("grant_type", is("grant_type")));
-        assertThat(idTokenJsonString, hasJsonPath("user_name", is("username")));
-        assertThat(idTokenJsonString, hasJsonPath("zid", is("myzid")));
-        assertThat(idTokenJsonString, hasJsonPath("origin", is("origin")));
-        assertThat(idTokenJsonString, hasJsonPath("jti", is("some-uuid")));
-        assertThat(idTokenJsonString, hasJsonPath("rev_sig", is("revSig")));
+        JsonContentAssert jsonContentAssert = assertThat(json.from(idTokenJsonString));
+        jsonContentAssert.hasJsonPath("user_id")
+                .hasJsonPath("sub")
+                .hasJsonPath("given_name")
+                .hasJsonPath("family_name")
+                .hasJsonPath("phone_number")
+                .hasJsonPath("user_attributes")
+                .doesNotHaveJsonPath("authTime")
+                .hasJsonPathValue("previous_logon_time", 1123)
+                .hasJsonPathValue("previous_logon_time", 1123)
+                .hasJsonPathValue("iat", 1)
+                .hasJsonPathValue("exp", 1)
+                .hasJsonPathValue("auth_time", 1)
+                .hasJsonPathValue("email_verified", true)
+                .hasJsonPathValue("nonce", "nonce")
+                .hasJsonPathValue("email", "email")
+                .hasJsonPathValue("cid", "client_id")
+                .hasJsonPathValue("client_id", "client_id")
+                .hasJsonPathValue("user_id", "sub")
+                .hasJsonPathValue("grant_type", "grant_type")
+                .hasJsonPathValue("user_name", "username")
+                .hasJsonPathValue("zid", "myzid")
+                .hasJsonPathValue("origin", "origin")
+                .hasJsonPathValue("jti", "some-uuid")
+                .hasJsonPathValue("rev_sig", "revSig");
+        jsonContentAssert.extractingJsonPathArrayValue("acr.values").contains("acr1", "acr2");
+        jsonContentAssert.extractingJsonPathArrayValue("amr").contains("amr1", "amr2");
+        jsonContentAssert.extractingJsonPathArrayValue("scope").contains("openid");
     }
 
     @Test
     void serializingIdTokenOmitNullValues() {
         idToken = new IdToken(
                 "sub",
-                newArrayList("aud"),
+                List.of("aud"),
                 "iss",
                 DateTime.now().toDate(),
                 DateTime.now().toDate(),
@@ -128,16 +129,16 @@ class IdTokenSerializationTest {
                 null);
 
         String idTokenJsonString = JsonUtils.writeValueAsString(idToken);
-
-        assertThat(idTokenJsonString, hasNoJsonPath("given_name"));
-        assertThat(idTokenJsonString, hasNoJsonPath("family_name"));
-        assertThat(idTokenJsonString, hasNoJsonPath("phone_number"));
-        assertThat(idTokenJsonString, hasNoJsonPath("auth_time"));
-        assertThat(idTokenJsonString, hasNoJsonPath("amr"));
-        assertThat(idTokenJsonString, hasNoJsonPath("acr"));
-        assertThat(idTokenJsonString, hasNoJsonPath("zid"));
-        assertThat(idTokenJsonString, hasNoJsonPath("origin"));
-        assertThat(idTokenJsonString, hasNoJsonPath("jti"));
-        assertThat(idTokenJsonString, hasNoJsonPath("rev_sig"));
+        assertThat(json.from(idTokenJsonString))
+                .doesNotHaveJsonPath("given_name")
+                .doesNotHaveJsonPath("family_name")
+                .doesNotHaveJsonPath("phone_number")
+                .doesNotHaveJsonPath("auth_time")
+                .doesNotHaveJsonPath("amr")
+                .doesNotHaveJsonPath("acr")
+                .doesNotHaveJsonPath("zid")
+                .doesNotHaveJsonPath("origin")
+                .doesNotHaveJsonPath("jti")
+                .doesNotHaveJsonPath("rev_sig");
     }
 }

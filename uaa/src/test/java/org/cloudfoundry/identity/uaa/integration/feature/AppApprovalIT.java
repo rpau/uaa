@@ -14,7 +14,6 @@
 package org.cloudfoundry.identity.uaa.integration.feature;
 
 import org.cloudfoundry.identity.uaa.ServerRunningExtension;
-import org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils;
 import org.cloudfoundry.identity.uaa.oauth.client.test.OAuth2ContextConfiguration;
 import org.cloudfoundry.identity.uaa.oauth.client.test.OAuth2ContextExtension;
 import org.cloudfoundry.identity.uaa.resources.SearchResults;
@@ -40,7 +39,6 @@ import org.springframework.web.client.RestOperations;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils.createUnapprovedUser;
-import static org.hamcrest.MatcherAssert.assertThat;
 
 @SpringJUnitConfig(classes = DefaultIntegrationTestConfig.class)
 @OAuth2ContextConfiguration(OAuth2ContextConfiguration.ClientCredentials.class)
@@ -204,8 +202,7 @@ class AppApprovalIT {
         webDriver.findElement(By.xpath("//input[@value='Sign in']")).click();
 
         // Authorize the app for some scopes
-        assertThat(webDriver.findElement(By.className("alert-error")).getText(), IntegrationTestUtils.RegexMatcher.matchesRegex("^Invalid redirect (.*) did not match one of the registered values"));
+        assertThat(webDriver.findElement(By.className("alert-error")).getText())
+                .matches("^Invalid redirect (.*) did not match one of the registered values");
     }
-
-
 }

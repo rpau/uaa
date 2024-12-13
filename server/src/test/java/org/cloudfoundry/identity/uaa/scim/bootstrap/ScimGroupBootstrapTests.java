@@ -10,7 +10,6 @@ import org.cloudfoundry.identity.uaa.scim.jdbc.JdbcScimGroupProvisioning;
 import org.cloudfoundry.identity.uaa.scim.jdbc.JdbcScimUserProvisioning;
 import org.cloudfoundry.identity.uaa.scim.test.TestUtils;
 import org.cloudfoundry.identity.uaa.util.MapCollector;
-import org.cloudfoundry.identity.uaa.util.PredicateMatcher;
 import org.cloudfoundry.identity.uaa.util.TimeServiceImpl;
 import org.cloudfoundry.identity.uaa.util.beans.DbUtils;
 import org.cloudfoundry.identity.uaa.zone.IdentityZone;
@@ -36,7 +35,7 @@ import java.util.Map;
 
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -193,10 +192,10 @@ class ScimGroupBootstrapTests {
 
         List<ScimGroup> bootstrappedGroups = gDB.retrieveAll(IdentityZone.getUaaZoneId());
 
-        assertThat(bootstrappedGroups, PredicateMatcher.has(group -> "pets.cat".equals(group.getDisplayName()) && "Access the cat".equals(group.getDescription())));
-        assertThat(bootstrappedGroups, PredicateMatcher.has(group -> "pets.dog".equals(group.getDisplayName()) && "Dog your data".equals(group.getDescription())));
-        assertThat(bootstrappedGroups, PredicateMatcher.has(group -> "pony".equals(group.getDisplayName()) && "The magic of friendship".equals(group.getDescription())));
-
+        assertThat(bootstrappedGroups).extracting(ScimGroup::getDisplayName, ScimGroup::getDescription)
+                .contains(tuple("pets.cat", "Access the cat"),
+                        tuple("pets.dog", "Dog your data"),
+                        tuple("pony", "The magic of friendship"));
     }
 
     @Test
@@ -229,16 +228,19 @@ class ScimGroupBootstrapTests {
 
         List<ScimGroup> bootstrappedGroups = gDB.retrieveAll(IdentityZone.getUaaZoneId());
 
-        // print: only specified in the configured groups, so it should get its description from there
-        assertThat(bootstrappedGroups, PredicateMatcher.has(group -> "print".equals(group.getDisplayName()) && "Access the network printer".equals(group.getDescription())));
-        // records.read: exists in the message property source but should get its description from configuration
-        assertThat(bootstrappedGroups, PredicateMatcher.has(group -> "records.read".equals(group.getDisplayName()) && "Read important data".equals(group.getDescription())));
-        // pets.cat: read: exists in the message property source but should get its description from configuration
-        assertThat(bootstrappedGroups, PredicateMatcher.has(group -> "pets.cat".equals(group.getDisplayName()) && "Pet the cat".equals(group.getDescription())));
-        // pets.dog: specified in configuration with no description, so it should retain the default description
-        assertThat(bootstrappedGroups, PredicateMatcher.has(group -> "pets.dog".equals(group.getDisplayName()) && "Dog your data".equals(group.getDescription())));
-        // fish.nemo: never gets a description
-        assertThat(bootstrappedGroups, PredicateMatcher.has(group -> "fish.nemo".equals(group.getDisplayName()) && group.getDescription() == null));
-        assertThat(bootstrappedGroups, PredicateMatcher.has(group -> "water.drink".equals(group.getDisplayName()) && "Drink the water".equals(group.getDescription())));
+        assertThat(bootstrappedGroups).extracting(ScimGroup::getDisplayName, ScimGroup::getDescription)
+                .containsExactlyInAnyOrder(
+                        // print: only specified in the configured groups, so it should get its description from there
+                        tuple("print", "Access the network printer"),
+                        // records.read: exists in the message property source but should get its description from configuration
+                        tuple("records.read", "Read important data"),
+                        // pets.cat: read: exists in the message property source but should get its description from configuration
+                        tuple("pets.cat", "Pet the cat"),
+                        // pets.dog: specified in configuration with no description, so it should retain the default description
+                        tuple("pets.dog", "Dog your data"),
+                        // fish.nemo: never gets a description
+                        tuple("fish.nemo", null),
+                        tuple("water.drink", "Drink the water")
+                );
     }
 }

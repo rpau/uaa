@@ -87,6 +87,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
+import static org.assertj.core.api.HamcrestCondition.matching;
 import static org.cloudfoundry.identity.uaa.oauth.TokenTestSupport.CLIENT_AUTHORITIES;
 import static org.cloudfoundry.identity.uaa.oauth.TokenTestSupport.CLIENT_ID;
 import static org.cloudfoundry.identity.uaa.oauth.TokenTestSupport.CLIENT_ID_NO_REFRESH_TOKEN_GRANT;
@@ -126,10 +127,8 @@ import static org.cloudfoundry.identity.uaa.user.UaaAuthority.USER_AUTHORITIES;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.number.OrderingComparison.greaterThan;
-import static org.hamcrest.number.OrderingComparison.lessThanOrEqualTo;
 import static org.hamcrest.text.IsEmptyString.isEmptyString;
 import static org.junit.jupiter.api.Named.named;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
@@ -466,9 +465,9 @@ class DeprecatedUaaTokenServicesTests {
         OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
 
         assertCommonClientAccessTokenProperties(accessToken);
-        assertThat(accessToken, validFor(is(tokenSupport.accessTokenValidity)));
-        assertThat(accessToken, issuerUri(is(ISSUER_URI)));
-        assertThat(accessToken, zoneId(is(IdentityZoneHolder.get().getId())));
+        assertThat(accessToken).is(matching(validFor(is(tokenSupport.accessTokenValidity))))
+                .is(matching(issuerUri(is(ISSUER_URI))))
+                .is(matching(zoneId(is(IdentityZoneHolder.get().getId()))));
         assertThat(accessToken.getRefreshToken()).isNull();
         validateExternalAttributes(accessToken);
 
@@ -503,9 +502,9 @@ class DeprecatedUaaTokenServicesTests {
         OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
 
         assertCommonClientAccessTokenProperties(accessToken);
-        assertThat(accessToken, validFor(is(tokenSupport.accessTokenValidity)));
-        assertThat(accessToken, issuerUri(is("http://uaamaster:8080/uaa/oauth/token")));
-        assertThat(accessToken, zoneId(is(IdentityZoneHolder.get().getId())));
+        assertThat(accessToken).is(matching(validFor(is(tokenSupport.accessTokenValidity))))
+                .is(matching(issuerUri(is("http://uaamaster:8080/uaa/oauth/token"))))
+                .is(matching(zoneId(is(IdentityZoneHolder.get().getId()))));
         assertThat(accessToken.getRefreshToken()).isNull();
         validateExternalAttributes(accessToken);
     }
@@ -537,10 +536,10 @@ class DeprecatedUaaTokenServicesTests {
         OAuth2RefreshToken refreshToken = accessToken.getRefreshToken();
 
         String refreshTokenValue = accessToken.getRefreshToken().getValue();
-        assertThat("Token value should be equal to or lesser than 36 characters", refreshTokenValue.length(), lessThanOrEqualTo(36));
+        assertThat(refreshTokenValue).hasSizeLessThanOrEqualTo(36);
         this.assertCommonUserRefreshTokenProperties(refreshToken);
-        assertThat(refreshToken, OAuth2RefreshTokenMatchers.issuerUri(is(ISSUER_URI)));
-        assertThat(refreshToken, OAuth2RefreshTokenMatchers.validFor(is(60 * 60 * 24 * 30)));
+        assertThat(refreshToken).is(matching(OAuth2RefreshTokenMatchers.issuerUri(is(ISSUER_URI))))
+                .is(matching(OAuth2RefreshTokenMatchers.validFor(is(60 * 60 * 24 * 30))));
         TokenRequest refreshTokenRequest = getRefreshTokenRequest();
 
         //validate both opaque and JWT refresh tokenSupport.tokens
@@ -565,7 +564,7 @@ class DeprecatedUaaTokenServicesTests {
         //validate both opaque and JWT refresh tokenSupport.tokens
         for (String s : Arrays.asList(refreshTokenValue, tokenSupport.tokens.get(refreshTokenValue).getValue())) {
             OAuth2AccessToken refreshedAccessToken = tokenServices.refreshAccessToken(s, refreshTokenRequest);
-            assertThat("Token value should be equal to or lesser than 36 characters", refreshedAccessToken.getValue().length(), lessThanOrEqualTo(36));
+            assertThat(refreshedAccessToken.getValue()).hasSizeLessThanOrEqualTo(36);
             assertCommonUserAccessTokenProperties(new DefaultOAuth2AccessToken(tokenSupport.tokens.get(refreshedAccessToken).getValue()), CLIENT_ID);
             validateExternalAttributes(refreshedAccessToken);
         }
@@ -618,12 +617,12 @@ class DeprecatedUaaTokenServicesTests {
         OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
 
         this.assertCommonClientAccessTokenProperties(accessToken);
-        assertThat(accessToken, validFor(is(3600)));
-        assertThat(accessToken, issuerUri(is("http://" + subdomain + ".localhost:8080/uaa/oauth/token")));
+        assertThat(accessToken).is(matching(validFor(is(3600))))
+                .is(matching(issuerUri(is("http://" + subdomain + ".localhost:8080/uaa/oauth/token"))));
         assertThat(accessToken.getRefreshToken()).isNull();
         validateExternalAttributes(accessToken);
 
-        assertThat(tokenSupport.publisher.getEventCount()).isEqualTo(1);
+        assertThat(tokenSupport.publisher.getEventCount()).isOne();
 
         this.assertCommonEventProperties(accessToken, CLIENT_ID, tokenSupport.expectedJson);
     }
@@ -817,9 +816,9 @@ class DeprecatedUaaTokenServicesTests {
         assertThat(accessToken.getRefreshToken().getValue()).isEqualTo(refreshedAccessToken.getRefreshToken().getValue());
 
         this.assertCommonUserAccessTokenProperties(refreshedAccessToken, CLIENT_ID);
-        assertThat(refreshedAccessToken, issuerUri(is(ISSUER_URI)));
-        assertThat(refreshedAccessToken, scope(is(tokenSupport.requestedAuthScopes)));
-        assertThat(refreshedAccessToken, validFor(is(60 * 60 * 12)));
+        assertThat(refreshedAccessToken).is(matching(issuerUri(is(ISSUER_URI))))
+                .is(matching(scope(is(tokenSupport.requestedAuthScopes))))
+                .is(matching(validFor(is(60 * 60 * 12))));
         validateExternalAttributes(accessToken);
     }
 
@@ -849,9 +848,9 @@ class DeprecatedUaaTokenServicesTests {
 
         //Then
         this.assertCommonUserAccessTokenProperties(refreshedAccessToken, CLIENT_ID);
-        assertThat(refreshedAccessToken, issuerUri(is(ISSUER_URI)));
-        assertThat(refreshedAccessToken, scope(is(tokenSupport.requestedAuthScopes)));
-        assertThat(refreshedAccessToken, validFor(is(60 * 60 * 12)));
+        assertThat(refreshedAccessToken).is(matching(issuerUri(is(ISSUER_URI))))
+                .is(matching(scope(is(tokenSupport.requestedAuthScopes))))
+                .is(matching(validFor(is(60 * 60 * 12))));
         validateExternalAttributes(accessToken);
     }
 
@@ -882,9 +881,9 @@ class DeprecatedUaaTokenServicesTests {
         assertThat(accessToken.getRefreshToken().getValue()).isEqualTo(refreshedAccessToken.getRefreshToken().getValue());
 
         this.assertCommonUserAccessTokenProperties(refreshedAccessToken, CLIENT_ID);
-        assertThat(refreshedAccessToken, issuerUri(is("http://test-zone-subdomain.localhost:8080/uaa/oauth/token")));
-        assertThat(refreshedAccessToken, scope(is(tokenSupport.requestedAuthScopes)));
-        assertThat(refreshedAccessToken, validFor(is(3600)));
+        assertThat(refreshedAccessToken).is(matching(issuerUri(is("http://test-zone-subdomain.localhost:8080/uaa/oauth/token"))))
+                .is(matching(scope(is(tokenSupport.requestedAuthScopes))))
+                .is(matching(validFor(is(3600))));
         validateExternalAttributes(accessToken);
     }
 
@@ -913,14 +912,14 @@ class DeprecatedUaaTokenServicesTests {
         OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
 
         this.assertCommonUserAccessTokenProperties(accessToken, CLIENT_ID);
-        assertThat(accessToken, issuerUri(is(ISSUER_URI)));
-        assertThat(accessToken, scope(is(tokenSupport.requestedAuthScopes)));
-        assertThat(accessToken, validFor(is(60 * 60 * 12)));
+        assertThat(accessToken).is(matching(issuerUri(is(ISSUER_URI))))
+                .is(matching(scope(is(tokenSupport.requestedAuthScopes))))
+                .is(matching(validFor(is(60 * 60 * 12))));
 
         OAuth2RefreshToken refreshToken = accessToken.getRefreshToken();
         this.assertCommonUserRefreshTokenProperties(refreshToken);
-        assertThat(refreshToken, OAuth2RefreshTokenMatchers.issuerUri(is(ISSUER_URI)));
-        assertThat(refreshToken, OAuth2RefreshTokenMatchers.validFor(is(60 * 60 * 24 * 30)));
+        assertThat(refreshToken).is(matching(OAuth2RefreshTokenMatchers.issuerUri(is(ISSUER_URI))))
+                .is(matching(OAuth2RefreshTokenMatchers.validFor(is(60 * 60 * 24 * 30))));
 
         this.assertCommonEventProperties(accessToken, tokenSupport.userId, buildJsonString(tokenSupport.requestedAuthScopes));
 
@@ -935,9 +934,9 @@ class DeprecatedUaaTokenServicesTests {
         assertThat(accessToken.getRefreshToken().getValue()).isEqualTo(refreshedAccessToken.getRefreshToken().getValue());
 
         this.assertCommonUserAccessTokenProperties(refreshedAccessToken, CLIENT_ID);
-        assertThat(refreshedAccessToken, issuerUri(is(ISSUER_URI)));
-        assertThat(refreshedAccessToken, scope(is(tokenSupport.requestedAuthScopes)));
-        assertThat(refreshedAccessToken, validFor(is(60 * 60 * 12)));
+        assertThat(refreshedAccessToken).is(matching(issuerUri(is(ISSUER_URI))))
+                .is(matching(scope(is(tokenSupport.requestedAuthScopes))))
+                .is(matching(validFor(is(60 * 60 * 12))));
         assertThat(accessToken.getRefreshToken()).isNotNull();
     }
 
@@ -966,14 +965,14 @@ class DeprecatedUaaTokenServicesTests {
         OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
 
         this.assertCommonUserAccessTokenProperties(accessToken, CLIENT_ID);
-        assertThat(accessToken, issuerUri(is(ISSUER_URI)));
-        assertThat(accessToken, scope(is(tokenSupport.requestedAuthScopes)));
-        assertThat(accessToken, validFor(is(60 * 60 * 12)));
+        assertThat(accessToken).is(matching(issuerUri(is(ISSUER_URI))))
+                .is(matching(scope(is(tokenSupport.requestedAuthScopes))))
+                .is(matching(validFor(is(60 * 60 * 12))));
 
         OAuth2RefreshToken refreshToken = accessToken.getRefreshToken();
         this.assertCommonUserRefreshTokenProperties(refreshToken);
-        assertThat(refreshToken, OAuth2RefreshTokenMatchers.issuerUri(is(ISSUER_URI)));
-        assertThat(refreshToken, OAuth2RefreshTokenMatchers.validFor(is(60 * 60 * 24 * 30)));
+        assertThat(refreshToken).is(matching(OAuth2RefreshTokenMatchers.issuerUri(is(ISSUER_URI))))
+                .is(matching(OAuth2RefreshTokenMatchers.validFor(is(60 * 60 * 24 * 30))));
 
         this.assertCommonEventProperties(accessToken, tokenSupport.userId, buildJsonString(tokenSupport.requestedAuthScopes));
 
@@ -988,8 +987,8 @@ class DeprecatedUaaTokenServicesTests {
         assertThat(accessToken.getRefreshToken().getValue()).isEqualTo(refreshedAccessToken.getRefreshToken().getValue());
 
         this.assertCommonUserAccessTokenProperties(refreshedAccessToken, CLIENT_ID);
-        assertThat(refreshedAccessToken, issuerUri(is(ISSUER_URI)));
-        assertThat(refreshedAccessToken, validFor(is(60 * 60 * 12)));
+        assertThat(refreshedAccessToken).is(matching(issuerUri(is(ISSUER_URI))))
+                .is(matching(validFor(is(60 * 60 * 12))));
         assertThat(accessToken.getRefreshToken()).isNotNull();
     }
 
@@ -1038,14 +1037,14 @@ class DeprecatedUaaTokenServicesTests {
         OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
 
         this.assertCommonUserAccessTokenProperties(accessToken, CLIENT_ID);
-        assertThat(accessToken, issuerUri(is(ISSUER_URI)));
-        assertThat(accessToken, scope(is(tokenSupport.requestedAuthScopes)));
-        assertThat(accessToken, validFor(is(60 * 60 * 12)));
+        assertThat(accessToken).is(matching(issuerUri(is(ISSUER_URI))))
+                .is(matching(scope(is(tokenSupport.requestedAuthScopes))))
+                .is(matching(validFor(is(60 * 60 * 12))));
 
         OAuth2RefreshToken refreshToken = accessToken.getRefreshToken();
         this.assertCommonUserRefreshTokenProperties(refreshToken);
-        assertThat(refreshToken, OAuth2RefreshTokenMatchers.issuerUri(is(ISSUER_URI)));
-        assertThat(refreshToken, OAuth2RefreshTokenMatchers.validFor(is(60 * 60 * 24 * 30)));
+        assertThat(refreshToken).is(matching(OAuth2RefreshTokenMatchers.issuerUri(is(ISSUER_URI))))
+                .is(matching(OAuth2RefreshTokenMatchers.validFor(is(60 * 60 * 24 * 30))));
 
         this.assertCommonEventProperties(accessToken, tokenSupport.userId, buildJsonString(tokenSupport.requestedAuthScopes));
 
@@ -1060,8 +1059,8 @@ class DeprecatedUaaTokenServicesTests {
         assertThat(accessToken.getRefreshToken().getValue()).isEqualTo(refreshedAccessToken.getRefreshToken().getValue());
 
         this.assertCommonUserAccessTokenProperties(refreshedAccessToken, CLIENT_ID);
-        assertThat(refreshedAccessToken, issuerUri(is(ISSUER_URI)));
-        assertThat(refreshedAccessToken, validFor(is(60 * 60 * 12)));
+        assertThat(refreshedAccessToken).is(matching(issuerUri(is(ISSUER_URI))))
+                .is(matching(validFor(is(60 * 60 * 12))));
         assertThat(accessToken.getRefreshToken()).isNotNull();
     }
 
@@ -1096,13 +1095,13 @@ class DeprecatedUaaTokenServicesTests {
         when(tokenSupport.timeService.getCurrentTimeMillis()).thenCallRealMethod();
         OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
         this.assertCommonUserAccessTokenProperties(accessToken, CLIENT_ID);
-        assertThat(accessToken, issuerUri(is(ISSUER_URI)));
-        assertThat(accessToken, scope(is(tokenSupport.requestedAuthScopes)));
-        assertThat(accessToken, validFor(is(60 * 60 * 12)));
+        assertThat(accessToken).is(matching(issuerUri(is(ISSUER_URI))))
+                .is(matching(scope(is(tokenSupport.requestedAuthScopes))))
+                .is(matching(validFor(is(60 * 60 * 12))));
         OAuth2RefreshToken refreshToken = accessToken.getRefreshToken();
         this.assertCommonUserRefreshTokenProperties(refreshToken);
-        assertThat(refreshToken, OAuth2RefreshTokenMatchers.issuerUri(is(ISSUER_URI)));
-        assertThat(refreshToken, OAuth2RefreshTokenMatchers.validFor(is(60 * 60 * 24 * 30)));
+        assertThat(refreshToken).is(matching(OAuth2RefreshTokenMatchers.issuerUri(is(ISSUER_URI))))
+                .is(matching(OAuth2RefreshTokenMatchers.validFor(is(60 * 60 * 24 * 30))));
         this.assertCommonEventProperties(accessToken, tokenSupport.userId, buildJsonString(tokenSupport.requestedAuthScopes));
         AuthorizationRequest refreshAuthorizationRequest = new AuthorizationRequest(CLIENT_ID, tokenSupport.requestedAuthScopes);
         refreshAuthorizationRequest.setResourceIds(new HashSet<>(tokenSupport.resourceIds));
@@ -1158,14 +1157,14 @@ class DeprecatedUaaTokenServicesTests {
         OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
 
         this.assertCommonUserAccessTokenProperties(accessToken, CLIENT_ID);
-        assertThat(accessToken, issuerUri(is(ISSUER_URI)));
-        assertThat(accessToken, scope(is(tokenSupport.requestedAuthScopes)));
-        assertThat(accessToken, validFor(is(60 * 60 * 12)));
+        assertThat(accessToken).is(matching(issuerUri(is(ISSUER_URI))))
+                .is(matching(scope(is(tokenSupport.requestedAuthScopes))))
+                .is(matching(validFor(is(60 * 60 * 12))));
 
         OAuth2RefreshToken refreshToken = accessToken.getRefreshToken();
         this.assertCommonUserRefreshTokenProperties(refreshToken);
-        assertThat(refreshToken, OAuth2RefreshTokenMatchers.issuerUri(is(ISSUER_URI)));
-        assertThat(refreshToken, OAuth2RefreshTokenMatchers.validFor(is(60 * 60 * 24 * 30)));
+        assertThat(refreshToken).is(matching(OAuth2RefreshTokenMatchers.issuerUri(is(ISSUER_URI))))
+                .is(matching(OAuth2RefreshTokenMatchers.validFor(is(60 * 60 * 24 * 30))));
 
         this.assertCommonEventProperties(accessToken, tokenSupport.userId, buildJsonString(tokenSupport.requestedAuthScopes));
 
@@ -1195,8 +1194,8 @@ class DeprecatedUaaTokenServicesTests {
         OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
 
         this.assertCommonUserAccessTokenProperties(accessToken, CLIENT_ID);
-        assertThat(accessToken, issuerUri(is(ISSUER_URI)));
-        assertThat(accessToken, validFor(is(60 * 60 * 12)));
+        assertThat(accessToken).is(matching(issuerUri(is(ISSUER_URI))))
+                .is(matching(validFor(is(60 * 60 * 12))));
         assertThat(accessToken.getRefreshToken()).isNull();
 
         this.assertCommonEventProperties(accessToken, tokenSupport.userId, buildJsonString(tokenSupport.requestedAuthScopes));
@@ -1278,9 +1277,9 @@ class DeprecatedUaaTokenServicesTests {
         OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
 
         this.assertCommonUserAccessTokenProperties(accessToken, CLIENT_ID);
-        assertThat(accessToken, issuerUri(is(ISSUER_URI)));
-        assertThat(accessToken, scope(is(scopesThatDontExist)));
-        assertThat(accessToken, validFor(greaterThan(60 * 60 * 12)));
+        assertThat(accessToken).is(matching(issuerUri(is(ISSUER_URI))))
+                .is(matching(scope(is(scopesThatDontExist))))
+                .is(matching(validFor(greaterThan(60 * 60 * 12))));
         assertThat(accessToken.getRefreshToken()).isNull();
 
         this.assertCommonEventProperties(accessToken, tokenSupport.userId, buildJsonString(scopesThatDontExist));
@@ -1316,15 +1315,15 @@ class DeprecatedUaaTokenServicesTests {
         OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
 
         this.assertCommonUserAccessTokenProperties(accessToken, CLIENT_ID);
-        assertThat(accessToken, issuerUri(is("http://test-zone-subdomain.localhost:8080/uaa/oauth/token")));
-        assertThat(accessToken, scope(is(tokenSupport.requestedAuthScopes)));
-        assertThat(accessToken, validFor(is(3600)));
+        assertThat(accessToken).is(matching(issuerUri(is("http://test-zone-subdomain.localhost:8080/uaa/oauth/token"))))
+                .is(matching(scope(is(tokenSupport.requestedAuthScopes))))
+                .is(matching(validFor(is(3600))));
         assertThat(accessToken.getRefreshToken()).isNotNull();
 
         OAuth2RefreshToken refreshToken = accessToken.getRefreshToken();
         this.assertCommonUserRefreshTokenProperties(refreshToken);
-        assertThat(refreshToken, OAuth2RefreshTokenMatchers.issuerUri(is("http://test-zone-subdomain.localhost:8080/uaa/oauth/token")));
-        assertThat(refreshToken, OAuth2RefreshTokenMatchers.validFor(is(9600)));
+        assertThat(refreshToken).is(matching(OAuth2RefreshTokenMatchers.issuerUri(is("http://test-zone-subdomain.localhost:8080/uaa/oauth/token"))))
+                .is(matching(OAuth2RefreshTokenMatchers.validFor(is(9600))));
 
         this.assertCommonEventProperties(accessToken, tokenSupport.userId, buildJsonString(tokenSupport.requestedAuthScopes));
     }
@@ -1366,12 +1365,11 @@ class DeprecatedUaaTokenServicesTests {
         when(tokenSupport.timeService.getCurrentTimeMillis()).thenCallRealMethod();
         OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
 
-        assertThat(accessToken, scope(is(tokenSupport.requestedAuthScopes)));
+        assertThat(accessToken).is(matching(scope(is(tokenSupport.requestedAuthScopes))));
         OAuth2RefreshToken refreshToken = accessToken.getRefreshToken();
-        assertThat(refreshToken).isNotNull();
-
-        assertThat(refreshToken, OAuth2RefreshTokenMatchers.scope(is(tokenSupport.requestedAuthScopes)));
-        assertThat(refreshToken, OAuth2RefreshTokenMatchers.audience(is(tokenSupport.resourceIds)));
+        assertThat(refreshToken).isNotNull()
+                .is(matching(OAuth2RefreshTokenMatchers.scope(is(tokenSupport.requestedAuthScopes))))
+                .is(matching(OAuth2RefreshTokenMatchers.audience(is(tokenSupport.resourceIds))));
 
         // Second request with reduced scopes
         AuthorizationRequest reducedScopeAuthorizationRequest = new AuthorizationRequest(CLIENT_ID, tokenSupport.readScope);
@@ -1384,7 +1382,7 @@ class DeprecatedUaaTokenServicesTests {
         OAuth2AccessToken reducedScopeAccessToken = tokenServices.refreshAccessToken(accessToken.getRefreshToken().getValue(), tokenSupport.requestFactory.createTokenRequest(reducedScopeAuthorizationRequest, "refresh_token"));
 
         // AT should have the new scopes, RT should be the same
-        assertThat(reducedScopeAccessToken, scope(is(tokenSupport.readScope)));
+        assertThat(reducedScopeAccessToken).is(matching(scope(is(tokenSupport.readScope))));
         assertThat(accessToken.getRefreshToken()).isEqualTo(reducedScopeAccessToken.getRefreshToken());
     }
 
@@ -1415,10 +1413,10 @@ class DeprecatedUaaTokenServicesTests {
         OAuth2Authentication authentication = new OAuth2Authentication(authorizationRequest.createOAuth2Request(), userAuthentication);
         when(tokenSupport.timeService.getCurrentTimeMillis()).thenCallRealMethod();
         OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
-        assertThat(accessToken, scope(is(tokenSupport.requestedAuthScopes)));
-        assertThat(accessToken.getRefreshToken()).isNotNull();
-        assertThat(accessToken.getRefreshToken(), OAuth2RefreshTokenMatchers.scope(is(tokenSupport.requestedAuthScopes)));
-        assertThat(accessToken.getRefreshToken(), OAuth2RefreshTokenMatchers.audience(is(tokenSupport.resourceIds)));
+        assertThat(accessToken).is(matching(scope(is(tokenSupport.requestedAuthScopes))));
+        assertThat(accessToken.getRefreshToken()).isNotNull()
+                .is(matching(OAuth2RefreshTokenMatchers.scope(is(tokenSupport.requestedAuthScopes))))
+                .is(matching(OAuth2RefreshTokenMatchers.audience(is(tokenSupport.resourceIds))));
         AuthorizationRequest expandedScopeAuthorizationRequest = new AuthorizationRequest(CLIENT_ID, tokenSupport.expandedScopes);
         expandedScopeAuthorizationRequest.setResourceIds(new HashSet<>(tokenSupport.resourceIds));
         Map<String, String> refreshAzParameters = new HashMap<>(expandedScopeAuthorizationRequest.getRequestParameters());
@@ -1452,10 +1450,9 @@ class DeprecatedUaaTokenServicesTests {
         when(tokenSupport.timeService.getCurrentTimeMillis()).thenCallRealMethod();
         OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
 
-        assertThat(accessToken, validFor(is(3600)));
-        assertThat(accessToken.getRefreshToken()).isNotNull();
-
-        assertThat(accessToken.getRefreshToken(), OAuth2RefreshTokenMatchers.validFor(is(36000)));
+        assertThat(accessToken).is(matching(validFor(is(3600))));
+        assertThat(accessToken.getRefreshToken()).isNotNull()
+                .is(matching(OAuth2RefreshTokenMatchers.validFor(is(36000))));
     }
 
     @MethodSource("data")
@@ -1853,9 +1850,9 @@ class DeprecatedUaaTokenServicesTests {
         OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
         assertThat(accessToken).as("Token should be composite token").isInstanceOf(CompositeToken.class);
         CompositeToken composite = (CompositeToken) accessToken;
-        assertThat("id_token should be JWT, thus longer than 36 characters", composite.getIdTokenValue().length(), greaterThan(36));
-        assertThat("Opaque access token must be shorter than 37 characters", accessToken.getValue().length(), lessThanOrEqualTo(36));
-        assertThat("Opaque refresh token must be shorter than 37 characters", accessToken.getRefreshToken().getValue().length(), lessThanOrEqualTo(36));
+        assertThat(composite.getIdTokenValue()).hasSizeGreaterThan(36);
+        assertThat(accessToken.getValue()).hasSizeLessThanOrEqualTo(36);
+        assertThat(accessToken.getRefreshToken().getValue()).hasSizeLessThanOrEqualTo(36);
 
         String accessTokenValue = tokenProvisioning.retrieve(composite.getValue(), IdentityZoneHolder.get().getId()).getValue();
         Map<String, Object> accessTokenClaims = tokenSupport.tokenValidationService.validateToken(accessTokenValue, true).getClaims();
@@ -1883,8 +1880,8 @@ class DeprecatedUaaTokenServicesTests {
         params.put("client_id", CLIENT_ID);
         params.put("token_format", OPAQUE.getStringValue());
         OAuth2AccessToken newAccessToken = tokenServices.refreshAccessToken(composite.getRefreshToken().getValue(), new TokenRequest(params, CLIENT_ID, Collections.emptySet(), "refresh_token"));
-        assertThat("Opaque access token must be shorter than 37 characters", newAccessToken.getValue().length(), lessThanOrEqualTo(36));
-        assertThat("Opaque refresh token must be shorter than 37 characters", newAccessToken.getRefreshToken().getValue().length(), lessThanOrEqualTo(36));
+        assertThat(newAccessToken.getValue()).hasSizeLessThanOrEqualTo(36);
+        assertThat(newAccessToken.getRefreshToken().getValue()).hasSizeLessThanOrEqualTo(36);
     }
 
     @MethodSource("data")
@@ -1998,14 +1995,14 @@ class DeprecatedUaaTokenServicesTests {
         OAuth2AccessToken token = tokenServices.createAccessToken(authentication);
 
         this.assertCommonUserAccessTokenProperties(token, CLIENT_ID);
-        assertThat(token, issuerUri(is(ISSUER_URI)));
-        assertThat(token, scope(is(tokenSupport.requestedAuthScopes)));
-        assertThat(token, validFor(is(60 * 60 * 12)));
+        assertThat(token).is(matching(issuerUri(is(ISSUER_URI))))
+                .is(matching(scope(is(tokenSupport.requestedAuthScopes))))
+                .is(matching(validFor(is(60 * 60 * 12))));
 
         OAuth2RefreshToken refreshToken = token.getRefreshToken();
         this.assertCommonUserRefreshTokenProperties(refreshToken);
-        assertThat(refreshToken, OAuth2RefreshTokenMatchers.issuerUri(is(ISSUER_URI)));
-        //assertThat(refreshToken, OAuth2RefreshTokenMatchers.validFor(greaterThan(60 * 60 * 24 * 30)));
+        assertThat(refreshToken).is(matching(OAuth2RefreshTokenMatchers.issuerUri(is(ISSUER_URI))));
+        //assertThat(refreshToken).is(matching(OAuth2RefreshTokenMatchers.validFor(greaterThan(60 * 60 * 24 * 30));
 
         this.assertCommonEventProperties(token, tokenSupport.userId, buildJsonString(tokenSupport.requestedAuthScopes));
 
@@ -2204,9 +2201,9 @@ class DeprecatedUaaTokenServicesTests {
 
     private void validateAccessTokenOnly(OAuth2AccessToken accessToken, String clientId) {
         this.assertCommonUserAccessTokenProperties(accessToken, clientId);
-        assertThat(accessToken, issuerUri(is(ISSUER_URI)));
-        assertThat(accessToken, scope(is(tokenSupport.requestedAuthScopes)));
-        assertThat(accessToken, validFor(is(60 * 60 * 12)));
+        assertThat(accessToken).is(matching(issuerUri(is(ISSUER_URI))))
+                .is(matching(scope(is(tokenSupport.requestedAuthScopes))))
+                .is(matching(validFor(is(60 * 60 * 12))));
         validateExternalAttributes(accessToken);
     }
 
@@ -2215,8 +2212,8 @@ class DeprecatedUaaTokenServicesTests {
 
         OAuth2RefreshToken refreshToken = accessToken.getRefreshToken();
         this.assertCommonUserRefreshTokenProperties(refreshToken);
-        assertThat(refreshToken, OAuth2RefreshTokenMatchers.issuerUri(is(ISSUER_URI)));
-        assertThat(refreshToken, OAuth2RefreshTokenMatchers.validFor(is(60 * 60 * 24 * 30)));
+        assertThat(refreshToken).is(matching(OAuth2RefreshTokenMatchers.issuerUri(is(ISSUER_URI))))
+                .is(matching(OAuth2RefreshTokenMatchers.validFor(is(60 * 60 * 24 * 30))));
 
         this.assertCommonEventProperties(accessToken, tokenSupport.userId, buildJsonString(tokenSupport.requestedAuthScopes));
     }
@@ -2301,57 +2298,51 @@ class DeprecatedUaaTokenServicesTests {
     @SuppressWarnings("unchecked")
     private void assertCommonClientAccessTokenProperties(OAuth2AccessToken accessToken) {
         assertThat(accessToken)
-                .satisfies(
-                        arg -> assertThat(arg, clientId(is(CLIENT_ID))),
-                        arg -> assertThat(arg, userId(nullValue())),
-                        arg -> assertThat(arg, subject(is(CLIENT_ID))),
-                        arg -> assertThat(arg, username(is(nullValue()))),
-                        arg -> assertThat(arg, cid(is(CLIENT_ID))),
-                        arg -> assertThat(arg, scope(is(tokenSupport.clientScopes))),
-                        arg -> assertThat(arg, audience(containsInAnyOrder(tokenSupport.resourceIds.toArray(new String[]{})))),
-                        arg -> assertThat(arg, jwtId(not(isEmptyString()))),
-                        arg -> assertThat(arg, issuedAt(is(greaterThan(0)))),
-                        arg -> assertThat(arg, expiry(is(greaterThan(0))))
-                );
+                .is(matching(clientId(is(CLIENT_ID))))
+                .is(matching(userId(nullValue())))
+                .is(matching(subject(is(CLIENT_ID))))
+                .is(matching(username(is(nullValue()))))
+                .is(matching(cid(is(CLIENT_ID))))
+                .is(matching(scope(is(tokenSupport.clientScopes))))
+                .is(matching(audience(containsInAnyOrder(tokenSupport.resourceIds.toArray(new String[]{})))))
+                .is(matching(jwtId(not(isEmptyString()))))
+                .is(matching(issuedAt(is(greaterThan(0)))))
+                .is(matching(expiry(is(greaterThan(0)))));
     }
 
     @SuppressWarnings({"unused", "unchecked"})
     private void assertCommonUserAccessTokenProperties(OAuth2AccessToken accessToken, String clientId) {
         assertThat(accessToken)
-                .satisfies(
-                        arg -> assertThat(arg, username(is(tokenSupport.username))),
-                        arg -> assertThat(arg, clientId(is(clientId))),
-                        arg -> assertThat(arg, subject(is(tokenSupport.userId))),
-                        arg -> assertThat(arg, audience(containsInAnyOrder(tokenSupport.resourceIds.toArray(new String[]{})))),
-                        arg -> assertThat(arg, origin(is(OriginKeys.UAA))),
-                        arg -> assertThat(arg, revocationSignature(not(nullValue()))),
-                        arg -> assertThat(arg, cid(is(clientId))),
-                        arg -> assertThat(arg, userId(is(tokenSupport.userId))),
-                        arg -> assertThat(arg, email(is(tokenSupport.email))),
-                        arg -> assertThat(arg, jwtId(not(isEmptyString()))),
-                        arg -> assertThat(arg, issuedAt(is(greaterThan(0)))),
-                        arg -> assertThat(arg, expiry(is(greaterThan(0))))
-                );
+                .is(matching(username(is(tokenSupport.username))))
+                .is(matching(clientId(is(clientId))))
+                .is(matching(subject(is(tokenSupport.userId))))
+                .is(matching(audience(containsInAnyOrder(tokenSupport.resourceIds.toArray(new String[]{})))))
+                .is(matching(origin(is(OriginKeys.UAA))))
+                .is(matching(revocationSignature(not(nullValue()))))
+                .is(matching(cid(is(clientId))))
+                .is(matching(userId(is(tokenSupport.userId))))
+                .is(matching(email(is(tokenSupport.email))))
+                .is(matching(jwtId(not(isEmptyString()))))
+                .is(matching(issuedAt(is(greaterThan(0)))))
+                .is(matching(expiry(is(greaterThan(0)))));
     }
 
     @SuppressWarnings("unchecked")
     private void assertCommonUserRefreshTokenProperties(OAuth2RefreshToken refreshToken) {
         assertThat(refreshToken)
-                .satisfies(
-                        arg -> assertThat(arg, OAuth2RefreshTokenMatchers.username(is(tokenSupport.username))),
-                        arg -> assertThat(arg, OAuth2RefreshTokenMatchers.clientId(is(CLIENT_ID))),
-                        arg -> assertThat(arg, OAuth2RefreshTokenMatchers.subject(not(nullValue()))),
-                        arg -> assertThat(arg, OAuth2RefreshTokenMatchers.audience(containsInAnyOrder(tokenSupport.resourceIds.toArray(new String[]{})))),
-                        arg -> assertThat(arg, OAuth2RefreshTokenMatchers.origin(is(OriginKeys.UAA))),
-                        arg -> assertThat(arg, OAuth2RefreshTokenMatchers.revocationSignature(is(not(nullValue())))),
-                        arg -> assertThat(arg, OAuth2RefreshTokenMatchers.jwtId(not(isEmptyString()))),
-                        arg -> assertThat(arg, OAuth2RefreshTokenMatchers.issuedAt(is(greaterThan(0)))),
-                        arg -> assertThat(arg, OAuth2RefreshTokenMatchers.expiry(is(greaterThan(0))))
-                );
+                .is(matching(OAuth2RefreshTokenMatchers.username(is(tokenSupport.username))))
+                .is(matching(OAuth2RefreshTokenMatchers.clientId(is(CLIENT_ID))))
+                .is(matching(OAuth2RefreshTokenMatchers.subject(not(nullValue()))))
+                .is(matching(OAuth2RefreshTokenMatchers.audience(containsInAnyOrder(tokenSupport.resourceIds.toArray(new String[]{})))))
+                .is(matching(OAuth2RefreshTokenMatchers.origin(is(OriginKeys.UAA))))
+                .is(matching(OAuth2RefreshTokenMatchers.revocationSignature(is(not(nullValue())))))
+                .is(matching(OAuth2RefreshTokenMatchers.jwtId(not(isEmptyString()))))
+                .is(matching(OAuth2RefreshTokenMatchers.issuedAt(is(greaterThan(0)))))
+                .is(matching(OAuth2RefreshTokenMatchers.expiry(is(greaterThan(0)))));
     }
 
     private void assertCommonEventProperties(OAuth2AccessToken accessToken, String expectedPrincipalId, String expectedData) {
-        assertThat(tokenSupport.publisher.getEventCount()).isEqualTo(1);
+        assertThat(tokenSupport.publisher.getEventCount()).isOne();
 
         TokenIssuedEvent event = tokenSupport.publisher.getLatestEvent();
         assertThat(event.getSource()).isEqualTo(accessToken);

@@ -22,7 +22,6 @@ import org.cloudfoundry.identity.uaa.zone.BrandingInformation;
 import org.cloudfoundry.identity.uaa.zone.BrandingInformation.Banner;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneConfiguration;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneHolder;
-import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -52,8 +51,6 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils.doesSupportZoneDNS;
-import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.startsWith;
 import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpMethod.POST;
 
@@ -104,7 +101,7 @@ public class LoginIT {
 
         headers.set(HttpHeaders.ACCEPT, MediaType.TEXT_HTML_VALUE);
         ResponseEntity<String> loginResponse = template.exchange(baseUrl + "/login",
-                HttpMethod.GET,
+                GET,
                 new HttpEntity<>(null, headers),
                 String.class);
 
@@ -118,24 +115,24 @@ public class LoginIT {
 
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
         loginResponse = template.exchange(baseUrl + "/login.do",
-                HttpMethod.POST,
+                POST,
                 new HttpEntity<>(requestBody, headers),
                 String.class);
         cookies = loginResponse.getHeaders().get("Set-Cookie");
-        MatcherAssert.assertThat(cookies, hasItem(startsWith("JSESSIONID")));
-        MatcherAssert.assertThat(cookies, hasItem(startsWith("X-Uaa-Csrf")));
-        MatcherAssert.assertThat(cookies, hasItem(startsWith("Current-User")));
+        assertThat(cookies).anySatisfy(s -> assertThat(s).startsWith("JSESSIONID"))
+                .anySatisfy(s -> assertThat(s).startsWith("X-Uaa-Csrf"))
+                .anySatisfy(s -> assertThat(s).startsWith("Current-User"));
         headers.clear();
         boolean jsessionIdValidated = false;
         for (String cookie : loginResponse.getHeaders().get("Set-Cookie")) {
             if (cookie.contains("JSESSIONID")) {
                 jsessionIdValidated = true;
-                assertThat(cookie.contains("HttpOnly")).isTrue();
-                assertThat(cookie.contains("SameSite=None")).isTrue();
-                assertThat(cookie.contains("Secure")).isTrue();
+                assertThat(cookie).contains("HttpOnly")
+                        .contains("SameSite=None")
+                        .contains("Secure");
             }
             if (cookie.contains("Current-User")) {
-                assertThat(cookie.contains("SameSite=Strict")).isTrue();
+                assertThat(cookie).contains("SameSite=Strict");
             }
         }
         assertThat(jsessionIdValidated).as("Did not find JSESSIONID").isTrue();
@@ -173,7 +170,7 @@ public class LoginIT {
         webDriver.get(zoneUrl);
 
         assertThat(webDriver.findElement(By.cssSelector(".banner-header img")).getAttribute("src")).isEqualTo("data:image/png;base64," + base64Val);
-        assertThat(webDriver.findElement(By.cssSelector(".banner-header")).findElements(By.xpath(".//*")).size()).isEqualTo(2);
+        assertThat(webDriver.findElement(By.cssSelector(".banner-header")).findElements(By.xpath(".//*"))).hasSize(2);
     }
 
     @Test
@@ -197,7 +194,7 @@ public class LoginIT {
         webDriver.get(zoneUrl);
         webDriver.manage().deleteAllCookies();
         webDriver.navigate().refresh();
-        assertThat(webDriver.findElements(By.cssSelector(".banner-header")).size()).isEqualTo(0);
+        assertThat(webDriver.findElements(By.cssSelector(".banner-header"))).isEmpty();
     }
 
     @Test
@@ -213,7 +210,7 @@ public class LoginIT {
 
         assertThat(webDriver.findElement(By.cssSelector("#last_login_time"))).isNotNull();
         String lastLoginDate = webDriver.findElement(By.cssSelector("#last_login_time")).getAttribute("innerHTML");
-        assertThat(lastLoginDate.isEmpty()).isFalse();
+        assertThat(lastLoginDate).isNotEmpty();
 
         IntegrationTestUtils.validateAccountChooserCookie(baseUrl, webDriver, IdentityZoneHolder.get());
     }
@@ -303,7 +300,7 @@ public class LoginIT {
                 new HttpEntity<>(body, headers),
                 String.class);
         assertThat(loginResponse.getStatusCode()).isEqualTo(HttpStatus.FOUND);
-        assertThat(loginResponse.getHeaders().getFirst("Location").contains("invalid_login_request")).as("CSRF message should be shown").isTrue();
+        assertThat(loginResponse.getHeaders().getFirst("Location")).contains("invalid_login_request");
     }
 
     @Test
@@ -346,7 +343,7 @@ public class LoginIT {
     @Test
     void loginPageReloadBasedOnCsrf() {
         webDriver.get(baseUrl + "/login");
-        assertThat(webDriver.getPageSource().contains("http-equiv=\"refresh\"")).isTrue();
+        assertThat(webDriver.getPageSource()).contains("http-equiv=\"refresh\"");
     }
 
     @Test
@@ -375,7 +372,7 @@ public class LoginIT {
         webDriver.get(baseUrl + "/login");
 
         String regex = "Version: \\S+, Commit: \\w{7}, Timestamp: .+, UAA: " + baseUrl;
-        assertThat(webDriver.findElement(By.cssSelector(".footer .copyright")).getAttribute("title").matches(regex)).isTrue();
+        assertThat(webDriver.findElement(By.cssSelector(".footer .copyright")).getAttribute("title")).matches(regex);
     }
 
     @Test
@@ -437,7 +434,7 @@ public class LoginIT {
         js.executeScript("document.cookie = \"Saved-Account-3=" + URLEncoder.encode(userExternal, StandardCharsets.UTF_8.name()) + ";path=/;domain=testzone3.localhost\"");
 
         webDriver.navigate().refresh();
-        assertThat(webDriver.findElements(By.cssSelector("span.email-address")).size()).isEqualTo(3);
+        assertThat(webDriver.findElements(By.cssSelector("span.email-address"))).hasSize(3);
 
         webDriver.findElement(By.xpath("//span[contains(text(), 'userUAA')]")).click();
         assertThat(webDriver.findElement(By.id("username")).getAttribute("value")).isEqualTo("userUAA");

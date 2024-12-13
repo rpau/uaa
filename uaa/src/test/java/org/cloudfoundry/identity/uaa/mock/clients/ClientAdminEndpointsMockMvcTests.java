@@ -42,7 +42,6 @@ import org.cloudfoundry.identity.uaa.test.UaaTestAccounts;
 import org.cloudfoundry.identity.uaa.test.ZoneSeeder;
 import org.cloudfoundry.identity.uaa.test.ZoneSeederExtension;
 import org.cloudfoundry.identity.uaa.util.JsonUtils;
-import org.cloudfoundry.identity.uaa.util.PredicateMatcher;
 import org.cloudfoundry.identity.uaa.zone.ClientSecretPolicy;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneHolder;
 import org.junit.jupiter.api.AfterEach;
@@ -87,8 +86,6 @@ import static org.cloudfoundry.identity.uaa.oauth.client.SecretChangeRequest.Cha
 import static org.cloudfoundry.identity.uaa.oauth.client.SecretChangeRequest.ChangeMode.DELETE;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_AUTHORIZATION_CODE;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_JWT_BEARER;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.iterableWithSize;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -189,7 +186,7 @@ class ClientAdminEndpointsMockMvcTests {
                 Collections.singleton("client_credentials"));
         verify(mockApplicationEventPublisher, times(1)).publishEvent(abstractUaaEventCaptor.capture());
         assertThat(abstractUaaEventCaptor.getValue().getAuditEvent().getType()).isEqualTo(AuditEventType.ClientCreateSuccess);
-        assertThat(client.getAdditionalInformation().get("name")).isEqualTo("Client " + client.getClientId());
+        assertThat(client.getAdditionalInformation()).containsEntry("name", "Client " + client.getClientId());
     }
 
     @Test
@@ -215,7 +212,7 @@ class ClientAdminEndpointsMockMvcTests {
                 .contentType(APPLICATION_JSON)
                 .content(JsonUtils.writeValueAsString(client));
         MvcResult mvcResult = mockMvc.perform(createClientPost).andExpect(status().isBadRequest()).andReturn();
-        assertThat(mvcResult.getResponse().getContentAsString().contains("Scope cannot be empty for grant_type " + GRANT_TYPE_JWT_BEARER)).isTrue();
+        assertThat(mvcResult.getResponse().getContentAsString()).contains("Scope cannot be empty for grant_type " + GRANT_TYPE_JWT_BEARER);
         verify(mockApplicationEventPublisher, times(0)).publishEvent(abstractUaaEventCaptor.capture());
     }
 
@@ -349,7 +346,7 @@ class ClientAdminEndpointsMockMvcTests {
         MvcResult result = mockMvc.perform(updateClient).andExpect(status().isOk()).andReturn();
         UaaClientDetails updatedClientDetails = JsonUtils.readValue(result.getResponse().getContentAsString(), UaaClientDetails.class);
         assertThat(updatedClientDetails.getClientId()).isEqualTo(client.getClientId());
-        assertThat(updatedClientDetails.getAuthorizedGrantTypes(), PredicateMatcher.has(m -> m.equals(GRANT_TYPE_AUTHORIZATION_CODE)));
+        assertThat(updatedClientDetails.getAuthorizedGrantTypes()).contains(GRANT_TYPE_AUTHORIZATION_CODE);
 
         MockHttpServletRequestBuilder deleteClient = delete("/oauth/clients/" + client.getClientId())
                 .header("Authorization", "Bearer" + adminUserToken)
@@ -658,7 +655,7 @@ class ClientAdminEndpointsMockMvcTests {
         mvcResult = mockMvc.perform(updateClient).andExpect(status().isOk()).andReturn();
         UaaClientDetails updatedClientDetails = JsonUtils.readValue(mvcResult.getResponse().getContentAsString(), UaaClientDetails.class);
         assertThat(updatedClientDetails.getClientId()).isEqualTo(client.getClientId());
-        assertThat(updatedClientDetails.getAuthorizedGrantTypes(), PredicateMatcher.has(m -> m.equals(GRANT_TYPE_AUTHORIZATION_CODE)));
+        assertThat(updatedClientDetails.getAuthorizedGrantTypes()).contains(GRANT_TYPE_AUTHORIZATION_CODE);
 
         MockHttpServletRequestBuilder deleteClient = delete("/oauth/clients/" + client.getClientId())
                 .header("Authorization", "Bearer" + adminUserToken)
@@ -946,7 +943,7 @@ class ClientAdminEndpointsMockMvcTests {
                 "oauth.approvals");
         addApprovals(userToken, details[0].getClientId());
         Approval[] approvals = getApprovals(details[0].getClientId());
-        assertThat(approvals.length).isEqualTo(3);
+        assertThat(approvals).hasSize(3);
 
 
         String deleteId = details[5].getClientId();
@@ -976,7 +973,7 @@ class ClientAdminEndpointsMockMvcTests {
             assertThat(c).isNull();
         }
         approvals = getApprovals(details[0].getClientId());
-        assertThat(approvals.length).isEqualTo(3);
+        assertThat(approvals).hasSize(3);
     }
 
     @Test
@@ -990,10 +987,10 @@ class ClientAdminEndpointsMockMvcTests {
                 testPassword,
                 "oauth.approvals");
         Approval[] approvals = getApprovals(details.getClientId());
-        assertThat(approvals.length).isEqualTo(0);
+        assertThat(approvals).isEmpty();
         addApprovals(userToken, details.getClientId());
         approvals = getApprovals(details.getClientId());
-        assertThat(approvals.length).isEqualTo(3);
+        assertThat(approvals).hasSize(3);
 
         MockHttpServletRequestBuilder deleteClientsPost = post("/oauth/clients/tx/delete")
                 .header("Authorization", "Bearer " + adminToken)
@@ -1009,7 +1006,7 @@ class ClientAdminEndpointsMockMvcTests {
         verify(mockApplicationEventPublisher, times(2)).publishEvent(abstractUaaEventCaptor.capture());
 
         approvals = getApprovals(details.getClientId());
-        assertThat(approvals.length).isEqualTo(0);
+        assertThat(approvals).isEmpty();
     }
 
     @Test
@@ -1023,10 +1020,10 @@ class ClientAdminEndpointsMockMvcTests {
                 testPassword,
                 "oauth.approvals");
         Approval[] approvals = getApprovals(details.getClientId());
-        assertThat(approvals.length).isEqualTo(0);
+        assertThat(approvals).isEmpty();
         addApprovals(userToken, details.getClientId());
         approvals = getApprovals(details.getClientId());
-        assertThat(approvals.length).isEqualTo(3);
+        assertThat(approvals).hasSize(3);
 
         MockHttpServletRequestBuilder deleteClientsPost = delete("/oauth/clients/" + details.getClientId())
                 .header("Authorization", "Bearer " + adminToken)
@@ -1043,7 +1040,7 @@ class ClientAdminEndpointsMockMvcTests {
                 "oauth.approvals");
 
         approvals = getApprovals(details.getClientId());
-        assertThat(approvals.length).isEqualTo(0);
+        assertThat(approvals).isEmpty();
     }
 
     @Test
@@ -1058,10 +1055,10 @@ class ClientAdminEndpointsMockMvcTests {
                 testPassword,
                 "oauth.approvals");
         Approval[] approvals = getApprovals(details.getClientId());
-        assertThat(approvals.length).isEqualTo(0);
+        assertThat(approvals).isEmpty();
         addApprovals(userToken, details.getClientId());
         approvals = getApprovals(details.getClientId());
-        assertThat(approvals.length).isEqualTo(3);
+        assertThat(approvals).hasSize(3);
 
         MockHttpServletRequestBuilder deleteClientsPost = post("/oauth/clients/tx/modify")
                 .header("Authorization", "Bearer " + adminToken)
@@ -1082,7 +1079,7 @@ class ClientAdminEndpointsMockMvcTests {
                 testPassword,
                 "oauth.approvals");
         approvals = getApprovals(details.getClientId());
-        assertThat(approvals.length).isEqualTo(0);
+        assertThat(approvals).isEmpty();
     }
 
     @Test
@@ -1120,7 +1117,7 @@ class ClientAdminEndpointsMockMvcTests {
                     testUser.getUserName(),
                     testPassword,
                     "oauth.approvals");
-            assertThat(getApprovals(c.getClientId()).length).isEqualTo(3);
+            assertThat(getApprovals(c.getClientId())).hasSize(3);
         }
 
         //change the secret, and we know the old secret
@@ -1151,7 +1148,7 @@ class ClientAdminEndpointsMockMvcTests {
                     testUser.getUserName(),
                     testPassword,
                     "oauth.approvals");
-            assertThat(getApprovals(c.getClientId()).length).isEqualTo(3);
+            assertThat(getApprovals(c.getClientId())).hasSize(3);
             assertThat(c.isApprovalsDeleted()).isFalse();
         }
 
@@ -1491,7 +1488,7 @@ class ClientAdminEndpointsMockMvcTests {
                     testUser.getUserName(),
                     testPassword,
                     "oauth.approvals");
-            assertThat(getApprovals(c.getClientId()).length).isEqualTo(3);
+            assertThat(getApprovals(c.getClientId())).hasSize(3);
         }
 
         //change the secret, and we know don't the old secret
@@ -1516,7 +1513,7 @@ class ClientAdminEndpointsMockMvcTests {
                     testUser.getUserName(),
                     testPassword,
                     "oauth.approvals");
-            assertThat(getApprovals(c.getClientId()).length).isEqualTo(0);
+            assertThat(getApprovals(c.getClientId())).isEmpty();
             assertThat(c.isApprovalsDeleted()).isTrue();
         }
 
@@ -1578,7 +1575,7 @@ class ClientAdminEndpointsMockMvcTests {
                     testUser.getUserName(),
                     testPassword,
                     "oauth.approvals");
-            assertThat(getApprovals(c.getClientId()).length).isEqualTo(3);
+            assertThat(getApprovals(c.getClientId())).hasSize(3);
         }
 
         //change the secret, and we know don't the old secret
@@ -1605,7 +1602,7 @@ class ClientAdminEndpointsMockMvcTests {
                     testUser.getUserName(),
                     testPassword,
                     "oauth.approvals");
-            assertThat(getApprovals(c.getClientId()).length).isEqualTo(3);
+            assertThat(getApprovals(c.getClientId())).hasSize(3);
         }
     }
 
@@ -1762,12 +1759,12 @@ class ClientAdminEndpointsMockMvcTests {
         Date lastDate = null;
 
         for (ClientDetails clientDetail : clientDetails) {
-            assertThat(clientDetail.getAdditionalInformation().containsKey("lastModified")).isTrue();
+            assertThat(clientDetail.getAdditionalInformation()).containsKey("lastModified");
 
             Date currentDate = JsonUtils.convertValue(clientDetail.getAdditionalInformation().get("lastModified"), Date.class);
 
             if (lastDate != null) {
-                assertThat(currentDate.getTime() <= lastDate.getTime()).isTrue();
+                assertThat(currentDate).isBeforeOrEqualTo(lastDate);
             }
 
             lastDate = currentDate;
@@ -1874,7 +1871,7 @@ class ClientAdminEndpointsMockMvcTests {
         mockMvc.perform(put).andExpect(status().isOk()).andReturn();
 
         client = getClient(client.getClientId());
-        assertThat(client.getAuthorities(), iterableWithSize(1));
+        assertThat(client.getAuthorities()).hasSize(1);
         GrantedAuthority authority = Iterables.get(client.getAuthorities(), 0);
         assertThat(authority.getAuthority()).isEqualTo("newAuthority");
     }

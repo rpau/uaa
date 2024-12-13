@@ -16,7 +16,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.assertj.core.api.HamcrestCondition.matching;
 
 class UaaClientDetailsTest {
 
@@ -39,11 +39,11 @@ class UaaClientDetailsTest {
         void copiesUaaBaseClientDetails() {
             testClient.setClientSecret("secret");
             UaaClientDetails copy = new UaaClientDetails(testClient);
-            assertThat(copy, UaaClientDetailsMatcher.aUaaClientDetails()
+            assertThat(copy).is(matching(UaaClientDetailsMatcher.aUaaClientDetails()
                     .withClientId("test")
                     .withClientSecret("secret")
                     .withScope(Matchers.contains("test.none"))
-                    .withResourceIds(Matchers.emptyIterable()));
+                    .withResourceIds(Matchers.emptyIterable())));
 
             List<String> authorities = copy.getAuthorities().stream()
                     .map(GrantedAuthority::getAuthority)
@@ -55,8 +55,8 @@ class UaaClientDetailsTest {
         void copiesAdditionalInformation() {
             testClient.setAdditionalInformation(Collections.singletonMap("key", "value"));
             UaaClientDetails copy = new UaaClientDetails(testClient);
-            assertThat(copy, UaaClientDetailsMatcher.aUaaClientDetails()
-                    .withAdditionalInformation(Matchers.allOf(Matchers.aMapWithSize(1), Matchers.hasEntry("key", "value"))));
+            assertThat(copy).is(matching(UaaClientDetailsMatcher.aUaaClientDetails()
+                    .withAdditionalInformation(Matchers.allOf(Matchers.aMapWithSize(1), Matchers.hasEntry("key", "value")))));
         }
 
         @Test
@@ -84,7 +84,7 @@ class UaaClientDetailsTest {
             UaaClientDetails copy = new UaaClientDetails(testClient);
             UaaClientDetails copy2 = new UaaClientDetails(testClient.getClientId(), "",
                     "test.none", "", "test.admin", null);
-            assertThat(copy2.hashCode()).isEqualTo(copy.hashCode());
+            assertThat(copy2).hasSameHashCodeAs(copy);
             copy.setClientJwtConfig("test");
             assertThat(copy2.hashCode()).isNotEqualTo(copy.hashCode());
         }
@@ -96,7 +96,7 @@ class UaaClientDetailsTest {
         void splitsScopesWhichIncludeAComma() {
             UaaClientDetails client = new UaaClientDetails(new UaaClientDetails());
             client.setScope(Collections.singleton("foo,bar"));
-            assertThat(client, UaaClientDetailsMatcher.aUaaClientDetails().withScope(Matchers.containsInAnyOrder("foo", "bar")));
+            assertThat(client).is(matching(UaaClientDetailsMatcher.aUaaClientDetails().withScope(Matchers.containsInAnyOrder("foo", "bar"))));
         }
     }
 
@@ -105,19 +105,19 @@ class UaaClientDetailsTest {
         @Test
         void baseClientDetailsDefaultConstructor() {
             UaaClientDetails details = new UaaClientDetails();
-            assertThat(details.getResourceIds().toString()).isEqualTo("[]");
-            assertThat(details.getScope().toString()).isEqualTo("[]");
-            assertThat(details.getAuthorizedGrantTypes().toString()).isEqualTo("[]");
-            assertThat(details.getAuthorities().toString()).isEqualTo("[]");
+            assertThat(details.getResourceIds()).hasToString("[]");
+            assertThat(details.getScope()).hasToString("[]");
+            assertThat(details.getAuthorizedGrantTypes()).hasToString("[]");
+            assertThat(details.getAuthorities()).hasToString("[]");
         }
 
         @Test
         void baseClientDetailsConvenienceConstructor() {
             UaaClientDetails details = new UaaClientDetails("foo", "", "foo,bar", "authorization_code", "ROLE_USER");
-            assertThat(details.getResourceIds().toString()).isEqualTo("[]");
-            assertThat(new TreeSet<String>(details.getScope()).toString()).isEqualTo("[bar, foo]");
-            assertThat(details.getAuthorizedGrantTypes().toString()).isEqualTo("[authorization_code]");
-            assertThat(details.getAuthorities().toString()).isEqualTo("[ROLE_USER]");
+            assertThat(details.getResourceIds()).hasToString("[]");
+            assertThat(new TreeSet<>(details.getScope())).hasToString("[bar, foo]");
+            assertThat(details.getAuthorizedGrantTypes()).hasToString("[authorization_code]");
+            assertThat(details.getAuthorities()).hasToString("[ROLE_USER]");
         }
 
         @Test
@@ -153,10 +153,10 @@ class UaaClientDetailsTest {
             details.setClientId("foo");
             details.setClientSecret("bar");
             String value = new ObjectMapper().writeValueAsString(details);
-            assertThat(value.contains("client_id")).isTrue();
-            assertThat(value.contains("client_secret")).isTrue();
-            assertThat(value.contains("authorized_grant_types")).isTrue();
-            assertThat(value.contains("[\"ROLE_USER\"]")).isTrue();
+            assertThat(value).contains("client_id")
+                    .contains("client_secret")
+                    .contains("authorized_grant_types")
+                    .contains("[\"ROLE_USER\"]");
         }
 
         @Test
@@ -165,7 +165,7 @@ class UaaClientDetailsTest {
             details.setClientId("foo");
             details.setAdditionalInformation(Collections.singletonMap("foo", "bar"));
             String value = new ObjectMapper().writeValueAsString(details);
-            assertThat(value.contains("\"foo\":\"bar\"")).isTrue();
+            assertThat(value).contains("\"foo\":\"bar\"");
         }
 
         @Test
@@ -221,7 +221,7 @@ class UaaClientDetailsTest {
             uaaClientDetails.setRegisteredRedirectUri(Set.of("http://localhost:8080/uaa"));
             uaaClientDetails.setRefreshTokenValiditySeconds(1);
             uaaClientDetails.setAccessTokenValiditySeconds(1);
-            assertThat(uaaClientDetails.hashCode() > 0).isTrue();
+            assertThat(uaaClientDetails.hashCode()).isPositive();
         }
     }
 
@@ -243,7 +243,7 @@ class UaaClientDetailsTest {
             UaaClientDetails uaaClientDetails1 = new UaaClientDetails(uaaClientDetails);
             assertThat(uaaClientDetails1).isEqualTo(uaaClientDetails);
             assertThat(new Object()).isNotEqualTo(uaaClientDetails);
-            assertThat(uaaClientDetails).isNotEqualTo(null);
+            assertThat(uaaClientDetails).isNotNull();
         }
 
         @Test
@@ -315,6 +315,5 @@ class UaaClientDetailsTest {
             testClientCompare.setAccessTokenValiditySeconds(1);
             assertThat(testClientCompare).isNotEqualTo(testClient);
         }
-
     }
 }

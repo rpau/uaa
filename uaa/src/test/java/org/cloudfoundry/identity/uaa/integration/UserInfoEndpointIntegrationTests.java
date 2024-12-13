@@ -20,20 +20,18 @@ import org.cloudfoundry.identity.uaa.test.TestAccountExtension;
 import org.cloudfoundry.identity.uaa.test.UaaTestAccounts;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.springframework.boot.test.json.BasicJsonTester;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.isA;
-import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * @author Dave Syer
  */
 @OAuth2ContextConfiguration
 class UserInfoEndpointIntegrationTests {
+    private final BasicJsonTester json = new BasicJsonTester(getClass());
 
     @RegisterExtension
     private static final ServerRunningExtension serverRunning = ServerRunningExtension.connect();
@@ -55,10 +53,10 @@ class UserInfoEndpointIntegrationTests {
         assertThat(user.getStatusCode()).isEqualTo(HttpStatus.OK);
 
         String infoResponseString = user.getBody();
-
-        assertThat(infoResponseString, hasJsonPath("user_id"));
-        assertThat(infoResponseString, hasJsonPath("sub"));
-        assertThat(infoResponseString, hasJsonPath("email", is(testAccounts.getEmail())));
-        assertThat(infoResponseString, hasJsonPath("email_verified", isA(Boolean.class)));
+        assertThat(json.from(infoResponseString))
+                .hasJsonPath("user_id")
+                .hasJsonPath("sub")
+                .hasJsonPathValue("email", testAccounts.getEmail())
+                .hasJsonPathBooleanValue("email_verified");
     }
 }

@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static com.jayway.jsonassert.impl.matcher.IsMapContainingKey.hasKey;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.cloudfoundry.identity.uaa.oauth.token.ClaimConstants.ACR;
@@ -37,7 +36,6 @@ import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYP
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_REFRESH_TOKEN;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_SAML2_BEARER;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_USER_TOKEN;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -96,7 +94,7 @@ class RefreshTokenCreatorTest {
         Map<String, Object> refreshClaims = UaaTokenUtils.getClaims(refreshToken.getValue(), Map.class);
         assertThat(refreshClaims).containsEntry(AUTH_TIME, 1L);
         assertThat((List<String>) refreshClaims.get(AMR)).contains("pwd");
-        assertThat((Map<String, List<String>>) refreshClaims.get(ACR), hasKey("values"));
+        assertThat((Map<String, List<String>>) refreshClaims.get(ACR)).containsKey("values");
         assertThat(((Map<String, List<String>>) refreshClaims.get(ACR)).get("values")).contains("urn:oasis:names:tc:SAML:2.0:ac:classes:Password");
     }
 

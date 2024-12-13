@@ -44,9 +44,6 @@ import static org.cloudfoundry.identity.uaa.constants.OriginKeys.OIDC10;
 import static org.cloudfoundry.identity.uaa.constants.OriginKeys.SAML;
 import static org.cloudfoundry.identity.uaa.constants.OriginKeys.UAA;
 import static org.cloudfoundry.identity.uaa.provider.ExternalIdentityProviderDefinition.USER_NAME_ATTRIBUTE_NAME;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasKey;
-import static org.hamcrest.Matchers.not;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.anyString;
@@ -431,7 +428,7 @@ class ExternalOAuthProviderConfiguratorTests {
 
         Map<String, String> queryParams =
                 UriComponentsBuilder.fromUriString(authzUri).build().getQueryParams().toSingleValueMap();
-        assertThat(queryParams, not(hasKey("nonce")));
+        assertThat(queryParams).doesNotContainKey("nonce");
     }
 
     @Test
@@ -443,9 +440,7 @@ class ExternalOAuthProviderConfiguratorTests {
 
         Map<String, String> queryParams =
                 UriComponentsBuilder.fromUriString(authzUri).build().getQueryParams().toSingleValueMap();
-        assertThat(queryParams)
-                .containsKey("code_challenge")
-                .containsKey("code_challenge_method");
+        assertThat(queryParams).containsKeys("code_challenge", "code_challenge_method");
     }
 
     @Test
@@ -497,8 +492,7 @@ class ExternalOAuthProviderConfiguratorTests {
 
         Map<String, String> queryParams =
                 UriComponentsBuilder.fromUriString(authzUri).build().getQueryParams().toSingleValueMap();
-        assertThat(queryParams, not(hasKey("code_challenge")));
-        assertThat(queryParams, not(hasKey("code_challenge_method")));
+        assertThat(queryParams).doesNotContainKeys("code_challenge", "code_challenge_method");
     }
 
     @Test

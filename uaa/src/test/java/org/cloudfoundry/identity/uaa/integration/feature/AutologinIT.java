@@ -50,9 +50,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils.getHeaders;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_AUTHORIZATION_CODE;
 import static org.cloudfoundry.identity.uaa.security.web.CookieBasedCsrfTokenRepository.DEFAULT_CSRF_COOKIE_NAME;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.startsWith;
 
 @SpringJUnitConfig(classes = DefaultIntegrationTestConfig.class)
 class AutologinIT {
@@ -199,7 +196,7 @@ class AutologinIT {
         //approval is complete, we receive a token code back
         assertThat(authorizeResponse.getStatusCode()).isEqualTo(HttpStatus.FOUND);
         List<String> location = authorizeResponse.getHeaders().get("Location");
-        assertThat(location.size()).isEqualTo(1);
+        assertThat(location).hasSize(1);
         String newCode = location.get(0).substring(location.get(0).indexOf("code=") + 5);
 
         //request a token using our code
@@ -243,12 +240,12 @@ class AutologinIT {
                 new HttpEntity<>(requestBody, getHeaders(cookieStore)),
                 String.class);
         cookies = loginResponse.getHeaders().get("Set-Cookie");
-        assertThat(cookies, hasItem(startsWith("JSESSIONID")));
-        assertThat(cookies, hasItem(startsWith("X-Uaa-Csrf")));
+        assertThat(cookies).anySatisfy(s -> assertThat(s).startsWith("JSESSIONID"))
+                .anySatisfy(s -> assertThat(s).startsWith("X-Uaa-Csrf"));
         if (IdentityZoneHolder.get().getConfig().isAccountChooserEnabled()) {
-            assertThat(cookies, hasItem(startsWith("Saved-Account-")));
+            assertThat(cookies).anySatisfy(s -> assertThat(s).startsWith("Saved-Account-"));
         }
-        assertThat(cookies, hasItem(startsWith("Current-User")));
+        assertThat(cookies).anySatisfy(s -> assertThat(s).startsWith("Current-User"));
         cookieStore.clear();
         setCookiesFromResponse(cookieStore, loginResponse);
         headers.add(HttpHeaders.ACCEPT, MediaType.TEXT_HTML_VALUE);
@@ -296,7 +293,7 @@ class AutologinIT {
                 Map.class);
 
         String autologinCode = (String) autologinResponseEntity.getBody().get("code");
-        assertThat(autologinCode.length()).isEqualTo(32);
+        assertThat(autologinCode).hasSize(32);
     }
 
     @Test

@@ -4,15 +4,15 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import org.cloudfoundry.identity.uaa.test.JsonTranslation;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.json.BasicJsonTester;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.lang.reflect.Field;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.cloudfoundry.identity.uaa.test.JsonMatcher.isJsonFile;
-import static org.hamcrest.MatcherAssert.assertThat;
 
 class OpenIdConfigurationTests extends JsonTranslation<OpenIdConfiguration> {
+    private final BasicJsonTester json = new BasicJsonTester(getClass());
 
     @BeforeEach
     void setup() {
@@ -61,10 +61,9 @@ class OpenIdConfigurationTests extends JsonTranslation<OpenIdConfiguration> {
             }
             ReflectionTestUtils.setField(openIdConfiguration, field.getName(), null);
         }
+        getObjectMapper().writeValueAsString(openIdConfiguration);
 
-        String actual = getObjectMapper().writeValueAsString(openIdConfiguration);
-
-        assertThat(actual, isJsonFile(this.getClass(), "OpenIdConfiguration-nulls.json"));
-
+        assertThat(json.from("OpenIdConfiguration-nulls.json", this.getClass()))
+                .hasEmptyJsonPathValue("issuer");
     }
 }

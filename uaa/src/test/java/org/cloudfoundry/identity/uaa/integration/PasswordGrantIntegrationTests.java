@@ -29,9 +29,6 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.CLIENT_AUTH_NONE;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasKey;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
@@ -66,8 +63,8 @@ class PasswordGrantIntegrationTests {
         assertThat(responseEntity.getHeaders().get("Content-Type").get(0)).isEqualTo(APPLICATION_JSON_VALUE);
         Map<String, Object> errors = JsonUtils.readValue(responseEntity.getBody(), new TypeReference<Map<String, Object>>() {
         });
-        assertThat(errors.get("error_description")).isEqualTo("User does not meet the client's required group criteria.");
-        assertThat(errors.get("error")).isEqualTo("invalid_scope");
+        assertThat(errors).containsEntry("error_description", "User does not meet the client's required group criteria.")
+                .containsEntry("error", "invalid_scope");
     }
 
     @Test
@@ -102,7 +99,7 @@ class PasswordGrantIntegrationTests {
                 null
         );
         client.setClientSecret("secret");
-        Map<String, Object> additional = new HashMap();
+        Map<String, Object> additional = new HashMap<>();
         additional.put(ClientConstants.REQUIRED_USER_GROUPS, Collections.singletonList("non.existent"));
         client.setAdditionalInformation(additional);
 
@@ -160,7 +157,7 @@ class PasswordGrantIntegrationTests {
         if (isNone) {
             assertThat(claims).containsEntry(ClaimConstants.CLIENT_AUTH_METHOD, CLIENT_AUTH_NONE);
         } else {
-            assertThat(claims, not(hasKey(ClaimConstants.CLIENT_AUTH_METHOD)));
+            assertThat(claims).doesNotContainKey(ClaimConstants.CLIENT_AUTH_METHOD);
         }
         return (String) jsonBody.get("refresh_token");
     }

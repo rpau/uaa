@@ -1,12 +1,12 @@
 package org.cloudfoundry.identity.uaa.client;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import org.assertj.core.groups.Tuple;
 import org.cloudfoundry.identity.uaa.DefaultTestContext;
 import org.cloudfoundry.identity.uaa.test.TestClient;
 import org.cloudfoundry.identity.uaa.test.UaaTestAccounts;
 import org.cloudfoundry.identity.uaa.util.AlphanumericRandomValueStringGenerator;
 import org.cloudfoundry.identity.uaa.util.JsonUtils;
-import org.cloudfoundry.identity.uaa.util.PredicateMatcher;
 import org.cloudfoundry.identity.uaa.zone.MultitenantJdbcClientDetailsService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,8 +22,6 @@ import java.net.URL;
 import java.util.ArrayList;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.not;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.http.MediaType.TEXT_PLAIN;
@@ -32,7 +30,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @DefaultTestContext
-public class ClientMetadataAdminEndpointsMockMvcTest {
+class ClientMetadataAdminEndpointsMockMvcTest {
 
     @Autowired
     public WebApplicationContext webApplicationContext;
@@ -85,7 +83,6 @@ public class ClientMetadataAdminEndpointsMockMvcTest {
     @Test
     void getClientMetadata_WhichDoesNotExist() throws Exception {
         String clientId = generator.generate();
-
         MockHttpServletResponse response = getTestClientMetadata(clientId, adminClientTokenWithClientsRead);
 
         assertThat(response.getStatus()).isEqualTo(HttpStatus.NOT_FOUND.value());
@@ -122,17 +119,17 @@ public class ClientMetadataAdminEndpointsMockMvcTest {
                 .header("Authorization", "Bearer " + marissaToken)
                 .accept(APPLICATION_JSON)).andExpect(status().isOk()).andReturn().getResponse();
         ArrayList<ClientMetadata> clientMetadataList = JsonUtils.readValue(response.getContentAsString(),
-                new TypeReference<ArrayList<ClientMetadata>>() {
+                new TypeReference<>() {
                 });
 
-        assertThat(clientMetadataList, not(PredicateMatcher.has(m -> m.getClientId().equals(clientId1))));
-        assertThat(clientMetadataList, not(PredicateMatcher.has(m -> m.getClientId().equals(clientId2))));
-        assertThat(clientMetadataList,
-                PredicateMatcher.has(m -> m.getClientId().equals(clientId3) && m.getAppIcon().equals(client3Metadata.getAppIcon()) && m.getAppLaunchUrl().equals(
-                        client3Metadata.getAppLaunchUrl()) && m.isShowOnHomePage() == client3Metadata.isShowOnHomePage()));
-        assertThat(clientMetadataList,
-                PredicateMatcher.has(m -> m.getClientId().equals(clientId4) && m.getAppIcon().equals(client4Metadata.getAppIcon()) && m.getAppLaunchUrl().equals(
-                        client4Metadata.getAppLaunchUrl()) && m.isShowOnHomePage() == client4Metadata.isShowOnHomePage()));
+        assertThat(clientMetadataList).extracting(ClientMetadata::getClientId).doesNotContain(clientId1);
+        assertThat(clientMetadataList).extracting(ClientMetadata::getClientId)
+                .doesNotContain(clientId1)
+                .doesNotContain(clientId2);
+        assertThat(clientMetadataList)
+                .extracting(ClientMetadata::getClientId, ClientMetadata::getAppIcon, ClientMetadata::getAppLaunchUrl, ClientMetadata::isShowOnHomePage)
+                .contains(Tuple.tuple(clientId3, client3Metadata.getAppIcon(), client3Metadata.getAppLaunchUrl(), client3Metadata.isShowOnHomePage()))
+                .contains(Tuple.tuple(clientId4, client4Metadata.getAppIcon(), client4Metadata.getAppLaunchUrl(), client4Metadata.isShowOnHomePage()));
     }
 
     @Test

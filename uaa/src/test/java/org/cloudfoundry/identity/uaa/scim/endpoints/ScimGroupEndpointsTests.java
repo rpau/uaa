@@ -422,12 +422,9 @@ class ScimGroupEndpointsTests {
         ScimGroup g = new ScimGroup(null, "clients.read", identityZoneManager.getCurrentIdentityZoneId());
         g.setMembers(Collections.singletonList(createMember(ScimGroupMember.Type.USER)));
         scimGroupEndpoints.createGroup(g, new MockHttpServletResponse());
-        try {
-            scimGroupEndpoints.createGroup(g, new MockHttpServletResponse());
-            fail("must have thrown exception");
-        } catch (ScimResourceAlreadyExistsException ex) {
-            validateSearchResults(scimGroupEndpoints.listGroups("id", "displayName eq \"clients.read\"", "id", "ASC", 1, 100), 1);
-        }
+        assertThatThrownBy(() -> scimGroupEndpoints.createGroup(g, new MockHttpServletResponse()))
+                .isInstanceOf(ScimResourceAlreadyExistsException.class);
+        validateSearchResults(scimGroupEndpoints.listGroups("id", "displayName eq \"clients.read\"", "id", "ASC", 1, 100), 1);
 
         deleteGroup("clients.read");
     }
@@ -437,13 +434,9 @@ class ScimGroupEndpointsTests {
         ScimGroup g = new ScimGroup(null, "clients.read", identityZoneManager.getCurrentIdentityZoneId());
         g.setMembers(Collections.singletonList(new ScimGroupMember("non-existent id", ScimGroupMember.Type.USER)));
 
-        try {
-            scimGroupEndpoints.createGroup(g, new MockHttpServletResponse());
-            fail("must have thrown exception");
-        } catch (InvalidScimResourceException ex) {
-            // ensure that the group was not created
-            validateSearchResults(scimGroupEndpoints.listGroups("id", "displayName eq \"clients.read\"", "id", "ASC", 1, 100), 0);
-        }
+        assertThatThrownBy(() -> scimGroupEndpoints.createGroup(g, new MockHttpServletResponse()))
+                .isInstanceOf(InvalidScimResourceException.class);
+        validateSearchResults(scimGroupEndpoints.listGroups("id", "displayName eq \"clients.read\"", "id", "ASC", 1, 100), 0);
     }
 
     @Test
@@ -534,20 +527,18 @@ class ScimGroupEndpointsTests {
     void updateNonUniqueDisplayNameFails() {
         ScimGroup g1 = new ScimGroup(null, "clients.read", identityZoneManager.getCurrentIdentityZoneId());
         g1.setMembers(Collections.singletonList(createMember(ScimGroupMember.Type.USER)));
-        g1 = scimGroupEndpoints.createGroup(g1, new MockHttpServletResponse());
+        ScimGroup g1a = scimGroupEndpoints.createGroup(g1, new MockHttpServletResponse());
 
         ScimGroup g2 = new ScimGroup(null, "clients.write", identityZoneManager.getCurrentIdentityZoneId());
         g2.setMembers(Collections.singletonList(createMember(ScimGroupMember.Type.USER)));
-        g2 = scimGroupEndpoints.createGroup(g2, new MockHttpServletResponse());
+        scimGroupEndpoints.createGroup(g2, new MockHttpServletResponse());
 
-        g1.setDisplayName("clients.write");
-        try {
-            scimGroupEndpoints.updateGroup(g1, g1.getId(), "*", new MockHttpServletResponse());
-            fail("must have thrown exception");
-        } catch (InvalidScimResourceException ex) {
-            validateSearchResults(scimGroupEndpoints.listGroups("id", "displayName eq \"clients.write\"", "id", "ASC", 1, 100), 1);
-            validateSearchResults(scimGroupEndpoints.listGroups("id", "displayName eq \"clients.read\"", "id", "ASC", 1, 100), 1);
-        }
+        g1a.setDisplayName("clients.write");
+        assertThatThrownBy(() -> scimGroupEndpoints.updateGroup(g1a, g1a.getId(), "*", new MockHttpServletResponse()))
+                .isInstanceOf(InvalidScimResourceException.class);
+
+        validateSearchResults(scimGroupEndpoints.listGroups("id", "displayName eq \"clients.write\"", "id", "ASC", 1, 100), 1);
+        validateSearchResults(scimGroupEndpoints.listGroups("id", "displayName eq \"clients.read\"", "id", "ASC", 1, 100), 1);
 
         deleteGroup("clients.read");
         deleteGroup("clients.write");
