@@ -34,8 +34,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -68,10 +67,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
-@ExtendWith(SpringExtension.class)
 @ExtendWith(PollutionPreventionExtension.class)
 @WebAppConfiguration
-@ContextConfiguration(classes = ResetPasswordControllerTest.ContextConfiguration.class)
+@SpringJUnitConfig(classes = ResetPasswordControllerTest.ContextConfiguration.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class ResetPasswordControllerTest extends TestClassNullifier {
     private MockMvc mockMvc;

@@ -32,7 +32,6 @@ import org.cloudfoundry.identity.uaa.zone.beans.IdentityZoneManagerImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -45,8 +44,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -88,9 +86,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.xpath;
 
-@ExtendWith(SpringExtension.class)
 @WebAppConfiguration
-@ContextConfiguration(classes = InvitationsControllerTest.ContextConfiguration.class)
+@SpringJUnitConfig(classes = InvitationsControllerTest.ContextConfiguration.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class InvitationsControllerTest {
 

@@ -31,8 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.thymeleaf.spring5.SpringTemplateEngine;
@@ -55,9 +54,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(SpringExtension.class)
 @ExtendWith(PollutionPreventionExtension.class)
-@ContextConfiguration(classes = {
+@SpringJUnitConfig(classes = {
         ThymeleafAdditional.class,
         ThymeleafConfig.class
 })

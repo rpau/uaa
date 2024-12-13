@@ -9,8 +9,7 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.security.web.FilterChainProxy;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -23,10 +22,9 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@ExtendWith(SpringExtension.class)
 @ExtendWith(PollutionPreventionExtension.class)
 @WebAppConfiguration
-@ContextConfiguration(classes = {
+@SpringJUnitConfig(classes = {
         SpringServletTestConfig.class,
         TestClientAndMockMvcTestConfig.class,
 })

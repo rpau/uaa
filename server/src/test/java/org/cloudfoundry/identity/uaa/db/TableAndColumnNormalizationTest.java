@@ -13,8 +13,7 @@ import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.ImportResource;
 import org.springframework.core.env.MapPropertySource;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.test.context.web.WebAppConfiguration;
 
 import javax.sql.DataSource;
@@ -53,10 +52,9 @@ class MySQLInitializer implements ApplicationContextInitializer<ConfigurableAppl
     }
 }
 
-@ExtendWith(SpringExtension.class)
 @ExtendWith(PollutionPreventionExtension.class)
 @WebAppConfiguration
-@ContextConfiguration(classes = {
+@SpringJUnitConfig(classes = {
         TableAndColumnNormalizationTestConfiguration.class,
         PasswordEncoderConfig.class
 },

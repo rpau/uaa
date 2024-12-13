@@ -24,8 +24,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -63,10 +62,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ExtendWith(SpringExtension.class)
 @ExtendWith(PollutionPreventionExtension.class)
 @WebAppConfiguration
-@ContextConfiguration(classes = ProfileControllerMockMvcTests.ContextConfiguration.class)
+@SpringJUnitConfig(classes = ProfileControllerMockMvcTests.ContextConfiguration.class)
 class ProfileControllerMockMvcTests {
 
     @EnableWebMvc

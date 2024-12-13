@@ -110,8 +110,8 @@ class CachingPasswordEncoderTest {
     }
 
     @Test
-        // TODO: This test takes a long time to run :(
     void ensureNoMemoryLeak() {
+        // TODO: This test takes a long time to run :(
         assertThat(cachingPasswordEncoder.getNumberOfKeys()).isZero();
         for (int i = 0; i < cachingPasswordEncoder.getMaxKeys(); i++) {
             password = new RandomValueStringGenerator().generate();

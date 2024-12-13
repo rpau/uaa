@@ -26,8 +26,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -56,10 +55,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.xpath;
 
-@ExtendWith(SpringExtension.class)
 @ExtendWith(PollutionPreventionExtension.class)
 @WebAppConfiguration
-@ContextConfiguration(classes = ChangeEmailControllerTest.ContextConfiguration.class)
+@SpringJUnitConfig(classes = ChangeEmailControllerTest.ContextConfiguration.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class ChangeEmailControllerTest {
 
