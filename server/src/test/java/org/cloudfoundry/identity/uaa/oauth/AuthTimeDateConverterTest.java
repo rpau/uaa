@@ -28,6 +28,6 @@ class AuthTimeDateConverterTest {
     @Test
     void dateToAuthTime_whenNotNull() {
         long authTime = AuthTimeDateConverter.dateToAuthTime(new Date(1000L));
-        assertThat(authTime).isEqualTo(1);
+        assertThat(authTime).isOne();
     }
 }

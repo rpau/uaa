@@ -207,7 +207,7 @@ public class PasswordChangeEndpointIntegrationTests {
 
         // Check that it is locked
         result = serverRunning.postForMap(serverRunning.buildUri("/oauth/token").build().toString(), data, headers);
-        assertThat(result.getBody().get("error_description")).isEqualTo("Your account has been locked because of too many failed attempts to login.");
+        assertThat(result.getBody()).containsEntry("error_description", "Your account has been locked because of too many failed attempts to login.");
         assertThat(result.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
 
         PasswordChangeRequest change = new PasswordChangeRequest();

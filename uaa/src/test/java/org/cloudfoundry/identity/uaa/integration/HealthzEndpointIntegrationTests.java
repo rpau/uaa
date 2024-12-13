@@ -41,7 +41,6 @@ class HealthzEndpointIntegrationTests {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 
         String body = response.getBody();
-        assertThat(body.contains("ok")).isTrue();
+        assertThat(body).contains("ok");
     }
-
 }

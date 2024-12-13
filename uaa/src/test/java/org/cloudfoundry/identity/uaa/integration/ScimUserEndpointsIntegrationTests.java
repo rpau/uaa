@@ -188,8 +188,9 @@ class ScimUserEndpointsIntegrationTests {
 
         @SuppressWarnings("unchecked")
         Map<String, String> error = response.getBody();
-        assertThat(error.get("error")).isEqualTo("scim_resource_not_found");
-        assertThat(error.get("message")).isEqualTo("User this-user-id-doesnt-exist does not exist");
+        assertThat(error)
+                .containsEntry("error", "scim_resource_not_found")
+                .containsEntry("message", "User this-user-id-doesnt-exist does not exist");
     }
 
     @Test
@@ -205,7 +206,7 @@ class ScimUserEndpointsIntegrationTests {
         Map<String, String> error = response.getBody();
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(error.get("error")).isEqualTo("invalid_scim_resource");
+        assertThat(error).containsEntry("error", "invalid_scim_resource");
     }
 
     @Test
@@ -321,7 +322,7 @@ class ScimUserEndpointsIntegrationTests {
         ResponseEntity<ScimUser> response = createUser(JOE, "Joe", "User", "joe@blah.com");
         ScimUser joe = response.getBody();
         assertThat(joe.getUserName()).isEqualTo(JOE);
-        assertThat(joe.getGroups().size()).isEqualTo(NUM_DEFAULT_GROUPS_ON_STARTUP);
+        assertThat(joe.getGroups()).hasSize(NUM_DEFAULT_GROUPS_ON_STARTUP);
 
         joe.setGroups(Collections.singletonList(new ScimUser.Group(UUID.randomUUID().toString(), "uaa.admin")));
 
@@ -333,7 +334,7 @@ class ScimUserEndpointsIntegrationTests {
         assertThat(joe1.getUserName()).isEqualTo(JOE);
 
         assertThat(joe1.getId()).isEqualTo(joe.getId());
-        assertThat(joe1.getGroups().size()).isEqualTo(NUM_DEFAULT_GROUPS_ON_STARTUP);
+        assertThat(joe1.getGroups()).hasSize(NUM_DEFAULT_GROUPS_ON_STARTUP);
     }
 
     // curl -v -H "Content-Type: application/json" -H "Accept: application/json"
@@ -352,14 +353,13 @@ class ScimUserEndpointsIntegrationTests {
         ResponseEntity<Map> response = client.postForEntity(serverRunning.getUrl(userEndpoint), user, Map.class);
         @SuppressWarnings("unchecked")
         Map<String, String> joel = response.getBody();
-        assertThat(joel.get("userName")).isEqualTo(JOEL);
+        assertThat(joel).containsEntry("userName", JOEL);
 
         response = client.postForEntity(serverRunning.getUrl(userEndpoint), user, Map.class);
         @SuppressWarnings("unchecked")
         Map<String, String> error = response.getBody();
 
-        assertThat(error.get("error")).isEqualTo("scim_resource_already_exists");
-
+        assertThat(error).containsEntry("error", "scim_resource_already_exists");
     }
 
     @Test
@@ -377,7 +377,7 @@ class ScimUserEndpointsIntegrationTests {
         ResponseEntity<Map> response = client.postForEntity(serverRunning.getUrl(userEndpoint), user, Map.class);
         @SuppressWarnings("unchecked")
         Map<String, String> joel = response.getBody();
-        assertThat(joel.get("userName")).isEqualTo(JOEL);
+        assertThat(joel).containsEntry("userName", JOEL);
 
         ScimUser userDifferentCase = new ScimUser();
         userDifferentCase.setPassword("password");
@@ -389,8 +389,7 @@ class ScimUserEndpointsIntegrationTests {
         @SuppressWarnings("unchecked")
         Map<String, String> error = response.getBody();
 
-        assertThat(error.get("error")).isEqualTo("scim_resource_already_exists");
-
+        assertThat(error).containsEntry("error", "scim_resource_already_exists");
     }
 
     // curl -v -H "Content-Type: application/json" -H "Accept: application/json"
@@ -402,8 +401,9 @@ class ScimUserEndpointsIntegrationTests {
         ResponseEntity<Map> response = deleteUser("9999", 0);
         @SuppressWarnings("unchecked")
         Map<String, String> error = response.getBody();
-        assertThat(error.get("error")).isEqualTo("scim_resource_not_found");
-        assertThat(error.get("message")).isEqualTo("User 9999 does not exist");
+        assertThat(error)
+                .containsEntry("error", "scim_resource_not_found")
+                .containsEntry("message", "User 9999 does not exist");
     }
 
     // curl -v -H "Content-Type: application/json" -H "Accept: application/json"
@@ -427,8 +427,9 @@ class ScimUserEndpointsIntegrationTests {
         @SuppressWarnings("unchecked")
         Map<String, String> error = response.getBody();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-        assertThat(error.get("error")).isEqualTo("scim_resource_not_found");
-        assertThat(error.get("message")).isEqualTo("User 9999 does not exist");
+        assertThat(error)
+                .containsEntry("error", "scim_resource_not_found")
+                .containsEntry("message", "User 9999 does not exist");
     }
 
     @Test
@@ -445,11 +446,11 @@ class ScimUserEndpointsIntegrationTests {
         Map firstUser = (Map) ((List) results.get("resources")).get(0);
         // [cfid-111] All attributes should be returned if no attributes
         // supplied in query
-        assertThat(firstUser.containsKey("id")).isTrue();
-        assertThat(firstUser.containsKey("userName")).isTrue();
-        assertThat(firstUser.containsKey("name")).isTrue();
-        assertThat(firstUser.containsKey("emails")).isTrue();
-        assertThat(firstUser.containsKey("groups")).isTrue();
+        assertThat(firstUser).containsKey("id")
+                .containsKey("userName")
+                .containsKey("name")
+                .containsKey("emails")
+                .containsKey("groups");
     }
 
     @Test
@@ -461,10 +462,10 @@ class ScimUserEndpointsIntegrationTests {
         assertThat((Integer) results.get("totalResults") > 0).as("There should be more than zero users").isTrue();
         Map firstUser = (Map) ((List) results.get("resources")).get(0);
         // All attributes should be returned if no attributes supplied in query
-        assertThat(firstUser.containsKey("id")).isTrue();
-        assertThat(firstUser.containsKey("userName")).isTrue();
-        assertThat(firstUser.containsKey("name")).isFalse();
-        assertThat(firstUser.containsKey("emails")).isFalse();
+        assertThat(firstUser).containsKey("id")
+                .containsKey("userName")
+                .doesNotContainKey("name")
+                .doesNotContainKey("emails");
     }
 
     @Test
@@ -474,7 +475,7 @@ class ScimUserEndpointsIntegrationTests {
         @SuppressWarnings("unchecked")
         Map<String, Object> results = response.getBody();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat((Integer) results.get("totalResults") > 0).as("There should be more than zero users").isTrue();
+        assertThat((Integer) results.get("totalResults")).as("There should be more than zero users").isPositive();
     }
 
     @Test
@@ -484,8 +485,8 @@ class ScimUserEndpointsIntegrationTests {
         @SuppressWarnings("unchecked")
         Map<String, Object> results = response.getBody();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat((Integer) results.get("totalResults") > 0).as("There should be more than zero users").isTrue();
-        assertThat(results.get("startIndex")).isEqualTo(2);
+        assertThat((Integer) results.get("totalResults")).as("There should be more than zero users").isPositive();
+        assertThat(results).containsEntry("startIndex", 2);
     }
 
     @BeforeEach
@@ -519,7 +520,8 @@ class ScimUserEndpointsIntegrationTests {
         Map<String, Object> results = response.getBody();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat((Integer) results.get("totalResults")).isGreaterThan(500);
-        assertThat(results.get("itemsPerPage")).isEqualTo(500);
-        assertThat(results.get("startIndex")).isEqualTo(1);
+        assertThat(results)
+                .containsEntry("itemsPerPage", 500)
+                .containsEntry("startIndex", 1);
     }
 }

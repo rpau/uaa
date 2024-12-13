@@ -75,9 +75,9 @@ class JdbcIdentityProviderProvisioningTests {
         IdentityProvider idp = MultitenancyFixture.identityProvider(origin, otherZoneId1);
         IdentityProvider createdIdp = jdbcIdentityProviderProvisioning.create(idp, otherZoneId1);
         assertThat(createdIdp).isNotNull();
-        assertThat(jdbcTemplate.queryForObject("select count(*) from identity_provider where identity_zone_id=?", new Object[]{otherZoneId1}, Integer.class)).isEqualTo(1);
+        assertThat(jdbcTemplate.queryForObject("select count(*) from identity_provider where identity_zone_id=?", new Object[]{otherZoneId1}, Integer.class)).isOne();
         jdbcIdentityProviderProvisioning.onApplicationEvent(new EntityDeletedEvent<>(mockIdentityZone, null, otherZoneId1));
-        assertThat(jdbcTemplate.queryForObject("select count(*) from identity_provider where identity_zone_id=?", new Object[]{otherZoneId1}, Integer.class)).isEqualTo(0);
+        assertThat(jdbcTemplate.queryForObject("select count(*) from identity_provider where identity_zone_id=?", new Object[]{otherZoneId1}, Integer.class)).isZero();
     }
 
     @Test
@@ -127,7 +127,7 @@ class JdbcIdentityProviderProvisioningTests {
     }
 
     private void assertIdentityProviderExists(final String id, final String zoneId) {
-        assertThat(jdbcTemplate.queryForObject("select count(*) from identity_provider where identity_zone_id=? and id=?", new Object[]{zoneId, id}, Integer.class)).isEqualTo(1);
+        assertThat(jdbcTemplate.queryForObject("select count(*) from identity_provider where identity_zone_id=? and id=?", new Object[]{zoneId, id}, Integer.class)).isOne();
     }
 
     private void assertIdentityProviderDoesNotExist(final String id, final String zoneId) {
@@ -170,9 +170,10 @@ class JdbcIdentityProviderProvisioningTests {
         assertThat(createdIdp.getConfig()).isEqualTo(idp.getConfig());
         assertThat(createdIdp.getConfig().getProviderDescription()).isEqualTo(providerDescription);
 
-        assertThat(rawCreatedIdp.get("name")).isEqualTo(idp.getName());
-        assertThat(rawCreatedIdp.get("origin_key")).isEqualTo(idp.getOriginKey());
-        assertThat(rawCreatedIdp.get("type")).isEqualTo(idp.getType());
+        assertThat(rawCreatedIdp)
+                .containsEntry("name", idp.getName())
+                .containsEntry("origin_key", idp.getOriginKey())
+                .containsEntry("type", idp.getType());
         assertThat(JsonUtils.readValue((String) rawCreatedIdp.get("config"), UaaIdentityProviderDefinition.class)).isEqualTo(idp.getConfig());
         assertThat(rawCreatedIdp.get("identity_zone_id").toString().trim()).isEqualTo(uaaZoneId);
 
@@ -283,11 +284,12 @@ class JdbcIdentityProviderProvisioningTests {
         assertThat(createdIdp.getType()).isEqualTo(idp.getType());
         assertThat(createdIdp.getConfig()).isEqualTo(idp.getConfig());
 
-        assertThat(rawCreatedIdp.get("name")).isEqualTo(idp.getName());
-        assertThat(rawCreatedIdp.get("origin_key")).isEqualTo(idp.getOriginKey());
-        assertThat(rawCreatedIdp.get("type")).isEqualTo(idp.getType());
+        assertThat(rawCreatedIdp)
+                .containsEntry("name", idp.getName())
+                .containsEntry("origin_key", idp.getOriginKey())
+                .containsEntry("type", idp.getType());
         assertThat(JsonUtils.readValue((String) rawCreatedIdp.get("config"), AbstractIdentityProviderDefinition.class)).isEqualTo(idp.getConfig());
-        assertThat(rawCreatedIdp.get("identity_zone_id")).isEqualTo(otherZoneId1);
+        assertThat(rawCreatedIdp).containsEntry("identity_zone_id", otherZoneId1);
     }
 
     @Test
@@ -330,7 +332,7 @@ class JdbcIdentityProviderProvisioningTests {
 
         assertThat(updatedIdp.getConfig()).isEqualTo(definition);
         assertThat(JsonUtils.readValue((String) rawUpdatedIdp.get("config"), LdapIdentityProviderDefinition.class)).isEqualTo(definition);
-        assertThat(rawUpdatedIdp.get("identity_zone_id")).isEqualTo(getUaaZoneId());
+        assertThat(rawUpdatedIdp).containsEntry("identity_zone_id", getUaaZoneId());
     }
 
     @Test
@@ -348,7 +350,7 @@ class JdbcIdentityProviderProvisioningTests {
 
         assertThat(updatedIdp.getConfig()).isEqualTo(definition);
         assertThat(JsonUtils.readValue((String) rawUpdatedIdp.get("config"), AbstractIdentityProviderDefinition.class)).isEqualTo(definition);
-        assertThat(rawUpdatedIdp.get("identity_zone_id")).isEqualTo(otherZoneId1);
+        assertThat(rawUpdatedIdp).containsEntry("identity_zone_id", otherZoneId1);
     }
 
     @Test
@@ -372,7 +374,7 @@ class JdbcIdentityProviderProvisioningTests {
         IdentityProvider defaultZoneIdp = MultitenancyFixture.identityProvider(origin, uaaZoneId);
         jdbcIdentityProviderProvisioning.create(defaultZoneIdp, uaaZoneId);
         identityProviders = jdbcIdentityProviderProvisioning.retrieveActive(uaaZoneId);
-        assertThat(identityProviders.size()).isEqualTo(numberOfIdps + 1);
+        assertThat(identityProviders).hasSize(numberOfIdps + 1);
 
         String otherOrigin = "otherOrigin-" + generator.generate();
         String otherZoneId = "otherZoneId-" + generator.generate();
@@ -380,7 +382,7 @@ class JdbcIdentityProviderProvisioningTests {
         jdbcIdentityProviderProvisioning.create(otherZoneIdp, otherZoneId);
 
         identityProviders = jdbcIdentityProviderProvisioning.retrieveActive(otherZoneId);
-        assertThat(identityProviders.size()).isEqualTo(1);
+        assertThat(identityProviders).hasSize(1);
     }
 
     @Test
@@ -430,9 +432,9 @@ class JdbcIdentityProviderProvisioningTests {
         final List<IdentityProvider> result = jdbcIdentityProviderProvisioning.retrieveActiveByTypes(otherZoneId1,
                 types);
         final Set<String> idsInResult = result.stream().map(IdentityProvider::getId).collect(toSet());
-        assertThat(idsInResult.size()).isEqualTo(expectedIdpIds.size());
+        assertThat(idsInResult).hasSize(expectedIdpIds.size());
         for (final String id : expectedIdpIds) {
-            assertThat(idsInResult.contains(id)).isTrue();
+            assertThat(idsInResult).contains(id);
         }
     }
 

@@ -92,7 +92,7 @@ class UserTokenMockMvcTests extends AbstractTokenMockMvcTests {
         String refreshToken = (String) result.get(REFRESH_TOKEN);
         assertThat(refreshToken).isNotNull();
         assertThat(refreshToken.length()).isLessThanOrEqualTo(36);
-        assertThat(result.get("scope")).isEqualTo("test.scope");
+        assertThat(result).containsEntry("scope", "test.scope");
         assertThat(result.get(ACCESS_TOKEN)).isNull();
 
         RevocableToken token = revocableTokenProvisioning.retrieve(refreshToken, identityZoneManager.getCurrentIdentityZoneId());

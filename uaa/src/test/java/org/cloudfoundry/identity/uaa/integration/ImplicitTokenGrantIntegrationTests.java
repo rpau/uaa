@@ -93,9 +93,7 @@ class ImplicitTokenGrantIntegrationTests {
         ResponseEntity<Void> result = serverRunning.postForResponse(implicitUrl(), headers, formData);
 
         assertThat(result.getHeaders().getLocation()).isNotNull();
-        assertThat(result.getHeaders().getLocation().toString()
-                .matches(REDIRECT_URL_PATTERN)).isTrue();
-
+        assertThat(result.getHeaders().getLocation().toString()).matches(REDIRECT_URL_PATTERN);
     }
 
     @Test
@@ -113,14 +111,11 @@ class ImplicitTokenGrantIntegrationTests {
 
         URI location = result.getHeaders().getLocation();
         assertThat(location).isNotNull();
-        assertThat(location.toString()
-                .matches(REDIRECT_URL_PATTERN)).as("Wrong location: " + location).isTrue();
-
+        assertThat(location.toString()).as("Wrong location: " + location).matches(REDIRECT_URL_PATTERN);
     }
 
     @Test
     void authzWithIntermediateFormLoginSucceeds() {
-
         BasicCookieStore cookies = new BasicCookieStore();
 
         ResponseEntity<Void> result = serverRunning.getForResponse(implicitUrl(), getHeaders(cookies));
@@ -141,10 +136,9 @@ class ImplicitTokenGrantIntegrationTests {
             }
         }
         // should be directed to the login screen...
-        assertThat(response.getBody().contains("/login.do")).isTrue();
-        assertThat(response.getBody().contains("username")).isTrue();
-        assertThat(response.getBody().contains("password")).isTrue();
-
+        assertThat(response.getBody()).contains("/login.do");
+        assertThat(response.getBody()).contains("username");
+        assertThat(response.getBody()).contains("password");
 
         location = "/login.do";
 
@@ -159,8 +153,7 @@ class ImplicitTokenGrantIntegrationTests {
         // System.err.println(result.getHeaders());
 
         assertThat(result.getHeaders().getLocation()).isNotNull();
-        assertThat(result.getHeaders().getLocation().toString()
-                .matches(REDIRECT_URL_PATTERN)).isTrue();
+        assertThat(result.getHeaders().getLocation().toString()).matches(REDIRECT_URL_PATTERN);
     }
 
     @Test

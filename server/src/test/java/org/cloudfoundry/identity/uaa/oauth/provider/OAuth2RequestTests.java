@@ -106,7 +106,7 @@ class OAuth2RequestTests {
     @Test
     void getRequestParameters() {
         oAuth2Request.setRequestParameters(Map.of(OAuth2Utils.RESPONSE_TYPE, "token"));
-        assertThat(oAuth2Request.getRequestParameters().get("response_type")).isEqualTo("token");
+        assertThat(oAuth2Request.getRequestParameters()).containsEntry("response_type", "token");
     }
 
     @Test

@@ -237,7 +237,7 @@ class DynamicZoneAwareAuthenticationManagerTest {
         when(loginHint.getOrigin()).thenReturn("uaa");
         ChainedAuthenticationManager chainedAuthenticationManager = manager.getChainedAuthenticationManager(ZONE, loginHint);
 
-        assertThat(chainedAuthenticationManager.getDelegates().length).isEqualTo(1);
+        assertThat(chainedAuthenticationManager.getDelegates().length).isOne();
         assertThat(chainedAuthenticationManager.getDelegates()[0].getAuthenticationManager()).isEqualTo(uaaAuthenticationMgr);
     }
 
@@ -252,7 +252,7 @@ class DynamicZoneAwareAuthenticationManagerTest {
         when(loginHint.getOrigin()).thenReturn("ldap");
         ChainedAuthenticationManager chainedAuthenticationManager = manager.getChainedAuthenticationManager(ZONE, loginHint);
 
-        assertThat(chainedAuthenticationManager.getDelegates().length).isEqualTo(1);
+        assertThat(chainedAuthenticationManager.getDelegates().length).isOne();
         assertThat(chainedAuthenticationManager.getDelegates()[0].getAuthenticationManager()).isEqualTo(manager.getLdapAuthenticationManager(ZONE, ldapActive));
     }
 

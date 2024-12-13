@@ -27,7 +27,7 @@ class LoggingOptionTest {
         Instant endTime = startTime.plus(duration);
         StringBuilder sb = new StringBuilder();
         LoggingOption.addDuration(sb, startTime, endTime);
-        assertThat(sb.toString()).isEqualTo("(" + expectedDuration + ") ");
+        assertThat(sb).hasToString("(" + expectedDuration + ") ");
     }
 
     @Test

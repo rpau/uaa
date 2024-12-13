@@ -128,7 +128,7 @@ class ResourceBeanDefinitionParserTest {
     @Test
     void doStatic() throws Exception {
         ResourceBeanDefinitionParser.StringListFactoryBean stringListFactoryBean = new ResourceBeanDefinitionParser.StringListFactoryBean("one,two");
-        assertThat(stringListFactoryBean.getObject().size()).isEqualTo(2);
+        assertThat(stringListFactoryBean.getObject()).hasSize(2);
         assertThat(stringListFactoryBean.getObject().get(0)).isEqualTo("one");
         assertThat(stringListFactoryBean.getObject().get(1)).isEqualTo("two");
         assertThat(stringListFactoryBean.getObjectType()).isEqualTo(List.class);

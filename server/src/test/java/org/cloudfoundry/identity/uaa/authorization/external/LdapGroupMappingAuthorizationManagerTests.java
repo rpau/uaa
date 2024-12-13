@@ -64,7 +64,7 @@ class LdapGroupMappingAuthorizationManagerTests {
         gDB = new JdbcScimGroupProvisioning(namedJdbcTemplate, pagingListFactory, dbUtils);
         eDB = new JdbcScimGroupExternalMembershipManager(jdbcTemplate, dbUtils);
         ((JdbcScimGroupExternalMembershipManager) eDB).setScimGroupProvisioning(gDB);
-        assertThat(gDB.retrieveAll(IdentityZoneHolder.get().getId()).size()).isEqualTo(0);
+        assertThat(gDB.retrieveAll(IdentityZoneHolder.get().getId())).isEmpty();
 
         gDB.create(new ScimGroup(null, "acme", IdentityZoneHolder.get().getId()), IdentityZoneHolder.get().getId());
         gDB.create(new ScimGroup(null, "acme.dev", IdentityZoneHolder.get().getId()), IdentityZoneHolder.get().getId());

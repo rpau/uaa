@@ -114,7 +114,7 @@ class ScimUserLookupMockMvcTests {
                 .andReturn().getResponse();
         Map<String, Object> map = JsonUtils.readValue(response.getContentAsString(), Map.class);
         List<Map<String, Object>> resources = (List<Map<String, Object>>) map.get("resources");
-        assertThat(resources.size()).isEqualTo(1);
+        assertThat(resources).hasSize(1);
         assertThat(resources.get(0).get("origin")).isNotEqualTo("test-origin");
     }
 
@@ -134,7 +134,7 @@ class ScimUserLookupMockMvcTests {
                 .andReturn().getResponse();
         Map<String, Object> map = JsonUtils.readValue(response.getContentAsString(), Map.class);
         List<Map<String, Object>> resources = (List<Map<String, Object>>) map.get("resources");
-        assertThat(resources.size()).isEqualTo(2);
+        assertThat(resources).hasSize(2);
     }
 
     @Test
@@ -257,7 +257,7 @@ class ScimUserLookupMockMvcTests {
         assertThat(map.get("itemsPerPage")).as("Response should contain 'itemsPerPage' object").isNotNull();
         assertThat(map.get("totalResults")).as("Response should contain 'totalResults' object").isNotNull();
         List<Map<String, Object>> resources = (List<Map<String, Object>>) map.get("resources");
-        assertThat(resources.size()).isEqualTo(usernames.length);
+        assertThat(resources).hasSize(usernames.length);
         for (Map<String, Object> user : resources) {
             assertThat(user.get(OriginKeys.ORIGIN)).as("Response should contain 'origin' object").isNotNull();
             assertThat(user.get("id")).as("Response should contain 'id' object").isNotNull();

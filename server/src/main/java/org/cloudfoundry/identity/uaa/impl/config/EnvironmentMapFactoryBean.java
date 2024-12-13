@@ -4,9 +4,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.context.EnvironmentAware;
-import org.springframework.core.env.*;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.EnumerablePropertySource;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.PropertySource;
+import org.springframework.core.env.StandardEnvironment;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Factory for Maps that reads from the Spring context {@link Environment} where
@@ -36,7 +44,7 @@ public class EnvironmentMapFactoryBean implements FactoryBean<Map<String, ?>>, E
     }
 
     @Override
-    public Map<String, ?> getObject() {
+    public Map<String, Object> getObject() {
         Map<String, Object> result = new LinkedHashMap<>();
         // The result is the default application properties overridden with
         // Spring environment values - reversing the
@@ -79,5 +87,4 @@ public class EnvironmentMapFactoryBean implements FactoryBean<Map<String, ?>>, E
     public boolean isSingleton() {
         return true;
     }
-
 }

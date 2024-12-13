@@ -27,7 +27,7 @@ class JsonWebKeyTests {
         // then
         assertThat(jsonWebKey.getKid()).isEqualTo(samlKeySet.getKeys().get(0).getKid());
         assertThat(jsonWebKey.getX5t()).isEqualTo(samlKeySet.getKeys().get(0).getX5t());
-        assertThat(((ArrayList) samlKeySet.getKeySetMap().get("keys")).size()).isEqualTo(3);
+        assertThat(((ArrayList) samlKeySet.getKeySetMap().get("keys"))).hasSize(3);
     }
 
     @Test
@@ -36,5 +36,4 @@ class JsonWebKeyTests {
         Map<String, Object> jsonMap = Map.of("kid", "uaa-key");
         assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> new JsonWebKey(jsonMap));
     }
-
 }

@@ -95,10 +95,10 @@ public class TestZonifyGroupSchema_V2_4_1 {
     }
 
     @Test
-    void test_Ensure_That_New_Fields_NotNull() throws Exception {
+    void ensure_that_new_fields_not_null() throws Exception {
         JdbcTemplate jdbcTemplate = webApplicationContext.getBean(JdbcTemplate.class);
         DbUtils dbUtils = webApplicationContext.getBean(DbUtils.class);
-        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM external_group_mapping WHERE origin IS NULL", Integer.class)).isEqualTo(0);
-        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM " + dbUtils.getQuotedIdentifier("groups", jdbcTemplate) + " WHERE identity_zone_id IS NULL", Integer.class)).isEqualTo(0);
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM external_group_mapping WHERE origin IS NULL", Integer.class)).isZero();
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM " + dbUtils.getQuotedIdentifier("groups", jdbcTemplate) + " WHERE identity_zone_id IS NULL", Integer.class)).isZero();
     }
 }

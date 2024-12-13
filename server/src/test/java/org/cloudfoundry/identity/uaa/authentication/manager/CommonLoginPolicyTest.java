@@ -45,7 +45,7 @@ class CommonLoginPolicyTest {
         commonLoginPolicy = spy(new CommonLoginPolicy(auditService, lockoutPolicyRetriever, successEventType, failureEventType, timeService, false));
         LoginPolicy.Result result = commonLoginPolicy.isAllowed("principal");
         assertThat(result.isAllowed()).isTrue();
-        assertThat(result.getFailureCount()).isEqualTo(0);
+        assertThat(result.getFailureCount()).isZero();
         verifyNoInteractions(lockoutPolicyRetriever);
         verifyNoInteractions(timeService);
         verifyNoInteractions(auditService);
@@ -58,7 +58,7 @@ class CommonLoginPolicyTest {
         LoginPolicy.Result result = commonLoginPolicy.isAllowed("principal");
 
         assertThat(result.isAllowed()).isTrue();
-        assertThat(result.getFailureCount()).isEqualTo(0);
+        assertThat(result.getFailureCount()).isZero();
     }
 
     @Test
@@ -72,7 +72,7 @@ class CommonLoginPolicyTest {
         LoginPolicy.Result result = commonLoginPolicy.isAllowed("principal");
 
         assertThat(result.isAllowed()).isFalse();
-        assertThat(result.getFailureCount()).isEqualTo(1);
+        assertThat(result.getFailureCount()).isOne();
     }
 
     @Test
@@ -86,6 +86,6 @@ class CommonLoginPolicyTest {
         LoginPolicy.Result result = commonLoginPolicy.isAllowed("principal");
 
         assertThat(result.isAllowed()).isTrue();
-        assertThat(result.getFailureCount()).isEqualTo(1);
+        assertThat(result.getFailureCount()).isOne();
     }
 }

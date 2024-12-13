@@ -105,7 +105,7 @@ class ScimUtilsTest {
 
                 URL expected = new URL("http://localhost:8080/uaa/verify_user?code=code");
 
-                assertThat(actual.toString()).isEqualTo(expected.toString());
+                assertThat(actual).hasToString(expected.toString());
             }
 
         }
@@ -122,7 +122,7 @@ class ScimUtilsTest {
 
                 URL expected = new URL("http://subdomain.localhost:8080/uaa/verify_user?code=code");
 
-                assertThat(actual.toString()).isEqualTo(expected.toString());
+                assertThat(actual).hasToString(expected.toString());
             }
         }
     }

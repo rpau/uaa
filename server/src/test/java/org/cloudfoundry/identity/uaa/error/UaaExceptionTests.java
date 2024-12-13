@@ -38,12 +38,6 @@ class UaaExceptionTests {
     }
 
     @Test
-    void addAdditionalInformation() {
-
-    }
-
-
-    @Test
     void valueOf() {
         Map<String, String> params = new HashMap<>();
         params.put("error", "error");
@@ -55,26 +49,26 @@ class UaaExceptionTests {
         assertThat(x.getErrorCode()).isEqualTo("error");
         assertThat(x.getMessage()).isEqualTo("error_description");
         assertThat(x.getHttpStatus()).isEqualTo(403);
-        assertThat(x.getAdditionalInformation().get("additional1")).isEqualTo("additional1");
-        assertThat(x.getAdditionalInformation().get("additional2")).isEqualTo("additional2");
+        assertThat(x.getAdditionalInformation()).containsEntry("additional1", "additional1")
+                .containsEntry("additional2", "additional2");
 
         params.put("status", "test");
         x = UaaException.valueOf(params);
         assertThat(x.getErrorCode()).isEqualTo("error");
         assertThat(x.getMessage()).isEqualTo("error_description");
         assertThat(x.getHttpStatus()).isEqualTo(400);
-        assertThat(x.getAdditionalInformation().get("additional1")).isEqualTo("additional1");
-        assertThat(x.getAdditionalInformation().get("additional2")).isEqualTo("additional2");
-        assertThat(x.getAdditionalInformation().get("additional3")).isNull();
+        assertThat(x.getAdditionalInformation()).containsEntry("additional1", "additional1")
+                .containsEntry("additional2", "additional2")
+                .doesNotContainKey("additional3");
 
         x.addAdditionalInformation("additional3", "additional3");
-        assertThat(x.getAdditionalInformation().get("additional1")).isEqualTo("additional1");
-        assertThat(x.getAdditionalInformation().get("additional2")).isEqualTo("additional2");
-        assertThat(x.getAdditionalInformation().get("additional3")).isEqualTo("additional3");
+        assertThat(x.getAdditionalInformation()).containsEntry("additional1", "additional1")
+                .containsEntry("additional2", "additional2")
+                .containsEntry("additional3", "additional3");
 
-        assertThat(x.getSummary()).isNotNull();
-        assertThat(x.getSummary().contains("error=\"error\"")).isTrue();
-        assertThat(x.getSummary().contains("additional3=\"additional3\"")).isTrue();
+        assertThat(x.getSummary()).isNotNull()
+                .contains("error=\"error\"")
+                .contains("additional3=\"additional3\"");
     }
 
     @Test
@@ -91,7 +85,6 @@ class UaaExceptionTests {
         OAuth2Exception deserialized = JsonUtils.readValue(uaaExceptionString, UaaException.class);
         assertThat(JsonUtils.writeValueAsString(deserialized)).isEqualTo(uaaExceptionString);
         UaaException newException = new UaaException(deserialized, deserialized.getOAuth2ErrorCode(), "error_description", 400);
-        assertThat(x.toString()).isEqualTo(newException.toString());
+        assertThat(x).hasToString(newException.toString());
     }
-
 }

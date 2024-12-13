@@ -42,8 +42,8 @@ class LimitSqlAdapterTests {
 
     @Test
     void deleteTopRows() {
-        assertThat((int) jdbcTemplate.queryForObject("select count(*) from delete_top_rows_test where id = 'X'", Integer.class)).isEqualTo(1);
-        assertThat((int) jdbcTemplate.queryForObject("select count(*) from delete_top_rows_test where id = 'A'", Integer.class)).isEqualTo(1);
+        assertThat((int) jdbcTemplate.queryForObject("select count(*) from delete_top_rows_test where id = 'X'", Integer.class)).isOne();
+        assertThat((int) jdbcTemplate.queryForObject("select count(*) from delete_top_rows_test where id = 'A'", Integer.class)).isOne();
         jdbcTemplate.update(
                 limitSqlAdapter.getDeleteExpiredQuery(
                         "delete_top_rows_test",
@@ -53,9 +53,9 @@ class LimitSqlAdapterTests {
                 ),
                 5
         );
-        assertThat((int) jdbcTemplate.queryForObject("select count(*) from delete_top_rows_test where id = 'K'", Integer.class)).isEqualTo(1);
-        assertThat((int) jdbcTemplate.queryForObject("select count(*) from delete_top_rows_test where id = 'D'", Integer.class)).isEqualTo(1);
-        assertThat((int) jdbcTemplate.queryForObject("select count(*) from delete_top_rows_test where id = 'A'", Integer.class)).isEqualTo(1);
+        assertThat((int) jdbcTemplate.queryForObject("select count(*) from delete_top_rows_test where id = 'K'", Integer.class)).isOne();
+        assertThat((int) jdbcTemplate.queryForObject("select count(*) from delete_top_rows_test where id = 'D'", Integer.class)).isOne();
+        assertThat((int) jdbcTemplate.queryForObject("select count(*) from delete_top_rows_test where id = 'A'", Integer.class)).isOne();
         assertThat((int) jdbcTemplate.queryForObject("select count(*) from delete_top_rows_test", Integer.class)).isEqualTo(3);
     }
 }

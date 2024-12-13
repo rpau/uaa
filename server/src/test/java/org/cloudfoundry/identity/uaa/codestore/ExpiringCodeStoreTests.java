@@ -41,12 +41,8 @@ abstract class ExpiringCodeStoreTests {
         ExpiringCode expiringCode = expiringCodeStore.generateCode(data, expiresAt, null, IdentityZone.getUaaZoneId());
 
         assertThat(expiringCode).isNotNull();
-
-        assertThat(expiringCode.getCode()).isNotNull();
-        assertThat(expiringCode.getCode().trim().length() > 0).isTrue();
-
+        assertThat(expiringCode.getCode()).isNotNull().isNotBlank();
         assertThat(expiringCode.getExpiresAt()).isEqualTo(expiresAt);
-
         assertThat(expiringCode.getData()).isEqualTo(data);
     }
 
@@ -92,10 +88,9 @@ abstract class ExpiringCodeStoreTests {
         String zoneId = IdentityZone.getUaaZoneId();
 
         ExpiringCode generatedCode = expiringCodeStore.generateCode(data, expiresAt, null, zoneId);
-
-        assertThat(expiringCodeStore.peekCode(generatedCode.getCode(), zoneId)).isEqualTo(generatedCode);
-        assertThat(expiringCodeStore.peekCode(generatedCode.getCode(), zoneId)).isEqualTo(generatedCode);
-        assertThat(expiringCodeStore.peekCode(generatedCode.getCode(), zoneId)).isEqualTo(generatedCode);
+        assertThat(expiringCodeStore.peekCode(generatedCode.getCode(), zoneId)).isEqualTo(generatedCode)
+                .isEqualTo(generatedCode)
+                .isEqualTo(generatedCode);
     }
 
     @Test
@@ -165,14 +160,14 @@ abstract class ExpiringCodeStoreTests {
     void expireCodeByIntent() {
         ExpiringCode code = expiringCodeStore.generateCode("{}", new Timestamp(System.currentTimeMillis() + 60000), "Test Intent", IdentityZone.getUaaZoneId());
 
-        assertThat(countCodes()).isEqualTo(1);
+        assertThat(countCodes()).isOne();
 
         expiringCodeStore.expireByIntent("Test Intent", "id");
-        assertThat(countCodes()).isEqualTo(1);
+        assertThat(countCodes()).isOne();
 
         expiringCodeStore.expireByIntent("Test Intent", IdentityZone.getUaaZoneId());
         ExpiringCode retrievedCode = expiringCodeStore.retrieveCode(code.getCode(), IdentityZone.getUaaZoneId());
-        assertThat(countCodes()).isEqualTo(0);
+        assertThat(countCodes()).isZero();
         assertThat(retrievedCode).isNull();
     }
 

@@ -154,7 +154,7 @@ public class CfScimUserEndpointIntegrationTests {
         @SuppressWarnings("unchecked")
         Map<String, String> error = response.getBody();
         // System.err.println(error);
-        assertThat(error.get("error")).isEqualTo("insufficient_scope");
+        assertThat(error).containsEntry("error", "insufficient_scope");
     }
 
     @Test
@@ -166,5 +166,4 @@ public class CfScimUserEndpointIntegrationTests {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
         assertThat(results.get("error")).as("There should be an error").isNotNull();
     }
-
 }

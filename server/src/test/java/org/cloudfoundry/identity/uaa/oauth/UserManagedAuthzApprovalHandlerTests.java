@@ -150,7 +150,7 @@ class UserManagedAuthzApprovalHandlerTests {
 
         // The request is approved because the user has not requested any scopes
         assertThat(handler.isApproved(request, mockAuthentication)).isTrue();
-        assertThat(request.getScope().size()).isEqualTo(0);
+        assertThat(request.getScope()).isEmpty();
     }
 
     @Test

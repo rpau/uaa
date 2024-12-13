@@ -32,7 +32,7 @@ public class TestUtils {
             final String userId) {
         String sql = "select count(id) from users where id='%s'".formatted(
                 userId);
-        assertThat(template.queryForObject(sql, Integer.class)).isEqualTo(0);
+        assertThat(template.queryForObject(sql, Integer.class)).isZero();
     }
 
     public static ScimUser scimUserInstance(String email) {

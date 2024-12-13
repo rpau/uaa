@@ -1930,7 +1930,7 @@ class IdentityZoneEndpointsMockMvcTests {
                                 .content(JsonUtils.writeValueAsString(identityZone2)))
                 .andExpect(status().isConflict());
 
-        assertThat(zoneModifiedEventListener.getEventCount()).isEqualTo(1);
+        assertThat(zoneModifiedEventListener.getEventCount()).isOne();
     }
 
     @Test

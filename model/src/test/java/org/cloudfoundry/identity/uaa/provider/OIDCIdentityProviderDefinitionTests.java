@@ -38,21 +38,21 @@ class OIDCIdentityProviderDefinitionTests {
         OIDCIdentityProviderDefinition def = JsonUtils.readValue(defaultJson, OIDCIdentityProviderDefinition.class);
         assertThat(def.getDiscoveryUrl()).isNull();
         def.setDiscoveryUrl(new URL(url));
-        assertThat(def.getDiscoveryUrl().toString()).isEqualTo(url);
+        assertThat(def.getDiscoveryUrl()).hasToString(url);
         String json = JsonUtils.writeValueAsString(def);
         def = JsonUtils.readValue(json, OIDCIdentityProviderDefinition.class);
-        assertThat(def.getDiscoveryUrl().toString()).isEqualTo(url);
-        assertThat(def.getAdditionalAuthzParameters().get("token_format")).isEqualTo("jwt");
+        assertThat(def.getDiscoveryUrl()).hasToString(url);
+        assertThat(def.getAdditionalAuthzParameters()).containsEntry("token_format", "jwt");
     }
 
     @Test
     void serializableObjectCalls() throws CloneNotSupportedException {
         OIDCIdentityProviderDefinition def = JsonUtils.readValue(defaultJson, OIDCIdentityProviderDefinition.class);
         OIDCIdentityProviderDefinition def2 = (OIDCIdentityProviderDefinition) def.clone();
-        assertThat(def2).isEqualTo(def);
-        assertThat(def2.hashCode()).isEqualTo(def.hashCode());
-        assertThat(def2.getAdditionalAuthzParameters().size()).isEqualTo(1);
-        assertThat(def2.getAdditionalAuthzParameters().get("token_format")).isEqualTo("jwt");
+        assertThat(def2).isEqualTo(def)
+                .hasSameHashCodeAs(def);
+        assertThat(def2.getAdditionalAuthzParameters()).hasSize(1)
+                .containsEntry("token_format", "jwt");
     }
 
     @Test

@@ -306,7 +306,7 @@ class AccountsControllerMockMvcTests {
                 .andExpect(redirectedUrl("accounts/email_sent"));
 
         FakeJavaMailSender.MimeMessageWrapper message = fakeJavaMailSender.getSentMessages().get(0);
-        assertThat(message.getContentString().contains("Cloud Foundry")).isTrue();
+        assertThat(message.getContentString()).contains("Cloud Foundry");
         assertThat(message.getMessage().getHeader("From")).contains("Cloud Foundry <admin@localhost>");
 
         mockMvc.perform(get("/verify_user")
@@ -357,12 +357,12 @@ class AccountsControllerMockMvcTests {
 
         FakeJavaMailSender.MimeMessageWrapper message = fakeJavaMailSender.getSentMessages().get(0);
         String link = mockMvcTestClient.extractLink(message.getContentString());
-        assertThat(message.getContentString().contains(subdomain + "zone")).isTrue();
+        assertThat(message.getContentString()).contains(subdomain + "zone");
         assertThat(message.getMessage().getHeader("From")).contains(subdomain + "zone <admin@localhost>");
-        assertThat(message.getContentString().contains("Cloud Foundry")).isFalse();
-        assertThat(message.getContentString().contains("Pivotal")).isFalse();
+        assertThat(message.getContentString()).doesNotContain("Cloud Foundry");
+        assertThat(message.getContentString()).doesNotContain("Pivotal");
         assertThat(hasLength(link)).isTrue();
-        assertThat(link.contains(subdomain + ".localhost")).isTrue();
+        assertThat(link).contains(subdomain + ".localhost");
 
         mockMvc.perform(get("/verify_user")
                         .param("code", "test" + generator.counter.get())
@@ -412,7 +412,7 @@ class AccountsControllerMockMvcTests {
         FakeJavaMailSender.MimeMessageWrapper message = fakeJavaMailSender.getSentMessages().get(0);
         String link = mockMvcTestClient.extractLink(message.getContentString());
         assertThat(hasLength(link)).isTrue();
-        assertThat(link.contains(subdomain + ".localhost")).isTrue();
+        assertThat(link).contains(subdomain + ".localhost");
 
         mockMvc.perform(get("/verify_user")
                         .param("code", "test" + generator.counter.get())
@@ -583,7 +583,7 @@ class AccountsControllerMockMvcTests {
                 .andExpect(redirectedUrl("accounts/email_sent"));
 
         FakeJavaMailSender.MimeMessageWrapper message = fakeJavaMailSender.getSentMessages().get(0);
-        assertThat(message.getContentString().contains("Cloud Foundry")).isTrue();
+        assertThat(message.getContentString()).contains("Cloud Foundry");
         assertThat(message.getMessage().getHeader("From")).contains("Cloud Foundry <admin@localhost>");
 
         mockMvc.perform(get("/verify_user")

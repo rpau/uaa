@@ -27,8 +27,7 @@ class JsonWebKeyDeserializerTest {
         JsonWebKeySet<JsonWebKey> keys = JsonUtils.readValue(microsoftJwKSet, new TypeReference<JsonWebKeySet<JsonWebKey>>() {
         });
         assertThat(keys).isNotNull();
-        assertThat(keys.getKeys()).isNotNull();
-        assertThat(keys.getKeys().size()).isEqualTo(3);
+        assertThat(keys.getKeys()).hasSize(3);
         for (JsonWebKey key : keys.getKeys()) {
             assertThat(key).isNotNull();
             assertThat(JsonWebKey.getRsaPublicKey(key)).isNotNull();
@@ -42,8 +41,8 @@ class JsonWebKeyDeserializerTest {
         JsonWebKeySet<JsonWebKey> keys = JsonUtils.readValue(uaaLegacyJwkSet, new TypeReference<JsonWebKeySet<JsonWebKey>>() {
         });
         assertThat(keys).isNotNull();
-        assertThat(keys.getKeys()).isNotNull();
-        assertThat(keys.getKeys().size()).isEqualTo(1);
+        assertThat(keys.getKeys()).isNotNull()
+                .hasSize(1);
         for (JsonWebKey key : keys.getKeys()) {
             assertThat(key).isNotNull();
             assertThat(JsonWebKey.getRsaPublicKey(key)).isNotNull();
@@ -57,8 +56,8 @@ class JsonWebKeyDeserializerTest {
         JsonWebKeySet<JsonWebKey> keys = JsonUtils.readValue(keyCloakJwkSet, new TypeReference<JsonWebKeySet<JsonWebKey>>() {
         });
         assertThat(keys).isNotNull();
-        assertThat(keys.getKeys()).isNotNull();
-        assertThat(keys.getKeys().size()).isEqualTo(1);
+        assertThat(keys.getKeys()).isNotNull()
+                .hasSize(1);
         for (JsonWebKey key : keys.getKeys()) {
             assertThat(key).isNotNull();
             assertThat(JsonWebKey.getRsaPublicKey(key)).isNotNull();
@@ -73,8 +72,8 @@ class JsonWebKeyDeserializerTest {
         JsonWebKeySet<JsonWebKey> keys = JsonUtils.readValue(keyOctedJwkSet, new TypeReference<JsonWebKeySet<JsonWebKey>>() {
         });
         assertThat(keys).isNotNull();
-        assertThat(keys.getKeys()).isNotNull();
-        assertThat(keys.getKeys().size()).isEqualTo(1);
+        assertThat(keys.getKeys()).isNotNull()
+                .hasSize(1);
         for (JsonWebKey key : keys.getKeys()) {
             assertThat(key).isNotNull();
             assertThat(key.getKty()).isEqualTo(oct);
@@ -88,17 +87,16 @@ class JsonWebKeyDeserializerTest {
         JsonWebKeySet<JsonWebKey> keys = JsonUtils.readValue(keyECJwkSet, new TypeReference<JsonWebKeySet<JsonWebKey>>() {
         });
         assertThat(keys).isNotNull();
-        assertThat(keys.getKeys()).isNotNull();
-        assertThat(keys.getKeys().size()).isEqualTo(1);
+        assertThat(keys.getKeys()).hasSize(1);
         for (JsonWebKey key : keys.getKeys()) {
             assertThat(key).isNotNull();
             assertThat(key.getValue()).isNull();
             assertThat(key.getKty()).isEqualTo(EC);
             assertThat(key.getAlgorithm()).isEqualTo("ES256");
             assertThat(key.getKid()).isEqualTo("ec-key-1");
-            assertThat(key.getKeyProperties().get("x")).isEqualTo("gI0GAILBdu7T53akrFmMyGcsF3n5dO7MmwNBHKW5SV0");
-            assertThat(key.getKeyProperties().get("y")).isEqualTo("SLW_xSffzlPWrHEVI30DHM_4egVwt3NQqeUD7nMFpps");
-            assertThat(key.getKeyProperties().get("crv")).isEqualTo("P-256");
+            assertThat(key.getKeyProperties()).containsEntry("x", "gI0GAILBdu7T53akrFmMyGcsF3n5dO7MmwNBHKW5SV0")
+                    .containsEntry("y", "SLW_xSffzlPWrHEVI30DHM_4egVwt3NQqeUD7nMFpps")
+                    .containsEntry("crv", "P-256");
         }
     }
 }

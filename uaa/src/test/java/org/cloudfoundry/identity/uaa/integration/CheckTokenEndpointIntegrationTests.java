@@ -87,9 +87,9 @@ class CheckTokenEndpointIntegrationTests {
             }
         }
         // should be directed to the login screen...
-        assertThat(response.getBody().contains("/login.do")).isTrue();
-        assertThat(response.getBody().contains("username")).isTrue();
-        assertThat(response.getBody().contains("password")).isTrue();
+        assertThat(response.getBody()).contains("/login.do")
+                .contains("username")
+                .contains("password");
         String csrf = IntegrationTestUtils.extractCookieCsrf(response.getBody());
 
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
@@ -117,7 +117,7 @@ class CheckTokenEndpointIntegrationTests {
         }
         if (response.getStatusCode() == HttpStatus.OK) {
             // The grant access page should be returned
-            assertThat(response.getBody().contains("<h1>Application Authorization</h1>")).isTrue();
+            assertThat(response.getBody()).contains("<h1>Application Authorization</h1>");
 
             formData.clear();
             formData.add(DEFAULT_CSRF_COOKIE_NAME, IntegrationTestUtils.extractCookieCsrf(response.getBody()));
@@ -159,8 +159,9 @@ class CheckTokenEndpointIntegrationTests {
         @SuppressWarnings("unchecked")
         Map<String, String> map = tokenResponse.getBody();
         assertThat(map.get("iss")).isNotNull();
-        assertThat(map.get("user_name")).isEqualTo(testAccounts.getUserName());
-        assertThat(map.get("email")).isEqualTo(testAccounts.getEmail());
+        assertThat(map)
+                .containsEntry("user_name", testAccounts.getUserName())
+                .containsEntry("email", testAccounts.getEmail());
 
         // Test that Spring's default converter can create an auth from the response.
         Authentication auth = (new DefaultUserAuthenticationConverter()).extractAuthentication(map);
@@ -179,7 +180,7 @@ class CheckTokenEndpointIntegrationTests {
 
         @SuppressWarnings("unchecked")
         Map<String, String> map = response.getBody();
-        assertThat(map.containsKey("error")).isTrue();
+        assertThat(map).containsKey("error");
     }
 
     @Test
@@ -196,7 +197,7 @@ class CheckTokenEndpointIntegrationTests {
 
         @SuppressWarnings("unchecked")
         Map<String, String> map = response.getBody();
-        assertThat(map.containsKey("error")).isTrue();
+        assertThat(map).containsKey("error");
     }
 
     @Test
@@ -217,8 +218,9 @@ class CheckTokenEndpointIntegrationTests {
 
         @SuppressWarnings("unchecked")
         Map<String, String> map = response.getBody();
-        assertThat(map.get("error")).isEqualTo("parameter_parsing_error");
-        assertThat(map.containsKey("error_description")).isTrue();
+        assertThat(map)
+                .containsEntry("error", "parameter_parsing_error")
+                .containsKey("error_description");
     }
 
     @Test
@@ -241,8 +243,9 @@ class CheckTokenEndpointIntegrationTests {
         @SuppressWarnings("unchecked")
         Map<String, String> map = tokenResponse.getBody();
         assertThat(map.get("iss")).isNotNull();
-        assertThat(map.get("user_name")).isEqualTo(testAccounts.getUserName());
-        assertThat(map.get("email")).isEqualTo(testAccounts.getEmail());
+        assertThat(map)
+                .containsEntry("user_name", testAccounts.getUserName())
+                .containsEntry("email", testAccounts.getEmail());
     }
 
     @Test
@@ -265,8 +268,9 @@ class CheckTokenEndpointIntegrationTests {
         @SuppressWarnings("unchecked")
         Map<String, String> map = tokenResponse.getBody();
         assertThat(map.get("iss")).isNotNull();
-        assertThat(map.get("user_name")).isEqualTo(testAccounts.getUserName());
-        assertThat(map.get("email")).isEqualTo(testAccounts.getEmail());
+        assertThat(map)
+                .containsEntry("user_name", testAccounts.getUserName())
+                .containsEntry("email", testAccounts.getEmail());
     }
 
     @Test

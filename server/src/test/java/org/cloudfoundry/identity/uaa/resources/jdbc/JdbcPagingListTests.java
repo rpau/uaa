@@ -56,21 +56,21 @@ class JdbcPagingListTests {
     void iterationOverPages() {
         list = new JdbcPagingList<>(jdbcTemplate, limitSqlAdapter, "SELECT * from foo where id>=:id",
                 Collections.<String, Object>singletonMap("id", 0), new ColumnMapRowMapper(), 3);
-        assertThat(list.size()).isEqualTo(6);
+        assertThat(list).hasSize(6);
         Set<String> names = new HashSet<>();
         for (Map<String, Object> map : list) {
             String name = (String) map.get("name");
             assertThat(name).isNotNull();
             names.add(name);
         }
-        assertThat(names.size()).isEqualTo(6);
+        assertThat(names).hasSize(6);
         names = new HashSet<>();
         for (Map<String, Object> map : list) {
             String name = (String) map.get("name");
             assertThat(name).isNotNull();
             names.add(name);
         }
-        assertThat(names.size()).isEqualTo(6);
+        assertThat(names).hasSize(6);
     }
 
     @Test
@@ -78,28 +78,28 @@ class JdbcPagingListTests {
         list = new JdbcPagingList<>(jdbcTemplate, limitSqlAdapter, "SELECT * from foo where id>=:id",
                 Collections.<String, Object>singletonMap("id", 0), new ColumnMapRowMapper(), 3);
         jdbcTemplate.update("DELETE from foo where id>3");
-        assertThat(list.size()).isEqualTo(6);
+        assertThat(list).hasSize(6);
         Set<String> names = new HashSet<>();
         for (Map<String, Object> map : list) {
             String name = (String) map.get("name");
             assertThat(name).isNotNull();
             names.add(name);
         }
-        assertThat(names.size()).isEqualTo(4);
+        assertThat(names).hasSize(4);
     }
 
     @Test
     void orderBy() {
         list = new JdbcPagingList<>(jdbcTemplate, limitSqlAdapter, "SELECT * from foo order by id asc",
                 Collections.<String, Object>singletonMap("id", 0), new ColumnMapRowMapper(), 3);
-        assertThat(list.size()).isEqualTo(6);
+        assertThat(list).hasSize(6);
         Set<String> names = new HashSet<>();
         for (Map<String, Object> map : list) {
             String name = (String) map.get("name");
             assertThat(name).isNotNull();
             names.add(name);
         }
-        assertThat(names.size()).isEqualTo(6);
+        assertThat(names).hasSize(6);
     }
 
     @Test
@@ -115,7 +115,7 @@ class JdbcPagingListTests {
         list = new JdbcPagingList<>(jdbcTemplate, limitSqlAdapter, "SELECT foo.id, foo.name from foo", new ColumnMapRowMapper(), 3);
         Map<String, Object> map = list.get(3);
         assertThat(map.get("name")).isNotNull();
-        assertThat(map.get("name")).isEqualTo("zab");
+        assertThat(map).containsEntry("name", "zab");
     }
 
     /**
@@ -127,10 +127,10 @@ class JdbcPagingListTests {
         list = new JdbcPagingList<>(jdbcTemplate, limitSqlAdapter, "SELECT foo.id, foo.NAME FrOm foo wHere foo.name = 'FoO' OR foo.name = 'foo' OrDeR By foo.name", new ColumnMapRowMapper(), 3);
         Map<String, Object> map = list.get(0);
         assertThat(map.get("name")).isNotNull();
-        assertThat(map.get("name")).isEqualTo("FoO");
+        assertThat(map).containsEntry("name", "FoO");
         map = list.get(1);
         assertThat(map.get("name")).isNotNull();
-        assertThat(map.get("name")).isEqualTo("foo");
+        assertThat(map).containsEntry("name", "foo");
     }
 
     @Test
@@ -162,7 +162,7 @@ class JdbcPagingListTests {
         list = new JdbcPagingList<>(jdbcTemplate, limitSqlAdapter, "SELECT * from foo",
                 new ColumnMapRowMapper(), 3);
         list = list.subList(1, 4);
-        assertThat(list.size()).isEqualTo(3);
+        assertThat(list).hasSize(3);
         int count = 0;
         for (Map<String, Object> map : list) {
             count++;
@@ -176,7 +176,7 @@ class JdbcPagingListTests {
         list = new JdbcPagingList<>(jdbcTemplate, limitSqlAdapter, "SELECT * from foo",
                 new ColumnMapRowMapper(), 3);
         list = list.subList(0, 5);
-        assertThat(list.size()).isEqualTo(5);
+        assertThat(list).hasSize(5);
         int count = 0;
         for (Map<String, Object> map : list) {
             count++;
@@ -198,7 +198,7 @@ class JdbcPagingListTests {
                 new ColumnMapRowMapper(), 3);
         jdbcTemplate.update("DELETE from foo where id>3");
         list = list.subList(1, list.size());
-        assertThat(list.size()).isEqualTo(5);
+        assertThat(list).hasSize(5);
         int count = 0;
         for (Map<String, Object> map : list) {
             count++;

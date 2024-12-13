@@ -53,7 +53,7 @@ public class CheckDefaultAuthoritiesMvcMockTests {
 
     @Test
     void defaultAuthorities() {
-        assertThat(defaultAuthorities.size()).isEqualTo(14);
+        assertThat(defaultAuthorities).hasSize(14);
         for (String s : EXPECTED_DEFAULT_GROUPS) {
             assertThat(defaultAuthorities.contains(s)).as("Expecting authority to be present:" + s).isTrue();
         }

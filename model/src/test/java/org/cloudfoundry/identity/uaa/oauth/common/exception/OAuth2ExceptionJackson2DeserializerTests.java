@@ -59,7 +59,7 @@ class OAuth2ExceptionJackson2DeserializerTests {
         String accessToken = "{\"error\": \"insufficient_scope\", \"error_description\": \"insufficient scope\", \"scope\": \"bar foo\"}";
         InsufficientScopeException result = (InsufficientScopeException) mapper.readValue(accessToken, OAuth2Exception.class);
         assertThat(result.getMessage()).isEqualTo("insufficient scope");
-        assertThat(result.getAdditionalInformation().get("scope")).isEqualTo("bar foo");
+        assertThat(result.getAdditionalInformation()).containsEntry("scope", "bar foo");
     }
 
     @Test
@@ -127,7 +127,7 @@ class OAuth2ExceptionJackson2DeserializerTests {
         String accessToken = "{\"error\": \"invalid_client\", \"error_description\": \"some detail\", \"foo\": \"bar\"}";
         InvalidClientException result = (InvalidClientException) mapper.readValue(accessToken, OAuth2Exception.class);
         assertThat(result.getMessage()).isEqualTo(DETAILS);
-        assertThat(result.getAdditionalInformation().toString()).isEqualTo("{foo=bar}");
+        assertThat(result.getAdditionalInformation()).hasToString("{foo=bar}");
     }
 
     @Test
@@ -135,7 +135,7 @@ class OAuth2ExceptionJackson2DeserializerTests {
         String accessToken = "{\"error\": [\"invalid\",\"client\"], \"error_description\": {\"some\":\"detail\"}, \"foo\": [\"bar\"]}";
         OAuth2Exception result = mapper.readValue(accessToken, OAuth2Exception.class);
         assertThat(result.getMessage()).isEqualTo("{some=detail}");
-        assertThat(result.getAdditionalInformation().toString()).isEqualTo("{foo=[bar]}");
+        assertThat(result.getAdditionalInformation()).hasToString("{foo=[bar]}");
     }
 
     // gh-594

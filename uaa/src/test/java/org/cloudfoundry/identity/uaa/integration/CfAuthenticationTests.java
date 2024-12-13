@@ -81,8 +81,8 @@ class CfAuthenticationTests {
                 params);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FOUND);
         String location = response.getHeaders().getLocation().toString();
-        assertThat(location.startsWith(params.getFirst("redirect_uri"))).isTrue();
-        assertThat(location.contains("error=invalid_scope")).isTrue();
-        assertThat(location.contains("credentials=")).isFalse();
+        assertThat(location).startsWith(params.getFirst("redirect_uri"))
+                .contains("error=invalid_scope")
+                .doesNotContain("credentials=");
     }
 }

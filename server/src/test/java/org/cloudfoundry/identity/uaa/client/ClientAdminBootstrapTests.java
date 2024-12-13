@@ -247,7 +247,7 @@ class ClientAdminBootstrapTests {
         map.put("authorities", "uaa.none");
         map.put("signup_redirect_url", "callback_url");
         ClientDetails clientDetails = doSimpleTest(map, clientAdminBootstrap, multitenantJdbcClientDetailsService, clients);
-        assertThat(clientDetails.getRegisteredRedirectUri().contains("callback_url")).isTrue();
+        assertThat(clientDetails.getRegisteredRedirectUri()).contains("callback_url");
     }
 
     @Test
@@ -307,7 +307,7 @@ class ClientAdminBootstrapTests {
 
         ClientMetadata clientMetadata = clientMetadataProvisioning.retrieve("foo", "uaa");
         assertThat(clientMetadata.isShowOnHomePage()).isTrue();
-        assertThat(clientMetadata.getAppLaunchUrl().toString()).isEqualTo("http://takemetothispage.com");
+        assertThat(clientMetadata.getAppLaunchUrl()).hasToString("http://takemetothispage.com");
         assertThat(clientMetadata.getAppIcon()).isEqualTo("bAsE64encODEd/iMAgE=");
     }
 
@@ -324,9 +324,8 @@ class ClientAdminBootstrapTests {
         map.put("change_email_redirect_url", "change_email_url");
         map.put(ClientConstants.ALLOWED_PROVIDERS, idps);
         ClientDetails created = doSimpleTest(map, clientAdminBootstrap, multitenantJdbcClientDetailsService, clients);
-        assertThat(created.getAdditionalInformation().get(ClientConstants.ALLOWED_PROVIDERS)).isEqualTo(idps);
-        assertThat(created.getRegisteredRedirectUri().contains("callback_url")).isTrue();
-        assertThat(created.getRegisteredRedirectUri().contains("change_email_url")).isTrue();
+        assertThat(created.getAdditionalInformation()).containsEntry(ClientConstants.ALLOWED_PROVIDERS, idps);
+        assertThat(created.getRegisteredRedirectUri()).contains("callback_url", "change_email_url");
     }
 
     @Test
@@ -339,7 +338,7 @@ class ClientAdminBootstrapTests {
         map.put("authorities", "uaa.none");
         map.put("change_email_redirect_url", "change_email_callback_url");
         ClientDetails created = doSimpleTest(map, clientAdminBootstrap, multitenantJdbcClientDetailsService, clients);
-        assertThat(created.getRegisteredRedirectUri().contains("change_email_callback_url")).isTrue();
+        assertThat(created.getRegisteredRedirectUri()).contains("change_email_callback_url");
     }
 
     @Nested
@@ -431,7 +430,7 @@ class ClientAdminBootstrapTests {
             ArgumentCaptor<ClientDetails> captor = ArgumentCaptor.forClass(ClientDetails.class);
             verify(multitenantJdbcClientDetailsService, times(1)).updateClientDetails(captor.capture(), anyString());
             verify(multitenantJdbcClientDetailsService, times(1)).updateClientSecret(clientId, "bar", "uaa");
-            assertThat(captor.getValue().getAuthorizedGrantTypes()).isEqualTo(new HashSet(Collections.singletonList("client_credentials")));
+            assertThat(captor.getValue().getAuthorizedGrantTypes()).isEqualTo(new HashSet<>(Collections.singletonList("client_credentials")));
         }
 
         @Nested
@@ -495,7 +494,7 @@ class ClientAdminBootstrapTests {
             ArgumentCaptor<ClientDetails> captor = ArgumentCaptor.forClass(ClientDetails.class);
             verify(multitenantJdbcClientDetailsService, times(1)).updateClientDetails(captor.capture(), anyString());
             verify(multitenantJdbcClientDetailsService, times(1)).updateClientSecret(clientId, "", "uaa");
-            assertThat(captor.getValue().getAuthorizedGrantTypes()).isEqualTo(new HashSet(Collections.singletonList("client_credentials")));
+            assertThat(captor.getValue().getAuthorizedGrantTypes()).isEqualTo(new HashSet<>(Collections.singletonList("client_credentials")));
         }
 
         @Test
@@ -520,7 +519,7 @@ class ClientAdminBootstrapTests {
             ArgumentCaptor<ClientDetails> captor = ArgumentCaptor.forClass(ClientDetails.class);
             verify(multitenantJdbcClientDetailsService, times(1)).updateClientDetails(captor.capture(), anyString());
             verify(multitenantJdbcClientDetailsService, times(1)).updateClientSecret(clientId, null, "uaa");
-            assertThat(captor.getValue().getAuthorizedGrantTypes()).isEqualTo(new HashSet(Collections.singletonList("client_credentials")));
+            assertThat(captor.getValue().getAuthorizedGrantTypes()).isEqualTo(new HashSet<>(Collections.singletonList("client_credentials")));
         }
 
         @Test
@@ -571,9 +570,9 @@ class ClientAdminBootstrapTests {
             clients.put("bar", barBeforeClient);
             clientAdminBootstrap.afterPropertiesSet();
 
-            Map fooUpdateClient = new HashMap(fooBeforeClient);
+            Map fooUpdateClient = new HashMap<>(fooBeforeClient);
             fooUpdateClient.put("secret", "bar");
-            Map barUpdateClient = new HashMap(fooBeforeClient);
+            Map barUpdateClient = new HashMap<>(fooBeforeClient);
             barUpdateClient.put("secret", "bar");
             clients.put("foo", fooUpdateClient);
             clients.put("bar", barUpdateClient);
@@ -644,7 +643,7 @@ class ClientAdminBootstrapTests {
         ClientDetails created = clientRegistrationService.loadClientByClientId((String) map.get("id"));
         assertThat(created).isNotNull();
         assertSet((String) map.get("scope"), Collections.singleton("uaa.none"), created.getScope(), String.class);
-        assertSet((String) map.get("resource-ids"), new HashSet(Collections.singletonList("none")), created.getResourceIds(), String.class);
+        assertSet((String) map.get("resource-ids"), new HashSet<>(Collections.singletonList("none")), created.getResourceIds(), String.class);
 
         String authTypes = (String) map.get("authorized-grant-types");
         if (authTypes != null && authTypes.contains(GRANT_TYPE_AUTHORIZATION_CODE)) {
@@ -667,9 +666,9 @@ class ClientAdminBootstrapTests {
             info.remove(key);
         }
         for (Map.Entry<String, Object> entry : info.entrySet()) {
-            assertThat(created.getAdditionalInformation().containsKey(entry.getKey())).as("Client should contain additional information key:" + entry.getKey()).isTrue();
+            assertThat(created.getAdditionalInformation()).as("Client should contain additional information key:" + entry.getKey()).containsKey(entry.getKey());
             if (entry.getValue() != null) {
-                assertThat(created.getAdditionalInformation().get(entry.getKey())).isEqualTo(entry.getValue());
+                assertThat(created.getAdditionalInformation()).containsEntry(entry.getKey(), entry.getValue());
             }
         }
 
@@ -721,6 +720,4 @@ class ClientAdminBootstrapTests {
         foo.setRegisteredRedirectUri(Collections.singleton("http://localhost/callback"));
         multitenantJdbcClientDetailsService.addClientDetails(foo);
     }
-
-
 }

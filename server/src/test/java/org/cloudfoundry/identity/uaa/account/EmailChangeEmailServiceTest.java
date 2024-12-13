@@ -207,12 +207,12 @@ class EmailChangeEmailServiceTest {
 
         String emailBody = emailBodyArgument.getValue();
 
-        assertThat(emailBody).contains("<a href=\"http://localhost/login/verify_email?code=the_secret_code\">Verify your email</a>");
-        assertThat(emailBody).contains("a Best Company account");
+        assertThat(emailBody).contains("<a href=\"http://localhost/login/verify_email?code=the_secret_code\">Verify your email</a>")
+                .contains("a Best Company account");
     }
 
     /**
-     * @Deprecated We need this because {@link MergedZoneBrandingInformation#getProductLogo} calls {@link IdentityZoneHolder#get}
+     * @deprecated We need this because {@link MergedZoneBrandingInformation#getProductLogo} calls {@link IdentityZoneHolder#get}
      */
     @Deprecated
     private void setIdentityZoneHolder(IdentityZone identityZone) {
@@ -234,19 +234,21 @@ class EmailChangeEmailServiceTest {
     @Test
     void completeVerification() {
         Map<String, String> response = setUpCompleteActivation("user-name", "app", "http://app.com/redirect");
-        assertThat(response.get("userId")).isEqualTo("user-001");
-        assertThat(response.get("username")).isEqualTo("user-name");
-        assertThat(response.get("email")).isEqualTo("new@example.com");
-        assertThat(response.get("redirect_url")).isEqualTo("http://app.com/redirect");
+        assertThat(response)
+                .containsEntry("userId", "user-001")
+                .containsEntry("username", "user-name")
+                .containsEntry("email", "new@example.com")
+                .containsEntry("redirect_url", "http://app.com/redirect");
     }
 
     @Test
     void completeVerificationWhereUsernameEqualsEmail() {
         Map<String, String> response = setUpCompleteActivation("user@example.com", "app", "http://app.com/redirect");
-        assertThat(response.get("userId")).isEqualTo("user-001");
-        assertThat(response.get("username")).isEqualTo("new@example.com");
-        assertThat(response.get("email")).isEqualTo("new@example.com");
-        assertThat(response.get("redirect_url")).isEqualTo("http://app.com/redirect");
+        assertThat(response)
+                .containsEntry("userId", "user-001")
+                .containsEntry("username", "new@example.com")
+                .containsEntry("email", "new@example.com")
+                .containsEntry("redirect_url", "http://app.com/redirect");
     }
 
     @Test
@@ -280,26 +282,26 @@ class EmailChangeEmailServiceTest {
         try {
             response = emailChangeEmailService.completeVerification("the_secret_code");
         } catch (NoSuchClientException e) {
-            assertThat(response.get("redirect_url")).isNull();
+            assertThat(response).doesNotContainKey("redirect_url");
         }
     }
 
     @Test
     void completeActivationWithNoClientId() {
         Map<String, String> response = setUpCompleteActivation("user@example.com", null, null);
-        assertThat(response.get("redirect_url")).isNull();
+        assertThat(response).doesNotContainValue("redirect_url");
     }
 
     @Test
     void completeActivationWhereWildcardsDoNotMatch() {
         Map<String, String> response = setUpCompleteActivation("user@example.com", "app", "http://blah.app.com/redirect");
-        assertThat(response.get("redirect_url")).isEqualTo("http://fallback.url/redirect");
+        assertThat(response).containsEntry("redirect_url", "http://fallback.url/redirect");
     }
 
     @Test
     void completeActivationWithNoRedirectUri() {
         Map<String, String> response = setUpCompleteActivation("user@example.com", "app", null);
-        assertThat(response.get("redirect_url")).isEqualTo("http://fallback.url/redirect");
+        assertThat(response).containsEntry("redirect_url", "http://fallback.url/redirect");
     }
 
     private Map<String, String> setUpCompleteActivation(String username, String clientId, String redirectUri) {
@@ -365,9 +367,8 @@ class EmailChangeEmailServiceTest {
 
         String emailBody = emailBodyArgument.getValue();
 
-        assertThat(emailBody).contains("A request has been made to change the email for %s from %s to %s".formatted(zoneName, "user@example.com", "new@example.com"));
-        assertThat(emailBody).contains("<a href=\"http://test.localhost/login/verify_email?code=the_secret_code\">Verify your email</a>");
-        assertThat(emailBody).contains("Thank you,<br />\n    " + zoneName);
+        assertThat(emailBody).contains("A request has been made to change the email for %s from %s to %s".formatted(zoneName, "user@example.com", "new@example.com"))
+                .contains("<a href=\"http://test.localhost/login/verify_email?code=the_secret_code\">Verify your email</a>")
+                .contains("Thank you,<br />\n    " + zoneName);
     }
-
 }

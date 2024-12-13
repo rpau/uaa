@@ -142,13 +142,13 @@ class UaaAuthorizationRequestManagerTests {
     @Test
     void tokenRequestEquals() {
         client.setClientId("foo");
-        assertThat(factory.createTokenRequest(parameters, client).hashCode()).isNotEqualTo(0);
+        assertThat(factory.createTokenRequest(parameters, client).hashCode()).isNotZero();
         assertThat(factory.createTokenRequest(parameters, client)).isEqualTo(factory.createTokenRequest(parameters, client));
         factory.setScopeSeparator(".");
         factory.setScopesToResources(Map.of("aud1.test", "aud2.test"));
         assertThat(factory.createOAuth2Request(client, factory.createTokenRequest(Map.of("client_id", client.getClientId()), client))).isNotEqualTo(factory.createTokenRequest(parameters, client));
-        assertThat(factory.createTokenRequest(parameters, client)).isNotEqualTo(factory.createOAuth2Request(factory.createAuthorizationRequest(Map.of("client_id", client.getClientId()))));
-        assertThat(factory.createTokenRequest(parameters, client)).isNotEqualTo(factory.createTokenRequest(factory.createAuthorizationRequest(Map.of("client_id", client.getClientId())), ""));
+        assertThat(factory.createTokenRequest(parameters, client)).isNotEqualTo(factory.createOAuth2Request(factory.createAuthorizationRequest(Map.of("client_id", client.getClientId()))))
+                .isNotEqualTo(factory.createTokenRequest(factory.createAuthorizationRequest(Map.of("client_id", client.getClientId())), ""));
     }
 
     @Test
@@ -173,11 +173,11 @@ class UaaAuthorizationRequestManagerTests {
         client.setClientId("requestingId");
         OAuth2Request request = factory.createTokenRequest(parameters, client).createOAuth2Request(recipient);
         assertThat(request.getClientId()).isEqualTo(recipient.getClientId());
-        assertThat(request.getRequestParameters().get(CLIENT_ID)).isEqualTo(recipient.getClientId());
-        assertThat(request.getRequestParameters().get(TokenConstants.USER_TOKEN_REQUESTING_CLIENT_ID)).isEqualTo(client.getClientId());
+        assertThat(request.getRequestParameters()).containsEntry(CLIENT_ID, recipient.getClientId())
+                .containsEntry(TokenConstants.USER_TOKEN_REQUESTING_CLIENT_ID, client.getClientId());
         assertThat(new TreeSet<>(request.getScope())).isEqualTo(StringUtils.commaDelimitedListToSet("requested.scope"));
         assertThat(new TreeSet<>(request.getResourceIds())).isEqualTo(StringUtils.commaDelimitedListToSet(recipient.getClientId() + ",requested"));
-        assertThat(request.getRequestParameters().get("expires_in")).isEqualTo("44000");
+        assertThat(request.getRequestParameters()).containsEntry("expires_in", "44000");
     }
 
     @Test
@@ -287,9 +287,9 @@ class UaaAuthorizationRequestManagerTests {
         Set<String> user = new HashSet<>(Arrays.asList("space.1.developer", "space.2.developer", "space.1.admin", "space.3.operator"));
 
         Set<String> result = factory.intersectScopes(client, client, user);
-        assertThat(result.size()).isEqualTo(2);
-        assertThat(result.contains("space.1.developer")).isTrue();
-        assertThat(result.contains("space.2.developer")).isTrue();
+        assertThat(result).hasSize(2)
+                .contains("space.1.developer")
+                .contains("space.2.developer");
     }
 
     @Test
@@ -299,8 +299,8 @@ class UaaAuthorizationRequestManagerTests {
         Set<String> user = new HashSet<>(Arrays.asList("space.1.developer", "space.2.developer", "space.1.admin", "space.3.operator"));
 
         Set<String> result = factory.intersectScopes(requested, client, user);
-        assertThat(result.size()).isEqualTo(1);
-        assertThat(result.contains("space.1.developer")).isTrue();
+        assertThat(result).hasSize(1)
+                .contains("space.1.developer");
     }
 
     @Test
@@ -310,7 +310,7 @@ class UaaAuthorizationRequestManagerTests {
         Set<String> user = new HashSet<>(Arrays.asList("space.1.developer", "space.2.developer", "space.1.admin", "space.3.operator"));
 
         Set<String> result = factory.intersectScopes(requested, client, user);
-        assertThat(result.size()).isEqualTo(0);
+        assertThat(result).isEmpty();
     }
 
     @Test
@@ -320,8 +320,8 @@ class UaaAuthorizationRequestManagerTests {
         Set<String> user = new HashSet<>(Arrays.asList("space.1.developer", "space.2.developer", "space.1.admin", "space.3.operator"));
 
         Set<String> result = factory.intersectScopes(requested, client, user);
-        assertThat(result.size()).isEqualTo(1);
-        assertThat(result.contains("space.1.admin")).isTrue();
+        assertThat(result).hasSize(1)
+                .contains("space.1.admin");
     }
 
     @Test
@@ -330,11 +330,11 @@ class UaaAuthorizationRequestManagerTests {
         Set<String> user = new HashSet<>(Arrays.asList("space.1.developer", "space.2.developer", "space.1.admin", "space.3.operator"));
 
         Set<String> result = factory.intersectScopes(client, client, user);
-        assertThat(result.size()).isEqualTo(4);
-        assertThat(result.contains("space.1.admin")).isTrue();
-        assertThat(result.contains("space.3.operator")).isTrue();
-        assertThat(result.contains("space.1.developer")).isTrue();
-        assertThat(result.contains("space.2.developer")).isTrue();
+        assertThat(result).hasSize(4)
+                .contains("space.1.admin")
+                .contains("space.3.operator")
+                .contains("space.1.developer")
+                .contains("space.2.developer");
     }
 
     @Test
@@ -344,7 +344,6 @@ class UaaAuthorizationRequestManagerTests {
         Set<String> user = new HashSet<>(Arrays.asList("space.1.developer", "space.2.developer", "space.1.admin", "space.3.operator"));
 
         Set<String> result = factory.intersectScopes(requested, client, user);
-        assertThat(result.size()).isEqualTo(0);
+        assertThat(result).isEmpty();
     }
-
 }

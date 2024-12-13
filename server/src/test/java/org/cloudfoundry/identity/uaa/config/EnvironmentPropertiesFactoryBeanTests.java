@@ -35,7 +35,7 @@ class EnvironmentPropertiesFactoryBeanTests {
         EnvironmentPropertiesFactoryBean factory = new EnvironmentPropertiesFactoryBean();
         factory.setDefaultProperties(getProperties("foo=foo"));
         Properties properties = factory.getObject();
-        assertThat(properties.get("foo")).isEqualTo("foo");
+        assertThat(properties).containsEntry("foo", "foo");
     }
 
     @Test
@@ -45,12 +45,11 @@ class EnvironmentPropertiesFactoryBeanTests {
         environment.getPropertySources().addFirst(new MapPropertySource("foo", Collections.singletonMap("foo", null)));
         factory.setEnvironment(environment);
         Properties properties = factory.getObject();
-        assertThat(properties.get("foo")).isEqualTo("");
+        assertThat(properties).containsEntry("foo", "");
     }
 
     private Properties getProperties(String input) {
         return StringUtils.splitArrayElementsIntoProperties(
                 StringUtils.commaDelimitedListToStringArray(input), "=");
     }
-
 }

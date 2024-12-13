@@ -143,8 +143,8 @@ class ApprovalsAdminEndpointsTests {
         addApproval(marissa.getId(), "uaa.admin", 12000, DENIED);
         addApproval(marissa.getId(), "openid", 6000, APPROVED);
 
-        assertThat(endpoints.getApprovals("user_id pr", 1, 100).size()).isEqualTo(3);
-        assertThat(endpoints.getApprovals("user_id pr", 1, 2).size()).isEqualTo(2);
+        assertThat(endpoints.getApprovals("user_id pr", 1, 100)).hasSize(3);
+        assertThat(endpoints.getApprovals("user_id pr", 1, 2)).hasSize(2);
     }
 
     @Test
@@ -168,12 +168,12 @@ class ApprovalsAdminEndpointsTests {
         addApproval(marissa.getId(), "uaa.admin", 12000, DENIED);
         addApproval(marissa.getId(), "openid", 6000, APPROVED);
 
-        assertThat(endpoints.getApprovals(userIdFilter(marissa.getId()), 1, 100).size()).isEqualTo(3);
+        assertThat(endpoints.getApprovals(userIdFilter(marissa.getId()), 1, 100)).hasSize(3);
 
         addApproval(marissa.getId(), "read", 12000, DENIED);
         addApproval(marissa.getId(), "write", 6000, APPROVED);
 
-        assertThat(endpoints.getApprovals(userIdFilter(marissa.getId()), 1, 100).size()).isEqualTo(3);
+        assertThat(endpoints.getApprovals(userIdFilter(marissa.getId()), 1, 100)).hasSize(3);
     }
 
     @Test
@@ -207,58 +207,61 @@ class ApprovalsAdminEndpointsTests {
                         .setExpiresAt(Approval.timeFromNow(2000))
                         .setStatus(APPROVED)};
         List<Approval> response = endpoints.updateApprovals(app);
-        assertThat(response.size()).isEqualTo(4);
-        assertThat(response.contains(new Approval()
-                .setUserId(marissa.getId())
-                .setClientId("c1")
-                .setScope("uaa.user")
-                .setExpiresAt(Approval.timeFromNow(2000))
-                .setStatus(APPROVED))).isTrue();
-        assertThat(response.contains(new Approval()
-                .setUserId(marissa.getId())
-                .setClientId("c1")
-                .setScope("dash.user")
-                .setExpiresAt(Approval.timeFromNow(2000))
-                .setStatus(APPROVED))).isTrue();
-        assertThat(response.contains(new Approval()
-                .setUserId(marissa.getId())
-                .setClientId("c1")
-                .setScope("openid")
-                .setExpiresAt(Approval.timeFromNow(2000))
-                .setStatus(DENIED))).isTrue();
-        assertThat(response.contains(new Approval()
-                .setUserId(marissa.getId())
-                .setClientId("c1")
-                .setScope("cloud_controller.read")
-                .setExpiresAt(Approval.timeFromNow(2000))
-                .setStatus(APPROVED))).isTrue();
+        assertThat(response)
+                .hasSize(4)
+                .contains(
+                        new Approval()
+                                .setUserId(marissa.getId())
+                                .setClientId("c1")
+                                .setScope("uaa.user")
+                                .setExpiresAt(Approval.timeFromNow(2000))
+                                .setStatus(APPROVED),
+                        new Approval()
+                                .setUserId(marissa.getId())
+                                .setClientId("c1")
+                                .setScope("dash.user")
+                                .setExpiresAt(Approval.timeFromNow(2000))
+                                .setStatus(APPROVED),
+                        new Approval()
+                                .setUserId(marissa.getId())
+                                .setClientId("c1")
+                                .setScope("openid")
+                                .setExpiresAt(Approval.timeFromNow(2000))
+                                .setStatus(DENIED),
+                        new Approval()
+                                .setUserId(marissa.getId())
+                                .setClientId("c1")
+                                .setScope("cloud_controller.read")
+                                .setExpiresAt(Approval.timeFromNow(2000))
+                                .setStatus(APPROVED));
 
         List<Approval> updatedApprovals = endpoints.getApprovals(userIdFilter(marissa.getId()), 1, 100);
-        assertThat(updatedApprovals.size()).isEqualTo(4);
-        assertThat(updatedApprovals.contains(new Approval()
-                .setUserId(marissa.getId())
-                .setClientId("c1")
-                .setScope("dash.user")
-                .setExpiresAt(Approval.timeFromNow(2000))
-                .setStatus(APPROVED))).isTrue();
-        assertThat(updatedApprovals.contains(new Approval()
-                .setUserId(marissa.getId())
-                .setClientId("c1")
-                .setScope("openid")
-                .setExpiresAt(Approval.timeFromNow(2000))
-                .setStatus(DENIED))).isTrue();
-        assertThat(updatedApprovals.contains(new Approval()
-                .setUserId(marissa.getId())
-                .setClientId("c1")
-                .setScope("cloud_controller.read")
-                .setExpiresAt(Approval.timeFromNow(2000))
-                .setStatus(APPROVED))).isTrue();
-        assertThat(updatedApprovals.contains(new Approval()
-                .setUserId(marissa.getId())
-                .setClientId("c1")
-                .setScope("uaa.user")
-                .setExpiresAt(Approval.timeFromNow(2000))
-                .setStatus(APPROVED))).isTrue();
+        assertThat(updatedApprovals)
+                .hasSize(4)
+                .contains(new Approval()
+                                .setUserId(marissa.getId())
+                                .setClientId("c1")
+                                .setScope("dash.user")
+                                .setExpiresAt(Approval.timeFromNow(2000))
+                                .setStatus(APPROVED),
+                        new Approval()
+                                .setUserId(marissa.getId())
+                                .setClientId("c1")
+                                .setScope("openid")
+                                .setExpiresAt(Approval.timeFromNow(2000))
+                                .setStatus(DENIED),
+                        new Approval()
+                                .setUserId(marissa.getId())
+                                .setClientId("c1")
+                                .setScope("cloud_controller.read")
+                                .setExpiresAt(Approval.timeFromNow(2000))
+                                .setStatus(APPROVED),
+                        new Approval()
+                                .setUserId(marissa.getId())
+                                .setClientId("c1")
+                                .setScope("uaa.user")
+                                .setExpiresAt(Approval.timeFromNow(2000))
+                                .setStatus(APPROVED));
     }
 
     @Test
@@ -270,25 +273,26 @@ class ApprovalsAdminEndpointsTests {
         addApproval(marissa.getId(), "openid", 10000, APPROVED);
 
         List<Approval> updatedApprovals = endpoints.getApprovals(userIdFilter(marissa.getId()), 1, 100);
-        assertThat(updatedApprovals.size()).isEqualTo(3);
-        assertThat(updatedApprovals.contains(new Approval()
-                .setUserId(marissa.getId())
-                .setClientId("c1")
-                .setScope("uaa.user")
-                .setExpiresAt(Approval.timeFromNow(6000))
-                .setStatus(APPROVED))).isTrue();
-        assertThat(updatedApprovals.contains(new Approval()
-                .setUserId(marissa.getId())
-                .setClientId("c1")
-                .setScope("uaa.admin")
-                .setExpiresAt(Approval.timeFromNow(12000))
-                .setStatus(DENIED))).isTrue();
-        assertThat(updatedApprovals.contains(new Approval()
-                .setUserId(marissa.getId())
-                .setClientId("c1")
-                .setScope("openid")
-                .setExpiresAt(Approval.timeFromNow(10000))
-                .setStatus(APPROVED))).isTrue();
+        assertThat(updatedApprovals)
+                .hasSize(3)
+                .contains(new Approval()
+                                .setUserId(marissa.getId())
+                                .setClientId("c1")
+                                .setScope("uaa.user")
+                                .setExpiresAt(Approval.timeFromNow(6000))
+                                .setStatus(APPROVED),
+                        new Approval()
+                                .setUserId(marissa.getId())
+                                .setClientId("c1")
+                                .setScope("uaa.admin")
+                                .setExpiresAt(Approval.timeFromNow(12000))
+                                .setStatus(DENIED),
+                        new Approval()
+                                .setUserId(marissa.getId())
+                                .setClientId("c1")
+                                .setScope("openid")
+                                .setExpiresAt(Approval.timeFromNow(10000))
+                                .setStatus(APPROVED));
     }
 
     @Test
@@ -299,25 +303,26 @@ class ApprovalsAdminEndpointsTests {
         addApproval(marissa.getId(), "openid", 18000, DENIED);
 
         List<Approval> updatedApprovals = endpoints.getApprovals(userIdFilter(marissa.getId()), 1, 100);
-        assertThat(updatedApprovals.size()).isEqualTo(3);
-        assertThat(updatedApprovals.contains(new Approval()
-                .setUserId(marissa.getId())
-                .setClientId("c1")
-                .setScope("uaa.user")
-                .setExpiresAt(Approval.timeFromNow(6000))
-                .setStatus(APPROVED))).isTrue();
-        assertThat(updatedApprovals.contains(new Approval()
-                .setUserId(marissa.getId())
-                .setClientId("c1")
-                .setScope("uaa.admin")
-                .setExpiresAt(Approval.timeFromNow(12000))
-                .setStatus(DENIED))).isTrue();
-        assertThat(updatedApprovals.contains(new Approval()
-                .setUserId(marissa.getId())
-                .setClientId("c1")
-                .setScope("openid")
-                .setExpiresAt(Approval.timeFromNow(18000))
-                .setStatus(DENIED))).isTrue();
+        assertThat(updatedApprovals)
+                .hasSize(3)
+                .contains(new Approval()
+                                .setUserId(marissa.getId())
+                                .setClientId("c1")
+                                .setScope("uaa.user")
+                                .setExpiresAt(Approval.timeFromNow(6000))
+                                .setStatus(APPROVED),
+                        new Approval()
+                                .setUserId(marissa.getId())
+                                .setClientId("c1")
+                                .setScope("uaa.admin")
+                                .setExpiresAt(Approval.timeFromNow(12000))
+                                .setStatus(DENIED),
+                        new Approval()
+                                .setUserId(marissa.getId())
+                                .setClientId("c1")
+                                .setScope("openid")
+                                .setExpiresAt(Approval.timeFromNow(18000))
+                                .setStatus(DENIED));
     }
 
     @Test
@@ -345,13 +350,12 @@ class ApprovalsAdminEndpointsTests {
         addApproval(marissa.getId(), "uaa.admin", 12000, DENIED);
         addApproval(marissa.getId(), "openid", 6000, APPROVED);
 
-        assertThat(endpoints.getApprovals("user_id pr", 1, 100).size()).isEqualTo(3);
+        assertThat(endpoints.getApprovals("user_id pr", 1, 100)).hasSize(3);
         assertThat(endpoints.revokeApprovals("c1").getStatus()).isEqualTo("ok");
-        assertThat(endpoints.getApprovals("user_id pr", 1, 100).size()).isEqualTo(0);
+        assertThat(endpoints.getApprovals("user_id pr", 1, 100)).isEmpty();
     }
 
     private static String userIdFilter(String userId) {
         return SCIMFilter.createEqualityFilter(AttributePath.parse("user_id"), userId).getFilterValue();
     }
-
 }

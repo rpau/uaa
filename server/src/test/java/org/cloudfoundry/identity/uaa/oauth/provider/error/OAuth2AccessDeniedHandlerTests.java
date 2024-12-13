@@ -27,7 +27,7 @@ class OAuth2AccessDeniedHandlerTests {
         request.addHeader("Accept", MediaType.APPLICATION_JSON_VALUE);
         handler.handle(request, response, new AccessDeniedException("Bad"));
         assertThat(response.getStatus()).isEqualTo(HttpServletResponse.SC_FORBIDDEN);
-        assertThat(response.getContentType().contains(MediaType.APPLICATION_JSON_VALUE)).isTrue();
+        assertThat(response.getContentType()).contains(MediaType.APPLICATION_JSON_VALUE);
         assertThat(response.getErrorMessage()).isNull();
     }
 

@@ -134,8 +134,8 @@ class JdbcQueryableClientDetailsServiceTests {
             final JdbcQueryableClientDetailsService jdbcQueryableClientDetailsService,
             final String zoneId) {
         addClients(jdbcTemplate, zoneId);
-        assertThat(jdbcQueryableClientDetailsService.retrieveAll(zoneId).size()).isEqualTo(4);
-        assertThat(jdbcQueryableClientDetailsService.query("authorized_grant_types eq \"client_credentials\"", zoneId).size()).isEqualTo(2);
+        assertThat(jdbcQueryableClientDetailsService.retrieveAll(zoneId)).hasSize(4);
+        assertThat(jdbcQueryableClientDetailsService.query("authorized_grant_types eq \"client_credentials\"", zoneId)).hasSize(2);
     }
 
     private static void verifyScimPresent(
@@ -143,8 +143,8 @@ class JdbcQueryableClientDetailsServiceTests {
             final JdbcQueryableClientDetailsService jdbcQueryableClientDetailsService,
             final String zoneId) {
         addClients(jdbcTemplate, zoneId);
-        assertThat(jdbcQueryableClientDetailsService.retrieveAll(zoneId).size()).isEqualTo(4);
-        assertThat(jdbcQueryableClientDetailsService.query("scope pr", zoneId).size()).isEqualTo(4);
+        assertThat(jdbcQueryableClientDetailsService.retrieveAll(zoneId)).hasSize(4);
+        assertThat(jdbcQueryableClientDetailsService.query("scope pr", zoneId)).hasSize(4);
     }
 
 }

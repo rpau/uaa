@@ -104,7 +104,7 @@ class OAuth2AccessTokenSupportTests {
         support.setTokenRequestEnhancer(enhancer);
         response.setBody(objectMapper.writeValueAsString(accessToken));
         OAuth2AccessToken retrieveToken = support.retrieveToken(request, resource, form, requestHeaders);
-        assertThat(form.get("foo").toString()).isEqualTo("[bar]");
+        assertThat(form.get("foo")).hasToString("[bar]");
         assertThat(retrieveToken).isEqualTo(accessToken);
     }
 
@@ -113,7 +113,7 @@ class OAuth2AccessTokenSupportTests {
         request.set("foo", "bar");
         response.setBody(objectMapper.writeValueAsString(accessToken));
         OAuth2AccessToken retrieveToken = support.retrieveToken(request, resource, form, requestHeaders);
-        assertThat(form.get("foo")).isNull();
+        assertThat(form).doesNotContainKey("foo");
         assertThat(retrieveToken).isEqualTo(accessToken);
     }
 
@@ -126,7 +126,7 @@ class OAuth2AccessTokenSupportTests {
         response.setBody(objectMapper.writeValueAsString(accessToken));
         resource.setClientAuthenticationScheme(AuthenticationScheme.form);
         OAuth2AccessToken retrieveToken = support.retrieveToken(request, resource, form, requestHeaders);
-        assertThat(form.get("foo").toString()).isEqualTo("[bar]");
+        assertThat(form.get("foo")).hasToString("[bar]");
         assertThat(retrieveToken).isEqualTo(accessToken);
     }
 
@@ -140,7 +140,7 @@ class OAuth2AccessTokenSupportTests {
         resource.setClientSecret("");
         resource.setClientAuthenticationScheme(AuthenticationScheme.form);
         OAuth2AccessToken retrieveToken = support.retrieveToken(request, resource, form, requestHeaders);
-        assertThat(form.get("foo").toString()).isEqualTo("[bar]");
+        assertThat(form.get("foo")).hasToString("[bar]");
         assertThat(retrieveToken).isEqualTo(accessToken);
     }
 
@@ -154,7 +154,7 @@ class OAuth2AccessTokenSupportTests {
         resource.setClientId("clientId");
         resource.setClientAuthenticationScheme(AuthenticationScheme.none);
         OAuth2AccessToken retrieveToken = support.retrieveToken(request, resource, form, requestHeaders);
-        assertThat(form.get("foo").toString()).isEqualTo("[bar]");
+        assertThat(form.get("foo")).hasToString("[bar]");
         assertThat(retrieveToken).isEqualTo(accessToken);
     }
 
@@ -234,5 +234,4 @@ class OAuth2AccessTokenSupportTests {
             return response;
         }
     }
-
 }

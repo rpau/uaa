@@ -102,11 +102,12 @@ class PasswordResetEndpointMockMvcTests {
         assertThat(expiringCode.getIntent()).isEqualTo(ExpiringCodeType.AUTOLOGIN.name());
         Map<String, String> data = JsonUtils.readValue(expiringCode.getData(), new TypeReference<Map<String, String>>() {
         });
-        assertThat(data).isNotNull();
-        assertThat(data.get("user_id")).isEqualTo(scimUser.getId());
-        assertThat(data.get("username")).isEqualTo(scimUser.getUserName());
-        assertThat(data.get(OAuth2Utils.CLIENT_ID)).isEqualTo("login");
-        assertThat(data.get(OriginKeys.ORIGIN)).isEqualTo(OriginKeys.UAA);
+        assertThat(data)
+                .isNotNull()
+                .containsEntry("user_id", scimUser.getId())
+                .containsEntry("username", scimUser.getUserName())
+                .containsEntry(OAuth2Utils.CLIENT_ID, "login")
+                .containsEntry(OriginKeys.ORIGIN, OriginKeys.UAA);
     }
 
     @Test
@@ -132,8 +133,9 @@ class PasswordResetEndpointMockMvcTests {
         ExpiringCode expiringCode = store.retrieveCode("test" + generator.counter.get(), IdentityZoneHolder.get().getId());
         Map<String, String> data = JsonUtils.readValue(expiringCode.getData(), new TypeReference<Map<String, String>>() {
         });
-        assertThat(data).isNotNull();
-        assertThat(data.get(OAuth2Utils.CLIENT_ID)).isEqualTo("another-client");
+        assertThat(data)
+                .isNotNull()
+                .containsEntry(OAuth2Utils.CLIENT_ID, "another-client");
     }
 
     @Test
@@ -156,11 +158,12 @@ class PasswordResetEndpointMockMvcTests {
         Map<String, String> resultingCodeData = JsonUtils.readValue(resultingCode.getData(), new TypeReference<Map<String, String>>() {
         });
 
-        assertThat(resultingCodeData).isNotNull();
-        assertThat(resultingCodeData.get("client_id")).isEqualTo("app");
-        assertThat(resultingCodeData.get("username")).isEqualTo(email);
-        assertThat(resultingCodeData.get("user_id")).isEqualTo(scimUser.getId());
-        assertThat(resultingCodeData.get("redirect_uri")).isEqualTo("redirect.example.com");
+        assertThat(resultingCodeData)
+                .isNotNull()
+                .containsEntry("client_id", "app")
+                .containsEntry("username", email)
+                .containsEntry("user_id", scimUser.getId())
+                .containsEntry("redirect_uri", "redirect.example.com");
     }
 
     @Test

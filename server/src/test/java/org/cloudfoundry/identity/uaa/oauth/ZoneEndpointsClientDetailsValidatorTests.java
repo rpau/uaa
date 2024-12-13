@@ -49,7 +49,7 @@ class ZoneEndpointsClientDetailsValidatorTests {
         assertThat(validatedClientDetails.getAuthorizedGrantTypes()).isEqualTo(clientDetails.getAuthorizedGrantTypes());
         assertThat(validatedClientDetails.getAuthorities()).isEqualTo(clientDetails.getAuthorities());
         assertThat(validatedClientDetails.getResourceIds()).isEqualTo(Collections.singleton("none"));
-        assertThat(validatedClientDetails.getAdditionalInformation().get(ALLOWED_PROVIDERS)).isEqualTo(Collections.singletonList(OriginKeys.UAA));
+        assertThat(validatedClientDetails.getAdditionalInformation()).containsEntry(ALLOWED_PROVIDERS, Collections.singletonList(OriginKeys.UAA));
     }
 
     @Test

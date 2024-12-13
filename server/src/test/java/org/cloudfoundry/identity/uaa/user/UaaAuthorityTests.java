@@ -30,8 +30,8 @@ class UaaAuthorityTests {
 
     @Test
     void valueOf() {
-        assertThat(UaaAuthority.UAA_USER.value()).isEqualTo(0);
-        assertThat(UaaAuthority.UAA_ADMIN.value()).isEqualTo(1);
+        assertThat(UaaAuthority.UAA_USER.value()).isZero();
+        assertThat(UaaAuthority.UAA_ADMIN.value()).isOne();
     }
 
     @Test

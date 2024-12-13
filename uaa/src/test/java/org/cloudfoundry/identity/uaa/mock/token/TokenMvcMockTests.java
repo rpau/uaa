@@ -409,7 +409,7 @@ public class TokenMvcMockTests extends AbstractTokenMockMvcTests {
         String username = "testuser" + generator.generate();
         String userScopes = "uaa.user";
         ScimUser user = setUpUser(jdbcScimUserProvisioning, jdbcScimGroupMembershipManager, jdbcScimGroupProvisioning, username, userScopes, OriginKeys.UAA, IdentityZone.getUaaZoneId());
-        assertThat(webApplicationContext.getBean(JdbcTemplate.class).update("UPDATE users SET passwd_change_required = ? WHERE ID = ?", true, user.getId())).isEqualTo(1);
+        assertThat(webApplicationContext.getBean(JdbcTemplate.class).update("UPDATE users SET passwd_change_required = ? WHERE ID = ?", true, user.getId())).isOne();
         doPasswordGrant(username, SECRET, "cf", "", status().is4xxClientError());
     }
 
@@ -3344,7 +3344,7 @@ public class TokenMvcMockTests extends AbstractTokenMockMvcTests {
         cal.setTimeInMillis(System.currentTimeMillis());
         cal.add(Calendar.YEAR, -1);
         Timestamp t = new Timestamp(cal.getTimeInMillis());
-        assertThat(webApplicationContext.getBean(JdbcTemplate.class).update("UPDATE users SET passwd_lastmodified = ? WHERE username = ?", t, username)).isEqualTo(1);
+        assertThat(webApplicationContext.getBean(JdbcTemplate.class).update("UPDATE users SET passwd_lastmodified = ? WHERE username = ?", t, username)).isOne();
 
         mockMvc.perform(post("/oauth/token")
                         .with(new SetServerNameRequestPostProcessor(subdomain + ".localhost"))

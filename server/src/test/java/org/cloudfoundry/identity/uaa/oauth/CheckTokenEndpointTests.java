@@ -697,7 +697,7 @@ class CheckTokenEndpointTests {
         OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
         Claims result = endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request);
         assertThat(result.getExtAttr()).as("external attributes not present").isNotNull();
-        assertThat(result.getExtAttr().get("purpose")).isEqualTo("test");
+        assertThat(result.getExtAttr()).containsEntry("purpose", "test");
     }
 
     @MethodSource("data")
@@ -890,9 +890,10 @@ class CheckTokenEndpointTests {
         OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
         Claims result = endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request);
         List<String> aud = result.getAud();
-        assertThat(aud.size()).isEqualTo(2);
-        assertThat(aud.contains("scim")).isTrue();
-        assertThat(aud.contains("client")).isTrue();
+        assertThat(aud)
+                .hasSize(2)
+                .contains("scim")
+                .contains("client");
     }
 
     void internal_byDefaultQueryStringIsAllowed() throws Exception {
@@ -1013,7 +1014,7 @@ class CheckTokenEndpointTests {
         initCheckTokenEndpointTests(signerKey, useOpaque);
         OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
         Claims result = endpoint.checkToken(accessToken.getValue(), Collections.emptyList(), request);
-        assertThat(result.getAud().contains("client")).isTrue();
+        assertThat(result.getAud()).contains("client");
     }
 
 

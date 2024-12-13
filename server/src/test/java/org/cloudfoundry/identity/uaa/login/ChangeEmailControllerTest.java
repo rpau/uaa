@@ -357,9 +357,9 @@ class ChangeEmailControllerTest {
         assertThat(principal.getEmail()).isEqualTo("new@example.com");
 
         authentication = (UaaAuthentication) SecurityContextHolder.getContext().getAuthentication();
-        assertThat(authentication.getAuthenticationMethods()).isNotNull();
-        assertThat(authentication.getAuthenticationMethods().contains("pwd")).isTrue();
-        assertThat(authentication.getAuthenticationMethods().size()).isEqualTo(1);
+        assertThat(authentication.getAuthenticationMethods())
+                .contains("pwd")
+                .hasSize(1);
     }
 
     private void setupSecurityContext() {

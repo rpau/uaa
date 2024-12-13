@@ -66,7 +66,7 @@ class UaaConfigurationTests {
                               autoapprove: true
                               authorized-grant-types: implicit
                         """);
-        assertThat(validator.getObject().oauth.clients.containsKey("cf")).isTrue();
+        assertThat(validator.getObject().oauth.clients).containsKey("cf");
     }
 
     @Test

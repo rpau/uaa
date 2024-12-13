@@ -18,56 +18,65 @@ class ApprovalTests {
                 .setClientId("c1")
                 .setScope("s1")
                 .setExpiresAt(Approval.timeFromNow(500))
-                .setStatus(Approval.ApprovalStatus.DENIED).hashCode()).isEqualTo(new Approval()
+                .setStatus(Approval.ApprovalStatus.DENIED)
+        ).hasSameHashCodeAs(new Approval()
                 .setUserId("u1")
                 .setClientId("c1")
                 .setScope("s1")
                 .setExpiresAt(Approval.timeFromNow(100))
-                .setStatus(Approval.ApprovalStatus.DENIED).hashCode());
+                .setStatus(Approval.ApprovalStatus.DENIED));
+
         assertThat(new Approval()
                 .setUserId("u1")
                 .setClientId("c2")
                 .setScope("s1")
                 .setExpiresAt(Approval.timeFromNow(100))
-                .setStatus(Approval.ApprovalStatus.DENIED).hashCode()).isNotEqualTo(new Approval()
+                .setStatus(Approval.ApprovalStatus.DENIED)
+        ).doesNotHaveSameHashCodeAs(new Approval()
                 .setUserId("u1")
                 .setClientId("c1")
                 .setScope("s1")
                 .setExpiresAt(Approval.timeFromNow(100))
-                .setStatus(Approval.ApprovalStatus.DENIED).hashCode());
+                .setStatus(Approval.ApprovalStatus.DENIED));
+
         assertThat(new Approval()
                 .setUserId("u1")
                 .setClientId("c1")
                 .setScope("s2")
                 .setExpiresAt(Approval.timeFromNow(100))
-                .setStatus(Approval.ApprovalStatus.DENIED).hashCode()).isNotEqualTo(new Approval()
+                .setStatus(Approval.ApprovalStatus.DENIED)
+        ).doesNotHaveSameHashCodeAs(new Approval()
                 .setUserId("u1")
                 .setClientId("c1")
                 .setScope("s1")
                 .setExpiresAt(Approval.timeFromNow(100))
-                .setStatus(Approval.ApprovalStatus.DENIED).hashCode());
+                .setStatus(Approval.ApprovalStatus.DENIED));
+
         assertThat(new Approval()
                 .setUserId("u2")
                 .setClientId("c1")
                 .setScope("s1")
                 .setExpiresAt(Approval.timeFromNow(100))
-                .setStatus(Approval.ApprovalStatus.DENIED).hashCode()).isNotEqualTo(new Approval()
+                .setStatus(Approval.ApprovalStatus.DENIED)
+        ).doesNotHaveSameHashCodeAs(new Approval()
                 .setUserId("u1")
                 .setClientId("c1")
                 .setScope("s1")
                 .setExpiresAt(Approval.timeFromNow(100))
-                .setStatus(Approval.ApprovalStatus.DENIED).hashCode());
+                .setStatus(Approval.ApprovalStatus.DENIED));
+
         assertThat(new Approval()
                 .setUserId("u1")
                 .setClientId("c1")
                 .setScope("s1")
                 .setExpiresAt(Approval.timeFromNow(100))
-                .setStatus(Approval.ApprovalStatus.APPROVED).hashCode()).isNotEqualTo(new Approval()
+                .setStatus(Approval.ApprovalStatus.APPROVED)
+        ).doesNotHaveSameHashCodeAs(new Approval()
                 .setUserId("u1")
                 .setClientId("c1")
                 .setScope("s1")
                 .setExpiresAt(Approval.timeFromNow(100))
-                .setStatus(Approval.ApprovalStatus.DENIED).hashCode());
+                .setStatus(Approval.ApprovalStatus.DENIED));
     }
 
     @Test
@@ -83,6 +92,7 @@ class ApprovalTests {
                 .setScope("s1")
                 .setExpiresAt(Approval.timeFromNow(100))
                 .setStatus(Approval.ApprovalStatus.DENIED));
+
         assertThat(new Approval()
                 .setUserId("u1")
                 .setClientId("c2")
@@ -94,6 +104,7 @@ class ApprovalTests {
                 .setScope("s1")
                 .setExpiresAt(Approval.timeFromNow(100))
                 .setStatus(Approval.ApprovalStatus.DENIED));
+
         assertThat(new Approval()
                 .setUserId("u1")
                 .setClientId("c1")
@@ -105,6 +116,7 @@ class ApprovalTests {
                 .setScope("s1")
                 .setExpiresAt(Approval.timeFromNow(100))
                 .setStatus(Approval.ApprovalStatus.DENIED));
+
         assertThat(new Approval()
                 .setUserId("u2")
                 .setClientId("c1")
@@ -116,6 +128,7 @@ class ApprovalTests {
                 .setScope("s1")
                 .setExpiresAt(Approval.timeFromNow(100))
                 .setStatus(Approval.ApprovalStatus.DENIED));
+
         assertThat(new Approval()
                 .setUserId("u1")
                 .setClientId("c1")
@@ -159,18 +172,19 @@ class ApprovalTests {
                         .setExpiresAt(Approval.timeFromNow(100))
                         .setStatus(Approval.ApprovalStatus.DENIED)
         );
-        assertThat(approvals.contains(new Approval()
-                .setUserId("u1")
-                .setClientId("c1")
-                .setScope("s1")
-                .setExpiresAt(Approval.timeFromNow(100))
-                .setStatus(Approval.ApprovalStatus.APPROVED))).isTrue();
-        assertThat(approvals.contains(new Approval()
-                .setUserId("u1")
-                .setClientId("c1")
-                .setScope("s1")
-                .setExpiresAt(Approval.timeFromNow(100))
-                .setStatus(Approval.ApprovalStatus.DENIED))).isFalse();
+        assertThat(approvals)
+                .contains(new Approval()
+                        .setUserId("u1")
+                        .setClientId("c1")
+                        .setScope("s1")
+                        .setExpiresAt(Approval.timeFromNow(100))
+                        .setStatus(Approval.ApprovalStatus.APPROVED))
+                .doesNotContain(new Approval()
+                        .setUserId("u1")
+                        .setClientId("c1")
+                        .setScope("s1")
+                        .setExpiresAt(Approval.timeFromNow(100))
+                        .setStatus(Approval.ApprovalStatus.DENIED));
     }
 
     @Test
@@ -182,6 +196,7 @@ class ApprovalTests {
                 .setScope("s1")
                 .setExpiresAt(Approval.timeFromNow(thirtyMinutes))
                 .setStatus(Approval.ApprovalStatus.APPROVED).isActiveAsOf(new Date())).isTrue();
+
         int expiresIn = -1;
         assertThat(new Approval()
                 .setUserId("u1")

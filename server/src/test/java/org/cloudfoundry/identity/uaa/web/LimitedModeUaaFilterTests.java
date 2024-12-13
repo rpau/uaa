@@ -167,7 +167,7 @@ public class LimitedModeUaaFilterTests {
         disableEnableUsesCacheToAvoidFileAccess();
         filter.setStatusFile(null);
         assertThat(filter.isEnabled()).isFalse();
-        assertThat(filter.getLastFileSystemCheck()).isEqualTo(0);
+        assertThat(filter.getLastFileSystemCheck()).isZero();
     }
 
     public static void setPathInfo(

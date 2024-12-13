@@ -13,7 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class JsonDateSerializerTest {
 
-    Exception exceptionOccured;
+    Exception exceptionOccurred;
 
     @Test
     void formatting() throws IOException {
@@ -22,7 +22,7 @@ class JsonDateSerializerTest {
         JsonGenerator gen = new JsonFactory().createGenerator(bos);
         new JsonDateSerializer().serialize(now, gen, null);
         gen.close();
-        assertThat(bos.toString()).isEqualTo("\"%s\"".formatted(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").format(now)));
+        assertThat(bos).hasToString("\"%s\"".formatted(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").format(now)));
     }
 
     @Test
@@ -43,7 +43,7 @@ class JsonDateSerializerTest {
                     }
 
                 } catch (Exception e) {
-                    exceptionOccured = e;
+                    exceptionOccurred = e;
                 }
             });
         }
@@ -55,7 +55,7 @@ class JsonDateSerializerTest {
         for (int i = 0; i < 1000; i++) {
             threadArray[i].join();
         }
-        assertThat(exceptionOccured).isNull();
+        assertThat(exceptionOccurred).isNull();
     }
 
 }

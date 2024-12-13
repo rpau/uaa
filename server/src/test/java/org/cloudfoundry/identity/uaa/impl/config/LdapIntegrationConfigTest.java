@@ -21,6 +21,6 @@ class LdapIntegrationConfigTest {
     void setLdapTimeoutPropertyTo30Minutes() {
         Environment env = Mockito.mock(Environment.class);
         Map properties = ldapIntegrationConfig.ldapProperties(env);
-        assertThat(properties.get("com.sun.jndi.ldap.connect.timeout")).isEqualTo(String.valueOf(30 * 60 * 1000));
+        assertThat(properties).containsEntry("com.sun.jndi.ldap.connect.timeout", String.valueOf(30 * 60 * 1000));
     }
 }

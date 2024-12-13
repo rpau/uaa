@@ -71,7 +71,7 @@ public class UaaMapUtilsTest {
         Map<String, Object> flat = UaaMapUtils.flatten(top);
         assertThat(flat.get("secondB.thirdC.emptyMap")).isSameAs(emptyMap);
         assertThat(flat.get("secondA")).isSameAs(secondA);
-        assertThat(flat.get("secondB.thirdC.keyC")).isEqualTo("valueC");
+        assertThat(flat).containsEntry("secondB.thirdC.keyC", "valueC");
     }
 
     public void internal_visit_all_keys(Map<String, Object> map, List<String> keys) {

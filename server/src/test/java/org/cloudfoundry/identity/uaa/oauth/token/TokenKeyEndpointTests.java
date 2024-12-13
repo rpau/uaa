@@ -110,10 +110,11 @@ class TokenKeyEndpointTests {
         String serialized = JsonUtils.writeValueAsString(response);
 
         Map<String, String> deserializedMap = JsonUtils.readValue(serialized, Map.class);
-        assertThat(deserializedMap.get("alg")).isEqualTo("HS256");
-        assertThat(deserializedMap.get("value")).isEqualTo("someKey");
-        assertThat(deserializedMap.get("kty")).isEqualTo("MAC");
-        assertThat(deserializedMap.get("use")).isEqualTo("sig");
+        assertThat(deserializedMap)
+                .containsEntry("alg", "HS256")
+                .containsEntry("value", "someKey")
+                .containsEntry("kty", "MAC")
+                .containsEntry("use", "sig");
     }
 
     @Test

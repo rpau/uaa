@@ -53,7 +53,7 @@ class ClientInfoEndpointTests {
 
         assertThat(clientDetails.getClientId()).isEqualTo(clientId);
         assertThat(clientDetails.getClientSecret()).isNull();
-        assertThat(clientDetails.getAdditionalInformation().isEmpty()).isTrue();
+        assertThat(clientDetails.getAdditionalInformation()).isEmpty();
     }
 
 }

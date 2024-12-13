@@ -141,8 +141,9 @@ class ExternalOAuthAuthenticationManagerGithubTest {
         assertThat(authenticationData.getUsername()).isEqualTo("octocat@github.example.com");
 
         Map<String, Object> claims = authenticationData.getClaims();
-        assertThat(claims.get("login")).isEqualTo("octocat");
-        assertThat(claims.get("name")).isEqualTo("monalisa octocat");
-        assertThat(claims.get("email")).isEqualTo("octocat@github.example.com");
+        assertThat(claims)
+                .containsEntry("login", "octocat")
+                .containsEntry("name", "monalisa octocat")
+                .containsEntry("email", "octocat@github.example.com");
     }
 }

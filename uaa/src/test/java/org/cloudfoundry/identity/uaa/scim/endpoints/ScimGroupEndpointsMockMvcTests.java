@@ -1318,8 +1318,9 @@ class ScimGroupEndpointsMockMvcTests {
         List<ScimGroupExternalMember> members = new ArrayList<>();
         for (String s : expected) {
             String[] data = s.split("\\|");
-            assertThat(data).isNotNull();
-            assertThat(data).hasSize(2);
+            assertThat(data)
+                    .isNotNull()
+                    .hasSize(2);
             String displayName = data[0];
             String externalId = data[1];
             ScimGroupExternalMember mbr = new ScimGroupExternalMember("N/A", externalId);

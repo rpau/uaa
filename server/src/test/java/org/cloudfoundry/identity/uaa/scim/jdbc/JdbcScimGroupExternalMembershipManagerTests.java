@@ -117,14 +117,14 @@ class JdbcScimGroupExternalMembershipManagerTests {
         createGroupMapping();
         gdao.delete("g1-" + IdentityZone.getUaaZoneId(), -1, IdentityZone.getUaaZoneId());
         int mappingsCount = jdbcTemplate.queryForObject("select count(1) from " + JdbcScimGroupExternalMembershipManager.EXTERNAL_GROUP_MAPPING_TABLE, Integer.class);
-        assertThat(mappingsCount).isEqualTo(0);
+        assertThat(mappingsCount).isZero();
     }
 
     @Test
     void group_mapping() {
         createGroupMapping();
-        assertThat(edao.getExternalGroupMapsByExternalGroup("cn=engineering,ou=groups,dc=example,dc=com", origin, IdentityZone.getUaaZoneId()).size()).isEqualTo(1);
-        assertThat(edao.getExternalGroupMapsByExternalGroup("cn=engineering,ou=groups,dc=example,dc=com", origin, "id").size()).isEqualTo(0);
+        assertThat(edao.getExternalGroupMapsByExternalGroup("cn=engineering,ou=groups,dc=example,dc=com", origin, IdentityZone.getUaaZoneId())).hasSize(1);
+        assertThat(edao.getExternalGroupMapsByExternalGroup("cn=engineering,ou=groups,dc=example,dc=com", origin, "id")).isEmpty();
     }
 
     private void createGroupMapping() {
@@ -137,7 +137,7 @@ class JdbcScimGroupExternalMembershipManagerTests {
 
         List<ScimGroupExternalMember> externalMapping = edao.getExternalGroupMapsByGroupId("g1-" + IdentityZone.getUaaZoneId(), origin, IdentityZone.getUaaZoneId());
 
-        assertThat(externalMapping.size()).isEqualTo(1);
+        assertThat(externalMapping).hasSize(1);
     }
 
     @Test
@@ -153,8 +153,8 @@ class JdbcScimGroupExternalMembershipManagerTests {
     @Test
     void using_filter_query_filters_by_zone() {
         map3GroupsInEachZone();
-        assertThat(edao.getExternalGroupMappings("invalid-zone-id").size()).isEqualTo(0);
-        assertThat(edao.getExternalGroupMappings(otherZone.getId()).size()).isEqualTo(3);
+        assertThat(edao.getExternalGroupMappings("invalid-zone-id")).isEmpty();
+        assertThat(edao.getExternalGroupMappings(otherZone.getId())).hasSize(3);
     }
 
     protected void map3GroupsInEachZone() {
@@ -187,7 +187,7 @@ class JdbcScimGroupExternalMembershipManagerTests {
         assertThat("g1-" + IdentityZone.getUaaZoneId()).isEqualTo(member.getGroupId());
         assertThat(member.getExternalGroup()).isEqualTo("cn=engineering,ou=groups,dc=example,dc=com");
         List<ScimGroupExternalMember> externalMapping = edao.getExternalGroupMapsByGroupId("g1-" + IdentityZone.getUaaZoneId(), origin, IdentityZone.getUaaZoneId());
-        assertThat(externalMapping.size()).isEqualTo(1);
+        assertThat(externalMapping).hasSize(1);
     }
 
     @Test
@@ -223,7 +223,7 @@ class JdbcScimGroupExternalMembershipManagerTests {
         }
 
         List<ScimGroupExternalMember> externalMappings = edao.getExternalGroupMapsByGroupId("g1-" + IdentityZone.getUaaZoneId(), origin, IdentityZone.getUaaZoneId());
-        assertThat(externalMappings.size()).isEqualTo(3);
+        assertThat(externalMappings).hasSize(3);
 
         List<String> testGroups = new ArrayList<>(
                 Arrays.asList(
@@ -239,7 +239,7 @@ class JdbcScimGroupExternalMembershipManagerTests {
             testGroups.remove(member.getExternalGroup());
         }
 
-        assertThat(testGroups.size()).isEqualTo(0);
+        assertThat(testGroups).isEmpty();
     }
 
     @Test
@@ -266,7 +266,7 @@ class JdbcScimGroupExternalMembershipManagerTests {
                 assertThat(member.getExternalGroup()).isEqualTo("cn=mgmt,ou=groups,dc=example,dc=com");
             }
             List<ScimGroupExternalMember> externalMappings = edao.getExternalGroupMapsByGroupId("g1-" + IdentityZone.getUaaZoneId(), origin, IdentityZone.getUaaZoneId());
-            assertThat(externalMappings.size()).isEqualTo(3);
+            assertThat(externalMappings).hasSize(3);
         }
         {
             ScimGroup group = gdao.retrieve("g2-" + IdentityZone.getUaaZoneId(), IdentityZone.getUaaZoneId());
@@ -290,7 +290,7 @@ class JdbcScimGroupExternalMembershipManagerTests {
                 assertThat(member.getExternalGroup()).isEqualTo("cn=mgmt,ou=groups,dc=example,dc=com");
             }
             List<ScimGroupExternalMember> externalMappings = edao.getExternalGroupMapsByGroupId("g2-" + IdentityZone.getUaaZoneId(), origin, IdentityZone.getUaaZoneId());
-            assertThat(externalMappings.size()).isEqualTo(3);
+            assertThat(externalMappings).hasSize(3);
         }
         {
             ScimGroup group = gdao.retrieve("g3-" + IdentityZone.getUaaZoneId(), IdentityZone.getUaaZoneId());
@@ -314,7 +314,7 @@ class JdbcScimGroupExternalMembershipManagerTests {
                 assertThat(member.getExternalGroup()).isEqualTo("cn=mgmt,ou=groups,dc=example,dc=com");
             }
             List<ScimGroupExternalMember> externalMappings = edao.getExternalGroupMapsByGroupId("g3-" + IdentityZone.getUaaZoneId(), origin, IdentityZone.getUaaZoneId());
-            assertThat(externalMappings.size()).isEqualTo(3);
+            assertThat(externalMappings).hasSize(3);
         }
 
         List<String> testGroups = new ArrayList<>(Arrays.asList(new String[]{"g1-" + IdentityZone.getUaaZoneId(), "g2-" + IdentityZone.getUaaZoneId(), "g3-" + IdentityZone.getUaaZoneId()}));
@@ -329,7 +329,7 @@ class JdbcScimGroupExternalMembershipManagerTests {
                 testGroups.remove(member.getGroupId());
             }
 
-            assertThat(testGroups.size()).isEqualTo(0);
+            assertThat(testGroups).isEmpty();
         }
 
         {
@@ -342,7 +342,7 @@ class JdbcScimGroupExternalMembershipManagerTests {
                 testGroups.remove(member.getGroupId());
             }
 
-            assertThat(testGroups.size()).isEqualTo(0);
+            assertThat(testGroups).isEmpty();
 
             List<ScimGroupExternalMember> externalMappings2 = edao
                     .getExternalGroupMapsByExternalGroup("cn=HR,ou=groups,dc=example,dc=com", origin, IdentityZone.getUaaZoneId());
@@ -351,7 +351,7 @@ class JdbcScimGroupExternalMembershipManagerTests {
                 testGroups.remove(member.getGroupId());
             }
 
-            assertThat(testGroups.size()).isEqualTo(0);
+            assertThat(testGroups).isEmpty();
         }
 
         {
@@ -364,7 +364,7 @@ class JdbcScimGroupExternalMembershipManagerTests {
                 testGroups.remove(member.getGroupId());
             }
 
-            assertThat(testGroups.size()).isEqualTo(0);
+            assertThat(testGroups).isEmpty();
         }
     }
 }

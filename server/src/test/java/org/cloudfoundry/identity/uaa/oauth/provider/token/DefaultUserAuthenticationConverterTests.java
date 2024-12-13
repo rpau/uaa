@@ -35,7 +35,7 @@ class DefaultUserAuthenticationConverterTests {
         assertThat(converter.extractAuthentication(Collections.emptyMap())).isNull();
         Authentication authentication = converter.extractAuthentication(map);
 
-        assertThat(authentication.getAuthorities().size()).isEqualTo(2);
+        assertThat(authentication.getAuthorities()).hasSize(2);
     }
 
     @Test
@@ -46,7 +46,7 @@ class DefaultUserAuthenticationConverterTests {
 
         Authentication authentication = converter.extractAuthentication(map);
 
-        assertThat(authentication.getAuthorities().size()).isEqualTo(2);
+        assertThat(authentication.getAuthorities()).hasSize(2);
     }
 
     @Test
@@ -60,7 +60,7 @@ class DefaultUserAuthenticationConverterTests {
         converter.setUserDetailsService(userDetailsService);
         Authentication authentication = converter.extractAuthentication(map);
 
-        assertThat(authentication.getAuthorities().iterator().next().toString()).isEqualTo("ROLE_SPAM");
+        assertThat(authentication.getAuthorities().iterator().next()).hasToString("ROLE_SPAM");
     }
 
     @Test
@@ -77,9 +77,9 @@ class DefaultUserAuthenticationConverterTests {
     void shouldConvertUserWithDefaultUsernameClaimWhenNotSet() {
         Authentication authentication = new UsernamePasswordAuthenticationToken("test_user", "", AuthorityUtils.createAuthorityList("user"));
         converter.setDefaultAuthorities(new String[]{"user"});
-        Map<String, ?> map = converter.convertUserAuthentication(authentication);
+        Map<String, Object> map = converter.convertUserAuthentication(authentication);
 
-        assertThat(map.get(UserAuthenticationConverter.USERNAME)).isEqualTo("test_user");
+        assertThat(map).containsEntry(UserAuthenticationConverter.USERNAME, "test_user");
     }
 
     @Test
@@ -104,9 +104,9 @@ class DefaultUserAuthenticationConverterTests {
 
         Authentication authentication = new UsernamePasswordAuthenticationToken("test_user", "");
 
-        Map<String, ?> map = converter.convertUserAuthentication(authentication);
+        Map<String, Object> map = converter.convertUserAuthentication(authentication);
 
-        assertThat(map.get(customUserClaim)).isEqualTo("test_user");
+        assertThat(map).containsEntry(customUserClaim, "test_user");
     }
 
     @Test

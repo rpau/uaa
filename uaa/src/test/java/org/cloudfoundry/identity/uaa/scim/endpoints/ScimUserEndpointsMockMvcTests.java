@@ -257,8 +257,9 @@ class ScimUserEndpointsMockMvcTests {
         Map<String, String> data = JsonUtils.readValue(expiringCode.getData(), new TypeReference<Map<String, String>>() {
         });
         assertThat(data.get(USER_ID)).isNotNull();
-        assertThat(data.get(CLIENT_ID)).isEqualTo(clientDetails.getClientId());
-        assertThat(data.get(REDIRECT_URI)).isEqualTo(HTTP_REDIRECT_EXAMPLE_COM);
+        assertThat(data)
+                .containsEntry(CLIENT_ID, clientDetails.getClientId())
+                .containsEntry(REDIRECT_URI, HTTP_REDIRECT_EXAMPLE_COM);
     }
 
     @Test
@@ -307,8 +308,9 @@ class ScimUserEndpointsMockMvcTests {
         Map<String, String> data = JsonUtils.readValue(expiringCode.getData(), new TypeReference<Map<String, String>>() {
         });
         assertThat(data.get(USER_ID)).isNotNull();
-        assertThat(data.get(CLIENT_ID)).isEqualTo(zonedClientDetails.getClientId());
-        assertThat(data.get(REDIRECT_URI)).isEqualTo(HTTP_REDIRECT_EXAMPLE_COM);
+        assertThat(data)
+                .containsEntry(CLIENT_ID, zonedClientDetails.getClientId())
+                .containsEntry(REDIRECT_URI, HTTP_REDIRECT_EXAMPLE_COM);
     }
 
     @Test
@@ -347,8 +349,9 @@ class ScimUserEndpointsMockMvcTests {
         Map<String, String> data = JsonUtils.readValue(expiringCode.getData(), new TypeReference<Map<String, String>>() {
         });
         assertThat(data.get(USER_ID)).isNotNull();
-        assertThat(data.get(CLIENT_ID)).isEqualTo("admin");
-        assertThat(data.get(REDIRECT_URI)).isEqualTo(HTTP_REDIRECT_EXAMPLE_COM);
+        assertThat(data)
+                .containsEntry(CLIENT_ID, "admin")
+                .containsEntry(REDIRECT_URI, HTTP_REDIRECT_EXAMPLE_COM);
     }
 
     @Test
@@ -525,7 +528,7 @@ class ScimUserEndpointsMockMvcTests {
                 .andExpect(status().isOk())
                 .andReturn();
         SearchResults searchResults = JsonUtils.readValue(mvcResult.getResponse().getContentAsString(), SearchResults.class);
-        assertThat(searchResults.getResources().size()).isEqualTo(usersMaxCount);
+        assertThat(searchResults.getResources()).hasSize(usersMaxCount);
         assertThat(searchResults.getItemsPerPage()).isEqualTo(usersMaxCount);
         assertThat(searchResults.getTotalResults()).isEqualTo(usersMaxCountWithOffset);
     }
@@ -1108,7 +1111,7 @@ class ScimUserEndpointsMockMvcTests {
         approval.setScope("openid");
         approval.setStatus(Approval.ApprovalStatus.APPROVED);
         store.addApproval(approval, IdentityZoneHolder.get().getId());
-        assertThat((long) template.queryForObject("select count(*) from authz_approvals where user_id=?", Integer.class, user.getId())).isEqualTo(1);
+        assertThat((long) template.queryForObject("select count(*) from authz_approvals where user_id=?", Integer.class, user.getId())).isOne();
         mockMvc.perform((delete("/Users/" + user.getId()))
                         .header("Authorization", "Bearer " + uaaAdminToken)
                         .contentType(APPLICATION_JSON)
@@ -1118,7 +1121,7 @@ class ScimUserEndpointsMockMvcTests {
                 .andExpect(jsonPath("$.emails[0].value").value(user.getPrimaryEmail()))
                 .andExpect(jsonPath("$.name.givenName").value(user.getGivenName()))
                 .andExpect(jsonPath("$.name.familyName").value(user.getFamilyName()));
-        assertThat((long) template.queryForObject("select count(*) from authz_approvals where user_id=?", Integer.class, user.getId())).isEqualTo(0);
+        assertThat((long) template.queryForObject("select count(*) from authz_approvals where user_id=?", Integer.class, user.getId())).isZero();
     }
 
     @Test

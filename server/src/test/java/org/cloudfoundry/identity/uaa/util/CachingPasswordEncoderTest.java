@@ -62,10 +62,10 @@ class CachingPasswordEncoderTest {
 
         assertThat(passwordEncoder.matches(password, encoded)).isTrue();
         assertThat(cachingPasswordEncoder.matches(password, encoded)).isTrue();
-        assertThat(cachingPasswordEncoder.getOrCreateHashList(cacheKey).isEmpty()).as("Password is no longer cached when we expected it to be cached").isFalse();
+        assertThat(cachingPasswordEncoder.getOrCreateHashList(cacheKey)).as("Password is no longer cached when we expected it to be cached").isNotEmpty();
 
         Thread.sleep(shortTTL.toMillis() + 100);
-        assertThat(cachingPasswordEncoder.getOrCreateHashList(cacheKey).size()).as("Password is still cached when we expected it to be expired").isEqualTo(0);
+        assertThat(cachingPasswordEncoder.getOrCreateHashList(cacheKey)).as("Password is still cached when we expected it to be expired").isEmpty();
     }
 
     @Test
@@ -112,7 +112,7 @@ class CachingPasswordEncoderTest {
     @Test
         // TODO: This test takes a long time to run :(
     void ensureNoMemoryLeak() {
-        assertThat(cachingPasswordEncoder.getNumberOfKeys()).isEqualTo(0);
+        assertThat(cachingPasswordEncoder.getNumberOfKeys()).isZero();
         for (int i = 0; i < cachingPasswordEncoder.getMaxKeys(); i++) {
             password = new RandomValueStringGenerator().generate();
             for (int j = 0; j < cachingPasswordEncoder.getMaxEncodedPasswords(); j++) {
@@ -125,7 +125,7 @@ class CachingPasswordEncoderTest {
         String encoded = cachingPasswordEncoder.encode(password);
         assertThat(cachingPasswordEncoder.matches(password, encoded)).isTrue();
         //overflow happened
-        assertThat(cachingPasswordEncoder.getNumberOfKeys()).isEqualTo(1);
+        assertThat(cachingPasswordEncoder.getNumberOfKeys()).isOne();
 
         for (int j = 1; j < cachingPasswordEncoder.getMaxEncodedPasswords(); j++) {
             encoded = cachingPasswordEncoder.encode(password);
@@ -135,9 +135,8 @@ class CachingPasswordEncoderTest {
         ConcurrentMap<CharSequence, Set<String>> cache = cachingPasswordEncoder.asMap();
         assertThat(cache).isNotNull();
         Set<String> passwords = cache.get(cachingPasswordEncoder.cacheEncode(password));
-        assertThat(passwords).isNotNull();
-        assertThat(passwords.size()).isEqualTo(cachingPasswordEncoder.getMaxEncodedPasswords());
+        assertThat(passwords).hasSize(cachingPasswordEncoder.getMaxEncodedPasswords());
         cachingPasswordEncoder.matches(password, cachingPasswordEncoder.encode(password));
-        assertThat(passwords.size()).isEqualTo(1);
+        assertThat(passwords).hasSize(1);
     }
 }

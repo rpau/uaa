@@ -130,7 +130,7 @@ class LoginAuthenticationManagerTests {
         AuthzAuthenticationRequest authenticationRequest = UaaAuthenticationTestFactory.getAuthenticationRequest("foo");
         manager.authenticate(authenticationRequest);
 
-        assertThat(publisher.getEventCount()).isEqualTo(1);
+        assertThat(publisher.getEventCount()).isOne();
         assertThat(publisher.getLatestEvent().getUser().getUsername()).isEqualTo("foo");
     }
 

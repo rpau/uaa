@@ -184,14 +184,14 @@ class IdentityZoneResolvingFilterTests {
     void setDefaultZoneHostNamesWithNull() {
         IdentityZoneResolvingFilter filter = new IdentityZoneResolvingFilter(dao);
         filter.setDefaultInternalHostnames(null);
-        assertThat(filter.getDefaultZoneHostnames().isEmpty()).isTrue();
+        assertThat(filter.getDefaultZoneHostnames()).isEmpty();
     }
 
     @Test
     void setAdditionalZoneHostNamesWithNull() {
         IdentityZoneResolvingFilter filter = new IdentityZoneResolvingFilter(dao);
         filter.setAdditionalInternalHostnames(null);
-        assertThat(filter.getDefaultZoneHostnames().isEmpty()).isTrue();
+        assertThat(filter.getDefaultZoneHostnames()).isEmpty();
     }
 
     @Test
@@ -199,7 +199,7 @@ class IdentityZoneResolvingFilterTests {
         IdentityZoneResolvingFilter filter = new IdentityZoneResolvingFilter(dao);
         filter.setDefaultInternalHostnames(new HashSet<>(Collections.singletonList("uaa.mycf.com")));
         filter.restoreDefaultHostnames(null);
-        assertThat(filter.getDefaultZoneHostnames().isEmpty()).isTrue();
+        assertThat(filter.getDefaultZoneHostnames()).isEmpty();
     }
 
     @Test
@@ -207,9 +207,9 @@ class IdentityZoneResolvingFilterTests {
         IdentityZoneResolvingFilter filter = new IdentityZoneResolvingFilter(dao);
         filter.setDefaultInternalHostnames(new HashSet<>(Collections.singletonList("uaa.mycf.com")));
         filter.setDefaultInternalHostnames(new HashSet<>(Collections.singletonList("uaa.MYCF2.com")));
-        assertThat(filter.getDefaultZoneHostnames().size()).isEqualTo(2);
-        assertThat(filter.getDefaultZoneHostnames().contains("uaa.mycf.com")).isTrue();
-        assertThat(filter.getDefaultZoneHostnames().contains("uaa.mycf2.com")).isTrue();
+        assertThat(filter.getDefaultZoneHostnames()).hasSize(2);
+        assertThat(filter.getDefaultZoneHostnames()).contains("uaa.mycf.com");
+        assertThat(filter.getDefaultZoneHostnames()).contains("uaa.mycf2.com");
     }
 
     @Test
@@ -217,9 +217,9 @@ class IdentityZoneResolvingFilterTests {
         IdentityZoneResolvingFilter filter = new IdentityZoneResolvingFilter(dao);
         filter.setAdditionalInternalHostnames(new HashSet<>(Collections.singletonList("uaa.mycf.com")));
         filter.setAdditionalInternalHostnames(new HashSet<>(Collections.singletonList("uaa.MYCF2.com")));
-        assertThat(filter.getDefaultZoneHostnames().size()).isEqualTo(2);
-        assertThat(filter.getDefaultZoneHostnames().contains("uaa.mycf.com")).isTrue();
-        assertThat(filter.getDefaultZoneHostnames().contains("uaa.mycf2.com")).isTrue();
+        assertThat(filter.getDefaultZoneHostnames()).hasSize(2);
+        assertThat(filter.getDefaultZoneHostnames()).contains("uaa.mycf.com");
+        assertThat(filter.getDefaultZoneHostnames()).contains("uaa.mycf2.com");
     }
 
     @Test
@@ -227,7 +227,7 @@ class IdentityZoneResolvingFilterTests {
         IdentityZoneResolvingFilter filter = new IdentityZoneResolvingFilter(dao);
         filter.setDefaultInternalHostnames(new HashSet<>(Collections.singletonList("uaa.mycf.com")));
         filter.restoreDefaultHostnames(new HashSet<>(Collections.singletonList("uaa.MYCF2.com")));
-        assertThat(filter.getDefaultZoneHostnames().size()).isEqualTo(1);
-        assertThat(filter.getDefaultZoneHostnames().contains("uaa.mycf2.com")).isTrue();
+        assertThat(filter.getDefaultZoneHostnames()).hasSize(1);
+        assertThat(filter.getDefaultZoneHostnames()).contains("uaa.mycf2.com");
     }
 }

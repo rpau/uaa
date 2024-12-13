@@ -116,50 +116,49 @@ class UaaTokenStoreTests {
         modifiedAuthentication.setExternalGroups(externalGroups);
 
         String code = store.createAuthorizationCode(uaaAuthentication);
-        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM oauth_code WHERE code = ?", new Object[]{code}, Integer.class)).isEqualTo(1);
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM oauth_code WHERE code = ?", new Object[]{code}, Integer.class)).isOne();
         OAuth2Authentication authentication = store.consumeAuthorizationCode(code);
-        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM oauth_code WHERE code = ?", new Object[]{code}, Integer.class)).isEqualTo(0);
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM oauth_code WHERE code = ?", new Object[]{code}, Integer.class)).isZero();
         assertThat(authentication).isNotNull();
 
         UaaAuthentication userAuthentication = (UaaAuthentication) authentication.getUserAuthentication();
-        assertThat(userAuthentication.getUserAttributes()).isNotNull();
-        assertThat(userAuthentication.getUserAttributes().size()).isEqualTo(2);
+        assertThat(userAuthentication.getUserAttributes()).hasSize(2);
         assertThat(userAuthentication.getUserAttributes().get("atest")).containsExactlyInAnyOrder("test1", "test2", "test3");
         assertThat(userAuthentication.getUserAttributes().get("btest")).containsExactlyInAnyOrder("test1", "test2", "test3");
 
-        assertThat(userAuthentication.getExternalGroups()).isNotNull();
-        assertThat(userAuthentication.getExternalGroups().size()).isEqualTo(3);
-        assertThat(userAuthentication.getExternalGroups()).containsExactlyInAnyOrder("group1", "group2", "group3");
+        assertThat(userAuthentication.getExternalGroups())
+                .hasSize(3)
+                .containsExactlyInAnyOrder("group1", "group2", "group3");
     }
 
     @Test
     void consumeClientCredentialsFromOldStore() {
         String code = legacyCodeServices.createAuthorizationCode(clientAuthentication);
-        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM oauth_code WHERE code = ?", new Object[]{code}, Integer.class)).isEqualTo(1);
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM oauth_code WHERE code = ?", new Object[]{code}, Integer.class)).isOne();
         OAuth2Authentication authentication = store.consumeAuthorizationCode(code);
         assertThat(authentication).isNotNull();
         assertThat(authentication.isClientOnly()).isTrue();
-        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM oauth_code WHERE code = ?", new Object[]{code}, Integer.class)).isEqualTo(0);
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM oauth_code WHERE code = ?", new Object[]{code}, Integer.class)).isZero();
     }
 
     @Test
     void storeTokenClientCredentials() {
         String code = store.createAuthorizationCode(clientAuthentication);
-        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM oauth_code WHERE code = ?", new Object[]{code}, Integer.class)).isEqualTo(1);
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM oauth_code WHERE code = ?", new Object[]{code}, Integer.class)).isOne();
         assertThat(code).isNotNull();
     }
 
     @Test
     void storeTokenPasswordGrantUsernamePasswordAuthentication() {
         String code = store.createAuthorizationCode(usernamePasswordAuthentication);
-        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM oauth_code WHERE code = ?", new Object[]{code}, Integer.class)).isEqualTo(1);
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM oauth_code WHERE code = ?", new Object[]{code}, Integer.class)).isOne();
         assertThat(code).isNotNull();
     }
 
     @Test
     void storeTokenPasswordGrantUaaAuthentication() {
         String code = store.createAuthorizationCode(uaaAuthentication);
-        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM oauth_code WHERE code = ?", new Object[]{code}, Integer.class)).isEqualTo(1);
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM oauth_code WHERE code = ?", new Object[]{code}, Integer.class)).isOne();
         assertThat(code).isNotNull();
     }
 
@@ -173,28 +172,28 @@ class UaaTokenStoreTests {
     @Test
     void retrieveToken() {
         String code = store.createAuthorizationCode(clientAuthentication);
-        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM oauth_code WHERE code = ?", new Object[]{code}, Integer.class)).isEqualTo(1);
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM oauth_code WHERE code = ?", new Object[]{code}, Integer.class)).isOne();
         OAuth2Authentication authentication = store.consumeAuthorizationCode(code);
-        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM oauth_code WHERE code = ?", new Object[]{code}, Integer.class)).isEqualTo(0);
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM oauth_code WHERE code = ?", new Object[]{code}, Integer.class)).isZero();
         assertThat(authentication).isNotNull();
 
         code = store.createAuthorizationCode(usernamePasswordAuthentication);
-        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM oauth_code WHERE code = ?", new Object[]{code}, Integer.class)).isEqualTo(1);
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM oauth_code WHERE code = ?", new Object[]{code}, Integer.class)).isOne();
         authentication = store.consumeAuthorizationCode(code);
-        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM oauth_code WHERE code = ?", new Object[]{code}, Integer.class)).isEqualTo(0);
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM oauth_code WHERE code = ?", new Object[]{code}, Integer.class)).isZero();
         assertThat(authentication).isNotNull();
 
         code = store.createAuthorizationCode(uaaAuthentication);
-        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM oauth_code WHERE code = ?", new Object[]{code}, Integer.class)).isEqualTo(1);
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM oauth_code WHERE code = ?", new Object[]{code}, Integer.class)).isOne();
         authentication = store.consumeAuthorizationCode(code);
-        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM oauth_code WHERE code = ?", new Object[]{code}, Integer.class)).isEqualTo(0);
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM oauth_code WHERE code = ?", new Object[]{code}, Integer.class)).isZero();
         assertThat(authentication).isNotNull();
     }
 
     @Test
     void retrieveExpiredToken() {
         String code = store.createAuthorizationCode(clientAuthentication);
-        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM oauth_code WHERE code = ?", new Object[]{code}, Integer.class)).isEqualTo(1);
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM oauth_code WHERE code = ?", new Object[]{code}, Integer.class)).isOne();
         doReturn(Instant.now().plus(UaaTokenStore.DEFAULT_EXPIRATION_TIME)).when(timeService).getCurrentInstant();
         assertThatExceptionOfType(InvalidGrantException.class).isThrownBy(() -> store.consumeAuthorizationCode(code));
     }
@@ -202,7 +201,7 @@ class UaaTokenStoreTests {
     @Test
     void retrieveNonExistentToken() {
         String code = store.createAuthorizationCode(clientAuthentication);
-        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM oauth_code WHERE code = ?", new Object[]{code}, Integer.class)).isEqualTo(1);
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM oauth_code WHERE code = ?", new Object[]{code}, Integer.class)).isOne();
         assertThatExceptionOfType(InvalidGrantException.class).isThrownBy(() -> store.consumeAuthorizationCode("non-existent"));
     }
 
@@ -219,7 +218,7 @@ class UaaTokenStoreTests {
 
         final String finalLastCode = lastCode;
         assertThatExceptionOfType(InvalidGrantException.class).isThrownBy(() -> store.consumeAuthorizationCode(finalLastCode));
-        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM oauth_code", Integer.class)).isEqualTo(0);
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM oauth_code", Integer.class)).isZero();
     }
 
     @Test
@@ -235,7 +234,7 @@ class UaaTokenStoreTests {
         assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM oauth_code", Integer.class)).isEqualTo(count);
         doReturn(Instant.now().plus(Duration.ofDays(4))).when(timeService).getCurrentInstant();
         assertThatExceptionOfType(InvalidGrantException.class).isThrownBy(() -> store.consumeAuthorizationCode("non-existent"));
-        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM oauth_code", Integer.class)).isEqualTo(0);
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM oauth_code", Integer.class)).isZero();
     }
 
     @Test
@@ -326,8 +325,7 @@ class UaaTokenStoreTests {
         // oAuth 2.0 standard suggests 160 bits of randomness
         // https://datatracker.ietf.org/doc/html/rfc6749#section-10.10
         String code = store.createAuthorizationCode(clientAuthentication);
-        assertThat(code).isNotNull();
-        assertThat(code.length() >= 32).isTrue();
+        assertThat(code).hasSizeGreaterThanOrEqualTo(32);
     }
 
     @Test

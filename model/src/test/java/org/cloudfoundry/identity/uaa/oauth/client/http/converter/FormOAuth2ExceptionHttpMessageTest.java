@@ -61,7 +61,6 @@ class FormOAuth2ExceptionHttpMessageTest {
         OAuth2Exception e = new BadClientCredentialsException();
         e.addAdditionalInformation("key", "value");
         converter.write(e, MediaType.APPLICATION_FORM_URLENCODED, outputMessage);
-        assertThat(outputMessage.getBody()).isNotNull();
-        assertThat(outputMessage.getBody().toString()).isEqualTo("error=invalid_client&error_description=Bad+client+credentials&key=value");
+        assertThat(outputMessage.getBody()).hasToString("error=invalid_client&error_description=Bad+client+credentials&key=value");
     }
 }

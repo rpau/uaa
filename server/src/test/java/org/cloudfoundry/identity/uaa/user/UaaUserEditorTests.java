@@ -101,10 +101,10 @@ class UaaUserEditorTests {
         assertThat(user.getEmail()).isEqualTo(expectedEmail);
         assertThat(user.getGivenName()).isEqualTo(expectedFnm);
         assertThat(user.getFamilyName()).isEqualTo(expectedLnm);
-        assertThat(user.getAuthorities().toString().contains("uaa.user")).isTrue();
+        assertThat(user.getAuthorities().toString()).contains("uaa.user");
         if (expectedAuth != null) {
             for (String auth : expectedAuth) {
-                assertThat(user.getAuthorities().toString().contains(auth)).isTrue();
+                assertThat(user.getAuthorities().toString()).contains(auth);
             }
         }
     }

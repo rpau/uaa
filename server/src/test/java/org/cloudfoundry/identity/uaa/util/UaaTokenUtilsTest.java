@@ -141,9 +141,10 @@ class UaaTokenUtilsTest {
 
         Map<String, Object> claims = UaaTokenUtils.getClaims(jwt, Map.class);
 
-        assertThat(claims.get("cid")).isEqualTo("openidclient");
-        assertThat(claims.get("origin")).isEqualTo("uaa");
-        assertThat(claims.get("aud")).isEqualTo(Arrays.asList("openidclient"));
+        assertThat(claims)
+                .containsEntry("cid", "openidclient")
+                .containsEntry("origin", "uaa")
+                .containsEntry("aud", Arrays.asList("openidclient"));
 
         Claims claimObject = UaaTokenUtils.getClaimsFromTokenString(jwt);
 
@@ -168,7 +169,7 @@ class UaaTokenUtilsTest {
         Map<String, Object> claims = UaaTokenUtils.getClaims(tokenWithNoClaims, Map.class);
 
         assertThat(claims).isNotNull();
-        assertThat(claims.size()).isEqualTo(0);
+        assertThat(claims).isEmpty();
     }
 
 }

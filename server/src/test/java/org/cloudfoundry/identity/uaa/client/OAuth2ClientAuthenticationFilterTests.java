@@ -52,7 +52,7 @@ class OAuth2ClientAuthenticationFilterTests {
         filter.setUserInfoUrl("https://uaa.cloudfoundry.com/userinfo");
         filter.afterPropertiesSet();
         SocialClientUserDetails user = (SocialClientUserDetails) filter.getPrincipal();
-        assertThat(user.getAuthorities().isEmpty()).isFalse();
+        assertThat(user.getAuthorities()).isNotEmpty();
     }
 
     @Test
@@ -63,7 +63,7 @@ class OAuth2ClientAuthenticationFilterTests {
         filter.setUserInfoUrl("https://api.github.com/user");
         filter.afterPropertiesSet();
         SocialClientUserDetails user = (SocialClientUserDetails) filter.getPrincipal();
-        assertThat(user.getAuthorities().isEmpty()).isFalse();
+        assertThat(user.getAuthorities()).isNotEmpty();
     }
 
     @Test
@@ -76,6 +76,6 @@ class OAuth2ClientAuthenticationFilterTests {
         filter.setUserInfoUrl("https://graph.facebook.com/me");
         filter.afterPropertiesSet();
         SocialClientUserDetails user = (SocialClientUserDetails) filter.getPrincipal();
-        assertThat(user.getAuthorities().isEmpty()).isFalse();
+        assertThat(user.getAuthorities()).isNotEmpty();
     }
 }

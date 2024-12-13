@@ -47,7 +47,6 @@ class ClientInfoEndpointIntegrationTests {
 
     @Test
     void getClientInfo() {
-
         HttpHeaders headers = new HttpHeaders();
         AuthorizationCodeResourceDetails app = testAccounts.getDefaultAuthorizationCodeResource();
         headers.set("Authorization", testAccounts.getAuthorizationHeader(app.getClientId(), app.getClientSecret()));
@@ -56,7 +55,7 @@ class ClientInfoEndpointIntegrationTests {
         @SuppressWarnings("rawtypes")
         ResponseEntity<Map> response = serverRunning.getForObject("/clientinfo", Map.class, headers);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody().get("client_id")).isEqualTo(app.getClientId());
+        assertThat(response.getBody()).containsEntry("client_id", app.getClientId());
     }
 
     @Test
@@ -70,8 +69,7 @@ class ClientInfoEndpointIntegrationTests {
         @SuppressWarnings("rawtypes")
         ResponseEntity<Map> response = serverRunning.getForObject("/clientinfo", Map.class, headers);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody().get("client_id")).isEqualTo(app.getClientId());
-
+        assertThat(response.getBody()).containsEntry("client_id", app.getClientId());
     }
 
     @Test
@@ -85,8 +83,6 @@ class ClientInfoEndpointIntegrationTests {
         @SuppressWarnings("rawtypes")
         ResponseEntity<Map> response = serverRunning.getForObject("/clientinfo", Map.class, headers);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
-        assertThat(response.getBody().get("error")).isEqualTo("invalid_client");
-
+        assertThat(response.getBody()).containsEntry("error", "invalid_client");
     }
-
 }

@@ -81,9 +81,9 @@ class IntrospectEndpointIntegrationTests {
             }
         }
         // should be directed to the login screen...
-        assertThat(response.getBody().contains("/login.do")).isTrue();
-        assertThat(response.getBody().contains("username")).isTrue();
-        assertThat(response.getBody().contains("password")).isTrue();
+        assertThat(response.getBody()).contains("/login.do")
+                .contains("username")
+                .contains("password");
         String csrf = IntegrationTestUtils.extractCookieCsrf(response.getBody());
 
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
@@ -111,7 +111,7 @@ class IntrospectEndpointIntegrationTests {
         }
         if (response.getStatusCode() == HttpStatus.OK) {
             // The grant access page should be returned
-            assertThat(response.getBody().contains("<h1>Application Authorization</h1>")).isTrue();
+            assertThat(response.getBody()).contains("<h1>Application Authorization</h1>");
 
             formData.clear();
             formData.add(DEFAULT_CSRF_COOKIE_NAME, IntegrationTestUtils.extractCookieCsrf(response.getBody()));
@@ -153,9 +153,10 @@ class IntrospectEndpointIntegrationTests {
         @SuppressWarnings("unchecked")
         Map<String, Object> map = introspectResponse.getBody();
         assertThat(map.get("iss")).isNotNull();
-        assertThat(map.get("user_name")).isEqualTo(testAccounts.getUserName());
-        assertThat(map.get("email")).isEqualTo(testAccounts.getEmail());
-        assertThat(map.get("active")).isEqualTo(Boolean.TRUE);
+        assertThat(map)
+                .containsEntry("user_name", testAccounts.getUserName())
+                .containsEntry("email", testAccounts.getEmail())
+                .containsEntry("active", Boolean.TRUE);
 
         // Test that Spring's default converter can create an auth from the response.
         Authentication auth = (new DefaultUserAuthenticationConverter()).extractAuthentication(map);
@@ -174,7 +175,7 @@ class IntrospectEndpointIntegrationTests {
 
         @SuppressWarnings("unchecked")
         Map<String, String> map = response.getBody();
-        assertThat(map.containsKey("error")).isTrue();
+        assertThat(map).containsKey("error");
     }
 
     @Test
@@ -191,7 +192,7 @@ class IntrospectEndpointIntegrationTests {
 
         @SuppressWarnings("unchecked")
         Map<String, String> map = response.getBody();
-        assertThat(map.containsKey("error")).isTrue();
+        assertThat(map).containsKey("error");
     }
 
     @Test
@@ -229,8 +230,9 @@ class IntrospectEndpointIntegrationTests {
         @SuppressWarnings("unchecked")
         Map<String, Object> map = introspectResponse.getBody();
         assertThat(map.get("iss")).isNotNull();
-        assertThat(map.get("user_name")).isEqualTo(testAccounts.getUserName());
-        assertThat(map.get("email")).isEqualTo(testAccounts.getEmail());
+        assertThat(map)
+                .containsEntry("user_name", testAccounts.getUserName())
+                .containsEntry("email", testAccounts.getEmail());
         assertThat((Boolean) map.get("active")).isEqualTo(Boolean.valueOf(true));
     }
 
@@ -252,8 +254,9 @@ class IntrospectEndpointIntegrationTests {
         @SuppressWarnings("unchecked")
         Map<String, Object> map = introspectResponse.getBody();
         assertThat(map.get("iss")).isNotNull();
-        assertThat(map.get("user_name")).isEqualTo(testAccounts.getUserName());
-        assertThat(map.get("email")).isEqualTo(testAccounts.getEmail());
+        assertThat(map)
+                .containsEntry("user_name", testAccounts.getUserName())
+                .containsEntry("email", testAccounts.getEmail());
         assertThat((Boolean) map.get("active")).isEqualTo(Boolean.valueOf(true));
     }
 
@@ -276,8 +279,9 @@ class IntrospectEndpointIntegrationTests {
         @SuppressWarnings("unchecked")
         Map<String, Object> map = introspectResponse.getBody();
         assertThat(map.get("iss")).isNotNull();
-        assertThat(map.get("user_name")).isEqualTo(testAccounts.getUserName());
-        assertThat(map.get("email")).isEqualTo(testAccounts.getEmail());
+        assertThat(map)
+                .containsEntry("user_name", testAccounts.getUserName())
+                .containsEntry("email", testAccounts.getEmail());
         assertThat((Boolean) map.get("active")).isEqualTo(Boolean.valueOf(true));
     }
 
@@ -300,8 +304,9 @@ class IntrospectEndpointIntegrationTests {
         @SuppressWarnings("unchecked")
         Map<String, Object> map = introspectResponse.getBody();
         assertThat(map.get("iss")).isNotNull();
-        assertThat(map.get("user_name")).isEqualTo(testAccounts.getUserName());
-        assertThat(map.get("email")).isEqualTo(testAccounts.getEmail());
+        assertThat(map)
+                .containsEntry("user_name", testAccounts.getUserName())
+                .containsEntry("email", testAccounts.getEmail());
         assertThat((Boolean) map.get("active")).isEqualTo(Boolean.valueOf(true));
     }
 
@@ -325,8 +330,9 @@ class IntrospectEndpointIntegrationTests {
         @SuppressWarnings("unchecked")
         Map<String, Object> map = introspectResponse.getBody();
         assertThat(map.get("iss")).isNotNull();
-        assertThat(map.get("user_name")).isEqualTo(testAccounts.getUserName());
-        assertThat(map.get("email")).isEqualTo(testAccounts.getEmail());
+        assertThat(map)
+                .containsEntry("user_name", testAccounts.getUserName())
+                .containsEntry("email", testAccounts.getEmail());
         assertThat((Boolean) map.get("active")).isEqualTo(Boolean.valueOf(true));
     }
 
@@ -429,8 +435,9 @@ class IntrospectEndpointIntegrationTests {
         @SuppressWarnings("unchecked")
         Map<String, Object> map = introspectResponse.getBody();
         assertThat(map.get("iss")).isNotNull();
-        assertThat(map.get("user_name")).isEqualTo(testAccounts.getUserName());
-        assertThat(map.get("email")).isEqualTo(testAccounts.getEmail());
+        assertThat(map)
+                .containsEntry("user_name", testAccounts.getUserName())
+                .containsEntry("email", testAccounts.getEmail());
         assertThat((Boolean) map.get("active")).isEqualTo(Boolean.valueOf(true));
     }
 

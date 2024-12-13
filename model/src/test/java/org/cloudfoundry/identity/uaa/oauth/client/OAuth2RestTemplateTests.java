@@ -76,7 +76,7 @@ class OAuth2RestTemplateTests {
         restTemplate.getOAuth2ClientContext().setAccessToken(token);
         ClientHttpRequest http = restTemplate.createRequest(URI.create("https://nowhere.com/api/crap"), HttpMethod.GET);
         String auth = http.getHeaders().getFirst("Authorization");
-        assertThat(auth.startsWith("MINE ")).isTrue();
+        assertThat(auth).startsWith("MINE ");
     }
 
     @Test

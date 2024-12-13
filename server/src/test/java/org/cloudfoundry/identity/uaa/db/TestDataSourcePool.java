@@ -21,7 +21,7 @@ class TestDataSourcePool {
     @Test
     void validationQuery() {
         int i = jdbcTemplate.queryForObject(this.validationQuery, Integer.class);
-        assertThat(i).isEqualTo(1);
+        assertThat(i).isOne();
     }
 
 }

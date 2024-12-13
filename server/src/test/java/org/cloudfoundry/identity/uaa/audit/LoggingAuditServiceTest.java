@@ -57,10 +57,10 @@ class LoggingAuditServiceTest {
 
         ArgumentCaptor<String> stringCaptor = ArgumentCaptor.forClass(String.class);
         verify(mockLogger).info(stringCaptor.capture());
-        assertThat(stringCaptor.getValue().contains("\r")).isFalse();
-        assertThat(stringCaptor.getValue().contains("\n")).isFalse();
-        assertThat(stringCaptor.getValue().contains("\t")).isFalse();
-        assertThat(stringCaptor.getValue().contains(LogSanitizerUtil.SANITIZED_FLAG)).isTrue();
+        assertThat(stringCaptor.getValue()).doesNotContain("\r")
+                .doesNotContain("\n")
+                .doesNotContain("\t")
+                .contains(LogSanitizerUtil.SANITIZED_FLAG);
     }
 
     @Test
@@ -71,6 +71,6 @@ class LoggingAuditServiceTest {
 
         ArgumentCaptor<String> stringCaptor = ArgumentCaptor.forClass(String.class);
         verify(mockLogger).info(stringCaptor.capture());
-        assertThat(stringCaptor.getValue().contains(LogSanitizerUtil.SANITIZED_FLAG)).isFalse();
+        assertThat(stringCaptor.getValue()).doesNotContain(LogSanitizerUtil.SANITIZED_FLAG);
     }
 }

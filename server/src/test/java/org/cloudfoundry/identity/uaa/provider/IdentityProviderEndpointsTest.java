@@ -301,7 +301,7 @@ class IdentityProviderEndpointsTest {
         ResponseEntity<List<IdentityProvider>> ldapList = identityProviderEndpoints.retrieveIdentityProviders("false", true, "");
         assertThat(ldapList).isNotNull();
         assertThat(ldapList.getBody()).isNotNull();
-        assertThat(ldapList.getBody().size()).isEqualTo(2);
+        assertThat(ldapList.getBody()).hasSize(2);
         IdentityProvider<LdapIdentityProviderDefinition> ldap = ldapList.getBody().get(0);
         assertThat(ldap).isNotNull();
         assertThat(ldap.getConfig()).isNotNull();
@@ -322,7 +322,7 @@ class IdentityProviderEndpointsTest {
         ResponseEntity<List<IdentityProvider>> puppyList = identityProviderEndpoints.retrieveIdentityProviders("false", true, "puppy");
         assertThat(puppyList).isNotNull();
         assertThat(puppyList.getBody()).isNotNull();
-        assertThat(puppyList.getBody().size()).isEqualTo(1);
+        assertThat(puppyList.getBody()).hasSize(1);
         IdentityProvider<OIDCIdentityProviderDefinition> oidc = puppyList.getBody().get(0);
         assertThat(oidc).isNotNull();
         assertThat(oidc.getConfig()).isNotNull();
@@ -346,7 +346,7 @@ class IdentityProviderEndpointsTest {
         ArgumentCaptor<IdentityProvider> captor = ArgumentCaptor.forClass(IdentityProvider.class);
         verify(mockIdentityProviderProvisioning, times(1)).update(captor.capture(), eq(zoneId));
         assertThat(captor.getValue()).isNotNull();
-        assertThat(captor.getAllValues().size()).isEqualTo(1);
+        assertThat(captor.getAllValues()).hasSize(1);
         assertThat(((LdapIdentityProviderDefinition) captor.getValue().getConfig()).getBindPassword()).isEqualTo(getLdapDefinition().getConfig().getBindPassword());
         assertThat(response).isNotNull();
         assertThat(response.getStatusCode().value()).isEqualTo(200);
@@ -371,7 +371,7 @@ class IdentityProviderEndpointsTest {
         ArgumentCaptor<IdentityProvider> captor = ArgumentCaptor.forClass(IdentityProvider.class);
         verify(mockIdentityProviderProvisioning, times(1)).update(captor.capture(), eq(zoneId));
         assertThat(captor.getValue()).isNotNull();
-        assertThat(captor.getAllValues().size()).isEqualTo(1);
+        assertThat(captor.getAllValues()).hasSize(1);
         assertThat(((LdapIdentityProviderDefinition) captor.getValue().getConfig()).getBindPassword()).isEqualTo("newpassword");
 
         assertThat(response).isNotNull();

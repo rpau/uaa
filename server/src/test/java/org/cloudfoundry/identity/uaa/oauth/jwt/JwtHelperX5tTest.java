@@ -47,7 +47,7 @@ public class JwtHelperX5tTest {
     @Test
     void jwtKeysShouldContainX5t() {
         Map<String, Object> keys = keyInfo.getJwkMap();
-        assertThat(keys.get("x5t")).isEqualTo(THUMBPRINT);
+        assertThat(keys).containsEntry("x5t", THUMBPRINT);
     }
 
     @Test
@@ -80,7 +80,8 @@ public class JwtHelperX5tTest {
         assertThat(tokenKey.get("x5t")).isNull();
         assertThat(tokenKey.get("x5c")).isNull();
         assertThat(tokenKey.get("value")).isNotNull();
-        assertThat(tokenKey.get("kid")).isEqualTo("testKid");
-        assertThat(tokenKey.get("alg")).isEqualTo("RS256");
+        assertThat(tokenKey)
+                .containsEntry("kid", "testKid")
+                .containsEntry("alg", "RS256");
     }
 }

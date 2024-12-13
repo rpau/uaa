@@ -21,7 +21,7 @@ class PathFragmentToLimiterMappingsTest {
         mapper = new PathFragmentToLimiterMappings(String::contains);
 
         assertThat(mapper.isEmpty()).isTrue();
-        assertThat(mapper.count()).isEqualTo(0);
+        assertThat(mapper.count()).isZero();
         assertThat(streamToPathFragments()).isEqualTo(List.of());
 
         assertThat(mapper.get("significantOther/Wilma/of/Fred")).isNull();

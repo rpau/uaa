@@ -24,16 +24,14 @@ class RandomValueStringGeneratorTests {
     @Test
     void generate() {
         String value = generator.generate();
-        assertThat(value).isNotNull();
-        assertThat(value.length()).as("Authorization code is not correct size").isEqualTo(6);
+        assertThat(value).as("Authorization code is not correct size").hasSize(6);
     }
 
     @Test
     void generate_LargeLengthOnConstructor() {
         generator = new RandomValueStringGenerator(1024);
         String value = generator.generate();
-        assertThat(value).isNotNull();
-        assertThat(value.length()).as("Authorization code is not correct size").isEqualTo(1024);
+        assertThat(value).as("Authorization code is not correct size").hasSize(1024);
     }
 
     @Test
@@ -41,15 +39,14 @@ class RandomValueStringGeneratorTests {
         byte[] bytes = new byte[10];
         new SecureRandom().nextBytes(bytes);
         String value = generator.getAuthorizationCodeString(bytes);
-        assertThat(value).isNotNull();
-        assertThat(value.length()).as("Authorization code is not correct size").isEqualTo(10);
+        assertThat(value).as("Authorization code is not correct size").hasSize(10);
     }
 
     @Test
     void setLength() {
         generator.setLength(12);
         String value = generator.generate();
-        assertThat(value.length()).as("Authorization code is not correct size").isEqualTo(12);
+        assertThat(value).as("Authorization code is not correct size").hasSize(12);
     }
 
     @Test
@@ -63,13 +60,13 @@ class RandomValueStringGeneratorTests {
         generator.setRandom(new SecureRandom());
         generator.setLength(12);
         String value = generator.generate();
-        assertThat(value.length()).as("Authorization code is not correct size").isEqualTo(12);
+        assertThat(value).as("Authorization code is not correct size").hasSize(12);
     }
 
     @Test
     void setCodec() {
         generator = new RandomValueStringGenerator("0123456789".toCharArray());
         String value = generator.generate();
-        assertThat(value.contains("A")).isFalse();
+        assertThat(value).doesNotContain("A");
     }
 }

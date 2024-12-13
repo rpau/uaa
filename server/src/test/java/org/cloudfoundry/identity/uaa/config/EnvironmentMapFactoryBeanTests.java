@@ -26,8 +26,8 @@ class EnvironmentMapFactoryBeanTests {
         inputProperties.put("foo", "foo");
 
         factory.setDefaultProperties(inputProperties);
-        Map<String, ?> properties = factory.getObject();
-        assertThat(properties.get("foo")).isEqualTo("foo");
+        Map<String, Object> properties = factory.getObject();
+        assertThat(properties).containsEntry("foo", "foo");
     }
 
     @Test
@@ -36,8 +36,8 @@ class EnvironmentMapFactoryBeanTests {
         inputProperties.put("foo", "${bar}");
 
         factory.setDefaultProperties(inputProperties);
-        Map<String, ?> properties = factory.getObject();
-        assertThat(properties.get("foo")).isEqualTo("${bar}");
+        Map<String, Object> properties = factory.getObject();
+        assertThat(properties).containsEntry("foo", "${bar}");
     }
 
     @Test
@@ -52,9 +52,10 @@ class EnvironmentMapFactoryBeanTests {
         environment.getPropertySources().addLast(new NestedMapPropertySource("override", overrideProperties));
         factory.setEnvironment(environment);
         factory.setDefaultProperties(inputProperties);
-        Map<String, ?> properties = factory.getObject();
-        assertThat(properties.get("foo")).isEqualTo("baz");
-        assertThat(properties.get("bar")).isEqualTo("${spam}");
+        Map<String, Object> properties = factory.getObject();
+        assertThat(properties)
+                .containsEntry("foo", "baz")
+                .containsEntry("bar", "${spam}");
     }
 
     @Test
@@ -69,8 +70,7 @@ class EnvironmentMapFactoryBeanTests {
         StandardEnvironment environment = new StandardEnvironment();
         environment.getPropertySources().addLast(new NestedMapPropertySource("override", overrideProperties));
         factory.setEnvironment(environment);
-        Map<String, ?> properties = factory.getObject();
-        assertThat(properties.get("foo")).isEqualTo("bar");
+        Map<String, Object> properties = factory.getObject();
+        assertThat(properties).containsEntry("foo", "bar");
     }
-
 }

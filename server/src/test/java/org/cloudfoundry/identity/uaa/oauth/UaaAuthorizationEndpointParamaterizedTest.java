@@ -124,7 +124,7 @@ public class UaaAuthorizationEndpointParamaterizedTest {
         request.setParameter(OAuth2Utils.REDIRECT_URI, redirectUrl);
         uaaAuthorizationEndpoint.commence(request, response, authException);
         assertThat(response.getStatus()).isEqualTo(HttpStatus.FOUND.value());
-        assertThat(response.getHeader("Location").contains("error=login_required")).isTrue();
+        assertThat(response.getHeader("Location")).contains("error=login_required");
     }
 
     @MethodSource("parameters")
@@ -152,7 +152,7 @@ public class UaaAuthorizationEndpointParamaterizedTest {
         when(servletWebRequest.getResponse()).thenReturn(mockHttpServletResponse);
         ModelAndView modelAndView = uaaAuthorizationEndpoint.handleOAuth2Exception(redirectMismatchException, servletWebRequest);
         assertThat(modelAndView).isNotNull();
-        assertThat(modelAndView.getModelMap().isEmpty()).isFalse();
+        assertThat(modelAndView.getModelMap()).isNotEmpty();
         assertThat(modelAndView.getViewName()).isEqualTo("forward:/oauth/error");
     }
 }

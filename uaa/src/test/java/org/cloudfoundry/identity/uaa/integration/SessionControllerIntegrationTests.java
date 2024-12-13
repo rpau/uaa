@@ -44,7 +44,7 @@ class SessionControllerIntegrationTests {
 
         Object r = ((JavascriptExecutor) webDriver).executeScript(
                 "return typeof(handleMessage);");
-        assertThat(r.toString()).isEqualTo("function");
+        assertThat(r).hasToString("function");
     }
 
     @Test
@@ -54,10 +54,10 @@ class SessionControllerIntegrationTests {
 
         Object clientId = ((JavascriptExecutor) webDriver).executeScript(
                 "return clientId;");
-        assertThat(clientId.toString()).isEqualTo("admin");
+        assertThat(clientId).hasToString("admin");
 
         Object origin = ((JavascriptExecutor) webDriver).executeScript(
                 "return messageOrigin;");
-        assertThat(origin.toString()).isEqualTo("http://localhost:8080");
+        assertThat(origin).hasToString("http://localhost:8080");
     }
 }

@@ -287,15 +287,17 @@ class JdbcUaaUserDatabaseTests {
                 databaseUrlModifier, dbUtils);
         UaaUser joe = jdbcUaaUserDatabase.retrieveUserByName("joe", OriginKeys.UAA);
         verify(spiedJdbcTemplate, times(2)).queryForList(anyString(), ArgumentMatchers.<String>any());
-        assertThat((List<GrantedAuthority>) joe.getAuthorities()).contains(new SimpleGrantedAuthority("uaa.user"), new SimpleGrantedAuthority("additional"), new SimpleGrantedAuthority("anotherOne"));
+        List<GrantedAuthority> grantedAuthorities = (List<GrantedAuthority>) joe.getAuthorities();
+        assertThat(grantedAuthorities).contains(new SimpleGrantedAuthority("uaa.user"), new SimpleGrantedAuthority("additional"), new SimpleGrantedAuthority("anotherOne"));
     }
 
     @Test
     void getUserWithNestedAuthoritiesWorks() {
         UaaUser joe = jdbcUaaUserDatabase.retrieveUserByName("joe", OriginKeys.UAA);
 
+        List<GrantedAuthority> grantedAuthorities = (List<GrantedAuthority>) joe.getAuthorities();
         defaultAuthorities.forEach(authority ->
-                assertThat(joe.getAuthorities().contains(authority)).isTrue());
+                assertThat(grantedAuthorities).contains(authority));
 
         String directId = new RandomValueStringGenerator().generate();
         String indirectId = new RandomValueStringGenerator().generate();
@@ -429,8 +431,8 @@ class JdbcUaaUserDatabaseTests {
         compareTo.add(new SimpleGrantedAuthority("direct"));
         compareTo.add(new SimpleGrantedAuthority("uaa.user"));
         compareTo.add(new SimpleGrantedAuthority("indirect"));
-        compareTo.forEach(authority ->
-                assertThat(joe.getAuthorities().contains(authority)).isTrue());
+        List<GrantedAuthority> grantedAuthorities = (List<GrantedAuthority>) joe.getAuthorities();
+        compareTo.forEach(authority -> assertThat(grantedAuthorities).contains(authority));
     }
 
     private static void addUser(

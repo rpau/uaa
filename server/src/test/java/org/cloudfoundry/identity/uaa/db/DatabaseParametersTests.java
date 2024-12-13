@@ -35,7 +35,7 @@ class DatabaseParametersTests {
 
     @Test
     void initial_size() {
-        assertThat(dataSource.getInitialSize()).isEqualTo(0);
+        assertThat(dataSource.getInitialSize()).isZero();
     }
 
     @Test
@@ -60,7 +60,6 @@ class DatabaseParametersTests {
             default:
                 throw new IllegalStateException("Unrecognized database: " + vendor);
         }
-
     }
 
     String getUrlParameter(String name) {
@@ -74,5 +73,4 @@ class DatabaseParametersTests {
         }
         return null;
     }
-
 }

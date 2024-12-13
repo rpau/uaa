@@ -88,7 +88,7 @@ class FormLoginIntegrationTests {
         location = response.getFirstHeader("Location").getValue();
         response.close();
         httpget.completed();
-        assertThat(location.contains("/login")).isTrue();
+        assertThat(location).contains("/login");
     }
 
     @Test
@@ -105,9 +105,9 @@ class FormLoginIntegrationTests {
         response.close();
         httpget.completed();
 
-        assertThat(body.contains("/login.do")).isTrue();
-        assertThat(body.contains("username")).isTrue();
-        assertThat(body.contains("password")).isTrue();
+        assertThat(body).contains("/login.do")
+                .contains("username")
+                .contains("password");
 
         String csrf = IntegrationTestUtils.extractCookieCsrf(body);
 
@@ -141,7 +141,6 @@ class FormLoginIntegrationTests {
 
         body = EntityUtils.toString(response.getEntity());
         response.close();
-        assertThat(body.contains("Sign Out")).isTrue();
+        assertThat(body).contains("Sign Out");
     }
-
 }

@@ -127,13 +127,13 @@ public class JsonWebKeySetTests {
     @Test
     void multi_key() {
         JsonWebKeySet<JsonWebKey> keys = test_key(multiKeyJson);
-        assertThat(keys.getKeys().size()).isEqualTo(3);
+        assertThat(keys.getKeys()).hasSize(3);
         JsonWebKey key = keys.getKeys().get(1);
         assertThat(key.getAlgorithm()).isEqualTo("HMACSHA256");
 
         assertThat(key.getValue()).isEqualTo("test-mac-key");
 
-        assertThat(key.getKeyProperties().get("k")).isEqualTo("test-mac-key");
+        assertThat(key.getKeyProperties()).containsEntry("k", "test-mac-key");
 
         assertThat(key.getUse()).isNull();
         assertThat(key.getKeyOps()).isEqualTo(new LinkedHashSet<>(Arrays.asList(JsonWebKey.KeyOperation.sign, JsonWebKey.KeyOperation.verify)));
@@ -142,13 +142,13 @@ public class JsonWebKeySetTests {
     @Test
     void multi_key_rfc7518() {
         JsonWebKeySet<JsonWebKey> keys = test_key(multiKeyJson);
-        assertThat(keys.getKeys().size()).isEqualTo(3);
+        assertThat(keys.getKeys()).hasSize(3);
         JsonWebKey key = keys.getKeys().get(2);
         assertThat(key.getAlgorithm()).isEqualTo("HS256");
 
         assertThat(key.getValue()).isEqualTo("test-oct-key");
 
-        assertThat(key.getKeyProperties().get("k")).isEqualTo("test-oct-key");
+        assertThat(key.getKeyProperties()).containsEntry("k", "test-oct-key");
 
         assertThat(key.getUse()).isNull();
         assertThat(key.getKeyOps()).isEqualTo(new LinkedHashSet<>(Arrays.asList(JsonWebKey.KeyOperation.verify)));
@@ -173,35 +173,35 @@ public class JsonWebKeySetTests {
     @Test
     void unknownKeyType() {
         JsonWebKeySet<JsonWebKey> keys = JsonWebKeyHelper.deserialize(unknownKeyJson);
-        assertThat(keys.getKeys().size()).isEqualTo(0);
+        assertThat(keys.getKeys()).isEmpty();
     }
 
     @Test
     void ignoreUnknownKeyTypes() {
         JsonWebKeySet<JsonWebKey> keys = JsonWebKeyHelper.deserialize(someUnknownKeysJson);
-        assertThat(keys.getKeys().size()).isEqualTo(1);
+        assertThat(keys.getKeys()).hasSize(1);
     }
 
     @Test
     void jsonKeySetParseJson() throws ParseException {
         String jsonConfig = "{\"keys\":[{\"kty\":\"RSA\",\"e\":\"AQAB\",\"use\":\"sig\",\"kid\":\"key-1\",\"alg\":\"RS256\",\"n\":\"xMi4Z4FBfQEOdNYLmzxkYJvP02TSeapZMKMQo90JQRL07ttIKcDMP6pGcirOGSQWWBBpvdo5EnVOiNzViu9JCJP2IWbHJ4sRe0S1dySYdBRVV_ZkgWOrj7Cr2yT0ZVvCCzH7NAWmlA6LUV19Mnp-ugeGoxK-fsk8SRLS_Z9JdyxgOb3tPxdDas3MZweMZ6HqujoAAG9NASBGjFNXbhMckrEfecwm3OJzsjGFxhqXRqkTsGEHvzETMxfvSkTkldOzmErnjpwyoOPLrXcWIs1wvdXHakfVHSvyb3T4gm3ZfOOoUf6lrd2w1pF_PkA88NkjN2-W9fQmbUzNgVjEQiXo4w\"}]}";
         JsonWebKeySet<JsonWebKey> keys = JsonWebKeyHelper.parseConfiguration(jsonConfig);
-        assertThat(keys.getKeys().size()).isEqualTo(1);
-        assertThat(keys.getKeySetMap().size()).isEqualTo(1);
+        assertThat(keys.getKeys()).hasSize(1);
+        assertThat(keys.getKeySetMap()).hasSize(1);
         JWKSet joseSet = JWKSet.parse(keys.getKeySetMap());
         assertThat(joseSet).isNotNull();
-        assertThat(joseSet.size()).isEqualTo(1);
+        assertThat(joseSet.size()).isOne();
     }
 
     @Test
     void jsonKeySetParsePublicKey() throws ParseException {
         String publicKey = "-----BEGIN PUBLIC KEY-----MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxMi4Z4FBfQEOdNYLmzxkYJvP02TSeapZMKMQo90JQRL07ttIKcDMP6pGcirOGSQWWBBpvdo5EnVOiNzViu9JCJP2IWbHJ4sRe0S1dySYdBRVV/ZkgWOrj7Cr2yT0ZVvCCzH7NAWmlA6LUV19Mnp+ugeGoxK+fsk8SRLS/Z9JdyxgOb3tPxdDas3MZweMZ6HqujoAAG9NASBGjFNXbhMckrEfecwm3OJzsjGFxhqXRqkTsGEHvzETMxfvSkTkldOzmErnjpwyoOPLrXcWIs1wvdXHakfVHSvyb3T4gm3ZfOOoUf6lrd2w1pF/PkA88NkjN2+W9fQmbUzNgVjEQiXo4wIDAQAB-----END PUBLIC KEY-----";
         JsonWebKeySet<JsonWebKey> keys = JsonWebKeyHelper.parseConfiguration(publicKey);
-        assertThat(keys.getKeys().size()).isEqualTo(1);
-        assertThat(keys.getKeySetMap().size()).isEqualTo(1);
+        assertThat(keys.getKeys()).hasSize(1);
+        assertThat(keys.getKeySetMap()).hasSize(1);
         JWKSet joseSet = JWKSet.parse(keys.getKeySetMap());
         assertThat(joseSet).isNotNull();
-        assertThat(joseSet.size()).isEqualTo(1);
+        assertThat(joseSet.size()).isOne();
     }
 
     @Test
@@ -214,7 +214,7 @@ public class JsonWebKeySetTests {
     void jsonKeySetParseRawKey() {
         String macKey = "tokenKey";
         JsonWebKeySet<JsonWebKey> keys = JsonWebKeyHelper.parseConfiguration(macKey);
-        assertThat(keys.getKeys().size()).isEqualTo(1);
+        assertThat(keys.getKeys()).hasSize(1);
         assertThat(keys.getKeys().get(0).getKty()).isEqualTo(JsonWebKey.KeyType.MAC);
         assertThat(keys.getKeys().get(0).getValue()).isEqualTo(macKey);
     }

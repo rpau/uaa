@@ -252,7 +252,7 @@ class IdentityZoneEndpointsIntegrationTests {
                 },
                 id2);
         assertThat(response2.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
-        assertThat(response2.getBody().get("error_description").toLowerCase().contains("subdomain")).isTrue();
+        assertThat(response2.getBody().get("error_description").toLowerCase()).contains("subdomain");
     }
 
     static class IdentityClient extends ClientCredentialsResourceDetails {
@@ -266,5 +266,4 @@ class IdentityZoneEndpointsIntegrationTests {
             setAccessTokenUri(test.serverRunning.getAccessTokenUri());
         }
     }
-
 }

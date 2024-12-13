@@ -37,7 +37,7 @@ class LocalUaaRestTemplateMockMvcTests {
         Method createRequest = OAuth2RestTemplate.class.getDeclaredMethod("createRequest", URI.class, HttpMethod.class);
         ReflectionUtils.makeAccessible(createRequest);
         ClientHttpRequest request = (ClientHttpRequest) createRequest.invoke(localUaaRestTemplate, new URI("http://localhost/oauth/token"), HttpMethod.POST);
-        assertThat(request.getHeaders().get("Authorization").size()).as("authorization bearer header should be present").isEqualTo(1);
+        assertThat(request.getHeaders().get("Authorization").size()).as("authorization bearer header should be present").isOne();
         assertThat(request.getHeaders().get("Authorization").get(0)).as("authorization bearer header should be present").isNotNull();
         assertThat(request.getHeaders().get("Authorization").get(0).toLowerCase()).startsWith("bearer ");
         assertThat(request.getHeaders().get("Authorization").get(0)).endsWith(token.getValue());

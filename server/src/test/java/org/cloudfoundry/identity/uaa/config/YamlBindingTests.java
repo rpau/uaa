@@ -69,7 +69,7 @@ class YamlBindingTests {
     void simpleValidation() {
         ValidatedTarget target = new ValidatedTarget();
         BindingResult result = bind(target, "");
-        assertThat(result.getErrorCount()).isEqualTo(1);
+        assertThat(result.getErrorCount()).isOne();
     }
 
     @Test

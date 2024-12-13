@@ -96,7 +96,7 @@ public class RemoteTokenServicesTests {
         body.put("client_authorities", Collections.singleton("uaa.none"));
         OAuth2Authentication result = services.loadAuthentication("FOO");
         assertThat(result).isNotNull();
-        assertThat(result.getOAuth2Request().getAuthorities().toString()).isEqualTo("[uaa.none]");
+        assertThat(result.getOAuth2Request().getAuthorities()).hasToString("[uaa.none]");
     }
 
     @Test
@@ -104,7 +104,7 @@ public class RemoteTokenServicesTests {
         body.put("user_authorities", Collections.singleton("uaa.user"));
         OAuth2Authentication result = services.loadAuthentication("FOO");
         assertThat(result).isNotNull();
-        assertThat(result.getUserAuthentication().getAuthorities().toString()).isEqualTo("[uaa.user]");
+        assertThat(result.getUserAuthentication().getAuthorities()).hasToString("[uaa.user]");
     }
 
     @Test
@@ -126,6 +126,6 @@ public class RemoteTokenServicesTests {
 
         assertThat(result).isNotNull();
         assertThat(result.getOAuth2Request()
-                .getRequestParameters().get(ClaimConstants.ADDITIONAL_AZ_ATTR)).isEqualTo(JsonUtils.writeValueAsString(additionalAuthorizationAttributesMap));
+                .getRequestParameters()).containsEntry(ClaimConstants.ADDITIONAL_AZ_ATTR, JsonUtils.writeValueAsString(additionalAuthorizationAttributesMap));
     }
 }

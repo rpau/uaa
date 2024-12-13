@@ -40,8 +40,8 @@ class RateLimitingConfigMapperImplTest extends AbstractExceptionTestSupport {
 
     @Test
     void checkForCredentialIdTypes() {
-        assertThat(new RateLimitingConfigMapperImpl().getCredentialIdTypeCount()).isEqualTo(0);
-        assertThat(new RateLimitingConfigMapperImpl(new CredentialIdTypeJWT(null)).getCredentialIdTypeCount()).isEqualTo(1);
+        assertThat(new RateLimitingConfigMapperImpl().getCredentialIdTypeCount()).isZero();
+        assertThat(new RateLimitingConfigMapperImpl(new CredentialIdTypeJWT(null)).getCredentialIdTypeCount()).isOne();
         assertThat(new RateLimitingConfigMapperImpl(new CredentialIdTypeJWT(null), new CredentialIdTypeJWTjsonField(null)).getCredentialIdTypeCount()).isEqualTo(2);
     }
 

@@ -31,18 +31,18 @@ class DefaultOAuth2SerializationServiceTests {
         // System.err.println(result);
         assertThat(result.getValue()).isEqualTo("FOO");
         assertThat(result.getTokenType()).isEqualTo("mac");
-        assertThat(result.getExpiration().getTime() > System.currentTimeMillis()).isTrue();
+        assertThat(result.getExpiration().getTime()).isGreaterThan(System.currentTimeMillis());
     }
 
     @Test
     void defaultDeserializationException() {
         Map<String, String> accessToken = Map.of("access_token", "FOO", "expires_in", "x");
         DefaultOAuth2AccessToken result = (DefaultOAuth2AccessToken) DefaultOAuth2AccessToken.valueOf(accessToken);
-        assertThat(result.getExpiration().getTime()).isNotEqualTo(0);
-        assertThat(result.getExpiresIn()).isEqualTo(0);
+        assertThat(result.getExpiration().getTime()).isNotZero();
+        assertThat(result.getExpiresIn()).isZero();
         result.setExpiresIn(300);
-        assertThat(result.getExpiresIn()).isEqualTo(0);
-        assertThat(result.hashCode()).isNotEqualTo(0);
+        assertThat(result.getExpiresIn()).isZero();
+        assertThat(result.hashCode()).isNotZero();
     }
 
     @Test

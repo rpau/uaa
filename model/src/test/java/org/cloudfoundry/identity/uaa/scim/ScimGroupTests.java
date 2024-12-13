@@ -103,7 +103,6 @@ class ScimGroupTests {
         assertThat(group.getDescription()).isNull();
     }
 
-
     @Test
     void dropDisplayName() {
         patch.setDisplayName("NewDisplayName");
@@ -136,10 +135,10 @@ class ScimGroupTests {
     @Test
     void dropAllMembers() {
         group.setMembers(Arrays.asList(member1, member2, member3));
-        assertThat(group.getMembers().size()).isEqualTo(3);
+        assertThat(group.getMembers()).hasSize(3);
         patch.getMeta().setAttributes(new String[]{"members"});
         group.patch(patch);
-        assertThat(group.getMembers().size()).isEqualTo(0);
+        assertThat(group.getMembers()).isEmpty();
     }
 
     @Test
@@ -151,7 +150,7 @@ class ScimGroupTests {
                 member
         ));
         group.patch(patch);
-        assertThat(group.getMembers().size()).isEqualTo(2);
+        assertThat(group.getMembers()).hasSize(2);
     }
 
     @Test
@@ -161,29 +160,26 @@ class ScimGroupTests {
         member3.setOperation("delete");
         group.setMembers(Arrays.asList(member1, member2, member3));
         patch.setMembers(group.getMembers());
-        assertThat(group.getMembers().size()).isEqualTo(3);
+        assertThat(group.getMembers()).hasSize(3);
         group.patch(patch);
-        assertThat(group.getMembers().size()).isEqualTo(0);
-
+        assertThat(group.getMembers()).isEmpty();
     }
 
     @Test
     void addAllMembers() {
         patch.setMembers(Arrays.asList(member1, member2, member3));
         group.setMembers(emptyList());
-        assertThat(group.getMembers().size()).isEqualTo(0);
+        assertThat(group.getMembers()).isEmpty();
         group.patch(patch);
-        assertThat(group.getMembers().size()).isEqualTo(3);
-
+        assertThat(group.getMembers()).hasSize(3);
     }
 
     @Test
     void addOneMember() {
         patch.setMembers(Collections.singletonList(member1));
         group.setMembers(Arrays.asList(member2, member3));
-        assertThat(group.getMembers().size()).isEqualTo(2);
+        assertThat(group.getMembers()).hasSize(2);
         group.patch(patch);
-        assertThat(group.getMembers().size()).isEqualTo(3);
-
+        assertThat(group.getMembers()).hasSize(3);
     }
 }

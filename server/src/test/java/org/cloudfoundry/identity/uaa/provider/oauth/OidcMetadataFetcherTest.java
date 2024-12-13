@@ -77,10 +77,10 @@ class OidcMetadataFetcherTest {
             metadataDiscoverer.fetchMetadataAndUpdateDefinition(definition);
 
             assertThat(definition).isNotNull();
-            assertThat(definition.getAuthUrl().toString()).isEqualTo("http://authz.should.not.have.been.updated");
-            assertThat(definition.getTokenUrl().toString()).isEqualTo("http://token.should.not.have.been.updated");
-            assertThat(definition.getUserInfoUrl().toString()).isEqualTo("http://userinfo.should.not.have.been.updated");
-            assertThat(definition.getTokenKeyUrl().toString()).isEqualTo("http://jwks.should.not.have.been.updated");
+            assertThat(definition.getAuthUrl()).hasToString("http://authz.should.not.have.been.updated");
+            assertThat(definition.getTokenUrl()).hasToString("http://token.should.not.have.been.updated");
+            assertThat(definition.getUserInfoUrl()).hasToString("http://userinfo.should.not.have.been.updated");
+            assertThat(definition.getTokenKeyUrl()).hasToString("http://jwks.should.not.have.been.updated");
             assertThat(definition.getIssuer()).isEqualTo("should-not-have-been-updated");
         }
 
@@ -92,10 +92,10 @@ class OidcMetadataFetcherTest {
             metadataDiscoverer.fetchMetadataAndUpdateDefinition(definition);
 
             assertThat(definition).isNotNull();
-            assertThat(definition.getAuthUrl().toString()).isEqualTo("http://authz.endpoint");
-            assertThat(definition.getTokenUrl().toString()).isEqualTo("http://token.endpoint");
-            assertThat(definition.getUserInfoUrl().toString()).isEqualTo("http://userinfo.endpoint");
-            assertThat(definition.getTokenKeyUrl().toString()).isEqualTo("http://jwks.uri");
+            assertThat(definition.getAuthUrl()).hasToString("http://authz.endpoint");
+            assertThat(definition.getTokenUrl()).hasToString("http://token.endpoint");
+            assertThat(definition.getUserInfoUrl()).hasToString("http://userinfo.endpoint");
+            assertThat(definition.getTokenKeyUrl()).hasToString("http://jwks.uri");
             assertThat(definition.getIssuer()).isEqualTo("metadataissuer");
         }
 
@@ -198,10 +198,10 @@ class OidcMetadataFetcherTest {
 
             assertThat(definition).isNotNull();
             assertThat(definition.getDiscoveryUrl()).isNull();
-            assertThat(definition.getAuthUrl().toString()).isEqualTo("http://authz.not.updated");
-            assertThat(definition.getTokenUrl().toString()).isEqualTo("http://token.not.updated");
-            assertThat(definition.getTokenKeyUrl().toString()).isEqualTo("http://jwk.not.updated");
-            assertThat(definition.getUserInfoUrl().toString()).isEqualTo("http://userinfo.not.updated");
+            assertThat(definition.getAuthUrl()).hasToString("http://authz.not.updated");
+            assertThat(definition.getTokenUrl()).hasToString("http://token.not.updated");
+            assertThat(definition.getTokenKeyUrl()).hasToString("http://jwk.not.updated");
+            assertThat(definition.getUserInfoUrl()).hasToString("http://userinfo.not.updated");
             assertThat(definition.getIssuer()).isEqualTo("issuer-not-changed");
 
             verifyNoInteractions(urlContentCache);
@@ -255,7 +255,7 @@ class OidcMetadataFetcherTest {
 
             JsonWebKeySet<JsonWebKey> keys = metadataDiscoverer.fetchWebKeySet(new ClientJwtConfiguration("http://token_keys", null));
             assertThat(keys).isNotNull();
-            assertThat(keys.getKeys().size()).isEqualTo(1);
+            assertThat(keys.getKeys()).hasSize(1);
             assertThat(keys.getKeys().get(0).getKid()).isEqualTo("id");
         }
 
@@ -264,7 +264,7 @@ class OidcMetadataFetcherTest {
 
             JsonWebKeySet<JsonWebKey> keys = metadataDiscoverer.fetchWebKeySet(ClientJwtConfiguration.parse("{\"keys\":[{\"alg\":\"RS256\",\"e\":\"e\",\"kid\":\"a\",\"kty\":\"RSA\",\"n\":\"n\"}]}"));
             assertThat(keys).isNotNull();
-            assertThat(keys.getKeys().size()).isEqualTo(1);
+            assertThat(keys.getKeys()).hasSize(1);
             assertThat(keys.getKeys().get(0).getKid()).isEqualTo("a");
         }
 

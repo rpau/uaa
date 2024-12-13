@@ -150,7 +150,7 @@ class MultitenantJdbcClientDetailsServiceTests {
 
             clients.removeIf(
                     client -> {
-                        assertThat(service.deleteByClient(client.getClientId(), zoneId)).as("We deleted exactly one row").isEqualTo(1);
+                        assertThat(service.deleteByClient(client.getClientId(), zoneId)).as("We deleted exactly one row").isOne();
                         assertThat(countClientsInZone(zoneId, jdbcTemplate)).as("Our client count decreased by 1").isEqualTo((clients.size() - 1));
                         assertThat(clientExists(client.getClientId(), zoneId, jdbcTemplate)).as("Client " + client.getClientId() + " was deleted.").isFalse();
                         return true;
@@ -356,8 +356,8 @@ class MultitenantJdbcClientDetailsServiceTests {
         List<String> requiredGroups = Arrays.asList(groups);
         baseClientDetails.addAdditionalInformation(REQUIRED_USER_GROUPS, requiredGroups);
         service.addClientDetails(baseClientDetails);
-        assertThat(jdbcTemplate.update("UPDATE oauth_client_details SET additional_information = ? WHERE client_id = ?", JsonUtils.writeValueAsString(baseClientDetails.getAdditionalInformation()), baseClientDetails.getClientId())).isEqualTo(1);
-        assertThat(jdbcTemplate.update("UPDATE oauth_client_details SET required_user_groups = ? WHERE client_id = ?", "group1,group2,group3", baseClientDetails.getClientId())).isEqualTo(1);
+        assertThat(jdbcTemplate.update("UPDATE oauth_client_details SET additional_information = ? WHERE client_id = ?", JsonUtils.writeValueAsString(baseClientDetails.getAdditionalInformation()), baseClientDetails.getClientId())).isOne();
+        assertThat(jdbcTemplate.update("UPDATE oauth_client_details SET required_user_groups = ? WHERE client_id = ?", "group1,group2,group3", baseClientDetails.getClientId())).isOne();
         ClientDetails updateClient = service.loadClientByClientId(baseClientDetails.getClientId());
         assertThat((Collection<String>) updateClient.getAdditionalInformation().get(REQUIRED_USER_GROUPS)).containsExactlyInAnyOrder("group1", "group2", "group3");
     }

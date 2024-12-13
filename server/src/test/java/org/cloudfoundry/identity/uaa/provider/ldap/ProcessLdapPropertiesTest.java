@@ -37,13 +37,13 @@ class ProcessLdapPropertiesTest {
         Map<String, String> properties = new HashMap<>();
         ProcessLdapProperties process = new ProcessLdapProperties("ldap://localhost:389", false, LDAP_TLS_NONE);
         assertThat(process.process(properties).get(LDAP_SOCKET_FACTORY)).isNull();
-        assertThat(process.process(properties).get(LDAP_SSL_SOCKET_FACTORY)).isEqualTo(ProcessLdapProperties.EXPIRY_CHECKING_SOCKET_FACTORY);
+        assertThat(process.process(properties)).containsEntry(LDAP_SSL_SOCKET_FACTORY, ProcessLdapProperties.EXPIRY_CHECKING_SOCKET_FACTORY);
         assertThat(process.getSSLSocketFactory().getClass().getName()).isEqualTo(ProcessLdapProperties.EXPIRY_CHECKING_SOCKET_FACTORY);
         process.setDisableSslVerification(true);
         assertThat(process.process(properties).get(LDAP_SOCKET_FACTORY)).isNull();
         process.setBaseUrl("ldaps://localhost:636");
-        assertThat(process.process(properties).get(LDAP_SOCKET_FACTORY)).isEqualTo(ProcessLdapProperties.SKIP_SSL_VERIFICATION_SOCKET_FACTORY);
-        assertThat(process.process(properties).get(LDAP_SSL_SOCKET_FACTORY)).isEqualTo(ProcessLdapProperties.SKIP_SSL_VERIFICATION_SOCKET_FACTORY);
+        assertThat(process.process(properties)).containsEntry(LDAP_SOCKET_FACTORY, ProcessLdapProperties.SKIP_SSL_VERIFICATION_SOCKET_FACTORY);
+        assertThat(process.process(properties)).containsEntry(LDAP_SSL_SOCKET_FACTORY, ProcessLdapProperties.SKIP_SSL_VERIFICATION_SOCKET_FACTORY);
         assertThat(process.getSSLSocketFactory().getClass().getName()).isEqualTo(ProcessLdapProperties.SKIP_SSL_VERIFICATION_SOCKET_FACTORY);
 
     }
@@ -53,15 +53,15 @@ class ProcessLdapPropertiesTest {
         Map<String, String> properties = new HashMap<>();
         ProcessLdapProperties process = new ProcessLdapProperties("ldap://localhost:389", false, LDAP_TLS_NONE);
         assertThat(process.process(properties).get(LDAP_SOCKET_FACTORY)).isNull();
-        assertThat(process.process(properties).get(LDAP_SSL_SOCKET_FACTORY)).isEqualTo(ProcessLdapProperties.EXPIRY_CHECKING_SOCKET_FACTORY);
+        assertThat(process.process(properties)).containsEntry(LDAP_SSL_SOCKET_FACTORY, ProcessLdapProperties.EXPIRY_CHECKING_SOCKET_FACTORY);
         assertThat(process.getSSLSocketFactory().getClass().getName()).isEqualTo(ProcessLdapProperties.EXPIRY_CHECKING_SOCKET_FACTORY);
         process.setDisableSslVerification(false);
         assertThat(process.process(properties).get(LDAP_SOCKET_FACTORY)).isNull();
-        assertThat(process.process(properties).get(LDAP_SSL_SOCKET_FACTORY)).isEqualTo(ProcessLdapProperties.EXPIRY_CHECKING_SOCKET_FACTORY);
+        assertThat(process.process(properties)).containsEntry(LDAP_SSL_SOCKET_FACTORY, ProcessLdapProperties.EXPIRY_CHECKING_SOCKET_FACTORY);
         assertThat(process.getSSLSocketFactory().getClass().getName()).isEqualTo(ProcessLdapProperties.EXPIRY_CHECKING_SOCKET_FACTORY);
         process.setBaseUrl("ldaps://localhost:636");
-        assertThat(process.process(properties).get(LDAP_SOCKET_FACTORY)).isEqualTo(ProcessLdapProperties.EXPIRY_CHECKING_SOCKET_FACTORY);
-        assertThat(process.process(properties).get(LDAP_SSL_SOCKET_FACTORY)).isEqualTo(ProcessLdapProperties.EXPIRY_CHECKING_SOCKET_FACTORY);
+        assertThat(process.process(properties)).containsEntry(LDAP_SOCKET_FACTORY, ProcessLdapProperties.EXPIRY_CHECKING_SOCKET_FACTORY);
+        assertThat(process.process(properties)).containsEntry(LDAP_SSL_SOCKET_FACTORY, ProcessLdapProperties.EXPIRY_CHECKING_SOCKET_FACTORY);
         assertThat(process.getSSLSocketFactory().getClass().getName()).isEqualTo(ProcessLdapProperties.EXPIRY_CHECKING_SOCKET_FACTORY);
     }
 

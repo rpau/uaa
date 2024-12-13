@@ -79,7 +79,7 @@ class UaaMetricsFilterTests {
     void url_groups_loaded() throws Exception {
         List<UrlGroup> urlGroups = filter.getUrlGroups();
         assertThat(urlGroups).isNotNull();
-        assertThat(urlGroups.size()).isGreaterThan(0);
+        assertThat(urlGroups.size()).isPositive();
         UrlGroup first = urlGroups.get(0);
         assertThat(first.getPattern()).isEqualTo("/authenticate/**");
         assertThat(first.getLimit()).isEqualTo(1000l);
@@ -93,7 +93,7 @@ class UaaMetricsFilterTests {
         performTwoSimpleRequests();
         MetricsQueue queue = JsonUtils.readValue(filter.getGlobals(), MetricsQueue.class);
         assertThat(queue).isNotNull();
-        assertThat(queue.getTotals().getCount()).isEqualTo(0);
+        assertThat(queue.getTotals().getCount()).isZero();
     }
 
     String performTwoSimpleRequests() throws ServletException, IOException {
@@ -112,15 +112,16 @@ class UaaMetricsFilterTests {
         filter.setNotificationPublisher(publisher);
         String path = performTwoSimpleRequests();
         Map<String, String> summary = filter.getSummary();
-        assertThat(summary).isNotNull();
-        assertThat(summary.isEmpty()).isFalse();
-        assertThat(summary.size()).isEqualTo(2);
+        assertThat(summary)
+                .isNotNull()
+                .isNotEmpty()
+                .hasSize(2);
         for (String uri : Arrays.asList(path, MetricsUtil.GLOBAL_GROUP)) {
             MetricsQueue totals = readValue(summary.get(filter.getUriGroup(request).getGroup()), MetricsQueue.class);
             assertThat(totals).as("URI:" + uri).isNotNull();
             for (StatusCodeGroup status : Arrays.asList(StatusCodeGroup.SUCCESS, StatusCodeGroup.SERVER_ERROR)) {
                 RequestMetricSummary total = totals.getDetailed().get(status);
-                assertThat(total.getCount()).as("URI:" + uri).isEqualTo(1);
+                assertThat(total.getCount()).as("URI:" + uri).isOne();
             }
         }
         assertThat(MetricsAccessor.getCurrent()).isNull();
@@ -128,7 +129,7 @@ class UaaMetricsFilterTests {
 
         verify(publisher, times(2)).sendNotification(argumentCaptor.capture());
         List<Notification> capturedArg = argumentCaptor.getAllValues();
-        assertThat(capturedArg.size()).isEqualTo(2);
+        assertThat(capturedArg).hasSize(2);
         assertThat(capturedArg.get(0).getType()).isEqualTo("/api");
     }
 
@@ -153,7 +154,7 @@ class UaaMetricsFilterTests {
             filter.doFilterInternal(request, response, chain);
             MetricsQueue metricsQueue = filter.getMetricsQueue(filter.getUriGroup(request).getGroup());
             RequestMetricSummary totals = metricsQueue.getTotals();
-            assertThat(totals.getCount()).isEqualTo(1);
+            assertThat(totals.getCount()).isOne();
             assertThat(totals.getIntolerableCount()).isEqualTo(timeService == slowRequestTimeService ? 1 : 0);
 
             ArgumentCaptor<Notification> argumentCaptor = ArgumentCaptor.forClass(Notification.class);

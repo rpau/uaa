@@ -245,7 +245,7 @@ class CodeStoreEndpointsMockMvcTests {
                 .andExpect(status().isCreated())
                 .andReturn();
 
-        assertThat(jdbcTemplate.queryForObject("select count(*) from expiring_code_store", Integer.class)).isEqualTo(1);
+        assertThat(jdbcTemplate.queryForObject("select count(*) from expiring_code_store", Integer.class)).isOne();
     }
 
     @Nested

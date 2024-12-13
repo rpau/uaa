@@ -35,11 +35,11 @@ class IntrospectionClaimsTest {
 
     @Test
     void serialize() {
-        assertThat(JsonUtils.writeValueAsString(introspectionPayload).contains(TokenConstants.CLIENT_AUTH_NONE)).isTrue();
-        assertThat(introspectionPayload.getClaimMap()).isNotNull();
-        assertThat(introspectionPayload.getClaimMap()).containsEntry("grant_type", "authorization_code");
-        assertThat(introspectionPayload.getClaimMap()).containsEntry("client_id", "login");
-        assertThat(introspectionPayload.getClaimMap()).containsEntry("aud", Arrays.asList("openid", "login"));
-        assertThat(introspectionPayload.getClaimMap()).containsEntry("scope", Arrays.asList("openid"));
+        assertThat(JsonUtils.writeValueAsString(introspectionPayload)).contains(TokenConstants.CLIENT_AUTH_NONE);
+        assertThat(introspectionPayload.getClaimMap()).isNotNull()
+                .containsEntry("grant_type", "authorization_code")
+                .containsEntry("client_id", "login")
+                .containsEntry("aud", Arrays.asList("openid", "login"))
+                .containsEntry("scope", Arrays.asList("openid"));
     }
 }

@@ -99,7 +99,7 @@ public abstract class AbstractDefaultTokenServicesTests {
                 Collections.singleton("read"), null);
         OAuth2AccessToken refreshedAccessToken = getTokenServices()
                 .refreshAccessToken(expectedExpiringRefreshToken.getValue(), tokenRequest);
-        assertThat(refreshedAccessToken.getScope().toString()).isEqualTo("[read]");
+        assertThat(refreshedAccessToken.getScope()).hasToString("[read]");
     }
 
     @Test
@@ -126,8 +126,7 @@ public abstract class AbstractDefaultTokenServicesTests {
         tokenServices.setClientDetailsService(clientDetailsService);
         OAuth2RefreshToken refreshToken = tokenServices.createAccessToken(createAuthentication())
                 .getRefreshToken();
-        assertThat(refreshToken).isNotNull();
-        assertThat(refreshToken instanceof ExpiringOAuth2RefreshToken).isFalse();
+        assertThat(refreshToken).isNotInstanceOf(ExpiringOAuth2RefreshToken.class);
     }
 
     @Test
@@ -136,7 +135,7 @@ public abstract class AbstractDefaultTokenServicesTests {
         OAuth2AccessToken original = getTokenServices().createAccessToken(authentication);
         services.readAccessToken(original.getValue());
         getTokenStore().removeAccessToken(original);
-        assertThat(getTokenStore().findTokensByClientId(authentication.getOAuth2Request().getClientId()).size()).isEqualTo(0);
+        assertThat(getTokenStore().findTokensByClientId(authentication.getOAuth2Request().getClientId())).isEmpty();
     }
 
     @Test
@@ -160,7 +159,7 @@ public abstract class AbstractDefaultTokenServicesTests {
     public void unlimitedTokenExpiry() {
         getTokenServices().setAccessTokenValiditySeconds(0);
         OAuth2AccessToken accessToken = getTokenServices().createAccessToken(createAuthentication());
-        assertThat(accessToken.getExpiresIn()).isEqualTo(0);
+        assertThat(accessToken.getExpiresIn()).isZero();
         assertThat(accessToken.getExpiration()).isNull();
     }
 
@@ -168,7 +167,7 @@ public abstract class AbstractDefaultTokenServicesTests {
     public void defaultTokenExpiry() {
         getTokenServices().setAccessTokenValiditySeconds(100);
         OAuth2AccessToken accessToken = getTokenServices().createAccessToken(createAuthentication());
-        assertThat(100 >= accessToken.getExpiresIn()).isTrue();
+        assertThat(accessToken.getExpiresIn()).isLessThanOrEqualTo(100);
     }
 
     @Test
@@ -182,7 +181,7 @@ public abstract class AbstractDefaultTokenServicesTests {
             }
         });
         OAuth2AccessToken accessToken = getTokenServices().createAccessToken(createAuthentication());
-        assertThat(100 >= accessToken.getExpiresIn()).isTrue();
+        assertThat(accessToken.getExpiresIn()).isLessThanOrEqualTo(100);
     }
 
     @Test
@@ -192,7 +191,7 @@ public abstract class AbstractDefaultTokenServicesTests {
         TokenRequest tokenRequest = new TokenRequest(Collections.singletonMap("client_id", "id"), "id", null, null);
         OAuth2AccessToken refreshedAccessToken = getTokenServices()
                 .refreshAccessToken(expectedExpiringRefreshToken.getValue(), tokenRequest);
-        assertThat(refreshedAccessToken.getScope().toString()).isEqualTo("[read, write]");
+        assertThat(refreshedAccessToken.getScope()).hasToString("[read, write]");
     }
 
     @Test
@@ -200,7 +199,7 @@ public abstract class AbstractDefaultTokenServicesTests {
         getTokenServices().setRefreshTokenValiditySeconds(0);
         OAuth2RefreshToken expectedExpiringRefreshToken = getTokenServices().createAccessToken(createAuthentication())
                 .getRefreshToken();
-        assertThat(expectedExpiringRefreshToken instanceof DefaultExpiringOAuth2RefreshToken).isFalse();
+        assertThat(expectedExpiringRefreshToken).isNotInstanceOf(DefaultExpiringOAuth2RefreshToken.class);
     }
 
     @Test
@@ -210,8 +209,8 @@ public abstract class AbstractDefaultTokenServicesTests {
         getTokenServices().revokeToken(token.getValue());
         Collection<OAuth2AccessToken> tokens = getTokenStore().findTokensByClientIdAndUserName(
                 authentication.getOAuth2Request().getClientId(), authentication.getUserAuthentication().getName());
-        assertThat(tokens.contains(token)).isFalse();
-        assertThat(tokens.isEmpty()).isTrue();
+        assertThat(tokens).doesNotContain(token)
+                .isEmpty();
     }
 
     protected void configureTokenServices(DefaultTokenServices services) throws Exception {

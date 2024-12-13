@@ -81,8 +81,8 @@ class ScopeAuthenticationManagerTests {
     @Test
     void dedup() {
         List<String> l1 = Arrays.asList("test", "test", "test");
-        assertThat(authenticationManager.dedup(l1).size()).isEqualTo(1);
+        assertThat(authenticationManager.dedup(l1)).hasSize(1);
         l1 = Arrays.asList("t1", "t2", "t3");
-        assertThat(authenticationManager.dedup(l1).size()).isEqualTo(3);
+        assertThat(authenticationManager.dedup(l1)).hasSize(3);
     }
 }

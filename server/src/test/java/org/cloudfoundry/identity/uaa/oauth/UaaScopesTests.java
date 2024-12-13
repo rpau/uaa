@@ -30,8 +30,8 @@ class UaaScopesTests {
 
     @Test
     void getUaaScopes() {
-        assertThat(uaaScopes.getUaaScopes().size()).isEqualTo(31);
-        assertThat(uaaScopes.getUaaAuthorities().size()).isEqualTo(31);
+        assertThat(uaaScopes.getUaaScopes()).hasSize(31);
+        assertThat(uaaScopes.getUaaAuthorities()).hasSize(31);
     }
 
     @Test

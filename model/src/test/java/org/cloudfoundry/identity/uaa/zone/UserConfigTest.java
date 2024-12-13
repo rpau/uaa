@@ -12,7 +12,7 @@ class UserConfigTest {
     @Test
     void defaultConfig() {
         UserConfig userConfig = new UserConfig();
-        assertThat(userConfig.getDefaultGroups().contains("openid")).isTrue();
+        assertThat(userConfig.getDefaultGroups()).contains("openid");
         assertThat(userConfig.getAllowedGroups()).isNull();       // all groups allowed
         assertThat(userConfig.resultingAllowedGroups()).isNull(); // all groups allowed
     }

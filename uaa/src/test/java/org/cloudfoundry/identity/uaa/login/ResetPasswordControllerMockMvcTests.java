@@ -81,8 +81,9 @@ public class ResetPasswordControllerMockMvcTests {
     void resettingAPasswordUsingUsernameToEnsureNoModification() throws Exception {
 
         List<ScimUser> users = webApplicationContext.getBean(ScimUserProvisioning.class).query("username eq \"marissa\"", IdentityZoneHolder.get().getId());
-        assertThat(users).isNotNull();
-        assertThat(users.size()).isEqualTo(1);
+        assertThat(users)
+                .isNotNull()
+                .hasSize(1);
         PasswordChange change = new PasswordChange(users.get(0).getId(), users.get(0).getUserName(), users.get(0).getPasswordLastModified(), "", "");
 
         ExpiringCode code = codeStore.generateCode(JsonUtils.writeValueAsString(change), new Timestamp(System.currentTimeMillis() + UaaResetPasswordService.PASSWORD_RESET_LIFETIME), null, IdentityZoneHolder.get().getId());
@@ -96,8 +97,9 @@ public class ResetPasswordControllerMockMvcTests {
     @Test
     void resettingPasswordDoesNotUpdateLastLogonTime() throws Exception {
         List<ScimUser> users = webApplicationContext.getBean(ScimUserProvisioning.class).query("username eq \"marissa\"", IdentityZoneHolder.get().getId());
-        assertThat(users).isNotNull();
-        assertThat(users.size()).isEqualTo(1);
+        assertThat(users)
+                .isNotNull()
+                .hasSize(1);
         Long lastLogonBeforeReset = users.get(0).getLastLogonTime();
         PasswordChange change = new PasswordChange(users.get(0).getId(), users.get(0).getUserName(), users.get(0).getPasswordLastModified(), "", "");
 
@@ -121,8 +123,9 @@ public class ResetPasswordControllerMockMvcTests {
 
         ScimUserProvisioning userProvisioning = webApplicationContext.getBean(ScimUserProvisioning.class);
         List<ScimUser> users = userProvisioning.query("username eq \"marissa\"", IdentityZoneHolder.get().getId());
-        assertThat(users).isNotNull();
-        assertThat(users.size()).isEqualTo(1);
+        assertThat(users)
+                .isNotNull()
+                .hasSize(1);
         ScimUser user = users.get(0);
         PasswordChange change = new PasswordChange(user.getId(), user.getUserName(), user.getPasswordLastModified(), "", "");
 
@@ -230,7 +233,7 @@ public class ResetPasswordControllerMockMvcTests {
                         .param("username", user.getUserName()))
                 .andExpect(redirectedUrl("email_sent?code=reset_password"));
 
-        assertThat((int) template.queryForObject("select count(*) from expiring_code_store where intent=?", new Object[]{intent}, Integer.class)).isEqualTo(1);
+        assertThat((int) template.queryForObject("select count(*) from expiring_code_store where intent=?", new Object[]{intent}, Integer.class)).isOne();
 
     }
 
@@ -333,8 +336,9 @@ public class ResetPasswordControllerMockMvcTests {
     @Test
     void resettingAPasswordNoCsrfParameter() throws Exception {
         List<ScimUser> users = webApplicationContext.getBean(ScimUserProvisioning.class).query("username eq \"marissa\"", IdentityZoneHolder.get().getId());
-        assertThat(users).isNotNull();
-        assertThat(users.size()).isEqualTo(1);
+        assertThat(users)
+                .isNotNull()
+                .hasSize(1);
         ExpiringCode code = codeStore.generateCode(users.get(0).getId(), new Timestamp(System.currentTimeMillis() + UaaResetPasswordService.PASSWORD_RESET_LIFETIME), null, IdentityZoneHolder.get().getId());
 
         mockMvc.perform(createChangePasswordRequest(users.get(0), code, false))
@@ -345,8 +349,9 @@ public class ResetPasswordControllerMockMvcTests {
     @Test
     void resettingAPasswordUsingTimestampForUserModification() throws Exception {
         List<ScimUser> users = webApplicationContext.getBean(ScimUserProvisioning.class).query("username eq \"marissa\"", IdentityZoneHolder.get().getId());
-        assertThat(users).isNotNull();
-        assertThat(users.size()).isEqualTo(1);
+        assertThat(users)
+                .isNotNull()
+                .hasSize(1);
         PasswordChange passwordChange = new PasswordChange(users.get(0).getId(), users.get(0).getUserName(), null, null, null);
         ExpiringCode code = codeStore.generateCode(JsonUtils.writeValueAsString(passwordChange), new Timestamp(System.currentTimeMillis() + UaaResetPasswordService.PASSWORD_RESET_LIFETIME), null, IdentityZoneHolder.get().getId());
 
@@ -362,8 +367,9 @@ public class ResetPasswordControllerMockMvcTests {
     void resetPassword_ReturnsUnprocessableEntity_NewPasswordSameAsOld() throws Exception {
         ScimUserProvisioning userProvisioning = webApplicationContext.getBean(ScimUserProvisioning.class);
         List<ScimUser> users = userProvisioning.query("username eq \"marissa\"", IdentityZoneHolder.get().getId());
-        assertThat(users).isNotNull();
-        assertThat(users.size()).isEqualTo(1);
+        assertThat(users)
+                .isNotNull()
+                .hasSize(1);
         ScimUser user = users.get(0);
         PasswordChange passwordChange = new PasswordChange(user.getId(), user.getUserName(), null, null, null);
         ExpiringCode code = codeStore.generateCode(JsonUtils.writeValueAsString(passwordChange), new Timestamp(System.currentTimeMillis() + UaaResetPasswordService.PASSWORD_RESET_LIFETIME), null, IdentityZoneHolder.get().getId());
@@ -389,8 +395,9 @@ public class ResetPasswordControllerMockMvcTests {
 
         ScimUserProvisioning userProvisioning = webApplicationContext.getBean(ScimUserProvisioning.class);
         List<ScimUser> users = userProvisioning.query("username eq \"marissa\"", IdentityZoneHolder.get().getId());
-        assertThat(users).isNotNull();
-        assertThat(users.size()).isEqualTo(1);
+        assertThat(users)
+                .isNotNull()
+                .hasSize(1);
         ScimUser user = users.get(0);
         PasswordChange passwordChange = new PasswordChange(user.getId(), user.getUserName(), null, null, null);
         ExpiringCode code = codeStore.generateCode(JsonUtils.writeValueAsString(passwordChange), new Timestamp(System.currentTimeMillis() + UaaResetPasswordService.PASSWORD_RESET_LIFETIME), null, IdentityZoneHolder.get().getId());

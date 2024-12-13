@@ -1805,7 +1805,7 @@ class ClientAdminEndpointsMockMvcTests {
 
         assertThat(clientDetailsSearchResults.getItemsPerPage()).isEqualTo(clientMaxCount);
         assertThat(clientDetailsSearchResults.getTotalResults()).isGreaterThan(6);
-        assertThat(clientDetailsSearchResults.getStartIndex()).isEqualTo(1);
+        assertThat(clientDetailsSearchResults.getStartIndex()).isOne();
         assertThat(clientDetailsSearchResults.getResources()).hasSize(clientMaxCount);
     }
 
@@ -1843,7 +1843,7 @@ class ClientAdminEndpointsMockMvcTests {
 
         assertThat(clientDetailsSearchResults.getItemsPerPage()).isEqualTo(clientMaxCount);
         assertThat(clientDetailsSearchResults.getTotalResults()).isGreaterThan(numOfClientsCreated);
-        assertThat(clientDetailsSearchResults.getStartIndex()).isEqualTo(1);
+        assertThat(clientDetailsSearchResults.getStartIndex()).isOne();
         assertThat(clientDetailsSearchResults.getResources()).hasSize(clientMaxCount);
     }
 

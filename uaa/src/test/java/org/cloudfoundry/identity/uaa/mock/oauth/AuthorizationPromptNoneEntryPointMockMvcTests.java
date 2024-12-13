@@ -73,7 +73,7 @@ class AuthorizationPromptNoneEntryPointMockMvcTests {
         // This is necessary to make sure Current-User gets cleaned up when, for example, a UAA is restarted and the
         // user's JSESSIONID is no longer valid.
         assertThat(result.getResponse().getCookie("Current-User").getValue()).isNull();
-        assertThat(result.getResponse().getCookie("Current-User").getMaxAge()).isEqualTo(0);
+        assertThat(result.getResponse().getCookie("Current-User").getMaxAge()).isZero();
     }
 
     @Test

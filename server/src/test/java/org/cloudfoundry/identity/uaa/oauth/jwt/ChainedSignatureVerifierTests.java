@@ -125,8 +125,9 @@ class ChainedSignatureVerifierTests {
         JsonWebKey macKey = new JsonWebKey(p);
         verifier = new ChainedSignatureVerifier(new JsonWebKeySet<>(Arrays.asList(validKey, invalidKey, macKey)));
         List<SignatureVerifier> delegates = new ArrayList((List<SignatureVerifier>) ReflectionTestUtils.getField(verifier, verifier.getClass(), "delegates"));
-        assertThat(delegates).isNotNull();
-        assertThat(delegates.size()).isEqualTo(3);
+        assertThat(delegates)
+                .isNotNull()
+                .hasSize(3);
         int pos = 0;
         for (SignatureVerifier v : delegates) {
             assertThat(v instanceof SignatureVerifier).as("Checking " + (pos++)).isTrue();
@@ -148,8 +149,9 @@ class ChainedSignatureVerifierTests {
         JsonWebKeySet keySet = JsonUtils.convertValue(singletonMap("keys", Arrays.asList(validKey, p, q)), JsonWebKeySet.class);
         verifier = new ChainedSignatureVerifier(keySet);
         List<SignatureVerifier> delegates = new ArrayList((List<SignatureVerifier>) ReflectionTestUtils.getField(verifier, verifier.getClass(), "delegates"));
-        assertThat(delegates).isNotNull();
-        assertThat(delegates.size()).isEqualTo(1);
+        assertThat(delegates)
+                .isNotNull()
+                .hasSize(1);
         int pos = 0;
         for (SignatureVerifier v : delegates) {
             assertThat(v instanceof SignatureVerifier).as("Checking " + (pos++)).isTrue();
@@ -183,8 +185,9 @@ class ChainedSignatureVerifierTests {
         JsonWebKeySet keySet = JsonUtils.convertValue(singletonMap("keys", Arrays.asList(q)), JsonWebKeySet.class);
         verifier = new ChainedSignatureVerifier(keySet);
         List<SignatureVerifier> delegates = new ArrayList((List<SignatureVerifier>) ReflectionTestUtils.getField(verifier, verifier.getClass(), "delegates"));
-        assertThat(delegates).isNotNull();
-        assertThat(delegates.size()).isEqualTo(1);
+        assertThat(delegates)
+                .isNotNull()
+                .hasSize(1);
         assertThat(delegates.get(0).algorithm()).isEqualTo("HS256");
     }
 
@@ -199,8 +202,9 @@ class ChainedSignatureVerifierTests {
         JsonWebKeySet keySet = JsonUtils.convertValue(singletonMap("keys", Arrays.asList(q)), JsonWebKeySet.class);
         verifier = new ChainedSignatureVerifier(keySet);
         List<SignatureVerifier> delegates = new ArrayList((List<SignatureVerifier>) ReflectionTestUtils.getField(verifier, verifier.getClass(), "delegates"));
-        assertThat(delegates).isNotNull();
-        assertThat(delegates.size()).isEqualTo(1);
+        assertThat(delegates)
+                .isNotNull()
+                .hasSize(1);
         assertThat(delegates.get(0)).isNotNull();
         assertThat(delegates.get(0).algorithm()).isEqualTo("ES256");
     }
@@ -215,8 +219,9 @@ class ChainedSignatureVerifierTests {
         verifier = new ChainedSignatureVerifier(new JsonWebKeySet<>(Arrays.asList(validKey, jsonWebKey)));
         JwtHelper.decode(signedValidContent.getEncoded()).verifySignature(verifier);
         List<SignatureVerifier> delegates = new ArrayList((List<SignatureVerifier>) ReflectionTestUtils.getField(verifier, verifier.getClass(), "delegates"));
-        assertThat(delegates).isNotNull();
-        assertThat(delegates.size()).isEqualTo(2);
+        assertThat(delegates)
+                .isNotNull()
+                .hasSize(2);
         assertThat(delegates.get(1).algorithm()).isEqualTo("HS256");
 
         //ensure the second signer never gets invoked upon success

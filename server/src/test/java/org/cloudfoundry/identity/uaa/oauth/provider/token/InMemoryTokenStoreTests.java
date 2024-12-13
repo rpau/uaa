@@ -58,7 +58,7 @@ public class InMemoryTokenStoreTests extends TokenStoreBaseTests {
         for (int i = 0; i <= 10; i++) {
             getTokenStore().storeAccessToken(expectedOAuth2AccessToken, expectedAuthentication);
             assertThat(getTokenStore().getExpiryTokenCount()).isEqualTo(getTokenStore().getAccessTokenCount());
-            assertThat(getTokenStore().getRefreshTokenCount()).isEqualTo(1);
+            assertThat(getTokenStore().getRefreshTokenCount()).isOne();
         }
     }
 

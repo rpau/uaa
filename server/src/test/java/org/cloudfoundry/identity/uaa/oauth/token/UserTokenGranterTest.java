@@ -166,7 +166,7 @@ class UserTokenGranterTest {
 
         DefaultOAuth2AccessToken result = granter.prepareForSerialization(token);
         assertThat(result).isSameAs(token);
-        assertThat(result.getAdditionalInformation().get(JTI)).isEqualTo(refreshToken.getValue());
+        assertThat(result.getAdditionalInformation()).containsEntry(JTI, refreshToken.getValue());
         assertThat(result.getValue()).isNull();
         verify(tokenStore).delete(eq(tokenId), anyInt(), eq(IdentityZoneHolder.get().getId()));
     }

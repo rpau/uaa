@@ -9,8 +9,8 @@ class IntUtilsTest {
 
     @Test
     void parsing() {
-        assertThat(IntUtils.parse("1", null)).isEqualTo(1);
-        assertThat(IntUtils.parseNoException("1", null)).isEqualTo(1);
+        assertThat(IntUtils.parse("1", null)).isOne();
+        assertThat(IntUtils.parseNoException("1", null)).isOne();
         assertThat(IntUtils.parse(" ", -1)).isEqualTo(-1);
         assertThat(IntUtils.parseNoException(" ", -1)).isEqualTo(-1);
         assertThat(IntUtils.parse(null, -2)).isEqualTo(-2);

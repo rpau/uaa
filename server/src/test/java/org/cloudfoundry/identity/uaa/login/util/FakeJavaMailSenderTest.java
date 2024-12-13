@@ -33,11 +33,11 @@ class FakeJavaMailSenderTest {
         }
 
         assertThat(sender.getMaxMessages()).isEqualTo(100);
-        assertThat(sender.getSentMessages().size()).isEqualTo(100);
+        assertThat(sender.getSentMessages()).hasSize(100);
 
         MimeMessage lastMessage = sender.createMimeMessage();
         sender.send(lastMessage);
-        assertThat(sender.getSentMessages().size()).isEqualTo(100);
+        assertThat(sender.getSentMessages()).hasSize(100);
         assertThat(sender.getSentMessages().get(99).getMessage()).isSameAs(lastMessage);
     }
 
@@ -50,7 +50,7 @@ class FakeJavaMailSenderTest {
             sender.send(m);
         }
 
-        assertThat(sender.getMaxMessages()).isEqualTo(0);
-        assertThat(sender.getSentMessages().size()).isEqualTo(0);
+        assertThat(sender.getMaxMessages()).isZero();
+        assertThat(sender.getSentMessages()).isEmpty();
     }
 }

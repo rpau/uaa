@@ -154,7 +154,7 @@ class ScimSearchQueryConverterTests {
 
         assertThat(filter.getSql()).isEqualTo(expectedSql);
 
-        assertThat(filter.getParams().size()).isEqualTo(expectedParamCount + 1);
+        assertThat(filter.getParams()).hasSize(expectedParamCount + 1);
 
         int count = 0;
         for (Class type : types) {

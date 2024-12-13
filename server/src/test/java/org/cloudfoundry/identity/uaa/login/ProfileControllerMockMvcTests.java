@@ -235,12 +235,12 @@ class ProfileControllerMockMvcTests {
 
         ArgumentCaptor<String> args = ArgumentCaptor.forClass(String.class);
         Mockito.verify(approvalStore, Mockito.times(2)).revokeApprovalsForClientAndUser(args.capture(), args.capture(), args.capture());
-        assertThat(args.getAllValues().size()).isEqualTo(6);
+        assertThat(args.getAllValues()).hasSize(6);
 
         ArgumentCaptor<DescribedApproval> captor = ArgumentCaptor.forClass(DescribedApproval.class);
         Mockito.verify(approvalStore, Mockito.times(2)).addApproval(captor.capture(), eq(currentIdentityZoneId));
 
-        assertThat(captor.getAllValues().size()).isEqualTo(2);
+        assertThat(captor.getAllValues()).hasSize(2);
 
         DescribedApproval readApproval = captor.getAllValues().get(0);
         assertThat(readApproval.getUserId()).isEqualTo(USER_ID);

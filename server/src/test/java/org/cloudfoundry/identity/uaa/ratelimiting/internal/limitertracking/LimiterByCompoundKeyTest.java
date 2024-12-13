@@ -83,7 +83,7 @@ class LimiterByCompoundKeyTest {
         assertThat(callerId11).isEqualTo(callerId1);
         assertThat(callerId12).isEqualTo(callerId1);
         assertThat(callerId13).isEqualTo(callerId1);
-        assertThat(limiterCreationTracker.entryCount()).isEqualTo(1);
+        assertThat(limiterCreationTracker.entryCount()).isOne();
         assertThat(limiterCreationTracker.callsCount(callerId1)).isEqualTo(2);
 
         String callerId2 = "callerId2";

@@ -86,9 +86,9 @@ class RefreshTokenSupportIntegrationTests {
             }
         }
         // should be directed to the login screen...
-        assertThat(response.getBody().contains("/login.do")).isTrue();
-        assertThat(response.getBody().contains("username")).isTrue();
-        assertThat(response.getBody().contains("password")).isTrue();
+        assertThat(response.getBody()).contains("/login.do")
+                .contains("username")
+                .contains("password");
 
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("username", testAccounts.getUserName());
@@ -116,7 +116,7 @@ class RefreshTokenSupportIntegrationTests {
         }
         if (response.getStatusCode() == HttpStatus.OK) {
             // The grant access page should be returned
-            assertThat(response.getBody().contains("<h1>Application Authorization</h1>")).isTrue();
+            assertThat(response.getBody()).contains("<h1>Application Authorization</h1>");
 
             formData.clear();
             formData.add(USER_OAUTH_APPROVAL, "true");

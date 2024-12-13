@@ -13,7 +13,7 @@ class UaaAuthenticationDetailsTest {
     void toStringDoesNotContainSessionId() {
         UaaAuthenticationDetails details = new UaaAuthenticationDetails(false, "clientid", "origin", "1234");
         String toString = details.toString();
-        assertThat(toString.contains("sessionId=<SESSION>")).isTrue();
+        assertThat(toString).contains("sessionId=<SESSION>");
     }
 
     @Test
@@ -70,7 +70,7 @@ class UaaAuthenticationDetailsTest {
 
         UaaAuthenticationDetails details = new UaaAuthenticationDetails(request, null);
         for (String key : filteredKeys) {
-            assertThat(details.getParameterMap().get(key)).isNull();
+            assertThat(details.getParameterMap()).doesNotContainKey(key);
         }
     }
 }

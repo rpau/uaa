@@ -27,11 +27,11 @@ class MBeanMapTest {
     void listDomain() throws Exception {
         Set<ObjectName> names = server.queryNames(ObjectName.getInstance("java.lang:type=Runtime,*"), null);
         System.err.println(names);
-        assertThat(names.size()).isEqualTo(1);
+        assertThat(names).hasSize(1);
         MBeanMap result = new MBeanMap(server, names.iterator().next());
         @SuppressWarnings("unchecked")
         Map<String, String> properties = (Map<String, String>) result.get("system_properties");
-        assertThat(properties.containsKey("java.vm.version")).isTrue();
+        assertThat(properties).containsKey("java.vm.version");
     }
 
 }

@@ -39,7 +39,7 @@ class LimiterManagerImplTest {
     // if the non-All (which is called first) doesn't limit, the "All" InternalLimiter is not directly shown below.
     // The "All" InternalLimiter is reflected in the results below starting at time '6.750' secs for "F2" and "K1"!
     private void allAndPathBasedCheckResults() {
-        assertThat(instanceTracking.size()).isEqualTo(6); // 5 plus the GBs
+        assertThat(instanceTracking).hasSize(6); // 5 plus the GBs
         // . .  0...1...2...3...4...5...6...7...8 seconds with calls every 250ms
         check("NFLLNFLLNFLLNFLLNFLLNFLLNFLLnLLL", "F1", "K1");
         check("NFLLNFLLNFLLNFLLNFLLNFLLNFLLnLLL", "F1", "K2");
@@ -86,7 +86,7 @@ class LimiterManagerImplTest {
     // if the non-All (which is called first) doesn't limit, the "All" InternalLimiter is not directly shown below.
     // The "All" InternalLimiter is NOT reflected in the results below as its limit is never reached!
     private void interactionOfMultiPathBasedCheckResults() {
-        assertThat(instanceTracking.size()).isEqualTo(3); // 2 plus the GBs
+        assertThat(instanceTracking).hasSize(3); // 2 plus the GBs
         // . .  0 . . . 1 . . . 2 . . . 3 . . . 4 . . . 5 . . . 6 . . . 7 . . . 8 seconds with TWO calls every 250ms
         check("NFFFLLLLNFFFLLLLNFFFLLLLNFFFLLLLNFFFLLLLNFFFLLLLNFFFLLLLNFFFLLLL", "FF", "K1");
         check("NFFFLLLLNFFFLLLLNFFFLLLLNFFFLLLLNFFFLLLLNFFFLLLLNFFFLLLLNFFFLLLL", "FF", "K2");

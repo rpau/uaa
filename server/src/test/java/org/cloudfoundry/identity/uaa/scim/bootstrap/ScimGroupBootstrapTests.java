@@ -84,8 +84,8 @@ class ScimGroupBootstrapTests {
         uDB.createUser(TestUtils.scimUserInstance("mgr1"), "test", IdentityZone.getUaaZoneId());
         uDB.createUser(TestUtils.scimUserInstance("hr1"), "test", IdentityZone.getUaaZoneId());
 
-        assertThat(uDB.retrieveAll(IdentityZone.getUaaZoneId()).size()).isEqualTo(7);
-        assertThat(gDB.retrieveAll(IdentityZone.getUaaZoneId()).size()).isEqualTo(0);
+        assertThat(uDB.retrieveAll(IdentityZone.getUaaZoneId())).hasSize(7);
+        assertThat(gDB.retrieveAll(IdentityZone.getUaaZoneId())).isEmpty();
 
         bootstrap = new ScimGroupBootstrap(gDB, uDB, mDB);
     }
@@ -94,7 +94,7 @@ class ScimGroupBootstrapTests {
     void canAddGroups() throws Exception {
         bootstrap.setGroups(StringUtils.commaDelimitedListToSet("org1.dev,org1.qa,org1.engg,org1.mgr,org1.hr").stream().collect(new MapCollector<>(s -> s, s -> null)));
         bootstrap.afterPropertiesSet();
-        assertThat(gDB.retrieveAll(IdentityZone.getUaaZoneId()).size()).isEqualTo(5);
+        assertThat(gDB.retrieveAll(IdentityZone.getUaaZoneId())).hasSize(5);
         assertThat(bootstrap.getGroup("org1.dev")).isNotNull();
         assertThat(bootstrap.getGroup("org1.qa")).isNotNull();
         assertThat(bootstrap.getGroup("org1.engg")).isNotNull();
@@ -131,7 +131,7 @@ class ScimGroupBootstrapTests {
     void nullGroups() throws Exception {
         bootstrap.setGroups(null);
         bootstrap.afterPropertiesSet();
-        assertThat(gDB.retrieveAll(IdentityZone.getUaaZoneId()).size()).isEqualTo(0);
+        assertThat(gDB.retrieveAll(IdentityZone.getUaaZoneId())).isEmpty();
     }
 
     @Test
@@ -148,12 +148,12 @@ class ScimGroupBootstrapTests {
         ));
         bootstrap.afterPropertiesSet();
 
-        assertThat(gDB.retrieveAll(IdentityZone.getUaaZoneId()).size()).isEqualTo(5);
-        assertThat(uDB.retrieveAll(IdentityZone.getUaaZoneId()).size()).isEqualTo(7);
-        assertThat(bootstrap.getGroup("org1.qa").getMembers().size()).isEqualTo(2);
-        assertThat(bootstrap.getGroup("org1.hr").getMembers().size()).isEqualTo(1);
-        assertThat(bootstrap.getGroup("org1.engg").getMembers().size()).isEqualTo(3);
-        assertThat(mDB.getMembers(bootstrap.getGroup("org1.dev").getId(), false, IdentityZone.getUaaZoneId()).size()).isEqualTo(5);
+        assertThat(gDB.retrieveAll(IdentityZone.getUaaZoneId())).hasSize(5);
+        assertThat(uDB.retrieveAll(IdentityZone.getUaaZoneId())).hasSize(7);
+        assertThat(bootstrap.getGroup("org1.qa").getMembers()).hasSize(2);
+        assertThat(bootstrap.getGroup("org1.hr").getMembers()).hasSize(1);
+        assertThat(bootstrap.getGroup("org1.engg").getMembers()).hasSize(3);
+        assertThat(mDB.getMembers(bootstrap.getGroup("org1.dev").getId(), false, IdentityZone.getUaaZoneId())).hasSize(5);
     }
 
     @Test

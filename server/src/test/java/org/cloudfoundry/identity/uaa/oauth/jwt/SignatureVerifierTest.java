@@ -49,7 +49,7 @@ class SignatureVerifierTest {
         SignatureVerifier cs = new SignatureVerifier(jsonWebKey);
         assertThat(cs).isNotNull();
         assertThat(cs.algorithm()).isEqualTo("RS256");
-        assertThat(cs.getJwkSet().size()).isEqualTo(1);
+        assertThat(cs.getJwkSet().size()).isOne();
         assertThat(cs.getJwkSet().getKeys().get(0).getAlgorithm()).isNull();
     }
 
@@ -63,7 +63,7 @@ class SignatureVerifierTest {
         SignatureVerifier cs = new SignatureVerifier(jsonWebKey);
         assertThat(cs).isNotNull();
         assertThat(cs.algorithm()).isEqualTo("HS256");
-        assertThat(cs.getJwkSet().size()).isEqualTo(1);
+        assertThat(cs.getJwkSet().size()).isOne();
         assertThat(cs.getJwkSet().getKeys().get(0).getAlgorithm().getName()).isEqualTo("HS256");
     }
 

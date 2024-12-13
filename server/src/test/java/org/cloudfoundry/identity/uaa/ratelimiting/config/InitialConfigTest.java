@@ -52,7 +52,7 @@ class InitialConfigTest {
     void getLocalConfigDirs() {
         String[] results = InitialConfig.getLocalConfigDirs(List.of("", "  Fred", "! ", "  "), s -> s.startsWith("!") ? s.substring(1) : s);
         assertThat(results).isNotNull();
-        assertThat(results.length).isEqualTo(1);
+        assertThat(results.length).isOne();
         assertThat(results[0]).isEqualTo("Fred");
     }
 

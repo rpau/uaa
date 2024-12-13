@@ -38,6 +38,6 @@ class ScimExternalGroupsTypeResolvingFactoryBeanTest {
 
         ScimExternalGroupsTypeResolvingFactoryBean scimExternalGroupsTypeResolvingFactoryBean = new ScimExternalGroupsTypeResolvingFactoryBean(internalToExternalGroups);
         Map<String, Map<String, List>> externalGroups = scimExternalGroupsTypeResolvingFactoryBean.getExternalGroups();
-        assertThat(externalGroups.size()).isEqualTo(0);
+        assertThat(externalGroups).isEmpty();
     }
 }

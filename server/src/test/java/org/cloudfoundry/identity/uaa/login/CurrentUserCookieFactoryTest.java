@@ -57,7 +57,7 @@ class CurrentUserCookieFactoryTest {
         assertThat(cookie.getValue()).isEqualTo("%7B%22userId%22%3A%22user-guid%22%7D");
         String decoded = URLDecoder.decode(cookie.getValue(), StandardCharsets.UTF_8);
         JsonNode parsedCookie = JsonUtils.readTree(decoded);
-        assertThat(parsedCookie.get("userId").toString()).isEqualTo("\"user-guid\"");
+        assertThat(parsedCookie.get("userId")).hasToString("\"user-guid\"");
     }
 
     @Test
@@ -66,15 +66,15 @@ class CurrentUserCookieFactoryTest {
 
         assertThat(cookie.getName()).isEqualTo("Current-User");
         assertThat(cookie.isHttpOnly()).isFalse();
-        assertThat(cookie.getMaxAge()).isEqualTo(0);
+        assertThat(cookie.getMaxAge()).isZero();
         assertThat(cookie.getPath()).isEqualTo("/");
     }
 
     @Test
     void getCookie_doesNotIncludePersonallyIdentifiableInformation() throws Exception {
         Cookie cookie = factory.getCookie(uaaPrincipal);
-        assertThat(cookie.getValue()).doesNotContain(username);
-        assertThat(cookie.getValue()).doesNotContain(email);
+        assertThat(cookie.getValue()).doesNotContain(username)
+                .doesNotContain(email);
     }
 
     @Test
@@ -85,5 +85,4 @@ class CurrentUserCookieFactoryTest {
         Cookie cookie = factory.getCookie(uaaPrincipal);
         assertThat(cookie.isHttpOnly()).isFalse();
     }
-
 }

@@ -99,7 +99,7 @@ class PathSelectorTest {
                 "Contains:/login",
                 "Other",
                 "All"));
-        assertThat(ps.size()).isEqualTo(5);
+        assertThat(ps).hasSize(5);
         checkOK(ps, 0, PathMatchType.Equals, "/login");
         checkOK(ps, 1, PathMatchType.StartsWith, "/login");
         checkOK(ps, 2, PathMatchType.Contains, "/login");

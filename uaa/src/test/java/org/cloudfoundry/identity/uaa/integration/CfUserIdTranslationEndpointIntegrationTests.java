@@ -125,7 +125,7 @@ public class CfUserIdTranslationEndpointIntegrationTests {
         @SuppressWarnings("unchecked")
         Map<String, Object> results = response.getBody();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(results.get("totalResults")).isEqualTo(1);
+        assertThat(results).containsEntry("totalResults", 1);
     }
 
     @Test

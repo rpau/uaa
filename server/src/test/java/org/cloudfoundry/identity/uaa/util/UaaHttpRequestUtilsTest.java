@@ -140,7 +140,7 @@ public class UaaHttpRequestUtilsTest {
             template.getForObject(url, String.class);
         } catch (Exception ignored) {
         }
-        assertThat(routePlanner.routes.size()).isEqualTo(1);
+        assertThat(routePlanner.routes).hasSize(1);
         assertThat(routePlanner.routes.get(0).getProxyHost().getHostName()).isEqualTo(expectedHost);
         assertThat(routePlanner.routes.get(0).getProxyHost().getPort()).isEqualTo(expectedPort);
         assertThat(httpResponseHandler.wasInvoked()).isEqualTo(wantHandlerInvoked);

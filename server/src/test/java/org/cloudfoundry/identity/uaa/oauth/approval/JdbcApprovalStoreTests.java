@@ -73,15 +73,15 @@ class JdbcApprovalStoreTests {
     void deleteZoneDeletesApprovals() {
         assertThat(countZoneApprovals(jdbcTemplate, defaultZoneId)).isEqualTo(3);
         jdbcApprovalStore.deleteByIdentityZone(defaultZoneId);
-        assertThat(countZoneApprovals(jdbcTemplate, defaultZoneId)).isEqualTo(0);
+        assertThat(countZoneApprovals(jdbcTemplate, defaultZoneId)).isZero();
     }
 
     @Test
     void deleteOtherZone() {
-        assertThat(countZoneApprovals(jdbcTemplate, otherZoneId)).isEqualTo(0);
+        assertThat(countZoneApprovals(jdbcTemplate, otherZoneId)).isZero();
         assertThat(countZoneApprovals(jdbcTemplate, defaultZoneId)).isEqualTo(3);
         jdbcApprovalStore.deleteByIdentityZone(otherZoneId);
-        assertThat(countZoneApprovals(jdbcTemplate, otherZoneId)).isEqualTo(0);
+        assertThat(countZoneApprovals(jdbcTemplate, otherZoneId)).isZero();
         assertThat(countZoneApprovals(jdbcTemplate, defaultZoneId)).isEqualTo(3);
     }
 
@@ -107,35 +107,35 @@ class JdbcApprovalStoreTests {
     void deleteOtherProvider() {
         addApproval(jdbcApprovalStore, "u4", "c1", "openid", 6000, APPROVED, defaultZoneId);
 
-        assertThat(countZoneApprovals(jdbcTemplate, otherZoneId)).isEqualTo(0);
+        assertThat(countZoneApprovals(jdbcTemplate, otherZoneId)).isZero();
         assertThat(countZoneApprovals(jdbcTemplate, defaultZoneId)).isEqualTo(4);
         jdbcApprovalStore.deleteByOrigin(LDAP, otherZoneId);
-        assertThat(countZoneApprovals(jdbcTemplate, otherZoneId)).isEqualTo(0);
+        assertThat(countZoneApprovals(jdbcTemplate, otherZoneId)).isZero();
         assertThat(countZoneApprovals(jdbcTemplate, defaultZoneId)).isEqualTo(4);
     }
 
     @Test
     void deleteClient() {
         assertThat(countClientApprovals(jdbcTemplate, "c1", defaultZoneId)).isEqualTo(2);
-        assertThat(countClientApprovals(jdbcTemplate, "c1", otherZoneId)).isEqualTo(0);
+        assertThat(countClientApprovals(jdbcTemplate, "c1", otherZoneId)).isZero();
         jdbcApprovalStore.deleteByClient("c1", otherZoneId);
         assertThat(countClientApprovals(jdbcTemplate, "c1", defaultZoneId)).isEqualTo(2);
-        assertThat(countClientApprovals(jdbcTemplate, "c1", otherZoneId)).isEqualTo(0);
+        assertThat(countClientApprovals(jdbcTemplate, "c1", otherZoneId)).isZero();
         jdbcApprovalStore.deleteByClient("c1", defaultZoneId);
-        assertThat(countClientApprovals(jdbcTemplate, "c1", defaultZoneId)).isEqualTo(0);
-        assertThat(countClientApprovals(jdbcTemplate, "c1", otherZoneId)).isEqualTo(0);
+        assertThat(countClientApprovals(jdbcTemplate, "c1", defaultZoneId)).isZero();
+        assertThat(countClientApprovals(jdbcTemplate, "c1", otherZoneId)).isZero();
     }
 
     @Test
     void deleteUser() {
         assertThat(countUserApprovals(jdbcTemplate, "u1", defaultZoneId)).isEqualTo(2);
-        assertThat(countUserApprovals(jdbcTemplate, "u1", otherZoneId)).isEqualTo(0);
+        assertThat(countUserApprovals(jdbcTemplate, "u1", otherZoneId)).isZero();
         jdbcApprovalStore.deleteByUser("u1", otherZoneId);
         assertThat(countUserApprovals(jdbcTemplate, "u1", defaultZoneId)).isEqualTo(2);
-        assertThat(countUserApprovals(jdbcTemplate, "u1", otherZoneId)).isEqualTo(0);
+        assertThat(countUserApprovals(jdbcTemplate, "u1", otherZoneId)).isZero();
         jdbcApprovalStore.deleteByUser("u1", defaultZoneId);
-        assertThat(countUserApprovals(jdbcTemplate, "u1", defaultZoneId)).isEqualTo(0);
-        assertThat(countUserApprovals(jdbcTemplate, "u1", otherZoneId)).isEqualTo(0);
+        assertThat(countUserApprovals(jdbcTemplate, "u1", defaultZoneId)).isZero();
+        assertThat(countUserApprovals(jdbcTemplate, "u1", otherZoneId)).isZero();
     }
 
     @Test
@@ -170,10 +170,10 @@ class JdbcApprovalStoreTests {
 
     @Test
     void canGetApprovals() {
-        assertThat(jdbcApprovalStore.getApprovalsForClient("c1", defaultZoneId).size()).isEqualTo(2);
-        assertThat(jdbcApprovalStore.getApprovals("u2", "c1", defaultZoneId).size()).isEqualTo(1);
-        assertThat(jdbcApprovalStore.getApprovals("u2", "c2", defaultZoneId).size()).isEqualTo(0);
-        assertThat(jdbcApprovalStore.getApprovals("u1", "c1", defaultZoneId).size()).isEqualTo(1);
+        assertThat(jdbcApprovalStore.getApprovalsForClient("c1", defaultZoneId)).hasSize(2);
+        assertThat(jdbcApprovalStore.getApprovals("u2", "c1", defaultZoneId)).hasSize(1);
+        assertThat(jdbcApprovalStore.getApprovals("u2", "c2", defaultZoneId)).isEmpty();
+        assertThat(jdbcApprovalStore.getApprovals("u1", "c1", defaultZoneId)).hasSize(1);
     }
 
     @Test
@@ -185,7 +185,7 @@ class JdbcApprovalStoreTests {
                 .setExpiresAt(Approval.timeFromNow(12000))
                 .setStatus(APPROVED), defaultZoneId)).isTrue();
         List<Approval> apps = jdbcApprovalStore.getApprovals("u2", "c2", defaultZoneId);
-        assertThat(apps.size()).isEqualTo(1);
+        assertThat(apps).hasSize(1);
         Approval app = apps.iterator().next();
         assertThat(app.getScope()).isEqualTo("dash.user");
         assertThat(app.getExpiresAt().after(new Date())).isTrue();
@@ -194,13 +194,13 @@ class JdbcApprovalStoreTests {
 
     @Test
     void approvalsIsZoneAware() {
-        assertThat(jdbcApprovalStore.getApprovalsForClient("c1", defaultZoneId).size()).isEqualTo(2);
-        assertThat(jdbcApprovalStore.getApprovalsForClient("c2", defaultZoneId).size()).isEqualTo(1);
-        assertThat(jdbcApprovalStore.getApprovalsForClient("c3", defaultZoneId).size()).isEqualTo(0);
+        assertThat(jdbcApprovalStore.getApprovalsForClient("c1", defaultZoneId)).hasSize(2);
+        assertThat(jdbcApprovalStore.getApprovalsForClient("c2", defaultZoneId)).hasSize(1);
+        assertThat(jdbcApprovalStore.getApprovalsForClient("c3", defaultZoneId)).isEmpty();
 
-        assertThat(jdbcApprovalStore.getApprovalsForClient("c1", otherZoneId).size()).isEqualTo(0);
-        assertThat(jdbcApprovalStore.getApprovalsForClient("c2", otherZoneId).size()).isEqualTo(0);
-        assertThat(jdbcApprovalStore.getApprovalsForClient("c3", otherZoneId).size()).isEqualTo(0);
+        assertThat(jdbcApprovalStore.getApprovalsForClient("c1", otherZoneId)).isEmpty();
+        assertThat(jdbcApprovalStore.getApprovalsForClient("c2", otherZoneId)).isEmpty();
+        assertThat(jdbcApprovalStore.getApprovalsForClient("c3", otherZoneId)).isEmpty();
         jdbcApprovalStore.revokeApprovalsForClient("c1", otherZoneId);
         jdbcApprovalStore.revokeApprovalsForClient("c2", otherZoneId);
         jdbcApprovalStore.revokeApprovalsForClient("c3", otherZoneId);
@@ -208,29 +208,30 @@ class JdbcApprovalStoreTests {
         jdbcApprovalStore.revokeApprovalsForUser("u2", otherZoneId);
         jdbcApprovalStore.revokeApprovalsForUser("u3", otherZoneId);
 
-        assertThat(jdbcApprovalStore.getApprovalsForClient("c1", defaultZoneId).size()).isEqualTo(2);
-        assertThat(jdbcApprovalStore.getApprovalsForClient("c2", defaultZoneId).size()).isEqualTo(1);
-        assertThat(jdbcApprovalStore.getApprovalsForClient("c3", defaultZoneId).size()).isEqualTo(0);
+        assertThat(jdbcApprovalStore.getApprovalsForClient("c1", defaultZoneId)).hasSize(2);
+        assertThat(jdbcApprovalStore.getApprovalsForClient("c2", defaultZoneId)).hasSize(1);
+        assertThat(jdbcApprovalStore.getApprovalsForClient("c3", defaultZoneId)).isEmpty();
     }
 
     @Test
     void canRevokeApprovals() {
-        assertThat(jdbcApprovalStore.getApprovalsForUser("u1", defaultZoneId).size()).isEqualTo(2);
+        assertThat(jdbcApprovalStore.getApprovalsForUser("u1", defaultZoneId)).hasSize(2);
         assertThat(jdbcApprovalStore.revokeApprovalsForUser("u1", defaultZoneId)).isTrue();
-        assertThat(jdbcApprovalStore.getApprovalsForUser("u1", defaultZoneId).size()).isEqualTo(0);
+        assertThat(jdbcApprovalStore.getApprovalsForUser("u1", defaultZoneId)).isEmpty();
     }
 
     @Test
     void canRevokeSingleApproval() {
         List<Approval> approvals = jdbcApprovalStore.getApprovalsForUser("u1", defaultZoneId);
-        assertThat(approvals.size()).isEqualTo(2);
+        assertThat(approvals).hasSize(2);
 
         Approval toRevoke = approvals.get(0);
         assertThat(jdbcApprovalStore.revokeApproval(toRevoke, defaultZoneId)).isTrue();
         List<Approval> approvalsAfterRevoke = jdbcApprovalStore.getApprovalsForUser("u1", defaultZoneId);
 
-        assertThat(approvalsAfterRevoke.size()).isEqualTo(1);
-        assertThat(approvalsAfterRevoke.contains(toRevoke)).isFalse();
+        assertThat(approvalsAfterRevoke)
+                .hasSize(1)
+                .doesNotContain(toRevoke);
     }
 
     @Test
@@ -285,24 +286,24 @@ class JdbcApprovalStoreTests {
 
     @Test
     void canPurgeExpiredApprovals() throws InterruptedException {
-        assertThat(jdbcApprovalStore.getApprovalsForClient("c3", defaultZoneId).size()).isEqualTo(0);
-        assertThat(jdbcApprovalStore.getApprovalsForUser("u3", defaultZoneId).size()).isEqualTo(0);
-        assertThat(jdbcApprovalStore.getApprovalsForClient("c1", defaultZoneId).size()).isEqualTo(2);
-        assertThat(jdbcApprovalStore.getApprovalsForUser("u1", defaultZoneId).size()).isEqualTo(2);
+        assertThat(jdbcApprovalStore.getApprovalsForClient("c3", defaultZoneId)).isEmpty();
+        assertThat(jdbcApprovalStore.getApprovalsForUser("u3", defaultZoneId)).isEmpty();
+        assertThat(jdbcApprovalStore.getApprovalsForClient("c1", defaultZoneId)).hasSize(2);
+        assertThat(jdbcApprovalStore.getApprovalsForUser("u1", defaultZoneId)).hasSize(2);
         addApproval(jdbcApprovalStore, "u3", "c3", "test1", 0, APPROVED, defaultZoneId);
         addApproval(jdbcApprovalStore, "u3", "c3", "test2", 0, DENIED, defaultZoneId);
         addApproval(jdbcApprovalStore, "u3", "c3", "test3", 0, APPROVED, defaultZoneId);
-        assertThat(jdbcApprovalStore.getApprovalsForClient("c3", defaultZoneId).size()).isEqualTo(3);
-        assertThat(jdbcApprovalStore.getApprovalsForUser("u3", defaultZoneId).size()).isEqualTo(3);
+        assertThat(jdbcApprovalStore.getApprovalsForClient("c3", defaultZoneId)).hasSize(3);
+        assertThat(jdbcApprovalStore.getApprovalsForUser("u3", defaultZoneId)).hasSize(3);
 
         // On mysql, the expiry is rounded off to the nearest second so
         // the following assert could randomly fail.
         Thread.sleep(1500);
         jdbcApprovalStore.purgeExpiredApprovals();
-        assertThat(jdbcApprovalStore.getApprovalsForClient("c3", defaultZoneId).size()).isEqualTo(0);
-        assertThat(jdbcApprovalStore.getApprovalsForUser("u3", defaultZoneId).size()).isEqualTo(0);
-        assertThat(jdbcApprovalStore.getApprovalsForClient("c1", defaultZoneId).size()).isEqualTo(2);
-        assertThat(jdbcApprovalStore.getApprovalsForUser("u1", defaultZoneId).size()).isEqualTo(2);
+        assertThat(jdbcApprovalStore.getApprovalsForClient("c3", defaultZoneId)).isEmpty();
+        assertThat(jdbcApprovalStore.getApprovalsForUser("u3", defaultZoneId)).isEmpty();
+        assertThat(jdbcApprovalStore.getApprovalsForClient("c1", defaultZoneId)).hasSize(2);
+        assertThat(jdbcApprovalStore.getApprovalsForUser("u1", defaultZoneId)).hasSize(2);
     }
 
     @Test
@@ -323,7 +324,7 @@ class JdbcApprovalStoreTests {
 
         jdbcApprovalStore.addApproval(approval, defaultZoneId);
 
-        assertThat(eventPublisher.getEventCount()).isEqualTo(1);
+        assertThat(eventPublisher.getEventCount()).isOne();
 
         ApprovalModifiedEvent addEvent = eventPublisher.getLatestEvent();
         assertThat(addEvent.getSource()).isEqualTo(approval);
@@ -335,7 +336,7 @@ class JdbcApprovalStoreTests {
         eventPublisher.clearEvents();
         jdbcApprovalStore.addApproval(approval, defaultZoneId);
 
-        assertThat(eventPublisher.getEventCount()).isEqualTo(1);
+        assertThat(eventPublisher.getEventCount()).isOne();
 
         ApprovalModifiedEvent modifyEvent = eventPublisher.getLatestEvent();
         assertThat(modifyEvent.getSource()).isEqualTo(approval);

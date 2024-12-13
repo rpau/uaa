@@ -50,7 +50,7 @@ class MetricsQueueTest {
         RequestMetricSummary summary = queue.getTotals();
         assertThat(summary).isNotNull();
         assertThat(summary.getCount()).isEqualTo(3);
-        assertThat(summary.getIntolerableCount()).isEqualTo(1);
+        assertThat(summary.getIntolerableCount()).isOne();
         assertThat(summary.getAverageTime()).isCloseTo(((double) (MAX_TIME + 3 + 5)) / 3.0, within(DELTA));
         assertThat(summary.getAverageIntolerableTime()).isCloseTo((double) MAX_TIME + 1, within(DELTA));
         assertThat(summary.getDatabaseQueryCount()).isEqualTo(3);
@@ -64,8 +64,7 @@ class MetricsQueueTest {
         String json = JsonUtils.writeValueAsString(queue);
         Map<String, Object> object = JsonUtils.readValue(json, new TypeReference<Map<String, Object>>() {
         });
-        assertThat(object).isNotNull();
-        assertThat(object.size()).isEqualTo(3);
+        assertThat(object).hasSize(3);
         MetricsQueue deserialized = JsonUtils.readValue(json, MetricsQueue.class);
         assertThat(deserialized).isNotNull();
         validateMetricsQueue(deserialized);
@@ -91,7 +90,7 @@ class MetricsQueueTest {
         for (int i = 0; i < threads.length; i++) {
             threads[i].join();
         }
-        assertThat(queue.getLastRequests().size()).isLessThanOrEqualTo(MetricsQueue.MAX_ENTRIES);
+        assertThat(queue.getLastRequests()).hasSizeLessThanOrEqualTo(MetricsQueue.MAX_ENTRIES);
     }
 
     @Test
@@ -110,12 +109,11 @@ class MetricsQueueTest {
 
     private static void validateMetricsQueue(MetricsQueue queue) {
         Map<StatusCodeGroup, RequestMetricSummary> summary = queue.getDetailed();
-        assertThat(summary).isNotNull();
-        assertThat(summary.size()).isEqualTo(2);
+        assertThat(summary).hasSize(2);
         RequestMetricSummary twoHundredResponses = summary.get(StatusCodeGroup.SUCCESS);
         assertThat(twoHundredResponses).isNotNull();
         assertThat(twoHundredResponses.getCount()).isEqualTo(2);
-        assertThat(twoHundredResponses.getIntolerableCount()).isEqualTo(1);
+        assertThat(twoHundredResponses.getIntolerableCount()).isOne();
         assertThat(twoHundredResponses.getAverageTime()).isCloseTo((double) (MAX_TIME + 3) / 2.0, within(DELTA));
         assertThat(twoHundredResponses.getAverageIntolerableTime()).isCloseTo(MAX_TIME + 1, within(DELTA));
         assertThat(twoHundredResponses.getDatabaseQueryCount()).isEqualTo(2);
@@ -123,16 +121,15 @@ class MetricsQueueTest {
 
         RequestMetricSummary fiveHundredResponses = summary.get(StatusCodeGroup.SERVER_ERROR);
         assertThat(fiveHundredResponses).isNotNull();
-        assertThat(fiveHundredResponses.getCount()).isEqualTo(1);
-        assertThat(fiveHundredResponses.getIntolerableCount()).isEqualTo(0);
+        assertThat(fiveHundredResponses.getCount()).isOne();
+        assertThat(fiveHundredResponses.getIntolerableCount()).isZero();
         assertThat(fiveHundredResponses.getAverageTime()).isCloseTo(5, within(DELTA));
         assertThat(fiveHundredResponses.getAverageIntolerableTime()).isCloseTo(0, within(DELTA));
-        assertThat(fiveHundredResponses.getDatabaseQueryCount()).isEqualTo(1);
+        assertThat(fiveHundredResponses.getDatabaseQueryCount()).isOne();
         assertThat(fiveHundredResponses.getAverageDatabaseQueryTime()).isCloseTo(2, within(DELTA));
-        assertThat(fiveHundredResponses.getDatabaseIntolerableQueryCount()).isEqualTo(0);
+        assertThat(fiveHundredResponses.getDatabaseIntolerableQueryCount()).isZero();
         assertThat(fiveHundredResponses.getAverageDatabaseIntolerableQueryTime()).isCloseTo(0, within(DELTA));
 
-        assertThat(queue.getLastRequests().size()).isEqualTo(3);
+        assertThat(queue.getLastRequests()).hasSize(3);
     }
-
 }

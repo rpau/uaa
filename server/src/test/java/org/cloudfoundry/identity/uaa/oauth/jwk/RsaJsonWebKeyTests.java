@@ -63,10 +63,10 @@ public class RsaJsonWebKeyTests {
         JsonWebKey key = new JsonWebKey(KeyInfoBuilder.build("id", sampleRsaPrivateKey, ISSUER).getJwkMap()).setKid("id");
 
         assertThat(key.getKty()).isEqualTo(RSA);
-        assertThat(key.getKeyProperties().get("kty")).isEqualTo("RSA");
+        assertThat(key.getKeyProperties()).containsEntry("kty", "RSA");
         assertThat(key.getKid()).isEqualTo("id");
         assertThat(key.getUse()).isEqualTo(sig);
-        assertThat(key.getKeyProperties().get("use")).isEqualTo("sig");
+        assertThat(key.getKeyProperties()).containsEntry("use", "sig");
         assertThat(key.getValue()).isNotNull();
 
         PublicKey pk = parseKeyPair(keyInfo.verifierKey()).getPublic();
@@ -74,8 +74,8 @@ public class RsaJsonWebKeyTests {
         BigInteger exponent = ((RSAPublicKey) pk).getPublicExponent();
         BigInteger modulus = ((RSAPublicKey) pk).getModulus();
         java.util.Base64.Encoder encoder = java.util.Base64.getUrlEncoder().withoutPadding();
-        assertThat(key.getKeyProperties().get("e")).isEqualTo(encoder.encodeToString(exponent.toByteArray()));
-        assertThat(key.getKeyProperties().get("n")).isEqualTo(encoder.encodeToString(BigIntegerUtils.toBytesUnsigned(modulus)));
+        assertThat(key.getKeyProperties()).containsEntry("e", encoder.encodeToString(exponent.toByteArray()));
+        assertThat(key.getKeyProperties()).containsEntry("n", encoder.encodeToString(BigIntegerUtils.toBytesUnsigned(modulus)));
     }
 
     @Test
@@ -88,10 +88,10 @@ public class RsaJsonWebKeyTests {
         JsonWebKey jsonWebKey = new JsonWebKey(jwkMap);
         JsonWebKey key = jsonWebKey.setKid("id");
         assertThat(key.getKty()).isEqualTo(RSA);
-        assertThat(key.getKeyProperties().get("kty")).isEqualTo("RSA");
+        assertThat(key.getKeyProperties()).containsEntry("kty", "RSA");
         assertThat(key.getKid()).isEqualTo("id");
         assertThat(key.getUse()).isEqualTo(sig);
-        assertThat(key.getKeyProperties().get("use")).isEqualTo("sig");
+        assertThat(key.getKeyProperties()).containsEntry("use", "sig");
         assertThat(key.getValue()).isNotNull();
 
         PublicKey pk = parseKeyPair(keyInfo.verifierKey()).getPublic();
@@ -99,8 +99,8 @@ public class RsaJsonWebKeyTests {
         BigInteger modulus = ((RSAPublicKey) pk).getModulus();
 
         java.util.Base64.Encoder encoder = java.util.Base64.getUrlEncoder().withoutPadding();
-        assertThat(key.getKeyProperties().get("e")).isEqualTo(encoder.encodeToString(exponent.toByteArray()));
-        assertThat(key.getKeyProperties().get("n")).isEqualTo(encoder.encodeToString(BigIntegerUtils.toBytesUnsigned(modulus)));
+        assertThat(key.getKeyProperties()).containsEntry("e", encoder.encodeToString(exponent.toByteArray()));
+        assertThat(key.getKeyProperties()).containsEntry("n", encoder.encodeToString(BigIntegerUtils.toBytesUnsigned(modulus)));
     }
 
     @Test
@@ -114,7 +114,7 @@ public class RsaJsonWebKeyTests {
         });
         List<JsonWebKey> list = new ArrayList<>(keys.getKeys());
         list.addAll(keys.getKeys());
-        assertThat(list.size()).isEqualTo(6);
+        assertThat(list).hasSize(6);
         keys = new JsonWebKeySet<>(list);
         deserialize_azure_keys(JsonUtils.writeValueAsString(keys));
     }
@@ -125,17 +125,17 @@ public class RsaJsonWebKeyTests {
         });
         List<JsonWebKey> list = new ArrayList<>(keys.getKeys());
         list.addAll(keys.getKeys());
-        assertThat(list.size()).isEqualTo(6);
+        assertThat(list).hasSize(6);
 
         Map<String, Object> p = new HashedMap(list.get(5).getKeyProperties());
         p.put("issuer", ISSUER);
         list.add(new VerificationKeyResponse(p));
-        assertThat(list.size()).isEqualTo(7);
+        assertThat(list).hasSize(7);
 
         keys = new JsonWebKeySet<>(list);
         keys = deserialize_azure_keys(JsonUtils.writeValueAsString(keys));
 
-        assertThat(keys.getKeys().get(2).getKeyProperties().get("issuer")).isEqualTo(ISSUER);
+        assertThat(keys.getKeys().get(2).getKeyProperties()).containsEntry("issuer", ISSUER);
     }
 
     @Test
@@ -180,7 +180,7 @@ public class RsaJsonWebKeyTests {
         });
         assertThat(keys).isNotNull();
         assertThat(keys.getKeys()).isNotNull();
-        assertThat(keys.getKeys().size()).isEqualTo(3);
+        assertThat(keys.getKeys()).hasSize(3);
         for (JsonWebKey key : keys.getKeys()) {
             assertThat(key).isNotNull();
             assertThat(JsonWebKey.getRsaPublicKey(key)).isNotNull();

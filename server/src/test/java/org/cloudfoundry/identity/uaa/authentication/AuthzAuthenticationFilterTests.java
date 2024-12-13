@@ -76,7 +76,7 @@ class AuthzAuthenticationFilterTests {
         ArgumentCaptor<AuthenticationException> captor = ArgumentCaptor.forClass(AuthenticationException.class);
         verify(entryPoint, times(1)).commence(same(request), same(response), captor.capture());
 
-        assertThat(captor.getAllValues().size()).isEqualTo(1);
+        assertThat(captor.getAllValues()).hasSize(1);
         assertThat(captor.getValue().getClass()).isEqualTo(PasswordChangeRequiredException.class);
         assertThat(captor.getValue().getMessage()).isEqualTo("password change required");
         assertThat(((PasswordChangeRequiredException) captor.getValue()).getAuthentication()).isSameAs(mockUaaAuthentication);

@@ -44,7 +44,7 @@ class NestedMapPropertySourceTests {
         @SuppressWarnings("unchecked")
         Map<String, Object> map = yaml.loadAs("foo: bar\nspam:\n  foo: baz", Map.class);
         NestedMapPropertySource properties = new NestedMapPropertySource("map", map);
-        assertThat(properties.getProperty("spam").toString()).isEqualTo("{foo=baz}");
+        assertThat(properties.getProperty("spam")).hasToString("{foo=baz}");
         assertThat(properties.getProperty("spam.foo")).isEqualTo("baz");
     }
 
@@ -55,7 +55,7 @@ class NestedMapPropertySourceTests {
         Map<String, Object> map = yaml.loadAs("foo: bar\nspam:\n  foo:\n    baz: bucket",
                 Map.class);
         NestedMapPropertySource properties = new NestedMapPropertySource("map", map);
-        assertThat(properties.getProperty("spam.foo").toString()).isEqualTo("{baz=bucket}");
+        assertThat(properties.getProperty("spam.foo")).hasToString("{baz=bucket}");
     }
 
     @Test
@@ -106,7 +106,7 @@ class NestedMapPropertySourceTests {
         NestedMapPropertySource properties = new NestedMapPropertySource("map", map);
         assertThat(properties.getProperty("foo[0]")).isEqualTo("bar");
         assertThat(properties.getProperty("foo[1]")).isEqualTo("baz");
-        assertThat(properties.getProperty("foo").toString()).isEqualTo("[bar, baz]");
+        assertThat(properties.getProperty("foo")).hasToString("[bar, baz]");
     }
 
     @Test
@@ -117,8 +117,8 @@ class NestedMapPropertySourceTests {
         NestedMapPropertySource properties = new NestedMapPropertySource("map", map);
         assertThat(properties.getProperty("foo.baz[0]")).isEqualTo("bar");
         assertThat(properties.getProperty("foo.baz[1]")).isEqualTo("baz");
-        assertThat(properties.getProperty("foo.baz") instanceof Collection).isTrue();
-        assertThat(properties.getProperty("foo.baz").toString()).isEqualTo("[bar, baz]");
+        assertThat(properties.getProperty("foo.baz")).isInstanceOf(Collection.class)
+                .hasToString("[bar, baz]");
     }
 
     @Test
@@ -133,7 +133,6 @@ class NestedMapPropertySourceTests {
         assertThat(properties.getProperty("foo[1]")).isEqualTo("baz");
         assertThat(properties.getProperty("foo[2].one")).isEqualTo("two");
         assertThat(properties.getProperty("foo[2].three")).isEqualTo("four");
-        assertThat(properties.getProperty("foo").toString()).isEqualTo("[{bar={spam=crap}}, baz, {one=two, three=four}]");
+        assertThat(properties.getProperty("foo")).hasToString("[{bar={spam=crap}}, baz, {one=two, three=four}]");
     }
-
 }

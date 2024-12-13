@@ -836,7 +836,7 @@ class ScimUserEndpointsAliasMockMvcTests extends AliasMockMvcTestBase {
                      * correctly handled */
                     aliasUser.setActive(false);
                     final ScimUser updatedAliasUser = updateUser(method, zone2, aliasUser);
-                    assertThat(updatedAliasUser.getVersion()).isEqualTo(1); // incremented by one
+                    assertThat(updatedAliasUser.getVersion()).isOne(); // incremented by one
 
                     final Optional<ScimUser> originalUserAfter2ndUpdateOpt = readUserFromZoneIfExists(
                             createdScimUser.getId(),

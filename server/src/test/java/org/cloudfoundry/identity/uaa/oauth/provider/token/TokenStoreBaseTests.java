@@ -95,7 +95,7 @@ public abstract class TokenStoreBaseTests {
         getTokenStore().storeAccessToken(expectedOAuth2AccessToken, expectedAuthentication);
 
         Collection<OAuth2AccessToken> actualOAuth2AccessTokens = getTokenStore().findTokensByClientIdAndUserName(clientId, name);
-        assertThat(actualOAuth2AccessTokens.size()).isEqualTo(1);
+        assertThat(actualOAuth2AccessTokens).hasSize(1);
     }
 
     @Test
@@ -106,7 +106,7 @@ public abstract class TokenStoreBaseTests {
         getTokenStore().storeAccessToken(expectedOAuth2AccessToken, expectedAuthentication);
 
         Collection<OAuth2AccessToken> actualOAuth2AccessTokens = getTokenStore().findTokensByClientId(clientId);
-        assertThat(actualOAuth2AccessTokens.size()).isEqualTo(1);
+        assertThat(actualOAuth2AccessTokens).hasSize(1);
     }
 
     @Test
@@ -191,8 +191,8 @@ public abstract class TokenStoreBaseTests {
         getTokenStore().storeAccessToken(token, expectedAuthentication);
         getTokenStore().removeAccessToken(token);
         Collection<OAuth2AccessToken> tokens = getTokenStore().findTokensByClientIdAndUserName("id", "test2");
-        assertThat(tokens.contains(token)).isFalse();
-        assertThat(tokens.isEmpty()).isTrue();
+        assertThat(tokens).doesNotContain(token);
+        assertThat(tokens).isEmpty();
     }
 
     protected static class TestAuthentication extends AbstractAuthenticationToken {

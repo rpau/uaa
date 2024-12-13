@@ -58,8 +58,8 @@ class UaaTokenTests {
     @Test
     void testHashCode() {
         CompositeToken copyToken = new CompositeToken(persistToken);
-        assertThat(persistToken.hashCode()).isEqualTo(copyToken.hashCode());
-        assertThat(new BaseOAuth2ProtectedResourceDetails().hashCode()).isEqualTo(resourceDetails.hashCode());
+        assertThat(persistToken).hasSameHashCodeAs(copyToken);
+        assertThat(new BaseOAuth2ProtectedResourceDetails()).hasSameHashCodeAs(resourceDetails);
     }
 
     @Test
@@ -72,7 +72,7 @@ class UaaTokenTests {
     @Test
     void oAuth2AccessDeniedException() {
         OAuth2AccessDeniedException oAuth2AccessDeniedException = new OAuth2AccessDeniedException();
-        assertThat(new OAuth2AccessDeniedException((BaseOAuth2ProtectedResourceDetails) null).toString()).isEqualTo(oAuth2AccessDeniedException.toString());
+        assertThat(new OAuth2AccessDeniedException((BaseOAuth2ProtectedResourceDetails) null)).hasToString(oAuth2AccessDeniedException.toString());
         assertThat(new OAuth2AccessDeniedException("", resourceDetails).toString()).isNotEqualTo(oAuth2AccessDeniedException.toString());
         assertThat(oAuth2AccessDeniedException.getOAuth2ErrorCode()).isEqualTo("access_denied");
         assertThat(oAuth2AccessDeniedException.getHttpErrorCode()).isEqualTo(403);
@@ -81,9 +81,9 @@ class UaaTokenTests {
     @Test
     void accessTokenRequiredException() {
         AccessTokenRequiredException accessTokenRequiredException = new AccessTokenRequiredException(resourceDetails);
-        assertThat(new AccessTokenRequiredException(null).toString()).isEqualTo(accessTokenRequiredException.toString());
+        assertThat(new AccessTokenRequiredException(null)).hasToString(accessTokenRequiredException.toString());
         assertThat(new AccessTokenRequiredException("", resourceDetails).toString()).isNotEqualTo(accessTokenRequiredException.toString());
-        assertThat(new AccessTokenRequiredException("OAuth2 access denied.", resourceDetails, null).toString()).isEqualTo(accessTokenRequiredException.toString());
+        assertThat(new AccessTokenRequiredException("OAuth2 access denied.", resourceDetails, null)).hasToString(accessTokenRequiredException.toString());
         assertThat(accessTokenRequiredException.getResource()).isNotNull();
     }
 
@@ -115,23 +115,23 @@ class UaaTokenTests {
         accessTokenRequest.setCookie("cookie-value");
         accessTokenRequest.setHeaders(null);
         // maintain
-        assertThat(accessTokenRequest.isEmpty()).isTrue();
+        assertThat(accessTokenRequest).isEmpty();
         accessTokenRequest.set("key", "value");
-        assertThat(accessTokenRequest.isEmpty()).isFalse();
+        assertThat(accessTokenRequest).isNotEmpty();
         accessTokenRequest.addAll(parameters);
         accessTokenRequest.clear();
         accessTokenRequest.add("key", "value");
         assertThat(accessTokenRequest.keySet()).isEqualTo(Set.of("key"));
-        assertThat(accessTokenRequest.values().toString()).isEqualTo(List.of(List.of("value")).toString());
+        assertThat(accessTokenRequest.values()).hasToString(List.of(List.of("value")).toString());
 
         // parameters
         accessTokenRequest.clear();
-        assertThat(accessTokenRequest.isEmpty()).isTrue();
+        assertThat(accessTokenRequest).isEmpty();
         accessTokenRequest.addAll("key", List.of("value"));
         accessTokenRequest.setAll(parameters);
         accessTokenRequest.putAll(parameters);
         accessTokenRequest.put("key", List.of("value"));
-        assertThat(accessTokenRequest.isEmpty()).isFalse();
+        assertThat(accessTokenRequest).isNotEmpty();
 
         // object compare
         accessTokenRequest.clear();
@@ -146,8 +146,8 @@ class UaaTokenTests {
             assertThat(entry.getKey()).isNotNull();
         }
         accessTokenRequest.remove("key");
-        assertThat(accessTokenRequest.get("key")).isNull();
-        assertThat(accessTokenRequest.containsKey("key")).isFalse();
+        assertThat(accessTokenRequest).doesNotContainKey("key")
+                .doesNotContainKey("key");
         assertThat(accessTokenRequest.containsValue("value")).isFalse();
     }
 

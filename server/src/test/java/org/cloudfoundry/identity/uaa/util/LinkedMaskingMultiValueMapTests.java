@@ -46,7 +46,7 @@ class LinkedMaskingMultiValueMapTests {
     void add() {
         map.add("key", "value1");
         map.add("key", "value2");
-        assertThat(map.size()).isEqualTo(1);
+        assertThat(map.size()).isOne();
         List<String> expected = new ArrayList<>(2);
         expected.add("value1");
         expected.add("value2");
@@ -57,8 +57,8 @@ class LinkedMaskingMultiValueMapTests {
     void addAll() {
         map.add("key", "value1");
         map.addAll("key", Arrays.asList("value2", "value3"));
-        assertThat(map.size()).isEqualTo(1);
-        assertThat(map.get("key").size()).isEqualTo(3);
+        assertThat(map.size()).isOne();
+        assertThat(map.get("key")).hasSize(3);
         assertThat(map.get("key")).isEqualTo(Arrays.asList("value1", "value2", "value3"));
     }
 
@@ -70,9 +70,9 @@ class LinkedMaskingMultiValueMapTests {
         map.add("key1", "existing value");
         map.addAll(toCopy);
         assertThat(map.size()).isEqualTo(2);
-        assertThat(map.get("key1").size()).isEqualTo(2);
+        assertThat(map.get("key1")).hasSize(2);
         assertThat(map.get("key1")).isEqualTo(Arrays.asList("existing value", "value1"));
-        assertThat(map.get("key2").size()).isEqualTo(1);
+        assertThat(map.get("key2")).hasSize(1);
         assertThat(map.get("key2")).isEqualTo(Collections.singletonList("value2"));
     }
 
@@ -90,7 +90,7 @@ class LinkedMaskingMultiValueMapTests {
     void set() {
         map.set("key", "value1");
         map.set("key", "value2");
-        assertThat(map.size()).isEqualTo(1);
+        assertThat(map.size()).isOne();
         assertThat(map.get("key")).isEqualTo(Collections.singletonList("value2"));
     }
 
@@ -112,23 +112,23 @@ class LinkedMaskingMultiValueMapTests {
     void selfReferenceKey() {
         objectMap.add(objectMap, "value1");
         String s = objectMap.toString();
-        assertThat(s.contains("this map")).isTrue();
+        assertThat(s).contains("this map");
     }
 
     @Test
     void selfReferenceValue() {
         objectMap.add("key1", objectMap);
         String s = objectMap.toString();
-        assertThat(s.contains("this map")).isTrue();
+        assertThat(s).contains("this map");
     }
 
     @Test
     void doNotPrintPassword() {
         map.add("password", "password-value");
         String s = map.toString();
-        assertThat(s.contains("password")).isTrue();
-        assertThat(s.contains("password-value")).isFalse();
-        assertThat(s.contains("PROTECTED")).isTrue();
+        assertThat(s).contains("password");
+        assertThat(s).doesNotContain("password-value");
+        assertThat(s).contains("PROTECTED");
     }
 
     @Test
@@ -140,11 +140,11 @@ class LinkedMaskingMultiValueMapTests {
             map.add("password", "password-value");
             map.add("code", "code-value");
             String s = map.toString();
-            assertThat(s.contains("password")).isTrue();
-            assertThat(s.contains("password-value")).isFalse();
-            assertThat(s.contains("code")).isTrue();
-            assertThat(s.contains("code-value")).isFalse();
-            assertThat(s.contains("PROTECTED")).isTrue();
+            assertThat(s).contains("password");
+            assertThat(s).doesNotContain("password-value");
+            assertThat(s).contains("code");
+            assertThat(s).doesNotContain("code-value");
+            assertThat(s).contains("PROTECTED");
         }
     }
 

@@ -138,8 +138,7 @@ public class AccountSavingAuthenticationSuccessHandlerTest {
         Optional<String> actualCurrentUserCookieHeaderValue = response.getHeaders("Set-Cookie").stream()
                 .filter(headerValue -> headerValue.startsWith("Current-User"))
                 .findAny();
-        assertThat(actualCurrentUserCookieHeaderValue).isNotNull();
-        assertThat(actualCurrentUserCookieHeaderValue.get()).isEqualTo("Current-User=%7B%22userId%22%3A%22user-id%22%7D; SameSite=Strict");
+        assertThat(actualCurrentUserCookieHeaderValue).contains("Current-User=%7B%22userId%22%3A%22user-id%22%7D; SameSite=Strict");
     }
 
     @MethodSource("parameters")

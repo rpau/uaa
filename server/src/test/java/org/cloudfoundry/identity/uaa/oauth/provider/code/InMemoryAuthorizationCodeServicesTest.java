@@ -22,15 +22,15 @@ class InMemoryAuthorizationCodeServicesTest {
     @Test
     void store() {
         inMemoryAuthorizationCodeServices.store("code", oAuth2Authentication);
-        assertThat(inMemoryAuthorizationCodeServices.authorizationCodeStore.get("code")).isEqualTo(oAuth2Authentication);
+        assertThat(inMemoryAuthorizationCodeServices.authorizationCodeStore).containsEntry("code", oAuth2Authentication);
     }
 
     @Test
     void remove() {
-        assertThat(inMemoryAuthorizationCodeServices.authorizationCodeStore.size()).isEqualTo(0);
+        assertThat(inMemoryAuthorizationCodeServices.authorizationCodeStore).isEmpty();
         inMemoryAuthorizationCodeServices.store("code", oAuth2Authentication);
-        assertThat(inMemoryAuthorizationCodeServices.authorizationCodeStore.size()).isEqualTo(1);
+        assertThat(inMemoryAuthorizationCodeServices.authorizationCodeStore).hasSize(1);
         inMemoryAuthorizationCodeServices.remove("code");
-        assertThat(inMemoryAuthorizationCodeServices.authorizationCodeStore.size()).isEqualTo(0);
+        assertThat(inMemoryAuthorizationCodeServices.authorizationCodeStore).isEmpty();
     }
 }

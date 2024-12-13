@@ -67,15 +67,15 @@ class CookieBasedCsrfTokenRepositoryTests {
         request.setPathInfo("/login/somepath");
         request.setContextPath(contextPath);
         CsrfToken token = repo.generateToken(request);
-        assertThat(token.getToken().length() >= 22).as("The token is at least 22 characters long.").isTrue();
+        assertThat(token.getToken().length()).as("The token is at least 22 characters long.").isGreaterThanOrEqualTo(22);
         repo.saveToken(token, request, response);
 
         Cookie cookie = response.getCookie(token.getParameterName());
         assertThat(cookie).isNotNull();
         assertThat(cookie.getValue()).isEqualTo(token.getToken());
         assertThat(cookie.getMaxAge()).isEqualTo(repo.getCookieMaxAge());
-        assertThat(cookie.getPath()).isNotNull();
-        assertThat(cookie.getPath()).isEqualTo(expectedCookiePath);
+        assertThat(cookie.getPath()).isNotNull()
+                .isEqualTo(expectedCookiePath);
 
         request.setCookies(cookie);
 
@@ -143,8 +143,8 @@ class CookieBasedCsrfTokenRepositoryTests {
         repo.saveToken(null, request, response);
 
         Cookie cookie = response.getCookie("X-Uaa-Csrf");
-        assertThat(cookie.getMaxAge()).isEqualTo(0);
-        assertThat(cookie.getValue().isEmpty()).isFalse();
+        assertThat(cookie.getMaxAge()).isZero();
+        assertThat(cookie.getValue()).isNotEmpty();
     }
 
     private MockHttpServletResponse saveTokenAndReturnResponse(boolean isSecure, String protocol) {

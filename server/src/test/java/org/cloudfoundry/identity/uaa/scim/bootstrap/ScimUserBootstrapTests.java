@@ -174,7 +174,7 @@ class ScimUserBootstrapTests {
         canAddUsers(OriginKeys.UAA, randomZoneId, jdbcScimUserProvisioning, jdbcScimGroupProvisioning,
                 jdbcScimGroupMembershipManager, scimUserService);
         List<ScimUser> users = jdbcScimUserProvisioning.retrieveAll(IdentityZone.getUaaZoneId());
-        assertThat(users.size()).isEqualTo(4);
+        assertThat(users).hasSize(4);
         reset(jdbcScimUserProvisioning);
         ApplicationEventPublisher publisher = mock(ApplicationEventPublisher.class);
         doAnswer(invocation -> {
@@ -192,10 +192,11 @@ class ScimUserBootstrapTests {
         ArgumentCaptor<ApplicationEvent> captor = ArgumentCaptor.forClass(EntityDeletedEvent.class);
         verify(publisher, times(2)).publishEvent(captor.capture());
         List<EntityDeletedEvent<ScimUser>> deleted = new LinkedList(ofNullable(captor.getAllValues()).orElse(emptyList()));
-        assertThat(deleted).isNotNull();
-        assertThat(deleted.size()).isEqualTo(2);
+        assertThat(deleted)
+                .isNotNull()
+                .hasSize(2);
         deleted.forEach(event -> assertThat(event.getDeleted().getOrigin()).isEqualTo(OriginKeys.UAA));
-        assertThat(jdbcScimUserProvisioning.retrieveAll(IdentityZone.getUaaZoneId()).size()).isEqualTo(2);
+        assertThat(jdbcScimUserProvisioning.retrieveAll(IdentityZone.getUaaZoneId())).hasSize(2);
     }
 
     @Test
@@ -207,14 +208,14 @@ class ScimUserBootstrapTests {
         String zoneId = IdentityZone.getUaaZoneId();
         verify(jdbcScimUserProvisioning, never()).create(any(), eq(zoneId));
         Collection<ScimUser> users = jdbcScimUserProvisioning.retrieveAll(zoneId);
-        assertThat(users.size()).isEqualTo(0);
+        assertThat(users).isEmpty();
     }
 
     @Test
     void canAddUsers() throws Exception {
         canAddUsers(OriginKeys.UAA, IdentityZone.getUaaZoneId(), jdbcScimUserProvisioning, jdbcScimGroupProvisioning, jdbcScimGroupMembershipManager, scimUserService);
         Collection<ScimUser> users = jdbcScimUserProvisioning.retrieveAll(IdentityZone.getUaaZoneId());
-        assertThat(users.size()).isEqualTo(2);
+        assertThat(users).hasSize(2);
     }
 
     @Test
@@ -239,12 +240,12 @@ class ScimUserBootstrapTests {
         @SuppressWarnings("unchecked")
         Collection<Map<String, Object>> users = (Collection<Map<String, Object>>) scimUserEndpoints.findUsers("id",
                 "id pr", "id", "ascending", 1, 100).getResources();
-        assertThat(users.size()).isEqualTo(1);
+        assertThat(users).hasSize(1);
 
         String id = (String) users.iterator().next().get("id");
         ScimUser user = scimUserEndpoints.getUser(id, new MockHttpServletResponse());
         // uaa.user is always added
-        assertThat(user.getGroups().size()).isEqualTo(3);
+        assertThat(user.getGroups()).hasSize(3);
     }
 
     @Test
@@ -267,7 +268,7 @@ class ScimUserBootstrapTests {
         @SuppressWarnings("unchecked")
         Collection<Map<String, Object>> users = (Collection<Map<String, Object>>) scimUserEndpoints.findUsers("id",
                 "id pr", "id", "ascending", 1, 100).getResources();
-        assertThat(users.size()).isEqualTo(1);
+        assertThat(users).hasSize(1);
 
         String id = (String) users.iterator().next().get("id");
         ScimUser user = scimUserEndpoints.getUser(id, new MockHttpServletResponse());
@@ -287,7 +288,7 @@ class ScimUserBootstrapTests {
         @SuppressWarnings("unchecked")
         Collection<Map<String, Object>> users = (Collection<Map<String, Object>>) scimUserEndpoints.findUsers("id",
                 "id pr", "id", "ascending", 1, 100).getResources();
-        assertThat(users.size()).isEqualTo(1);
+        assertThat(users).hasSize(1);
 
         String id = (String) users.iterator().next().get("id");
         ScimUser user = scimUserEndpoints.getUser(id, new MockHttpServletResponse());
@@ -307,12 +308,12 @@ class ScimUserBootstrapTests {
         @SuppressWarnings("unchecked")
         Collection<Map<String, Object>> users = (Collection<Map<String, Object>>) scimUserEndpoints.findUsers("id",
                 "id pr", "id", "ascending", 1, 100).getResources();
-        assertThat(users.size()).isEqualTo(1);
+        assertThat(users).hasSize(1);
 
         String id = (String) users.iterator().next().get("id");
         ScimUser user = scimUserEndpoints.getUser(id, new MockHttpServletResponse());
         // uaa.user is always added
-        assertThat(user.getGroups().size()).isEqualTo(4);
+        assertThat(user.getGroups()).hasSize(4);
     }
 
     @Test
@@ -329,11 +330,11 @@ class ScimUserBootstrapTests {
         bootstrap.afterPropertiesSet();
 
         List<ScimUser> users = jdbcScimUserProvisioning.query("userName eq \"" + joeUserId + "\"", IdentityZone.getUaaZoneId());
-        assertThat(users.size()).isEqualTo(1);
+        assertThat(users).hasSize(1);
 
         ScimUser user = scimUserEndpoints.getUser(users.get(0).getId(), new MockHttpServletResponse());
         // uaa.user is always added
-        assertThat(user.getGroups().size()).isEqualTo(2);
+        assertThat(user.getGroups()).hasSize(2);
     }
 
     @Test
@@ -350,7 +351,7 @@ class ScimUserBootstrapTests {
         bootstrap = new ScimUserBootstrap(jdbcScimUserProvisioning, scimUserService, jdbcScimGroupProvisioning, jdbcScimGroupMembershipManager, Collections.singletonList(joe), true, Collections.emptyList(), false);
         bootstrap.afterPropertiesSet();
         Collection<ScimUser> users = jdbcScimUserProvisioning.retrieveAll(IdentityZone.getUaaZoneId());
-        assertThat(users.size()).isEqualTo(1);
+        assertThat(users).hasSize(1);
         assertThat(users.iterator().next().getFamilyName()).isEqualTo("Bloggs");
         assertThat(jdbcTemplate.queryForObject("select password from users where username='joe'", new Object[0], String.class)).isNotEqualTo(passwordHash);
 
@@ -579,7 +580,7 @@ class ScimUserBootstrapTests {
         bootstrap = new ScimUserBootstrap(jdbcScimUserProvisioning, scimUserService, jdbcScimGroupProvisioning, jdbcScimGroupMembershipManager, Collections.singletonList(joe), false, Collections.emptyList(), false);
         bootstrap.afterPropertiesSet();
         Collection<ScimUser> users = jdbcScimUserProvisioning.retrieveAll(IdentityZone.getUaaZoneId());
-        assertThat(users.size()).isEqualTo(1);
+        assertThat(users).hasSize(1);
         assertThat(users.iterator().next().getFamilyName()).isEqualTo("User");
     }
 
@@ -597,7 +598,7 @@ class ScimUserBootstrapTests {
         bootstrap = new ScimUserBootstrap(jdbcScimUserProvisioning, scimUserService, jdbcScimGroupProvisioning, jdbcScimGroupMembershipManager, Collections.singletonList(joe), true, Collections.emptyList(), false);
         bootstrap.afterPropertiesSet();
         Collection<ScimUser> users = jdbcScimUserProvisioning.retrieveAll(IdentityZone.getUaaZoneId());
-        assertThat(users.size()).isEqualTo(1);
+        assertThat(users).hasSize(1);
         assertThat(users.iterator().next().getFamilyName()).isEqualTo("Bloggs");
         assertThat(jdbcTemplate.queryForObject("select password from users where username='joe'", new Object[0], String.class)).isEqualTo(passwordHash);
     }
@@ -693,13 +694,13 @@ class ScimUserBootstrapTests {
         bootstrap.afterPropertiesSet();
 
         List<ScimUser> users = jdbcScimUserProvisioning.query("userName eq \"" + username + "\" and origin eq \"" + origin + "\"", IdentityZone.getUaaZoneId());
-        assertThat(users.size()).isEqualTo(1);
+        assertThat(users).hasSize(1);
         userId = users.get(0).getId();
         user = getUaaUser(externalAuthorities, origin, newEmail, firstName, lastName, password, externalId, userId, username);
 
         bootstrap.onApplicationEvent(new ExternalGroupAuthorizationEvent(user, true, getAuthorities(externalAuthorities), true));
         users = jdbcScimUserProvisioning.query("userName eq \"" + username + "\" and origin eq \"" + origin + "\"", IdentityZone.getUaaZoneId());
-        assertThat(users.size()).isEqualTo(1);
+        assertThat(users).hasSize(1);
         ScimUser created = users.get(0);
         assertThat(created.getPrimaryEmail()).isEqualTo(newEmail);
 
@@ -707,13 +708,13 @@ class ScimUserBootstrapTests {
         //Ensure email doesn't get updated if event instructs not to update.
         bootstrap.onApplicationEvent(new ExternalGroupAuthorizationEvent(user, false, getAuthorities(externalAuthorities), true));
         users = jdbcScimUserProvisioning.query("userName eq \"" + username + "\" and origin eq \"" + origin + "\"", IdentityZone.getUaaZoneId());
-        assertThat(users.size()).isEqualTo(1);
+        assertThat(users).hasSize(1);
         created = users.get(0);
         assertThat(created.getPrimaryEmail()).isEqualTo(newEmail);
 
         bootstrap.onApplicationEvent(new ExternalGroupAuthorizationEvent(user, true, getAuthorities(externalAuthorities), true));
         users = jdbcScimUserProvisioning.query("userName eq \"" + username + "\" and origin eq \"" + origin + "\"", IdentityZone.getUaaZoneId());
-        assertThat(users.size()).isEqualTo(1);
+        assertThat(users).hasSize(1);
         created = users.get(0);
         assertThat(created.getPrimaryEmail()).isEqualTo("test123@test.org");
     }
@@ -738,13 +739,13 @@ class ScimUserBootstrapTests {
         bootstrap.afterPropertiesSet();
 
         List<ScimUser> users = jdbcScimUserProvisioning.query("userName eq \"" + username + "\" and origin eq \"" + origin + "\"", IdentityZone.getUaaZoneId());
-        assertThat(users.size()).isEqualTo(1);
+        assertThat(users).hasSize(1);
         userId = users.get(0).getId();
         user = getUaaUser(userAuthorities, origin, newEmail, firstName, lastName, password, externalId, userId, username);
 
         List<GrantedAuthority> authorities = getAuthorities(externalAuthorities);
         authorities.addAll(getAuthorities(externalAuthorities));
-        assertThat(authorities.size()).isEqualTo(2 * externalAuthorities.length);
+        assertThat(authorities).hasSize(2 * externalAuthorities.length);
         verify(spy, times(externalAuthorities.length)).addMember(any(), any(), any());
 
         bootstrap.onApplicationEvent(new ExternalGroupAuthorizationEvent(user, true, authorities, true));
@@ -770,7 +771,7 @@ class ScimUserBootstrapTests {
         addIdentityProvider(jdbcTemplate, "newOrigin");
         bootstrap = new ScimUserBootstrap(jdbcScimUserProvisioning, scimUserService, jdbcScimGroupProvisioning, jdbcScimGroupMembershipManager, Arrays.asList(user, user.modifySource("newOrigin", "")), false, Collections.emptyList(), false);
         bootstrap.afterPropertiesSet();
-        assertThat(jdbcScimUserProvisioning.retrieveAll(IdentityZone.getUaaZoneId()).size()).isEqualTo(2);
+        assertThat(jdbcScimUserProvisioning.retrieveAll(IdentityZone.getUaaZoneId())).hasSize(2);
     }
 
     @Test
@@ -794,7 +795,7 @@ class ScimUserBootstrapTests {
         bootstrap.afterPropertiesSet();
 
         List<ScimUser> scimUsers = jdbcScimUserProvisioning.query("userName eq \"" + username + "\" and origin eq \"" + origin + "\"", IdentityZone.getUaaZoneId());
-        assertThat(scimUsers.size()).isEqualTo(1);
+        assertThat(scimUsers).hasSize(1);
         ScimUser scimUser = scimUsers.get(0);
         ScimGroupMember member = new ScimGroupMember<>(scimUser);
         user = getUaaUser(userAuthorities, origin, email, firstName, lastName, password, externalId, member.getMemberId(), username);
@@ -881,7 +882,7 @@ class ScimUserBootstrapTests {
         bootstrap.afterPropertiesSet();
 
         List<ScimUser> users = jdbcScimUserProvisioning.query("userName eq \"" + username + "\" and origin eq \"" + origin + "\"", IdentityZone.getUaaZoneId());
-        assertThat(users.size()).isEqualTo(1);
+        assertThat(users).hasSize(1);
         userId = users.get(0).getId();
 
         // add all the user authorities on the uaa origin
@@ -900,7 +901,7 @@ class ScimUserBootstrapTests {
         bootstrap.onApplicationEvent(new ExternalGroupAuthorizationEvent(user, false, getAuthorities(externalAuthorities), add));
 
         users = jdbcScimUserProvisioning.query("userName eq \"" + username + "\" and origin eq \"" + origin + "\"", IdentityZone.getUaaZoneId());
-        assertThat(users.size()).isEqualTo(1);
+        assertThat(users).hasSize(1);
         created = users.get(0);
         validateAuthoritiesCreated(add ? externalAuthorities : new String[0], userAuthorities, origin, created, jdbcScimGroupMembershipManager);
 

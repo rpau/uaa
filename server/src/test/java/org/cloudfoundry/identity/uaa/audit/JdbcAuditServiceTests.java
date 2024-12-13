@@ -37,7 +37,7 @@ class JdbcAuditServiceTests {
         Thread.sleep(100);
         auditService.log(getAuditEvent(UserAuthenticationFailure, "1", "joe"), getAuditEvent(UserAuthenticationFailure, "1", "joe").getIdentityZoneId());
         List<AuditEvent> events = auditService.find("1", 0, IdentityZone.getUaaZoneId());
-        assertThat(events.size()).isEqualTo(2);
+        assertThat(events).hasSize(2);
         assertThat(events.get(0).getPrincipalId()).isEqualTo("1");
         assertThat(events.get(0).getData()).isEqualTo("joe");
         assertThat(events.get(0).getOrigin()).isEqualTo("1.1.1.1");
@@ -48,7 +48,7 @@ class JdbcAuditServiceTests {
     void principalAuthenticationFailureAuditSucceeds() {
         auditService.log(getAuditEvent(PrincipalAuthenticationFailure, "clientA"), getAuditEvent(PrincipalAuthenticationFailure, "clientA").getIdentityZoneId());
         List<AuditEvent> events = auditService.find("clientA", 0, IdentityZone.getUaaZoneId());
-        assertThat(events.size()).isEqualTo(1);
+        assertThat(events).hasSize(1);
         assertThat(events.get(0).getPrincipalId()).isEqualTo("clientA");
         assertThat(events.get(0).getOrigin()).isEqualTo("1.1.1.1");
         assertThat(events.get(0).getIdentityZoneId()).isEqualTo(IdentityZone.getUaaZoneId());
@@ -64,7 +64,7 @@ class JdbcAuditServiceTests {
         auditService.log(getAuditEvent(PrincipalAuthenticationFailure, "clientB"), getAuditEvent(PrincipalAuthenticationFailure, "clientB").getIdentityZoneId());
         // Find events within last 2 mins
         List<AuditEvent> events = auditService.find("clientA", now - 120 * 1000, IdentityZone.getUaaZoneId());
-        assertThat(events.size()).isEqualTo(1);
+        assertThat(events).hasSize(1);
     }
 
     private AuditEvent getAuditEvent(AuditEventType type, String principal) {

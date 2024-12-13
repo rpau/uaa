@@ -26,7 +26,7 @@ class QueryMetricTest {
 
     @Test
     void getRequestStartTime() {
-        assertThat(metric.getRequestStartTime()).isEqualTo(1);
+        assertThat(metric.getRequestStartTime()).isOne();
     }
 
     @Test

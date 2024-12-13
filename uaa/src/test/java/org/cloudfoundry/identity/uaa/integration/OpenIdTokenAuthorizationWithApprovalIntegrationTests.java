@@ -148,7 +148,7 @@ class OpenIdTokenAuthorizationWithApprovalIntegrationTests {
         Map<String, Object> params = responseEntity.getBody();
 
         assertThat(params.get("jti")).isNotNull();
-        assertThat(params.get("token_type")).isEqualTo("bearer");
+        assertThat(params).containsEntry("token_type", "bearer");
         assertThat((Integer) params.get("expires_in")).isGreaterThan(40000);
 
         String[] scopes = UriUtils.decode((String) params.get("scope"), "UTF-8").split(" ");
@@ -286,14 +286,14 @@ class OpenIdTokenAuthorizationWithApprovalIntegrationTests {
             }
         }
         // should be directed to the login screen...
-        assertThat(response.getBody().contains("/login.do")).isTrue();
-        assertThat(response.getBody().contains("username")).isTrue();
-        assertThat(response.getBody().contains("password")).isTrue();
+        assertThat(response.getBody()).contains("/login.do")
+                .contains("username")
+                .contains("password");
 
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("username", user.getUserName());
         formData.add("password", "s3Cret");
-        formData.add(CookieBasedCsrfTokenRepository.DEFAULT_CSRF_COOKIE_NAME, extractCookieCsrf(response.getBody()));
+        formData.add(DEFAULT_CSRF_COOKIE_NAME, extractCookieCsrf(response.getBody()));
 
         // Should be redirected to the original URL, but now authenticated
         result = serverRunning.postForResponse("/login.do", getHeaders(cookies), formData);
@@ -321,7 +321,7 @@ class OpenIdTokenAuthorizationWithApprovalIntegrationTests {
         }
         if (response.getStatusCode() == HttpStatus.OK) {
             // The grant access page should be returned
-            assertThat(response.getBody().contains("Application Authorization</h1>")).isTrue();
+            assertThat(response.getBody()).contains("Application Authorization</h1>");
 
             formData.clear();
             formData.add(USER_OAUTH_APPROVAL, "true");

@@ -60,36 +60,36 @@ public class TimeBasedExpiringValueMapTest {
     void clear() {
         map.put(key1, value1);
         assertThat(map.get(key1)).isNotNull();
-        assertThat(map.size()).isEqualTo(1);
+        assertThat(map.size()).isOne();
         map.clear();
         assertThat(map.get(key1)).isNull();
-        assertThat(map.size()).isEqualTo(0);
+        assertThat(map.size()).isZero();
     }
 
     @Test
     void expire_on_get() {
         map.put(key1, value1);
         timeService.addAndGet(TIMEOUT * 2);
-        assertThat(map.size()).isEqualTo(1);
+        assertThat(map.size()).isOne();
         assertThat(map.get(key1)).isSameAs(value1);
-        assertThat(map.size()).isEqualTo(0);
+        assertThat(map.size()).isZero();
         assertThat(map.get(key1)).isNull();
     }
 
     @Test
     void expire_on_put() {
         map.put(key1, value1);
-        assertThat(map.size()).isEqualTo(1);
+        assertThat(map.size()).isOne();
         timeService.addAndGet(TIMEOUT * 2);
         map.put(key2, value2);
-        assertThat(map.size()).isEqualTo(1);
+        assertThat(map.size()).isOne();
     }
 
     @Test
     void remove() {
         map.put(key1, value1);
         assertThat(map.remove(key1)).isSameAs(value1);
-        assertThat(map.size()).isEqualTo(0);
+        assertThat(map.size()).isZero();
     }
 
     @Test
@@ -124,7 +124,7 @@ public class TimeBasedExpiringValueMapTest {
 
         when(timeService.getCurrentTimeMillis()).thenReturn(Long.MAX_VALUE);
         map.get("random-key");
-        assertThat(map.size()).isEqualTo(0);
+        assertThat(map.size()).isZero();
     }
 
     @Test
