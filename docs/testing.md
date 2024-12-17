@@ -134,3 +134,51 @@ If you have timing-based issues in your test, ensure that you set `$TZ` before s
     $ TZ="Europe/Paris" docker compose up
 
 It is not required, and MySQL will default to using UTC.
+
+## Running tests in parallel
+
+Depending on the machine used for tests, HSQL-based tests are twice as fast as Postgres or MySQL tests. The bottleneck
+project is `cloudfoundry-identity-uaa`. Tests for other projects are much faster, and since each project is tested in
+parallel, they all complete before the longer `cloudfoundry-identity-uaa` test is over.
+
+While it makes sense to run tests in parallel for `cloudfoundry-identity-uaa` when testing locally, it has a few
+consequences. First, it might bring it test pollution, see [above](#test-pollution). Second, the databases must be able
+to handle the incoming connections, but this is handled by setting the number of concurrent connections to 250 on both
+Postgres and MySQL.
+
+Furthermore, too many tests running in parallel has diminishing returns, because the Spring testing support caches
+ApplicationContext between tests to avoid bootstrapping too many contexts. Having many tests in parallel means there
+will be a lot of cache misses, and every gradle worker handling a test will have to bootstrap multiple
+ApplicationContext, which is usually quite slow. A value that has been previously used is 6 workers in parallel, and,
+for any given project, 4 tests in parallel. Since `cloudfoundry-identity-uaa` is the bottleneck, we make its tests run
+in parallel, and keep other projects running sequential tests. Empirically, this yields a x2 or more speedup on the test
+suite on a powerful developer machine. Increasing parallelism further yields no benefits (for example, tests are
+slightly slower on a Mac M1 using 6 tests in parallel).
+
+Technically, parallelism is controlled by two parameters:
+
+- `org.gradle.workers.max` in `gradle.properties`, set to 6. This means that there are no more than 6 gradle processes
+  running at any given time. It does not have anything to do with tests directly. This might mean you have a 3 compile
+  processes for 3 different projects, as well as 3 test processes for different projects. Within a given project, by
+  default, tests are running sequentially and never in parallel. Unless you configure parallelism for tests, see below:
+- `maxParallelForks` in the test task in the project's `build.gradle`, set to 4. This controls how many tests can run in
+  parallel within a given project. It is bounded by the max workers set above - so if there are 5 compile tasks running,
+  and one test task, the test task will run tests sequentially as there is a single worker available left.
+
+With this setup, we get 11 test workers total, 4 for `cloudfoundry-identity-uaa`, plus 1 per remaining project:
+
+- `cloudfoundry-identity-metrics-data`
+- `cloudfoundry-identity-statsd-lib`
+- `cloudfoundry-identity-model`
+- `cloudfoundry-identity-statsd`
+- `cloudfoundry-identity-samples:cloudfoundry-identity-api`
+- `cloudfoundry-identity-samples:cloudfoundry-identity-app`
+- `cloudfoundry-identity-server`
+
+Since `cloudfoundry-identity-uaa` depends on all the projects, it runs last, and gets workers 8, 9, 10 and 11. If some
+tests did not need to be re-run because the code hasn't changed in some projects, it may get assigned workers with lower
+IDs. This means that we need all databases between `uaa_1` and `uaa_11`, included. To make sure we have enough room for
+future changes, we will keep the current setup with 24 databases, see [test pollution](#test-pollution).
+
+In single-CPU scenarios (i.e. in CI), we would only need two databases, `uaa_7` for`cloudfoundry-identity-server` and
+`uaa_8` for `cloudfoundry-identity-uaa`.
