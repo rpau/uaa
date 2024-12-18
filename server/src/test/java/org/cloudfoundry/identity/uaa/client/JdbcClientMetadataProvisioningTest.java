@@ -1,6 +1,7 @@
 package org.cloudfoundry.identity.uaa.client;
 
 import org.cloudfoundry.identity.uaa.annotations.WithDatabaseContext;
+import org.cloudfoundry.identity.uaa.extensions.profiles.DisabledIfProfile;
 import org.cloudfoundry.identity.uaa.util.AlphanumericRandomValueStringGenerator;
 import org.cloudfoundry.identity.uaa.zone.MultitenantJdbcClientDetailsService;
 import org.junit.jupiter.api.BeforeEach;
@@ -71,7 +72,15 @@ class JdbcClientMetadataProvisioningTest {
                 () -> jdbcClientMetadataProvisioning.update(clientMetadata, identityZoneId));
     }
 
+    /**
+     * In MySQL, characters are stored with a padding, but when they are retrieved, the padding is trimmed.
+     * To disable this behavior, you must add the {@code sql_mode} to include {@code PAD_CHAR_TO_FULL_LENGTH}.
+     *
+     * @see <a href="https://dev.mysql.com/doc/refman/8.4/en/char.html">CHAR type docs</a>
+     * @see <a href="https://dev.mysql.com/doc/refman/8.4/en/sql-mode.html#sqlmode_pad_char_to_full_length"> PAD_CHAR_TO_FULL_LENGTH </a>
+     */
     @Test
+    @DisabledIfProfile("mysql")
     void createdByPadsTo36Chars() {
         jdbcTemplate.execute(insertIntoOauthClientDetails(clientId, identityZoneId, "abcdef"));
 

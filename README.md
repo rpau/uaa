@@ -209,13 +209,32 @@ You can run the integration tests with docker
 
 will create a docker container running uaa + ldap + database whereby integration tests are run against.
 
-### Using Gradle to test with postgresql or mysql
+### Using Docker to test with postgresql or mysql
 
 The default uaa unit tests (./gradlew test integrationTest) use hsqldb.
 
 To run the unit tests with docker:
 
     $ run-unit-tests.sh <dbtype>
+
+### Using Gradle to test with Postgres or MySQL
+
+You need a locally running database. You can launch a Postgres 15 and MySQL 8 locally with docker compose:
+
+    $ docker compose --file scripts/docker-compose.yaml up
+
+If you wish to launch only one of the DBs, select the appropriate service name:
+
+    $ docker compose --file scripts/docker-compose.yaml up postgresql
+
+Then run the test with the appropriate profile:
+
+    $ ./gradlew '-Dspring.profiles.active=postgresql,default' \
+        --no-daemon \
+        test
+
+There are special guarantees in place to avoid pollution between tests, so be sure to run the images
+from the compose script, and run your test with `--no-daemon`. To learn more, read [docs/testing.md](docs/testing.md).
 
 ### To run a single test
 

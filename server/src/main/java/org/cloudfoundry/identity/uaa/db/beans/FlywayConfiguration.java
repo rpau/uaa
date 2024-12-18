@@ -63,6 +63,9 @@ public class FlywayConfiguration {
         public Flyway flyway(Flyway baseFlyway) {
             baseFlyway.repair();
             baseFlyway.migrate();
+            org.apache.tomcat.jdbc.pool.DataSource ds =
+                    (org.apache.tomcat.jdbc.pool.DataSource)baseFlyway.getConfiguration().getDataSource();
+            ds.purge();
             return baseFlyway;
         }
     }

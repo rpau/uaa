@@ -34,6 +34,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
@@ -47,6 +48,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -106,6 +109,10 @@ class JdbcScimUserProvisioningTests {
 
     @Autowired
     NamedParameterJdbcTemplate namedJdbcTemplate;
+
+    @Autowired
+    private Environment enviroment;
+
     private String joeEmail;
     private static final String JOE_NAME = "joe";
 
@@ -432,38 +439,37 @@ class JdbcScimUserProvisioningTests {
         user2.setOrigin(originInactive);
         final ScimUser created2 = jdbcScimUserProvisioning.createUser(user2, "j7hyqpassX", currentIdentityZoneId);
 
-        final Function<String, List<String>> retrieveByScimFilter = scimFilter -> {
-            final List<ScimUser> result = jdbcScimUserProvisioning.query(
-                    scimFilter,
-                    "userName",
-                    true,
-                    currentIdentityZoneId
-            );
-            Assertions.assertThat(result).isNotNull();
-            final List<String> usernames = result.stream().map(ScimUser::getUserName).toList();
-            Assertions.assertThat(usernames).isSorted();
-            return usernames;
-        };
+        final Function<String, List<ScimUser>> retrieveByScimFilter = scimFilter -> jdbcScimUserProvisioning.query(
+                scimFilter,
+                "created",
+                true,
+                currentIdentityZoneId
+        );
 
         // case 1: should return both
         String filter = "id eq '%s' or origin eq '%s'".formatted(created1.getId(), created2.getOrigin());
-        List<String> usernames = retrieveByScimFilter.apply(filter);
-        Assertions.assertThat(usernames)
+        List<ScimUser> users = retrieveByScimFilter.apply(filter);
+        var oldestFirst = Comparator.<ScimUser, Date>comparing(x -> x.getMeta().getCreated());
+        Assertions.assertThat(users)
                 .hasSize(2)
+                .isSortedAccordingTo(oldestFirst)
+                .map(ScimUser::getUserName)
                 .contains(created1.getUserName(), created2.getUserName());
 
         // case 2: should return user 2
         filter = "origin eq '%s'".formatted(created2.getOrigin());
-        usernames = retrieveByScimFilter.apply(filter);
-        Assertions.assertThat(usernames)
+        users = retrieveByScimFilter.apply(filter);
+        Assertions.assertThat(users)
                 .hasSize(1)
+                .map(ScimUser::getUserName)
                 .contains(created2.getUserName());
 
         // case 3: should return user 2 (filtered by origin and ID)
         filter = "origin eq '%s' and id eq '%s'".formatted(created2.getOrigin(), created2.getId());
-        usernames = retrieveByScimFilter.apply(filter);
-        Assertions.assertThat(usernames)
+        users = retrieveByScimFilter.apply(filter);
+        Assertions.assertThat(users)
                 .hasSize(1)
+                .map(ScimUser::getUserName)
                 .contains(created2.getUserName());
     }
 
