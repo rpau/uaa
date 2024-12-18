@@ -68,7 +68,6 @@ class KeyInfoTest {
                 .hasMessageContaining("Invalid Key URL");
     }
 
-
     @Test
     void creatingRsaKeyWithInvalidUrlShouldFail() {
         assertThatThrownBy(() -> new KeyInfo("id", "secret", "foo bar"))

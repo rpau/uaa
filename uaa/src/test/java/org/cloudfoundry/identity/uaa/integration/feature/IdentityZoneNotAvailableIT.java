@@ -1,6 +1,5 @@
 package org.cloudfoundry.identity.uaa.integration.feature;
 
-
 import org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils;
 import org.cloudfoundry.identity.uaa.oauth.client.resource.ClientCredentialsResourceDetails;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,17 +25,11 @@ public class IdentityZoneNotAvailableIT {
 
     private RestTemplate restTemplate;
 
-    private String zoneUrl;
-
     public static List<Object[]> data() {
         return Arrays.asList(new Object[][]{
                 {"http://testzonedoesnotexist.localhost:8080/uaa"},
                 {"http://testzoneinactive.localhost:8080/uaa"}
         });
-    }
-
-    void initIdentityZoneNotAvailableIT(String zoneUrl) {
-        this.zoneUrl = zoneUrl;
     }
 
     @BeforeEach
@@ -55,6 +48,7 @@ public class IdentityZoneNotAvailableIT {
 
             @Override
             public void handleError(ClientHttpResponse response) {
+                // pass through
             }
         });
         IntegrationTestUtils.createInactiveIdentityZone(restTemplate, baseUrl);
@@ -63,28 +57,24 @@ public class IdentityZoneNotAvailableIT {
     @MethodSource("data")
     @ParameterizedTest(name = "{index}: zoneUrl[{0}];")
     void tokenKeysEndpoint(String zoneUrl) {
-        initIdentityZoneNotAvailableIT(zoneUrl);
         checkNotFoundForEndpoint(HttpMethod.GET, zoneUrl + "/token_keys");
     }
 
     @MethodSource("data")
     @ParameterizedTest(name = "{index}: zoneUrl[{0}];")
     void tokenKeyEndpoint(String zoneUrl) {
-        initIdentityZoneNotAvailableIT(zoneUrl);
         checkNotFoundForEndpoint(HttpMethod.GET, zoneUrl + "/token_key");
     }
 
     @MethodSource("data")
     @ParameterizedTest(name = "{index}: zoneUrl[{0}];")
     void logoutDo(String zoneUrl) {
-        initIdentityZoneNotAvailableIT(zoneUrl);
         checkNotFoundForEndpoint(HttpMethod.GET, zoneUrl + "/logout.do");
     }
 
     @MethodSource("data")
     @ParameterizedTest(name = "{index}: zoneUrl[{0}];")
     void identityProvidersEndpoints(String zoneUrl) {
-        initIdentityZoneNotAvailableIT(zoneUrl);
         checkNotFoundForEndpoint(HttpMethod.POST, zoneUrl + "/identity-providers");
         checkNotFoundForEndpoint(HttpMethod.GET, zoneUrl + "/identity-providers");
         checkNotFoundForEndpoint(HttpMethod.GET, zoneUrl + "/identity-providers/id");
@@ -96,7 +86,6 @@ public class IdentityZoneNotAvailableIT {
     @MethodSource("data")
     @ParameterizedTest(name = "{index}: zoneUrl[{0}];")
     void usersEndpoints(String zoneUrl) {
-        initIdentityZoneNotAvailableIT(zoneUrl);
         checkNotFoundForEndpoint(HttpMethod.GET, zoneUrl + "/Users/id");
         checkNotFoundForEndpoint(HttpMethod.GET, zoneUrl + "/Users");
         checkNotFoundForEndpoint(HttpMethod.POST, zoneUrl + "/Users");
@@ -115,7 +104,6 @@ public class IdentityZoneNotAvailableIT {
     @MethodSource("data")
     @ParameterizedTest(name = "{index}: zoneUrl[{0}];")
     void groupsEndpoints(String zoneUrl) {
-        initIdentityZoneNotAvailableIT(zoneUrl);
         checkNotFoundForEndpoint(HttpMethod.GET, zoneUrl + "/Groups/id");
         checkNotFoundForEndpoint(HttpMethod.GET, zoneUrl + "/Groups");
         checkNotFoundForEndpoint(HttpMethod.POST, zoneUrl + "/Groups");
@@ -134,7 +122,6 @@ public class IdentityZoneNotAvailableIT {
     @MethodSource("data")
     @ParameterizedTest(name = "{index}: zoneUrl[{0}];")
     void clientsEndpoints(String zoneUrl) {
-        initIdentityZoneNotAvailableIT(zoneUrl);
         checkNotFoundForEndpoint(HttpMethod.GET, zoneUrl + "/oauth/clients/id");
         checkNotFoundForEndpoint(HttpMethod.GET, zoneUrl + "/oauth/clients");
         checkNotFoundForEndpoint(HttpMethod.POST, zoneUrl + "/oauth/clients");
@@ -154,7 +141,6 @@ public class IdentityZoneNotAvailableIT {
     @MethodSource("data")
     @ParameterizedTest(name = "{index}: zoneUrl[{0}];")
     void serverInformationEndpoints(String zoneUrl) {
-        initIdentityZoneNotAvailableIT(zoneUrl);
         checkNotFoundForEndpoint(HttpMethod.GET, zoneUrl + "/info");
         checkNotFoundForEndpoint(HttpMethod.GET, zoneUrl + "/passcode");
         checkNotFoundForEndpoint(HttpMethod.POST, zoneUrl + "/autologin");
@@ -164,14 +150,12 @@ public class IdentityZoneNotAvailableIT {
     @MethodSource("data")
     @ParameterizedTest(name = "{index}: zoneUrl[{0}];")
     void externalLoginServerEndpoints(String zoneUrl) {
-        initIdentityZoneNotAvailableIT(zoneUrl);
         checkNotFoundForEndpoint(HttpMethod.POST, zoneUrl + "/password_resets");
     }
 
     @MethodSource("data")
     @ParameterizedTest(name = "{index}: zoneUrl[{0}];")
     void staticContentFound(String zoneUrl) {
-        initIdentityZoneNotAvailableIT(zoneUrl);
         HttpMethod method = HttpMethod.GET;
         String endpoint = zoneUrl + "/resources/oss/stylesheets/application.css";
 

@@ -14,7 +14,6 @@
 package org.cloudfoundry.identity.uaa.integration.feature;
 
 import org.apache.http.impl.client.BasicCookieStore;
-import org.apache.http.impl.cookie.BasicClientCookie;
 import org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils;
 import org.cloudfoundry.identity.uaa.test.UaaTestAccounts;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneHolder;
@@ -230,7 +229,7 @@ class AutologinIT {
                 new HttpEntity<>(null, getHeaders(cookieStore)),
                 String.class);
 
-        setCookiesFromResponse(cookieStore, loginResponse);
+        IntegrationTestUtils.extractCookies(loginResponse, cookieStore);
         String csrf = IntegrationTestUtils.extractCookieCsrf(loginResponse.getBody());
         requestBody.add(DEFAULT_CSRF_COOKIE_NAME, csrf);
 
@@ -247,14 +246,14 @@ class AutologinIT {
         }
         assertThat(cookies).anySatisfy(s -> assertThat(s).startsWith("Current-User"));
         cookieStore.clear();
-        setCookiesFromResponse(cookieStore, loginResponse);
+        IntegrationTestUtils.extractCookies(loginResponse, cookieStore);
         headers.add(HttpHeaders.ACCEPT, MediaType.TEXT_HTML_VALUE);
         ResponseEntity<String> profilePage =
                 restOperations.exchange(baseUrl + "/profile",
                         HttpMethod.GET,
                         new HttpEntity<>(null, getHeaders(cookieStore)), String.class);
 
-        setCookiesFromResponse(cookieStore, profilePage);
+        IntegrationTestUtils.extractCookies(profilePage, cookieStore);
         String revokeApprovalsUrl = UriComponentsBuilder.fromHttpUrl(baseUrl)
                 .path("/profile")
                 .build().toUriString();
@@ -267,15 +266,6 @@ class AutologinIT {
                 new HttpEntity<>(requestBody, getHeaders(cookieStore)),
                 Void.class);
         assertThat(revokeResponse.getStatusCode()).isEqualTo(HttpStatus.FOUND);
-    }
-
-    private void setCookiesFromResponse(BasicCookieStore cookieStore, ResponseEntity<String> loginResponse) {
-        if (loginResponse.getHeaders().containsKey("Set-Cookie")) {
-            for (String cookie : loginResponse.getHeaders().get("Set-Cookie")) {
-                int nameLength = cookie.indexOf('=');
-                cookieStore.addCookie(new BasicClientCookie(cookie.substring(0, nameLength), cookie.substring(nameLength + 1)));
-            }
-        }
     }
 
     @Test

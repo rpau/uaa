@@ -121,7 +121,7 @@ class OauthIdentityProviderDefinitionFactoryBeanTest {
     @Test
     void jwtClientAuthenticationTrue() {
         Map<String, Map> definitions = new HashMap<>();
-        idpDefinitionMap.put("jwtclientAuthentication", Boolean.valueOf(true));
+        idpDefinitionMap.put("jwtclientAuthentication", Boolean.TRUE);
         idpDefinitionMap.put("type", OriginKeys.OIDC10);
         definitions.put("test", idpDefinitionMap);
         factoryBean = new OauthIDPWrapperFactoryBean(definitions);
@@ -144,7 +144,7 @@ class OauthIdentityProviderDefinitionFactoryBeanTest {
     @Test
     void jwtClientAuthenticationInvalidType() {
         Map<String, Map> definitions = new HashMap<>();
-        idpDefinitionMap.put("jwtclientAuthentication", Integer.valueOf(1));
+        idpDefinitionMap.put("jwtclientAuthentication", 1);
         idpDefinitionMap.put("type", OriginKeys.OIDC10);
         definitions.put("test", idpDefinitionMap);
         factoryBean = new OauthIDPWrapperFactoryBean(definitions);
@@ -165,8 +165,8 @@ class OauthIdentityProviderDefinitionFactoryBeanTest {
         factoryBean.setCommonProperties(idpDefinitionMap, providerDefinition);
         assertThat(factoryBean.getProviders().get(0).getProvider().getConfig()).isInstanceOf(OIDCIdentityProviderDefinition.class);
         assertThat(((OIDCIdentityProviderDefinition) factoryBean.getProviders().get(0).getProvider().getConfig()).getJwtClientAuthentication()).isNotNull();
-        assertThat((((Map<String, String>) ((OIDCIdentityProviderDefinition) factoryBean.getProviders().get(0).getProvider().getConfig()).getJwtClientAuthentication()).get("iss")))
-                .isEqualTo("issuer");
+        assertThat((Map<String, String>) ((OIDCIdentityProviderDefinition) factoryBean.getProviders().get(0).getProvider().getConfig()).getJwtClientAuthentication())
+                .containsEntry("iss", "issuer");
     }
 
     @Test

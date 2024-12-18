@@ -77,11 +77,11 @@ class AbstractUaaEventTest {
         when(authentication.getDetails()).thenReturn(Map.of("misc", "somedetails", "remoteAddress", "external"));
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String originString = event.getOrigin(authentication);
-        assertThat(originString).contains("marissa");
-        assertThat(originString).contains("client=null");
-        assertThat(originString).contains("misc=somedetails");
-        assertThat(originString).contains("remoteAddress=external");
-        assertThat(originString).contains("details=({");
+        assertThat(originString).contains("marissa")
+                .contains("client=null")
+                .contains("misc=somedetails")
+                .contains("remoteAddress=external")
+                .contains("details=({");
     }
 
     @Test
@@ -98,37 +98,36 @@ class AbstractUaaEventTest {
         when(authentication.getDetails()).thenReturn("{\"misc\":\"somedetails\",\"remoteAddress\":\"external\"}");
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String originString = event.getOrigin(authentication);
-        assertThat(originString).contains("marissa");
-        assertThat(originString).contains("client=null");
-        assertThat(originString).doesNotContain("misc=somedetails");
-        assertThat(originString).contains("remoteAddress=external");
-        assertThat(originString).doesNotContain("{");
+        assertThat(originString).contains("marissa")
+                .contains("client=null")
+                .doesNotContain("misc=somedetails")
+                .contains("remoteAddress=external")
+                .doesNotContain("{");
     }
 
     @Test
     void getAuthenticationJsonWebTokenValue() {
         String originTokenString = event.getOrigin(mockAuthenticationWithToken("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJtYXJpc3NhIiwiaXNzIjoidWFhIn0.omitted"));
-        assertThat(originTokenString).contains("client=clientid");
-        assertThat(originTokenString).contains("iss=uaa");
-        assertThat(originTokenString).contains("sub=marissa");
+        assertThat(originTokenString).contains("client=clientid")
+                .contains("iss=uaa")
+                .contains("sub=marissa");
     }
 
     @Test
     void getAuthenticationOpaqueTokenValue() {
         String originTokenString = event.getOrigin(mockAuthenticationWithToken("any-value"));
-        assertThat(originTokenString).contains("client=clientid");
-        assertThat(originTokenString).contains("opaque-token=present");
-        assertThat(originTokenString).doesNotContain("any-value");
+        assertThat(originTokenString).contains("client=clientid")
+                .contains("opaque-token=present")
+                .doesNotContain("any-value");
     }
-
 
     @Test
     void getAuthenticationTokenValueInvalid() {
         String originTokenString = event.getOrigin(mockAuthenticationWithToken("fake.token.value"));
-        assertThat(originTokenString).contains("client=clientid");
-        assertThat(originTokenString).contains("<token extraction failed>");
-        assertThat(originTokenString).doesNotContain("fake");
-        assertThat(originTokenString).doesNotContain("value");
+        assertThat(originTokenString).contains("client=clientid")
+                .contains("<token extraction failed>")
+                .doesNotContain("fake")
+                .doesNotContain("value");
     }
 
     private Authentication mockAuthenticationWithToken(String token) {

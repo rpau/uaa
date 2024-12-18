@@ -38,7 +38,6 @@ class QueryFilterTests {
         MetricsAccessor.clear();
     }
 
-
     @Test
     void reportUnsuccessfulQuery() {
         long start = System.currentTimeMillis();

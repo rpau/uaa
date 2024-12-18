@@ -48,7 +48,7 @@ class IdentityZoneManagerImplTest {
 
         @Test
         void isCurrentZoneUaa() {
-            assertThat(identityZoneManager.isCurrentZoneUaa()).isEqualTo(true);
+            assertThat(identityZoneManager.isCurrentZoneUaa()).isTrue();
         }
     }
 
@@ -61,7 +61,7 @@ class IdentityZoneManagerImplTest {
 
         @Test
         void isCurrentZoneUaa() {
-            assertThat(identityZoneManager.isCurrentZoneUaa()).isEqualTo(false);
+            assertThat(identityZoneManager.isCurrentZoneUaa()).isFalse();
         }
     }
 }

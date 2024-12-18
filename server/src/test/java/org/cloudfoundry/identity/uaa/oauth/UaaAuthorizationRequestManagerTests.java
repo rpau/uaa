@@ -185,7 +185,6 @@ class UaaAuthorizationRequestManagerTests {
         assertThat(factory.createAuthorizationRequest(parameters)).isNotNull();
     }
 
-
     @Test
     void scopeIncludesAuthoritiesForUser() {
         client.setScope(StringUtils.commaDelimitedListToSet("one,two,foo.bar"));

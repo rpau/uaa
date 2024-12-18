@@ -273,7 +273,6 @@ public final class TestCredentialObjects {
         return keyWithCert2.getCertificate();
     }
 
-
     /**
      * @return a PrivateKey for testing
      */

@@ -41,8 +41,6 @@ import static org.cloudfoundry.identity.uaa.oauth.jwk.JsonWebKey.KeyType.MAC;
 import static org.mockito.Mockito.mock;
 
 class ChainedSignatureVerifierTests {
-    private Signer signer;
-
     private Jwt signedValidContent;
 
     private JsonWebKey validKey;
@@ -72,8 +70,6 @@ class ChainedSignatureVerifierTests {
                 uXKjM9wbsnebwQIgeZIbVovUp74zaQ44xT3EhVwC7ebxXnv3qAkIBMk526sCIDVg
                 z1jr3KEcaq9zjNJd9sKBkqpkVSqj8Mv+Amq+YjBA
                 -----END RSA PRIVATE KEY-----""";
-
-        Signer invalidSigner = new CommonSigner("invalid", invalidRsaSigningKey, "http://localhost/uaa");
 
         String content = "{\"sub\": \"" + new RandomValueStringGenerator(1024 * 4).generate() + "\"}";
         KeyInfo keyInfo = KeyInfoBuilder.build("valid", rsaSigningKey, "http://localhost/uaa");
@@ -124,13 +120,11 @@ class ChainedSignatureVerifierTests {
         p.put("value", "test-mac-key");
         JsonWebKey macKey = new JsonWebKey(p);
         verifier = new ChainedSignatureVerifier(new JsonWebKeySet<>(Arrays.asList(validKey, invalidKey, macKey)));
-        List<SignatureVerifier> delegates = new ArrayList((List<SignatureVerifier>) ReflectionTestUtils.getField(verifier, verifier.getClass(), "delegates"));
-        assertThat(delegates)
-                .isNotNull()
-                .hasSize(3);
+        List<SignatureVerifier> delegates = new ArrayList<>((List<SignatureVerifier>) ReflectionTestUtils.getField(verifier, verifier.getClass(), "delegates"));
+        assertThat(delegates).hasSize(3);
         int pos = 0;
         for (SignatureVerifier v : delegates) {
-            assertThat(v instanceof SignatureVerifier).as("Checking " + (pos++)).isTrue();
+            assertThat(v).as("Checking " + (pos++)).isInstanceOf(SignatureVerifier.class);
         }
     }
 
@@ -148,13 +142,11 @@ class ChainedSignatureVerifierTests {
         q.put("k", "octkeyvalue");
         JsonWebKeySet keySet = JsonUtils.convertValue(singletonMap("keys", Arrays.asList(validKey, p, q)), JsonWebKeySet.class);
         verifier = new ChainedSignatureVerifier(keySet);
-        List<SignatureVerifier> delegates = new ArrayList((List<SignatureVerifier>) ReflectionTestUtils.getField(verifier, verifier.getClass(), "delegates"));
-        assertThat(delegates)
-                .isNotNull()
-                .hasSize(1);
+        List<SignatureVerifier> delegates = new ArrayList<>((List<SignatureVerifier>) ReflectionTestUtils.getField(verifier, verifier.getClass(), "delegates"));
+        assertThat(delegates).hasSize(1);
         int pos = 0;
         for (SignatureVerifier v : delegates) {
-            assertThat(v instanceof SignatureVerifier).as("Checking " + (pos++)).isTrue();
+            assertThat(v).as("Checking " + (pos++)).isInstanceOf(SignatureVerifier.class);
         }
     }
 
@@ -184,10 +176,8 @@ class ChainedSignatureVerifierTests {
         q.put("k", "octkeyvalue");
         JsonWebKeySet keySet = JsonUtils.convertValue(singletonMap("keys", Arrays.asList(q)), JsonWebKeySet.class);
         verifier = new ChainedSignatureVerifier(keySet);
-        List<SignatureVerifier> delegates = new ArrayList((List<SignatureVerifier>) ReflectionTestUtils.getField(verifier, verifier.getClass(), "delegates"));
-        assertThat(delegates)
-                .isNotNull()
-                .hasSize(1);
+        List<SignatureVerifier> delegates = new ArrayList<>((List<SignatureVerifier>) ReflectionTestUtils.getField(verifier, verifier.getClass(), "delegates"));
+        assertThat(delegates).hasSize(1);
         assertThat(delegates.get(0).algorithm()).isEqualTo("HS256");
     }
 
@@ -201,10 +191,8 @@ class ChainedSignatureVerifierTests {
         q.put("y", "SLW_xSffzlPWrHEVI30DHM_4egVwt3NQqeUD7nMFpps");
         JsonWebKeySet keySet = JsonUtils.convertValue(singletonMap("keys", Arrays.asList(q)), JsonWebKeySet.class);
         verifier = new ChainedSignatureVerifier(keySet);
-        List<SignatureVerifier> delegates = new ArrayList((List<SignatureVerifier>) ReflectionTestUtils.getField(verifier, verifier.getClass(), "delegates"));
-        assertThat(delegates)
-                .isNotNull()
-                .hasSize(1);
+        List<SignatureVerifier> delegates = new ArrayList<>((List<SignatureVerifier>) ReflectionTestUtils.getField(verifier, verifier.getClass(), "delegates"));
+        assertThat(delegates).hasSize(1);
         assertThat(delegates.get(0)).isNotNull();
         assertThat(delegates.get(0).algorithm()).isEqualTo("ES256");
     }
@@ -218,10 +206,8 @@ class ChainedSignatureVerifierTests {
 
         verifier = new ChainedSignatureVerifier(new JsonWebKeySet<>(Arrays.asList(validKey, jsonWebKey)));
         JwtHelper.decode(signedValidContent.getEncoded()).verifySignature(verifier);
-        List<SignatureVerifier> delegates = new ArrayList((List<SignatureVerifier>) ReflectionTestUtils.getField(verifier, verifier.getClass(), "delegates"));
-        assertThat(delegates)
-                .isNotNull()
-                .hasSize(2);
+        List<SignatureVerifier> delegates = new ArrayList<>((List<SignatureVerifier>) ReflectionTestUtils.getField(verifier, verifier.getClass(), "delegates"));
+        assertThat(delegates).hasSize(2);
         assertThat(delegates.get(1).algorithm()).isEqualTo("HS256");
 
         //ensure the second signer never gets invoked upon success
@@ -232,5 +218,4 @@ class ChainedSignatureVerifierTests {
         JwtHelper.decode(signedValidContent.getEncoded()).verifySignature(verifier);
         Mockito.verifyNoInteractions(macSigner);
     }
-
 }

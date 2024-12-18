@@ -55,7 +55,7 @@ import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpMethod.POST;
 
 @SpringJUnitConfig(classes = DefaultIntegrationTestConfig.class)
-public class LoginIT {
+class LoginIT {
 
     private static final String USER_PASSWORD = "sec3Tas";
 
@@ -105,11 +105,7 @@ public class LoginIT {
                 new HttpEntity<>(null, headers),
                 String.class);
 
-        if (loginResponse.getHeaders().containsKey("Set-Cookie")) {
-            for (String cookie : loginResponse.getHeaders().get("Set-Cookie")) {
-                headers.add("Cookie", cookie);
-            }
-        }
+        IntegrationTestUtils.copyCookies(loginResponse, headers);
         String csrf = IntegrationTestUtils.extractCookieCsrf(loginResponse.getBody());
         requestBody.add(CookieBasedCsrfTokenRepository.DEFAULT_CSRF_COOKIE_NAME, csrf);
 
@@ -287,8 +283,8 @@ public class LoginIT {
 
             @Override
             public void handleError(ClientHttpResponse response) {
+                // pass through
             }
-
         });
         LinkedMultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("username", testAccounts.getUserName());
@@ -323,11 +319,7 @@ public class LoginIT {
                 new HttpEntity<>(null, headers),
                 String.class);
 
-        if (loginResponse.getHeaders().containsKey("Set-Cookie")) {
-            for (String cookie : loginResponse.getHeaders().get("Set-Cookie")) {
-                headers.add("Cookie", cookie);
-            }
-        }
+        IntegrationTestUtils.copyCookies(loginResponse, headers);
         String csrf = IntegrationTestUtils.extractCookieCsrf(loginResponse.getBody());
         LinkedMultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("username", testAccounts.getUserName());
@@ -407,8 +399,8 @@ public class LoginIT {
         webDriver.get(zoneUrl + "/logout.do");
 
         webDriver.get(zoneUrl);
-        assertThat(webDriver.findElement(By.className("email-address")).getText()).startsWith(userEmail);
-        assertThat(webDriver.findElement(By.className("email-address")).getText()).contains(OriginKeys.UAA);
+        assertThat(webDriver.findElement(By.className("email-address")).getText()).startsWith(userEmail)
+                .contains(OriginKeys.UAA);
         webDriver.findElement(By.className("email-address")).click();
 
         assertThat(webDriver.findElement(By.id("username")).getAttribute("value")).isEqualTo(userEmail);
@@ -462,7 +454,6 @@ public class LoginIT {
 
         assertThat(webDriver.getCurrentUrl()).contains("/login");
         assertThat(webDriver.findElement(By.name("form_redirect_uri")).getAttribute("value")).contains("redirect_uri=" + redirectUri);
-
     }
 
     private String createAnotherUser() {

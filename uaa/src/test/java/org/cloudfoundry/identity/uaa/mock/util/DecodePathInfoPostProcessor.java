@@ -24,7 +24,6 @@ public class DecodePathInfoPostProcessor  implements RequestPostProcessor {
         return request;
     }
 
-
     /**
      * Performs URL decoding on the provided source using the encoding from the request.
      *

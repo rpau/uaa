@@ -25,13 +25,12 @@ class OAuth2AuthenticationDetailsTests {
         OAuth2AuthenticationDetails holder = new OAuth2AuthenticationDetails(request);
         OAuth2AuthenticationDetails other = (OAuth2AuthenticationDetails) SerializationUtils.deserialize(SerializationUtils
                 .serialize(holder));
-        assertThat(other).isEqualTo(holder);
-        assertThat(other.hashCode()).isEqualTo(holder.hashCode());
-        assertThat(other.toString()).isEqualTo(holder.toString());
+        assertThat(other).isEqualTo(holder)
+                .hasSameHashCodeAs(holder)
+                .hasToString(holder.toString());
         assertThat(other.getSessionId()).isEqualTo(holder.getSessionId());
         assertThat(other.getRemoteAddress()).isEqualTo(holder.getRemoteAddress());
         assertThat(other.getTokenType()).isEqualTo(holder.getTokenType());
         assertThat(other.getTokenValue()).isEqualTo(holder.getTokenValue());
     }
-
 }

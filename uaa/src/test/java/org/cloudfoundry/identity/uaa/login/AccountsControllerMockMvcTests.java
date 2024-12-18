@@ -89,7 +89,6 @@ class AccountsControllerMockMvcTests {
         emailService.setMailSender(fakeJavaMailSender);
 
         userEmail = "user" + new AlphanumericRandomValueStringGenerator().generate() + "@example.com";
-        assertThat(webApplicationContext.getBean("messageService")).isNotNull();
         IdentityZoneHolder.setProvisioning(webApplicationContext.getBean(IdentityZoneProvisioning.class));
 
         mockMvcTestClient = new MockMvcTestClient(mockMvc);
@@ -568,9 +567,7 @@ class AccountsControllerMockMvcTests {
         PredictableGenerator generator = new PredictableGenerator();
         JdbcExpiringCodeStore store = webApplicationContext.getBean(JdbcExpiringCodeStore.class);
         store.setGenerator(generator);
-
         UaaClientDetails clientDetails = createTestClient();
-
 
         mockMvc.perform(post("/create_account.do")
                         .with(cookieCsrf())

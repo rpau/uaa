@@ -16,7 +16,6 @@ package org.cloudfoundry.identity.uaa.integration;
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.cookie.BasicClientCookie;
 import org.cloudfoundry.identity.uaa.ServerRunningExtension;
 import org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils;
 import org.cloudfoundry.identity.uaa.oauth.client.OAuth2RestTemplate;
@@ -30,7 +29,6 @@ import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerato
 import org.cloudfoundry.identity.uaa.oauth.jwt.Jwt;
 import org.cloudfoundry.identity.uaa.oauth.jwt.JwtHelper;
 import org.cloudfoundry.identity.uaa.scim.ScimUser;
-import org.cloudfoundry.identity.uaa.security.web.CookieBasedCsrfTokenRepository;
 import org.cloudfoundry.identity.uaa.test.TestAccountExtension;
 import org.cloudfoundry.identity.uaa.test.UaaTestAccounts;
 import org.junit.jupiter.api.BeforeEach;
@@ -76,10 +74,10 @@ class OpenIdTokenAuthorizationWithApprovalIntegrationTests {
     private static final UaaTestAccounts testAccounts = UaaTestAccounts.standard(serverRunning);
 
     @RegisterExtension
-    private static final TestAccountExtension testAccountSetup = TestAccountExtension.standard(serverRunning, testAccounts);
+    private static final TestAccountExtension testAccountExtension = TestAccountExtension.standard(serverRunning, testAccounts);
 
     @RegisterExtension
-    private static final OAuth2ContextExtension context = OAuth2ContextExtension.withTestAccounts(serverRunning, testAccountSetup);
+    private static final OAuth2ContextExtension context = OAuth2ContextExtension.withTestAccounts(serverRunning, testAccountExtension);
 
     private RestTemplate client;
 
@@ -103,6 +101,7 @@ class OpenIdTokenAuthorizationWithApprovalIntegrationTests {
 
             @Override
             public void handleError(ClientHttpResponse response) {
+                // pass through
             }
         });
 
@@ -116,6 +115,7 @@ class OpenIdTokenAuthorizationWithApprovalIntegrationTests {
 
             @Override
             public void handleError(ClientHttpResponse response) {
+                // pas through
             }
         });
         user = createUser(new RandomValueStringGenerator().generate(), "openiduser", "openidlast", "test@openid,com", true).getBody();
@@ -137,7 +137,6 @@ class OpenIdTokenAuthorizationWithApprovalIntegrationTests {
         postBody.add("user_id", user.getId());
         postBody.add("add_new", "false");
 
-
         ResponseEntity<Map> responseEntity = loginClient.exchange(serverRunning.getBaseUrl() + "/oauth/token",
                 HttpMethod.POST,
                 new HttpEntity<>(postBody, headers),
@@ -147,8 +146,8 @@ class OpenIdTokenAuthorizationWithApprovalIntegrationTests {
 
         Map<String, Object> params = responseEntity.getBody();
 
-        assertThat(params.get("jti")).isNotNull();
-        assertThat(params).containsEntry("token_type", "bearer");
+        assertThat(params).containsKey("jti")
+                .containsEntry("token_type", "bearer");
         assertThat((Integer) params.get("expires_in")).isGreaterThan(40000);
 
         String[] scopes = UriUtils.decode((String) params.get("scope"), "UTF-8").split(" ");
@@ -237,9 +236,7 @@ class OpenIdTokenAuthorizationWithApprovalIntegrationTests {
     }
 
     private String doOpenIdHybridFlowIdTokenAndReturnCode(Set<String> responseTypes, String responseTypeMatcher) {
-
         BasicCookieStore cookies = new BasicCookieStore();
-
         AuthorizationCodeResourceDetails resource = testAccounts.getDefaultAuthorizationCodeResource();
 
         StringBuilder responseType = new StringBuilder();
@@ -270,21 +267,12 @@ class OpenIdTokenAuthorizationWithApprovalIntegrationTests {
 
         assertThat(result.getStatusCode()).isEqualTo(HttpStatus.FOUND);
         String location = UriUtils.decode(result.getHeaders().getLocation().toString(), "UTF-8");
+        IntegrationTestUtils.extractCookies(result, cookies);
 
-        if (result.getHeaders().containsKey("Set-Cookie")) {
-            for (String cookie : result.getHeaders().get("Set-Cookie")) {
-                int nameLength = cookie.indexOf('=');
-                cookies.addCookie(new BasicClientCookie(cookie.substring(0, nameLength), cookie.substring(nameLength + 1)));
-            }
-        }
 
         ResponseEntity<String> response = serverRunning.getForString(location, getHeaders(cookies));
-        if (response.getHeaders().containsKey("Set-Cookie")) {
-            for (String cookie : response.getHeaders().get("Set-Cookie")) {
-                int nameLength = cookie.indexOf('=');
-                cookies.addCookie(new BasicClientCookie(cookie.substring(0, nameLength), cookie.substring(nameLength + 1)));
-            }
-        }
+        IntegrationTestUtils.extractCookies(response, cookies);
+
         // should be directed to the login screen...
         assertThat(response.getBody()).contains("/login.do")
                 .contains("username")
@@ -300,25 +288,15 @@ class OpenIdTokenAuthorizationWithApprovalIntegrationTests {
         assertThat(result.getStatusCode()).isEqualTo(HttpStatus.FOUND);
 
         cookies.clear();
-        if (result.getHeaders().containsKey("Set-Cookie")) {
-            for (String cookie : result.getHeaders().get("Set-Cookie")) {
-                int nameLength = cookie.indexOf('=');
-                cookies.addCookie(new BasicClientCookie(cookie.substring(0, nameLength), cookie.substring(nameLength + 1)));
-            }
-        }
+        IntegrationTestUtils.extractCookies(result, cookies);
 
         location = UriUtils.decode(result.getHeaders().getLocation().toString(), "UTF-8");
-        //response = serverRunning.getForString(location, headers);
         response = restTemplate.exchange(location,
                 HttpMethod.GET,
                 new HttpEntity<>(null, getHeaders(cookies)),
                 String.class);
-        if (response.getHeaders().containsKey("Set-Cookie")) {
-            for (String cookie : response.getHeaders().get("Set-Cookie")) {
-                int nameLength = cookie.indexOf('=');
-                cookies.addCookie(new BasicClientCookie(cookie.substring(0, nameLength), cookie.substring(nameLength + 1)));
-            }
-        }
+        IntegrationTestUtils.extractCookies(response, cookies);
+
         if (response.getStatusCode() == HttpStatus.OK) {
             // The grant access page should be returned
             assertThat(response.getBody()).contains("Application Authorization</h1>");
@@ -334,7 +312,7 @@ class OpenIdTokenAuthorizationWithApprovalIntegrationTests {
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FOUND);
             location = UriUtils.decode(response.getHeaders().getLocation().toString(), "UTF-8");
         }
-        assertThat(location.matches(resource.getPreEstablishedRedirectUri() + responseTypeMatcher)).as("Wrong location: " + location).isTrue();
+        assertThat(location).as("Wrong location: " + location).matches(resource.getPreEstablishedRedirectUri() + responseTypeMatcher);
 
         String code = location.split("code=")[1].split("&")[0];
         exchangeCodeForToken(clientId, redirectUri, clientSecret, code, formData);
@@ -379,9 +357,7 @@ class OpenIdTokenAuthorizationWithApprovalIntegrationTests {
 
         assertThat(result.getStatusCode()).isEqualTo(HttpStatus.FOUND);
         String location = UriUtils.decode(result.getHeaders().getLocation().toString(), "UTF-8");
-        assertThat(location.matches(resource.getPreEstablishedRedirectUri() + responseTypeMatcher)).as("Wrong location: " + location).isTrue();
-
-
+        assertThat(location).as("Wrong location: " + location).matches(resource.getPreEstablishedRedirectUri() + responseTypeMatcher);
     }
 
     private void exchangeCodeForToken(String clientId, String redirectUri, String clientSecret, String value, MultiValueMap<String, String> formData) {
@@ -399,8 +375,8 @@ class OpenIdTokenAuthorizationWithApprovalIntegrationTests {
         @SuppressWarnings("unchecked")
         Map<String, String> body = tokenResponse.getBody();
         Jwt token = JwtHelper.decode(body.get("access_token"));
-        assertThat(token.getClaims().contains("\"aud\"")).as("Wrong claims: " + token.getClaims()).isTrue();
-        assertThat(token.getClaims().contains("\"user_id\"")).as("Wrong claims: " + token.getClaims()).isTrue();
+        assertThat(token.getClaims()).as("Wrong claims: " + token.getClaims()).contains("\"aud\"")
+                .as("Wrong claims: " + token.getClaims()).contains("\"user_id\"");
     }
 
     private ResponseEntity<ScimUser> createUser(String username, String firstName, String lastName,
@@ -441,5 +417,4 @@ class OpenIdTokenAuthorizationWithApprovalIntegrationTests {
                     .build();
         }
     }
-
 }

@@ -8,18 +8,18 @@ import org.cloudfoundry.identity.uaa.zone.MultitenancyFixture;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.http.HttpMethod.POST;
 import static org.springframework.http.HttpMethod.PUT;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.jsonPath;
@@ -32,18 +32,14 @@ class NotificationsServiceTest {
 
     private RestTemplate notificationsTemplate;
     private MockRestServiceServer mockNotificationsServer;
-    private RestTemplate uaaTemplate;
     private Map<MessageType, HashMap<String, Object>> notifications;
     private NotificationsService notificationsService;
-    private Map<String, Object> response;
 
     @BeforeEach
     void setUp() {
         notificationsTemplate = new RestTemplate();
         mockNotificationsServer = MockRestServiceServer.createServer(notificationsTemplate);
-
-        uaaTemplate = Mockito.mock(RestTemplate.class);
-        notifications = new HashMap<>();
+        notifications = new EnumMap<>(MessageType.class);
         HashMap<String, Object> passwordResetNotification = new HashMap<>();
 
         passwordResetNotification.put("id", "kind-id-01");
@@ -59,7 +55,7 @@ class NotificationsServiceTest {
             }
         };
 
-        response = new HashMap<>();
+        Map<String, Object> response = new HashMap<>();
         List<Map<String, String>> resources = new ArrayList<>();
         Map<String, String> userDetails = new HashMap<>();
         userDetails.put("id", "user-id-01");
@@ -82,7 +78,6 @@ class NotificationsServiceTest {
 
     @Test
     void sendingMessageToEmailAddress() {
-
         mockNotificationsServer.expect(requestTo("http://notifications.example.com/emails"))
                 .andExpect(method(POST))
                 .andExpect(jsonPath("$.kind_id").value("kind-id-01"))
@@ -90,9 +85,7 @@ class NotificationsServiceTest {
                 .andExpect(jsonPath("$.subject").value("First message"))
                 .andExpect(jsonPath("$.html").value("<p>Message</p>"))
                 .andRespond(withSuccess());
-
         notificationsService.sendMessage("user@example.com", MessageType.PASSWORD_RESET, "First message", "<p>Message</p>");
-
         mockNotificationsServer.verify();
     }
 
@@ -125,11 +118,8 @@ class NotificationsServiceTest {
                 .andExpect(jsonPath("$.subject").value("First message"))
                 .andExpect(jsonPath("$.html").value("<p>Message</p>"))
                 .andRespond(withBadRequest());
-        try {
-            notificationsService.sendMessage("user@example.com", MessageType.PASSWORD_RESET, "First message", "<p>Message</p>");
-            fail("");
-        } catch (HttpClientErrorException ignored) {
-        }
+        assertThatThrownBy(() -> notificationsService.sendMessage("user@example.com", MessageType.PASSWORD_RESET, "First message", "<p>Message</p>"))
+                .isInstanceOf(HttpClientErrorException.class);
 
         mockNotificationsServer.verify();
         assertThat(IdentityZoneHolder.get()).isSameAs(zone);

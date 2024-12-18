@@ -49,7 +49,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Luke Taylor
  */
 @OAuth2ContextConfiguration(OAuth2ContextConfiguration.Implicit.class)
-public class CfUserIdTranslationEndpointIntegrationTests {
+class CfUserIdTranslationEndpointIntegrationTests {
 
     private final String JOE = "joe" + new RandomValueStringGenerator().generate().toLowerCase();
 
@@ -61,10 +61,10 @@ public class CfUserIdTranslationEndpointIntegrationTests {
     private static final UaaTestAccounts testAccounts = UaaTestAccounts.standard(serverRunning);
 
     @RegisterExtension
-    private static final TestAccountExtension testAccountSetup = TestAccountExtension.standard(serverRunning, testAccounts);
+    private static final TestAccountExtension testAccountExtension = TestAccountExtension.standard(serverRunning, testAccounts);
 
     @RegisterExtension
-    private static final OAuth2ContextExtension context = OAuth2ContextExtension.withTestAccounts(serverRunning, testAccountSetup);
+    private static final OAuth2ContextExtension context = OAuth2ContextExtension.withTestAccounts(serverRunning, testAccountExtension);
 
     @BeforeOAuth2Context
     @OAuth2ContextConfiguration(OAuth2ContextConfiguration.ClientCredentials.class)
@@ -113,6 +113,7 @@ public class CfUserIdTranslationEndpointIntegrationTests {
 
             @Override
             public void handleError(ClientHttpResponse response) {
+                // pass through
             }
         });
     }
@@ -136,7 +137,7 @@ public class CfUserIdTranslationEndpointIntegrationTests {
         @SuppressWarnings("unchecked")
         Map<String, Object> results = response.getBody();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(results.get("error")).as("There should be an error").isNotNull();
+        assertThat(results).as("There should be an error").containsKey("error");
     }
 
     @Test
@@ -146,7 +147,7 @@ public class CfUserIdTranslationEndpointIntegrationTests {
         @SuppressWarnings("unchecked")
         Map<String, Object> results = response.getBody();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(results.get("error")).as("There should be an error").isNotNull();
+        assertThat(results).as("There should be an error").containsKey("error");
     }
 
     @Test
@@ -157,6 +158,6 @@ public class CfUserIdTranslationEndpointIntegrationTests {
         @SuppressWarnings("unchecked")
         Map<String, Object> results = response.getBody();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(results.get("error")).as("There should be an error").isNotNull();
+        assertThat(results).as("There should be an error").containsKey("error");
     }
 }

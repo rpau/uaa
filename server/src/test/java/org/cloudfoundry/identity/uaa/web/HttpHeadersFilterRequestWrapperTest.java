@@ -16,22 +16,20 @@
 package org.cloudfoundry.identity.uaa.web;
 
 import org.cloudfoundry.identity.uaa.util.EmptyEnumerationOfString;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class HttpHeadersFilterRequestWrapperTest {
+class HttpHeadersFilterRequestWrapperTest {
 
-    public static List<String> BAD_HEADERS = Arrays.asList("X-Forwarded-For", "X-Forwarded-Host", "X-Forwarded-Proto", "X-Forwarded-Prefix", "Forwarded");
+    private static final List<String> BAD_HEADERS = List.of("X-Forwarded-For", "X-Forwarded-Host", "X-Forwarded-Proto", "X-Forwarded-Prefix", "Forwarded");
 
     MockHttpServletRequest mock;
     private HttpHeadersFilterRequestWrapper request;
@@ -46,10 +44,6 @@ public class HttpHeadersFilterRequestWrapperTest {
         mock.addHeader("Forwarded", "for=proxy-ip;host=proxy-host;for=my-proxy;by=somebody-else");
         mock.addHeader("Other-header", "other-value");
         request = new HttpHeadersFilterRequestWrapper(BAD_HEADERS, mock);
-    }
-
-    @AfterEach
-    void tearDown() {
     }
 
     @Test
@@ -116,10 +110,4 @@ public class HttpHeadersFilterRequestWrapperTest {
             assertThat(request.getHeaders(header).nextElement()).as("Header %s should return a value.".formatted(header)).isNotNull();
         }
     }
-
-    @Test
-    void filter_creates_wrapper() {
-
-    }
-
 }

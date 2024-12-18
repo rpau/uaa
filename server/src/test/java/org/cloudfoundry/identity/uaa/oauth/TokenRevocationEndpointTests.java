@@ -119,7 +119,7 @@ public class TokenRevocationEndpointTests {
         assertThat(getClient().getAdditionalInformation()).containsEntry(TOKEN_SALT, "pre-salt");
         assertThat(clientTokenCount()).isOne();
         endpoint.revokeTokensForClient(client.getClientId());
-        assertThat(getClient().getAdditionalInformation().get(TOKEN_SALT)).isNotEqualTo("pre-salt");
+        assertThat(getClient().getAdditionalInformation()).doesNotContainEntry(TOKEN_SALT, "pre-salt");
         assertThat(clientTokenCount()).isZero();
     }
 

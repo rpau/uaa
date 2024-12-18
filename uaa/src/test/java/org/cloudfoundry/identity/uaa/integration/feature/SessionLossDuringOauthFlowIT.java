@@ -43,7 +43,7 @@ import static org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtil
 
 @SpringJUnitConfig(classes = DefaultIntegrationTestConfig.class)
 @OAuth2ContextConfiguration(OAuth2ContextConfiguration.ClientCredentials.class)
-public class SessionLossDuringOauthFlowIT {
+class SessionLossDuringOauthFlowIT {
 
     @RegisterExtension
     private static final ServerRunningExtension serverRunning = ServerRunningExtension.connect();
@@ -51,10 +51,10 @@ public class SessionLossDuringOauthFlowIT {
     private static final UaaTestAccounts testAccounts = UaaTestAccounts.standard(serverRunning);
 
     @RegisterExtension
-    private static final TestAccountExtension testAccountSetup = TestAccountExtension.standard(serverRunning, testAccounts);
+    private static final TestAccountExtension testAccountExtension = TestAccountExtension.standard(serverRunning, testAccounts);
 
     @RegisterExtension
-    private static final OAuth2ContextExtension context = OAuth2ContextExtension.withTestAccounts(serverRunning, testAccountSetup);
+    private static final OAuth2ContextExtension context = OAuth2ContextExtension.withTestAccounts(serverRunning, testAccountExtension);
 
     public RestOperations restTemplate;
 
@@ -101,7 +101,6 @@ public class SessionLossDuringOauthFlowIT {
         headers.add("If-Match", Integer.toString(group.getVersion()));
         HttpEntity request = new HttpEntity(group, headers);
         restTemplate.exchange(baseUrl + "/Groups/{group-id}", HttpMethod.PUT, request, Object.class, group.getId());
-
         ScimUser user = createUnapprovedUser(serverRunning);
 
         // Visit app
@@ -110,7 +109,6 @@ public class SessionLossDuringOauthFlowIT {
         // Sign in to login server
         webDriver.findElement(By.name("username")).sendKeys(user.getUserName());
         webDriver.findElement(By.name("password")).sendKeys(user.getPassword());
-
 
         //Session Expires (we simulate through deleting the cookie)
         webDriver.manage().deleteCookieNamed("JSESSIONID");
@@ -122,7 +120,6 @@ public class SessionLossDuringOauthFlowIT {
         webDriver.findElement(By.xpath("//label[text()='Change your password']/preceding-sibling::input")).click();
         webDriver.findElement(By.xpath("//label[text()='Read user IDs and retrieve users by ID']/preceding-sibling::input")).click();
         webDriver.findElement(By.xpath("//label[text()='Read about your clouds.']/preceding-sibling::input"));
-
 
         //Session Expires (we simulate through deleting the cookie)
         webDriver.manage().deleteCookieNamed("JSESSIONID");
@@ -143,6 +140,4 @@ public class SessionLossDuringOauthFlowIT {
 
         assertThat(webDriver.findElement(By.cssSelector("h1")).getText()).isEqualTo("Sample Home Page");
     }
-
-
 }

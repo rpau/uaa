@@ -1,43 +1,41 @@
 package org.cloudfoundry.identity.uaa.ratelimiting.internal;
 
 import org.cloudfoundry.identity.uaa.ratelimiting.core.CompoundKey;
-import org.cloudfoundry.identity.uaa.ratelimiting.core.LoggingOption;
 import org.cloudfoundry.identity.uaa.ratelimiting.core.http.RequestInfo;
 import org.cloudfoundry.identity.uaa.ratelimiting.internal.common.InternalLimiterFactoriesSupplier;
 import org.cloudfoundry.identity.uaa.ratelimiting.internal.common.InternalLimiterFactory;
 import org.junit.jupiter.api.Test;
 
-import javax.validation.constraints.NotNull;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SuppressWarnings({"SameParameterValue", "UnnecessaryLocalVariable"})
+@SuppressWarnings({"SameParameterValue"})
 class RateLimiterStatusTest {
-    private static final long now15_123450 = Instant.parse("2011-01-15T12:34:50Z").toEpochMilli();
-    private static final long now15_123456 = Instant.parse("2011-01-15T12:34:56Z").toEpochMilli();
-    private static final long now16_012345 = Instant.parse("2011-01-16T01:23:45Z").toEpochMilli();
-    private static final long now16_014000 = Instant.parse("2011-01-16T01:40:00Z").toEpochMilli();
+    private static final long NOW_15_123450 = Instant.parse("2011-01-15T12:34:50Z").toEpochMilli();
+    private static final long NOW_15_123456 = Instant.parse("2011-01-15T12:34:56Z").toEpochMilli();
+    private static final long NOW_16_012345 = Instant.parse("2011-01-16T01:23:45Z").toEpochMilli();
+    private static final long NOW_16_014000 = Instant.parse("2011-01-16T01:40:00Z").toEpochMilli();
 
     @Test
     void statusVariation_CompletelyDisabled() {
-        check(createCompletelyDisabled(now15_123456), // Example of Rate Limiting completely Disabled!
+        check(createCompletelyDisabled(NOW_15_123456), // Example of Rate Limiting completely Disabled!
                 "{",
                 "  'current' : {",
                 "    'status' : 'DISABLED',",
-                "    'asOf' : '" + toISO(now15_123456) + "'",
+                "    'asOf' : '" + toISO(NOW_15_123456) + "'",
                 "  }",
                 "}");
     }
 
     @Test
     void statusVariation_WithLocalFileOnly() {
-        check(createInitialFileOnlySuccess(now15_123456),
+        check(createInitialFileOnlySuccess(NOW_15_123456),
                 "{",
                 "  'current' : {",
                 "    'status' : 'ACTIVE',",
-                "    'asOf' : '" + toISO(now15_123456) + "',",
+                "    'asOf' : '" + toISO(NOW_15_123456) + "',",
                 "    'credentialIdExtractor' : 'JWT[1]',",
                 "    'loggingLevel' : 'OnlyLimited',",
                 "    'limiterMappings' : 9",
@@ -45,11 +43,11 @@ class RateLimiterStatusTest {
                 "  'fromSource' : 'Local Config File'",
                 "}");
 
-        check(createInitialFileOnlyError(now15_123456),
+        check(createInitialFileOnlyError(NOW_15_123456),
                 "{",
                 "  'current' : {",
                 "    'status' : 'DISABLED',",
-                "    'asOf' : '" + toISO(now15_123456) + "',",
+                "    'asOf' : '" + toISO(NOW_15_123456) + "',",
                 "    'error' : 'someError'",
                 "  },",
                 "  'fromSource' : 'Local Config File'",
@@ -58,8 +56,8 @@ class RateLimiterStatusTest {
 
     @Test
     void statusVariation_WithDynamicURLUpdateOnly() {
-        long time1 = now15_123456; // Times for time based sequence
-        long time6 = now16_014000;
+        long time1 = NOW_15_123456; // Times for a time-based sequence
+        long time6 = NOW_16_014000;
 
         RateLimiterStatus status = createInitialUrlBased(time1);
         check(status, // Example of Rate Limiting Config w/ dynamic 'URL' sourced updates; where initially disabled and waiting for update!
@@ -86,8 +84,8 @@ class RateLimiterStatusTest {
 
     @Test
     void statusVariation_WithLocalFile_AND_WithDynamicURLUpdate() {
-        long time1 = now15_123450; // Times for time based sequence
-        long time6 = now16_014000;
+        long time1 = NOW_15_123450; // Times for a time-based sequence
+        long time6 = NOW_16_014000;
 
         RateLimiterStatus status = createInitialFile_AND_UrlBased(time1);
         check(status, // Example of Rate Limiting Config w/ dynamic 'URL' sourced updates; where initially disabled and waiting for update!
@@ -185,7 +183,7 @@ class RateLimiterStatusTest {
 
     @Test
     void check_create_AND_update() {
-        long time1 = now16_012345; // Times for time based sequence
+        long time1 = NOW_16_012345; // Times for a time-based sequence
 
         // Scenario 1
         RateLimiterStatus status = RateLimiterStatus.create(InternalLimiterFactoriesSupplier.NOOP, null, time1, "test");
@@ -211,11 +209,6 @@ class RateLimiterStatusTest {
             @Override
             public LinkedHashMap<CompoundKey, InternalLimiterFactory> factoryMapFor(RequestInfo info) {
                 throw new IllegalStateException("Not Implemented");
-            }
-
-            @Override
-            public @NotNull LoggingOption getLoggingOption() {
-                return LoggingOption.DEFAULT;
             }
 
             @Override
@@ -251,11 +244,11 @@ class RateLimiterStatusTest {
 
     @Test
     void check_noRateLimiting() {
-        check(RateLimiterStatus.noRateLimiting(now15_123456),
+        check(RateLimiterStatus.noRateLimiting(NOW_15_123456),
                 "{",
                 "  'current' : {",
                 "    'status' : 'DISABLED',",
-                "    'asOf' : '" + toISO(now15_123456) + "'",
+                "    'asOf' : '" + toISO(NOW_15_123456) + "'",
                 "  }",
                 "}");
     }
@@ -263,7 +256,7 @@ class RateLimiterStatusTest {
     @Test
     void check_toISO8601ZtoSec_Truncation() {
         String now = RateLimiterStatus.toISO8601ZtoSec(System.currentTimeMillis());
-        assertThat(now.length()).as(now).isEqualTo(20);
+        assertThat(now).as(now).hasSize(20);
     }
 
     private void check(RateLimiterStatus status, String... expected) {
@@ -274,7 +267,7 @@ class RateLimiterStatusTest {
     private void check(String actualStr, String... expected) {
         StringBuilder sb = new StringBuilder();
         for (String str : expected) {
-            if (sb.length() != 0) {
+            if (!sb.isEmpty()) {
                 sb.append('\n');
             }
             sb.append(str);

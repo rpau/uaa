@@ -248,13 +248,10 @@ public abstract class AbstractLdapMockMvcTest {
                 redirectUri
         );
 
-
         String code = MockMvcUtils.extractInvitationCode(url.toString());
-
         String userInfoOrigin = getWebApplicationContext().getBean(JdbcTemplate.class).queryForObject("select origin from users where email=? and identity_zone_id=?", String.class, email, zone.getZone().getIdentityZone().getId());
         String userInfoId = getWebApplicationContext().getBean(JdbcTemplate.class).queryForObject("select id from users where email=? and identity_zone_id=?", String.class, email, zone.getZone().getIdentityZone().getId());
         assertThat(userInfoOrigin).isEqualTo(LDAP);
-
 
         ResultActions actions = getMockMvc().perform(get("/invitations/accept")
                 .param("code", code)
@@ -296,7 +293,6 @@ public abstract class AbstractLdapMockMvcTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("form_redirect_uri")))
                 .andExpect(content().string(containsString(URLEncoder.encode(redirectUri, StandardCharsets.UTF_8))));
-
 
         getMockMvc().perform(
                         post("/login.do")
@@ -482,7 +478,6 @@ public abstract class AbstractLdapMockMvcTest {
                 .andExpect(status().isFound())
                 .andExpect(unauthenticated())
                 .andExpect(redirectedUrl("/login?error=login_failure"));
-
 
         provider.setActive(true);
         MockMvcUtils.createIdpUsingWebRequest(getMockMvc(), zone.getZone().getIdentityZone().getId(), zone.getZone().getZoneAdminToken(), provider, status().isOk(), true);

@@ -38,10 +38,10 @@ class AppsIntegrationTests {
     private static final UaaTestAccounts testAccounts = UaaTestAccounts.standard(serverRunning);
 
     @RegisterExtension
-    private static final TestAccountExtension testAccountSetup = TestAccountExtension.standard(serverRunning, testAccounts);
+    private static final TestAccountExtension testAccountExtension = TestAccountExtension.standard(serverRunning, testAccounts);
 
     @RegisterExtension
-    private static final OAuth2ContextExtension context = OAuth2ContextExtension.withTestAccounts(serverRunning, testAccountSetup);
+    private static final OAuth2ContextExtension context = OAuth2ContextExtension.withTestAccounts(serverRunning, testAccountExtension);
 
     /**
      * tests a happy-day flow of the native application profile.

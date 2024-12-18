@@ -25,7 +25,6 @@ import org.springframework.web.client.RequestCallback;
 import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.util.UriTemplate;
 
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.URI;
 import java.util.Collections;
@@ -99,7 +98,7 @@ class OAuth2RestTemplateTests {
      * tests appendQueryParameter
      */
     @Test
-    void appendQueryParameter() throws Exception {
+    void appendQueryParameter() {
         OAuth2AccessToken token = new DefaultOAuth2AccessToken("12345");
         URI appended = restTemplate.appendQueryParameter(URI.create("https://graph.facebook.com/search?type=checkin"),
                 token);
@@ -110,7 +109,7 @@ class OAuth2RestTemplateTests {
      * tests appendQueryParameter
      */
     @Test
-    void appendQueryParameterWithNoExistingParameters() throws Exception {
+    void appendQueryParameterWithNoExistingParameters() {
         OAuth2AccessToken token = new DefaultOAuth2AccessToken("12345");
         URI appended = restTemplate.appendQueryParameter(URI.create("https://graph.facebook.com/search"), token);
         assertThat(appended).hasToString("https://graph.facebook.com/search?bearer_token=12345");
@@ -120,7 +119,7 @@ class OAuth2RestTemplateTests {
      * tests encoding of access token value
      */
     @Test
-    void doubleEncodingOfParameterValue() throws Exception {
+    void doubleEncodingOfParameterValue() {
         OAuth2AccessToken token = new DefaultOAuth2AccessToken("1/qIxxx");
         URI appended = restTemplate.appendQueryParameter(URI.create("https://graph.facebook.com/search"), token);
         assertThat(appended).hasToString("https://graph.facebook.com/search?bearer_token=1%2FqIxxx");
@@ -130,7 +129,7 @@ class OAuth2RestTemplateTests {
      * tests no double encoding of existing query parameter
      */
     @Test
-    void nonEncodingOfUriTemplate() throws Exception {
+    void nonEncodingOfUriTemplate() {
         OAuth2AccessToken token = new DefaultOAuth2AccessToken("12345");
         UriTemplate uriTemplate = new UriTemplate("https://graph.facebook.com/fql?q={q}");
         URI expanded = uriTemplate.expand("[q: fql]");
@@ -142,7 +141,7 @@ class OAuth2RestTemplateTests {
      * tests URI with fragment value
      */
     @Test
-    void fragmentUri() throws Exception {
+    void fragmentUri() {
         OAuth2AccessToken token = new DefaultOAuth2AccessToken("1234");
         URI appended = restTemplate.appendQueryParameter(URI.create("https://graph.facebook.com/search#foo"), token);
         assertThat(appended).hasToString("https://graph.facebook.com/search?bearer_token=1234#foo");
@@ -152,10 +151,9 @@ class OAuth2RestTemplateTests {
      * tests encoding of access token value passed in protected requests ref: SECOAUTH-90
      */
     @Test
-    void doubleEncodingOfAccessTokenValue() throws Exception {
+    void doubleEncodingOfAccessTokenValue() {
         // try with fictitious token value with many characters to encode
         OAuth2AccessToken token = new DefaultOAuth2AccessToken("1 qI+x:y=z");
-        // System.err.println(UriUtils.encodeQueryParam(token.getValue(), "UTF-8"));
         URI appended = restTemplate.appendQueryParameter(URI.create("https://graph.facebook.com/search"), token);
         assertThat(appended).hasToString("https://graph.facebook.com/search?bearer_token=1+qI%2Bx%3Ay%3Dz");
     }
@@ -163,10 +161,8 @@ class OAuth2RestTemplateTests {
     @Test
     void noRetryAccessDeniedExceptionForNoExistingToken() {
         restTemplate.setAccessTokenProvider(new StubAccessTokenProvider());
-        restTemplate.setRequestFactory(new ClientHttpRequestFactory() {
-            public ClientHttpRequest createRequest(URI uri, HttpMethod httpMethod) throws IOException {
-                throw new AccessTokenRequiredException(resource);
-            }
+        restTemplate.setRequestFactory((uri, httpMethod) -> {
+            throw new AccessTokenRequiredException(resource);
         });
         assertThatExceptionOfType(AccessTokenRequiredException.class).isThrownBy(() ->
                 restTemplate.doExecute(new URI("https://foo"), HttpMethod.GET, new NullRequestCallback(),
@@ -179,7 +175,7 @@ class OAuth2RestTemplateTests {
         restTemplate.getOAuth2ClientContext().setAccessToken(new DefaultOAuth2AccessToken("TEST"));
         restTemplate.setAccessTokenProvider(new StubAccessTokenProvider());
         restTemplate.setRequestFactory(new ClientHttpRequestFactory() {
-            public ClientHttpRequest createRequest(URI uri, HttpMethod httpMethod) throws IOException {
+            public ClientHttpRequest createRequest(URI uri, HttpMethod httpMethod) {
                 if (!failed.get()) {
                     failed.set(true);
                     throw new AccessTokenRequiredException(resource);
@@ -307,18 +303,19 @@ class OAuth2RestTemplateTests {
         } catch (UserRedirectRequiredException e) {
             // planned
         }
-        // context token should be reset as it clearly is invalid at this point
+        // context token should be reset as it is invalid at this point
         assertThat(restTemplate.getOAuth2ClientContext().getAccessToken()).isNull();
     }
 
     private final class SimpleResponseExtractor implements ResponseExtractor<Boolean> {
-        public Boolean extractData(ClientHttpResponse response) throws IOException {
+        public Boolean extractData(ClientHttpResponse response) {
             return true;
         }
     }
 
     private static class NullRequestCallback implements RequestCallback {
-        public void doWithRequest(ClientHttpRequest request) throws IOException {
+        public void doWithRequest(ClientHttpRequest request) {
+            // do nothing
         }
     }
 

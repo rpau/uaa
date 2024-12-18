@@ -17,7 +17,6 @@ import org.cloudfoundry.identity.uaa.provider.LdapIdentityProviderDefinition;
 import org.cloudfoundry.identity.uaa.util.JsonUtils;
 import org.cloudfoundry.identity.uaa.util.LdapUtils;
 import org.cloudfoundry.identity.uaa.util.UaaMapUtils;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.config.YamlMapFactoryBean;
 import org.springframework.beans.factory.config.YamlProcessor;
@@ -33,7 +32,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.cloudfoundry.identity.uaa.constants.OriginKeys.LDAP;
 import static org.cloudfoundry.identity.uaa.provider.LdapIdentityProviderDefinition.LDAP_PROPERTY_TYPES;
@@ -45,11 +44,6 @@ import static org.cloudfoundry.identity.uaa.provider.LdapIdentityProviderDefinit
 class LdapIdentityProviderDefinitionTest {
 
     private LdapIdentityProviderDefinition ldapIdentityProviderDefinition;
-
-    @BeforeEach
-    void setUp() {
-
-    }
 
     @Test
     void property_types() {
@@ -89,12 +83,11 @@ class LdapIdentityProviderDefinitionTest {
         ldapIdentityProviderDefinition.setTlsConfiguration(LDAP_TLS_SIMPLE);
         ldapIdentityProviderDefinition.setTlsConfiguration(null);
         assertThat(ldapIdentityProviderDefinition.getTlsConfiguration()).isEqualTo(LDAP_TLS_NONE);
-        try {
-            String tlsConfiguration = "other string";
-            ldapIdentityProviderDefinition.setTlsConfiguration(tlsConfiguration);
-            fail(tlsConfiguration + " is not a valid TLS configuration option.");
-        } catch (IllegalArgumentException ignored) {
-        }
+        String tlsConfiguration = "other string";
+        assertThatThrownBy(() ->
+                ldapIdentityProviderDefinition.setTlsConfiguration(tlsConfiguration))
+                .as(tlsConfiguration + " is not a valid TLS configuration option.")
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -214,7 +207,7 @@ class LdapIdentityProviderDefinitionTest {
     }
 
     @Test
-    void simple_bind_config() throws Exception {
+    void simple_bind_config() {
         String config = """
                 ldap:
                   profile:
@@ -248,7 +241,7 @@ class LdapIdentityProviderDefinitionTest {
     }
 
     @Test
-    void search_and_bind_config() throws Exception {
+    void search_and_bind_config() {
         String config = """
                 ldap:
                   profile:
@@ -285,7 +278,7 @@ class LdapIdentityProviderDefinitionTest {
     }
 
     @Test
-    void search_and_bind_with_groups_config() throws Exception {
+    void search_and_bind_with_groups_config() {
         String config = """
                 ldap:
                   profile:
@@ -326,12 +319,10 @@ class LdapIdentityProviderDefinitionTest {
         assertThat(def.getMaxGroupSearchDepth()).isEqualTo(30);
         assertThat(def.isAutoAddGroups()).isTrue();
         assertThat(def.getGroupRoleAttribute()).isNull();
-
     }
 
-
     @Test
-    void search_and_compare_config() throws Exception {
+    void search_and_compare_config() {
         String config = """
                 ldap:
                   profile:
@@ -376,7 +367,7 @@ class LdapIdentityProviderDefinitionTest {
     }
 
     @Test
-    void search_and_compare_with_groups_1_config_and_custom_attributes() throws Exception {
+    void search_and_compare_with_groups_1_config_and_custom_attributes() {
         String config = """
                 ldap:
                   profile:
@@ -588,7 +579,7 @@ class LdapIdentityProviderDefinitionTest {
     }
 
     @Test
-    void deserialize_correct_comparator() throws Exception {
+    void deserialize_correct_comparator() {
         String config = """
                 ldap:
                   profile:

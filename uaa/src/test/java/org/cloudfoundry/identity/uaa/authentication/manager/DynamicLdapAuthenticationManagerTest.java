@@ -40,11 +40,10 @@ class DynamicLdapAuthenticationManagerTest {
                         scimGroupProvisioning,
                         ldapLoginAuthenticationManager)
                         .getLdapAuthenticationManager();
-        assertThat(manager).isNotNull();
-        assertThat(manager instanceof ChainedAuthenticationManager).isTrue();
+        assertThat(manager).isInstanceOf(ChainedAuthenticationManager.class);
         ChainedAuthenticationManager chainedAuthenticationManager = (ChainedAuthenticationManager) manager;
         ProviderManager providerManager = (ProviderManager) chainedAuthenticationManager.getDelegates()[0].getAuthenticationManager();
         assertThat(providerManager.getProviders()).hasSize(1);
-        assertThat(providerManager.getProviders().get(0) instanceof LdapAuthenticationProvider).isTrue();
+        assertThat(providerManager.getProviders().get(0)).isInstanceOf(LdapAuthenticationProvider.class);
     }
 }

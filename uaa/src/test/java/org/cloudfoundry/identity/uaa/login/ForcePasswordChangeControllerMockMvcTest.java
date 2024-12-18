@@ -264,7 +264,6 @@ class ForcePasswordChangeControllerMockMvcTest {
                 .andExpect(redirectedUrl("http://localhost/login"));
     }
 
-
     static class PasswordPolicyWithInvalidPassword {
         PasswordPolicy passwordPolicy;
         String password;

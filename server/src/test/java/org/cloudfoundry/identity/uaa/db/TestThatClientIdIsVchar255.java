@@ -38,24 +38,6 @@ class TestThatClientIdIsVchar255 {
         }
     }
 
-//    @Parameterized.Parameters(name = "{index}: org.cloudfoundry.identity.uaa.db[{0}]; table[{1}]")
-//    public static Collection<Object[]> data() {
-//        return Arrays.asList(new Object[][]{
-//                {null, "authz_approvals", "client_id"},
-//                {null, "oauth_client_details", "client_id"},
-//                {null, "sec_audit", "principal_id"},
-
-    /// /            {"hsqldb", "authz_approvals", "client_id"},
-    /// /            {"hsqldb", "oauth_client_details", "client_id"},
-    /// /            {"hsqldb", "sec_audit", "principal_id"},
-    /// /            {"postgresql", "authz_approvals", "client_id"},
-    /// /            {"postgresql", "oauth_client_details", "client_id"},
-    /// /            {"postgresql", "sec_audit", "principal_id"},
-    /// /            {"mysql", "authz_approvals", "client_id"},
-    /// /            {"mysql", "oauth_client_details", "client_id"},
-    /// /            {"mysql", "sec_audit", "principal_id"},
-//        });
-//    }
     @ParameterizedTest
     @ArgumentsSource(ClientIdArgumentsProvider.class)
     void that_client_id_is_varchar_255(

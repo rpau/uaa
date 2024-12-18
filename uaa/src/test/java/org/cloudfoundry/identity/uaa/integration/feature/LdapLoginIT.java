@@ -17,6 +17,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchElementException;
@@ -40,14 +41,12 @@ import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpMethod.POST;
 
 @SpringJUnitConfig(classes = DefaultIntegrationTestConfig.class)
+@ExtendWith(ScreenshotOnFailExtension.class)
 class LdapLoginIT {
 
     @Autowired
     @RegisterExtension
     private IntegrationTestExtension integrationTestExtension;
-
-    @RegisterExtension
-    private static final ScreenshotOnFailExtension screenshotExtension = new ScreenshotOnFailExtension();
 
     @Autowired
     RestOperations restOperations;
@@ -69,7 +68,7 @@ class LdapLoginIT {
     private Optional<String> alertError = Optional.empty();
 
     @BeforeAll
-    public static void startLocalLdap() {
+    static void startLocalLdap() {
         server = InMemoryLdapServer.startLdap();
     }
 
@@ -83,7 +82,6 @@ class LdapLoginIT {
         //ensure we are able to resolve DNS for hostname testzone2.localhost
         assertThat(doesSupportZoneDNS()).as("Expected testzone1/2/3/4.localhost to resolve to 127.0.0.1").isTrue();
 
-        screenshotExtension.setWebDriver(webDriver);
         for (String domain : Arrays.asList("localhost", "testzone1.localhost", "testzone2.localhost", "testzone3.localhost", "testzone4.localhost")) {
             webDriver.get(baseUrl.replace("localhost", domain) + "/logout.do");
             webDriver.manage().deleteAllCookies();
@@ -107,7 +105,7 @@ class LdapLoginIT {
     }
 
     @Test
-    void ldapLogin_with_StartTLS() throws Exception {
+    void ldapLogin_with_StartTLS() {
         Long beforeTest = System.currentTimeMillis();
         performLdapLogin("testzone2", server.getUrl(), "marissa4", "ldap4");
         Long afterTest = System.currentTimeMillis();
@@ -118,13 +116,13 @@ class LdapLoginIT {
     }
 
     @Test
-    void ldap_login_using_utf8_characters() throws Exception {
+    void ldap_login_using_utf8_characters() {
         performLdapLogin("testzone2", server.getUrl(), "\u7433\u8D3A", "koala");
         assertThat(webDriver.findElement(By.cssSelector("h1")).getText()).contains("Where to?");
     }
 
     private void performLdapLogin(String subdomain, String ldapUrl, String username, String password) {
-        //ensure that certs have been added to truststore via gradle
+        //ensure that certs have been added to truststore via Gradle
         String zoneUrl = baseUrl.replace("localhost", subdomain + ".localhost");
 
         //identity client token

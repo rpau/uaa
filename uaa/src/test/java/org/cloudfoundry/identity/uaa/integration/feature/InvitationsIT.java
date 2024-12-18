@@ -57,14 +57,12 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 @SpringJUnitConfig(classes = DefaultIntegrationTestConfig.class)
 @ExtendWith(PollutionPreventionExtension.class)
+@ExtendWith(ScreenshotOnFailExtension.class)
 public class InvitationsIT {
 
     @Autowired
     @RegisterExtension
     private IntegrationTestExtension integrationTestExtension;
-
-    @RegisterExtension
-    private static final ScreenshotOnFailExtension screenshotExtension = new ScreenshotOnFailExtension();
 
     @Autowired
     WebDriver webDriver;
@@ -130,7 +128,6 @@ public class InvitationsIT {
     void setup() {
         scimToken = testClient.getOAuthAccessToken("admin", "adminsecret", "client_credentials", "scim.read,scim.write,clients.admin");
         loginToken = testClient.getOAuthAccessToken("login", "loginsecret", "client_credentials", "oauth.login");
-        screenshotExtension.setWebDriver(webDriver);
 
         testInviteEmail = "testinvite@test.org";
 

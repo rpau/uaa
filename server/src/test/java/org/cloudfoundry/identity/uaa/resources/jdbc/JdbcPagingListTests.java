@@ -19,8 +19,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 
 @WithDatabaseContext
@@ -107,15 +107,15 @@ class JdbcPagingListTests {
         list = new JdbcPagingList<>(jdbcTemplate, limitSqlAdapter, "SELECT * from foo",
                 new ColumnMapRowMapper(), 3);
         Map<String, Object> map = list.get(3);
-        assertThat(map.get("name")).isNotNull();
+        assertThat(map).containsKey("name");
     }
 
     @Test
     void selectColumnsFull() {
         list = new JdbcPagingList<>(jdbcTemplate, limitSqlAdapter, "SELECT foo.id, foo.name from foo", new ColumnMapRowMapper(), 3);
         Map<String, Object> map = list.get(3);
-        assertThat(map.get("name")).isNotNull();
-        assertThat(map).containsEntry("name", "zab");
+        assertThat(map).containsKey("name")
+                .containsEntry("name", "zab");
     }
 
     /**
@@ -126,11 +126,11 @@ class JdbcPagingListTests {
     void selectMoreColumnsWithOrderBy_Hsql() {
         list = new JdbcPagingList<>(jdbcTemplate, limitSqlAdapter, "SELECT foo.id, foo.NAME FrOm foo wHere foo.name = 'FoO' OR foo.name = 'foo' OrDeR By foo.name", new ColumnMapRowMapper(), 3);
         Map<String, Object> map = list.get(0);
-        assertThat(map.get("name")).isNotNull();
-        assertThat(map).containsEntry("name", "FoO");
+        assertThat(map).containsKey("name")
+                .containsEntry("name", "FoO");
         map = list.get(1);
-        assertThat(map.get("name")).isNotNull();
-        assertThat(map).containsEntry("name", "foo");
+        assertThat(map).containsKey("name")
+                .containsEntry("name", "foo");
     }
 
     @Test
@@ -138,11 +138,9 @@ class JdbcPagingListTests {
     void selectMoreColumnsWithOrderBy_PostgresMysql() {
         list = new JdbcPagingList<>(jdbcTemplate, limitSqlAdapter, "SELECT foo.id, foo.NAME FrOm foo wHere foo.name = 'FoO' OR foo.name = 'foo' OrDeR By foo.name", new ColumnMapRowMapper(), 3);
         Map<String, Object> map = list.get(0);
-        assertThat(map.get("name")).isNotNull();
-        assertThat(map.get("name")).isEqualTo("foo");
+        assertThat(map).containsEntry("name", "foo");
         map = list.get(1);
-        assertThat(map.get("name")).isNotNull();
-        assertThat(map.get("name")).isEqualTo("FoO");
+        assertThat(map).containsEntry("name", "FoO");
     }
 
     @Test
@@ -166,7 +164,7 @@ class JdbcPagingListTests {
         int count = 0;
         for (Map<String, Object> map : list) {
             count++;
-            assertThat(map.get("name")).isNotNull();
+            assertThat(map).containsKey("name");
         }
         assertThat(count).isEqualTo(3);
     }
@@ -180,7 +178,7 @@ class JdbcPagingListTests {
         int count = 0;
         for (Map<String, Object> map : list) {
             count++;
-            assertThat(map.get("name")).isNotNull();
+            assertThat(map).containsKey("name");
         }
         assertThat(count).isEqualTo(5);
     }
@@ -202,9 +200,8 @@ class JdbcPagingListTests {
         int count = 0;
         for (Map<String, Object> map : list) {
             count++;
-            assertThat(map.get("name")).isNotNull();
+            assertThat(map).containsKey("name");
         }
         assertThat(count).isEqualTo(3); // count is less than original size estimate
     }
-
 }

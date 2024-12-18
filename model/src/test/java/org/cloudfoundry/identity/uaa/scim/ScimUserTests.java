@@ -38,7 +38,7 @@ import static org.assertj.core.api.Assertions.fail;
 /**
  * @author Luke Taylor
  */
-public class ScimUserTests {
+class ScimUserTests {
 
     private static final String SCHEMAS = "\"schemas\": [\"urn:scim:schemas:core:1.0\"],";
     private ScimUser user;
@@ -69,10 +69,12 @@ public class ScimUserTests {
         ScimUser user = new ScimUser("id", "username", "giveName", "familyName");
         String json = JsonUtils.writeValueAsString(user);
         ScimUser user1 = JsonUtils.readValue(json, ScimUser.class);
+        assertThat(user1.getPhoneNumbers()).isNull();
 
         user.setPhoneNumbers(null);
         json = JsonUtils.writeValueAsString(user);
         user1 = JsonUtils.readValue(json, ScimUser.class);
+        assertThat(user1.getPhoneNumbers()).isNull();
 
         json = json.replace("\"id\":\"id\"", "\"id\":\"id\", \"phoneNumbers\":[]");
         user1 = JsonUtils.readValue(json, ScimUser.class);
@@ -81,8 +83,6 @@ public class ScimUserTests {
         json = json.replace("\"phoneNumbers\":[]", "\"phoneNumbers\":null");
         user1 = JsonUtils.readValue(json, ScimUser.class);
         assertThat(user1.getPhoneNumbers()).isNotNull();
-
-
     }
 
     @Test
@@ -131,14 +131,12 @@ public class ScimUserTests {
         user.getMeta().setCreated(new SimpleDateFormat("yyyy-MM-dd").parse("2011-11-30"));
 
         String json = JsonUtils.writeValueAsString(user);
-        // System.err.println(json);
         assertThat(json).contains("\"userName\":\"joe\"")
                 .contains("\"id\":\"123\"")
                 .contains("\"meta\":")
                 .contains("\"created\":\"2011-11-30")
                 .matches(".*\\\"created\\\":\\\"([0-9-]*-?)T([0-9:.]*)Z\\\".*")
                 .doesNotContain("\"lastModified\":");
-
     }
 
     @Test
@@ -151,10 +149,8 @@ public class ScimUserTests {
         user.addPhoneNumber("+1-222-1234567");
 
         String json = JsonUtils.writeValueAsString(user);
-        // System.err.println(json);
         assertThat(json).contains("\"emails\":")
                 .contains("\"phoneNumbers\":");
-
     }
 
     @Test
@@ -165,7 +161,6 @@ public class ScimUserTests {
         user.setGroups(Collections.singleton(new Group(null, "foo")));
 
         String json = JsonUtils.writeValueAsString(user);
-        // System.err.println(json);
         assertThat(json).contains("\"groups\":");
     }
 
@@ -239,13 +234,11 @@ public class ScimUserTests {
         ScimUser.PhoneNumber p1 = new ScimUser.PhoneNumber();
         phoneNumbers.add(p1);
         roz.setPhoneNumbers(phoneNumbers);
-        assertThat(roz.getPhoneNumbers()).isNotNull()
-                .isEmpty();
+        assertThat(roz.getPhoneNumbers()).isEmpty();
         p1.setValue("value");
         p1.setType("type");
         roz.setPhoneNumbers(phoneNumbers);
-        assertThat(roz.getPhoneNumbers()).isNotNull()
-                .hasSize(1);
+        assertThat(roz.getPhoneNumbers()).hasSize(1);
 
         assertThat(roz.getDisplayName()).isNull();
         roz.setDisplayName("DisplayName");
@@ -314,7 +307,6 @@ public class ScimUserTests {
     void setPrimaryEmail() {
         ScimUser user = new ScimUser();
 
-
         assertThat(user.getPrimaryEmail()).isNull();
         user.setPrimaryEmail("email0@bar.com");
         assertThat(user.getPrimaryEmail()).isEqualTo("email0@bar.com");
@@ -350,9 +342,7 @@ public class ScimUserTests {
         user.setUserName("userName");
         user.setNickName("nickName");
         user.setName(new ScimUser.Name("givenName", "familyName"));
-        assertThat(user.wordList()).isNotNull()
-                .isNotEmpty()
-                .hasSize(7);
+        assertThat(user.wordList()).hasSize(7);
     }
 
     @Test
@@ -567,6 +557,7 @@ public class ScimUserTests {
             user.patch(patch);
             fail("username is a required field, can't nullify it.");
         } catch (IllegalArgumentException ignored) {
+            // ignore
         }
         assertThat(user.getUserName()).isNotNull();
 
@@ -746,29 +737,6 @@ public class ScimUserTests {
         user.patch(patch);
         assertThat(user.getPhoneNumbers()).hasSize(1);
         assertThat(user.getPhoneNumbers().get(0).getValue()).isEqualTo(newNumber.getValue());
-    }
-
-    @Test
-    void patchDropUsingAttributes() {
-        String[] s = {
-                "username",
-                "Name",
-                "Emails",
-                "hOnEnUmBeRs",
-                "DisplayName",
-                "NickName",
-                "ProfileUrl",
-                "Title",
-                "PreferredLanguage",
-                "Locale",
-                "Timezone",
-                "Name.familyName",
-                "Name.givenName",
-                "Name.formatted",
-                "Name.honorificPreFix",
-                "Name.honorificSuffix",
-                "Name.middleName"
-        };
     }
 
     @Test

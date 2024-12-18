@@ -1,12 +1,8 @@
 package org.cloudfoundry.identity.uaa.oauth.common;
 
-import com.fasterxml.jackson.core.JsonGenerationException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
 import java.util.Date;
@@ -18,7 +14,6 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-@ExtendWith(MockitoExtension.class)
 class OAuth2AccessTokenJackson2DeserializerTests extends BaseOAuth2AccessTokenJacksonTest {
 
     protected ObjectMapper mapper;
@@ -29,7 +24,7 @@ class OAuth2AccessTokenJackson2DeserializerTests extends BaseOAuth2AccessTokenJa
     }
 
     @Test
-    void readValueNoRefresh() throws JsonGenerationException, JsonMappingException, IOException {
+    void readValueNoRefresh() throws IOException {
         accessToken.setRefreshToken(null);
         accessToken.setScope(null);
         OAuth2AccessToken actual = mapper.readValue(ACCESS_TOKEN_NOREFRESH, OAuth2AccessToken.class);
@@ -37,28 +32,28 @@ class OAuth2AccessTokenJackson2DeserializerTests extends BaseOAuth2AccessTokenJa
     }
 
     @Test
-    void readValueWithRefresh() throws JsonGenerationException, JsonMappingException, IOException {
+    void readValueWithRefresh() throws IOException {
         accessToken.setScope(null);
         OAuth2AccessToken actual = mapper.readValue(ACCESS_TOKEN_NOSCOPE, OAuth2AccessToken.class);
         assertTokenEquals(accessToken, actual);
     }
 
     @Test
-    void readValueWithSingleScopes() throws JsonGenerationException, JsonMappingException, IOException {
+    void readValueWithSingleScopes() throws IOException {
         accessToken.getScope().remove(accessToken.getScope().iterator().next());
         OAuth2AccessToken actual = mapper.readValue(ACCESS_TOKEN_SINGLESCOPE, OAuth2AccessToken.class);
         assertTokenEquals(accessToken, actual);
     }
 
     @Test
-    void readValueWithEmptyStringScope() throws JsonGenerationException, JsonMappingException, IOException {
+    void readValueWithEmptyStringScope() throws IOException {
         accessToken.setScope(new HashSet<>());
         OAuth2AccessToken actual = mapper.readValue(ACCESS_TOKEN_EMPTYSCOPE, OAuth2AccessToken.class);
         assertTokenEquals(accessToken, actual);
     }
 
     @Test
-    void readValueWithBrokenExpiresIn() throws JsonGenerationException, JsonMappingException, IOException {
+    void readValueWithBrokenExpiresIn() throws IOException {
         accessToken.setScope(new HashSet<>());
         OAuth2AccessToken actual = mapper.readValue(ACCESS_TOKEN_BROKENEXPIRES, OAuth2AccessToken.class);
         assertTokenEquals(accessToken, actual);

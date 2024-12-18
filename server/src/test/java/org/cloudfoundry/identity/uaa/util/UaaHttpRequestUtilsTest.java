@@ -35,7 +35,7 @@ import static org.assertj.core.api.Assertions.fail;
 import static org.cloudfoundry.identity.uaa.util.UaaHttpRequestUtils.createRequestFactory;
 import static org.springframework.http.HttpStatus.OK;
 
-public class UaaHttpRequestUtilsTest {
+class UaaHttpRequestUtilsTest {
 
     private static final String HTTP_HOST_PROPERTY = "http.proxyHost";
     private static final String HTTP_PORT_PROPERTY = "http.proxyPort";
@@ -44,7 +44,6 @@ public class UaaHttpRequestUtilsTest {
 
     private static final Map<String, String> systemProxyConfig = new HashMap<>();
     private NetworkTestUtils.SimpleHttpResponseHandler httpResponseHandler;
-    private NetworkTestUtils.SimpleHttpResponseHandler httpsResponseHandler;
 
     @BeforeAll
     static void storeSystemProxyConfig() {
@@ -74,7 +73,6 @@ public class UaaHttpRequestUtilsTest {
     HttpsServer httpsServer;
     HttpServer httpServer;
     private String httpsUrl;
-    private String httpUrl;
 
     @BeforeEach
     void setup() throws Exception {
@@ -82,13 +80,12 @@ public class UaaHttpRequestUtilsTest {
         File keystore = NetworkTestUtils.getKeystore(new Date(), 10);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        httpResponseHandler = new NetworkTestUtils.SimpleHttpResponseHandler(200, headers, "OK");
-        httpsResponseHandler = new NetworkTestUtils.SimpleHttpResponseHandler(200, headers, "OK");
+        httpResponseHandler = new NetworkTestUtils.SimpleHttpResponseHandler(headers, "OK");
+        NetworkTestUtils.SimpleHttpResponseHandler httpsResponseHandler = new NetworkTestUtils.SimpleHttpResponseHandler(headers, "OK");
 
         httpsServer = NetworkTestUtils.startHttpsServer(keystore, NetworkTestUtils.keyPass, httpsResponseHandler);
         httpServer = NetworkTestUtils.startHttpServer(httpResponseHandler);
         httpsUrl = "https://localhost:" + httpsServer.getAddress().getPort() + "/";
-        httpUrl = "http://localhost:" + httpServer.getAddress().getPort() + "/";
     }
 
     @AfterEach
@@ -98,7 +95,7 @@ public class UaaHttpRequestUtilsTest {
     }
 
     @Test
-    void httpProxy() throws Exception {
+    void httpProxy() {
         String host = "localhost";
         System.setProperty(HTTP_HOST_PROPERTY, host);
         System.setProperty(HTTP_PORT_PROPERTY, String.valueOf(httpServer.getAddress().getPort()));
@@ -106,7 +103,7 @@ public class UaaHttpRequestUtilsTest {
     }
 
     @Test
-    void httpsProxy() throws Exception {
+    void httpsProxy() {
         String host = "localhost";
         System.setProperty("https.protocols", " TLSv1.2, TLSv1.3 ");
         System.setProperty(HTTPS_HOST_PROPERTY, host);
@@ -115,7 +112,7 @@ public class UaaHttpRequestUtilsTest {
     }
 
     @Test
-    void httpIpProxy() throws Exception {
+    void httpIpProxy() {
         String ip = "127.0.0.1";
         System.setProperty(HTTP_HOST_PROPERTY, ip);
         System.setProperty(HTTP_PORT_PROPERTY, String.valueOf(httpServer.getAddress().getPort()));
@@ -123,7 +120,7 @@ public class UaaHttpRequestUtilsTest {
     }
 
     @Test
-    void httpsIpProxy() throws Exception {
+    void httpsIpProxy() {
         String ip = "127.0.0.1";
         System.setProperty(HTTPS_HOST_PROPERTY, ip);
         System.setProperty(HTTPS_PORT_PROPERTY, String.valueOf(httpServer.getAddress().getPort()));
@@ -139,6 +136,7 @@ public class UaaHttpRequestUtilsTest {
         try {
             template.getForObject(url, String.class);
         } catch (Exception ignored) {
+            // ignored
         }
         assertThat(routePlanner.routes).hasSize(1);
         assertThat(routePlanner.routes.get(0).getProxyHost().getHostName()).isEqualTo(expectedHost);
@@ -163,9 +161,7 @@ public class UaaHttpRequestUtilsTest {
         }
     }
 
-
     public static class SystemProxyRoutePlanner implements HttpRoutePlanner {
-
         private final HttpRoutePlanner delegate;
         public List<HttpRoute> routes = new LinkedList<>();
 
@@ -180,5 +176,4 @@ public class UaaHttpRequestUtilsTest {
             return route;
         }
     }
-
 }

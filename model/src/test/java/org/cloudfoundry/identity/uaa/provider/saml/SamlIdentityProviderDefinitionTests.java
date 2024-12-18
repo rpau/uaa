@@ -103,8 +103,6 @@ public class SamlIdentityProviderDefinitionTests {
                         assertThat(actualValue).as(f.getName()).isEqualTo(expectedValue);
                     }
                 });
-
-
     }
 
     @Test

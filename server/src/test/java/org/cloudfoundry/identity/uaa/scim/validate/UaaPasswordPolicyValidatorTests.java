@@ -23,7 +23,7 @@ import static org.mockito.Mockito.mock;
 @ExtendWith(PollutionPreventionExtension.class)
 class UaaPasswordPolicyValidatorTests {
 
-    private IdentityProviderProvisioning provisioning = mock(IdentityProviderProvisioning.class);
+    private final IdentityProviderProvisioning provisioning = mock(IdentityProviderProvisioning.class);
 
     private UaaPasswordPolicyValidator validator;
 
@@ -59,7 +59,6 @@ class UaaPasswordPolicyValidatorTests {
         validatePassword("", "Password must be at least 1 characters in length.");
         validatePassword(null, "Password must be at least 1 characters in length.");
     }
-
 
     @Test
     void validateSuccess() {
@@ -132,7 +131,7 @@ class UaaPasswordPolicyValidatorTests {
                 fail("Didn't expect InvalidPasswordException, but messages were " + e.getErrorMessages());
             }
             for (String expectedError : expectedErrors) {
-                assertThat(e.getErrorMessages().contains(expectedError)).as("Errors should contain:" + expectedError).isTrue();
+                assertThat(e.getErrorMessages()).as("Errors should contain:" + expectedError).contains(expectedError);
             }
         }
     }

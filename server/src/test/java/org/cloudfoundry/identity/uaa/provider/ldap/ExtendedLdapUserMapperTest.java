@@ -13,9 +13,9 @@ import javax.naming.directory.Attributes;
 import javax.naming.ldap.LdapName;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.provider.ldap.ExtendedLdapUserMapper.SUBSTITUTE_MAIL_ATTR_NAME;
 
@@ -29,13 +29,13 @@ class ExtendedLdapUserMapperTest {
     @BeforeEach
     void setUp() {
         attrs = new NameAwareAttributes();
-        authorities = emptyList();
+        authorities = List.of();
         mapper = new ExtendedLdapUserMapper();
     }
 
     @Test
     void configureMailAttribute() {
-        ExtendedLdapUserMapper mapper = new ExtendedLdapUserMapper();
+        mapper = new ExtendedLdapUserMapper();
         mapper.setMailAttributeName("mail");
         mapper.setMailSubstitute("{0}@substitute.org");
         mapper.setMailSubstituteOverridesLdap(true);
@@ -85,7 +85,7 @@ class ExtendedLdapUserMapperTest {
 
     private ExtendedLdapUserImpl getExtendedLdapUser() {
         UserDetails userDetails = mapper.mapUserFromContext(adapter, "marissa", authorities);
-        assertThat(userDetails instanceof ExtendedLdapUserImpl).isEqualTo(true);
+        assertThat(userDetails).isInstanceOf(ExtendedLdapUserImpl.class);
         return (ExtendedLdapUserImpl) userDetails;
     }
 

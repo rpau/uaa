@@ -45,18 +45,18 @@ class UaaMetricsEmitterTest {
         metricsUtils = mock(MetricsUtils.class);
 
         Map<String, String> urlGroupJsonMap = new HashMap<>();
-        urlGroupJsonMap.put("/ui", uiJson);
-        urlGroupJsonMap.put("/static-content", staticContentJson);
+        urlGroupJsonMap.put("/ui", UI_JSON);
+        urlGroupJsonMap.put("/static-content", STATIC_CONTENT_JSON);
 
         uaaMetrics1 = mock(UaaMetrics.class);
-        when(uaaMetrics1.getGlobals()).thenReturn(globalsJson1);
+        when(uaaMetrics1.getGlobals()).thenReturn(GLOBALS_JSON_1);
         when(uaaMetrics1.getSummary()).thenReturn(urlGroupJsonMap);
         when(uaaMetrics1.getIdleTime()).thenReturn(12349L);
         when(uaaMetrics1.getUpTime()).thenReturn(12349843L);
         when(uaaMetrics1.getInflightCount()).thenReturn(3L);
 
         uaaMetrics2 = mock(UaaMetrics.class);
-        when(uaaMetrics2.getGlobals()).thenReturn(globalsJson2);
+        when(uaaMetrics2.getGlobals()).thenReturn(GLOBALS_JSON_2);
         when(uaaMetrics2.getSummary()).thenReturn(urlGroupJsonMap);
         when(uaaMetrics2.getIdleTime()).thenReturn(12349L);
         when(uaaMetrics2.getUpTime()).thenReturn(12349843L);
@@ -144,7 +144,7 @@ class UaaMetricsEmitterTest {
     void getMetricDelta() {
         String name = "metric.name";
         assertThat(uaaMetricsEmitter.getMetricDelta(name, 5L)).isEqualTo(5L);
-        assertThat(uaaMetricsEmitter.getMetricDelta(name, 5L)).isEqualTo(0L);
+        assertThat(uaaMetricsEmitter.getMetricDelta(name, 5L)).isZero();
         assertThat(uaaMetricsEmitter.getMetricDelta(name, 8L)).isEqualTo(3L);
     }
 
@@ -208,7 +208,7 @@ class UaaMetricsEmitterTest {
         Mockito.verify(statsDClient, times(0)).gauge(anyString(), anyLong());
     }
 
-    private final String staticContentJson = """
+    private static final String STATIC_CONTENT_JSON = """
             {
                "lastRequests":[
                   {
@@ -307,7 +307,7 @@ class UaaMetricsEmitterTest {
             }\
             """;
 
-    private final String uiJson = """
+    private static final String UI_JSON = """
             { \s
                "lastRequests":[  ],
                "detailed":{ \s
@@ -345,7 +345,7 @@ class UaaMetricsEmitterTest {
             }\
             """;
 
-    private final String globalsJson1 = """
+    private static final String GLOBALS_JSON_1 = """
             {
                "lastRequests":[
                   {
@@ -445,7 +445,7 @@ class UaaMetricsEmitterTest {
             """;
 
     //values have increased
-    private final String globalsJson2 = globalsJson1
+    private static final String GLOBALS_JSON_2 = GLOBALS_JSON_1
             .replace("\"count\":3087,\n", "\"count\":3091,\n") //total
             .replace("         \"count\":763,\n", "         \"count\":764,\n") //redirect
             .replace("         \"count\":175,\n", "         \"count\":176,\n") //client_error

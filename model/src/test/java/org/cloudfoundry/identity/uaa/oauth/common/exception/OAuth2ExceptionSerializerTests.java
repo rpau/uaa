@@ -93,7 +93,7 @@ class OAuth2ExceptionSerializerTests {
     }
 
     @Test
-    void writeValueAsStringUnapprovedClientAuthenticationException() throws Exception {
+    void writeValueAsStringUnapprovedClientAuthenticationException() {
         String expected = createResponse(new UnapprovedClientAuthenticationException(DETAILS, new Exception("")).getMessage());
         assertThat(expected).isNotNull();
     }
@@ -149,7 +149,6 @@ class OAuth2ExceptionSerializerTests {
     void writeValueAsStringInvalidScopeException() throws Exception {
         oauthException = new InvalidScopeException(DETAILS, Set.of("unknown"));
         assertThat(oauthException.getHttpErrorCode()).isEqualTo(400);
-        String expected = createResponse(oauthException.getOAuth2ErrorCode());
         assertThat(mapper.writeValueAsString(oauthException)).isNotNull();
     }
 

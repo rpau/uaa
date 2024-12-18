@@ -1,6 +1,5 @@
 package org.cloudfoundry.identity.uaa.audit;
 
-
 import org.cloudfoundry.identity.uaa.logging.LogSanitizerUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

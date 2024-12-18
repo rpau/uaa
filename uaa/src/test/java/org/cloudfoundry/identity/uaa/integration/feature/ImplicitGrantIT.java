@@ -47,6 +47,7 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringJUnitConfig(classes = DefaultIntegrationTestConfig.class)
+// public for YamlProcessorTest
 public class ImplicitGrantIT {
 
     @Autowired
@@ -122,13 +123,11 @@ public class ImplicitGrantIT {
         Map<String, Object> claims = JsonUtils.readValue(accessToken.getClaims(), new TypeReference<Map<String, Object>>() {
         });
 
-        assertThat(claims.get("jti")).isEqualTo(params.getFirst("jti"));
-        assertThat(claims.get("client_id")).isEqualTo("cf");
-        assertThat(claims.get("cid")).isEqualTo("cf");
-        assertThat(claims.get("user_name")).isEqualTo(testAccounts.getUserName());
-
+        assertThat(claims).containsEntry("jti", params.getFirst("jti"))
+                .containsEntry("client_id", "cf")
+                .containsEntry("cid", "cf")
+                .containsEntry("user_name", testAccounts.getUserName());
         assertThat(((List<String>) claims.get("scope"))).containsExactlyInAnyOrder(scopes);
-
         assertThat(((List<String>) claims.get("aud"))).containsExactlyInAnyOrder("scim", "openid", "cloud_controller", "password", "cf", "uaa");
     }
 

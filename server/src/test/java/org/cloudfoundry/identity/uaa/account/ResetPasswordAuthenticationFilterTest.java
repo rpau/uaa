@@ -85,11 +85,8 @@ class ResetPasswordAuthenticationFilterTest {
         request.setParameter("password_confirmation", passwordConfirmation);
         request.setParameter("email", email);
 
-
         response = mock(HttpServletResponse.class);
-
         chain = mock(FilterChain.class);
-
         service = mock(ResetPasswordService.class);
         user = new ScimUser("id", "username", "first name", "last name");
         resetPasswordResponse = new ResetPasswordService.ResetPasswordResponse(user, "/", null);
@@ -142,19 +139,17 @@ class ResetPasswordAuthenticationFilterTest {
         verify(chain, times(0)).doFilter(any(), any());
     }
 
-
     @Test
     void invalid_password_confirmation() throws Exception {
         request.setParameter("password_confirmation", "invalid");
         Exception e = error_during_password_reset(PasswordConfirmationException.class);
-        assertThat(e instanceof AuthenticationException).isTrue();
-        assertThat(e.getCause()).isNotNull();
-        assertThat(e.getCause() instanceof PasswordConfirmationException).isTrue();
+        assertThat(e).isInstanceOf(AuthenticationException.class)
+                .hasCauseInstanceOf(PasswordConfirmationException.class);
+
         PasswordConfirmationException pe = (PasswordConfirmationException) e.getCause();
         assertThat(pe.getMessageCode()).isEqualTo("form_error");
         assertThat(pe.getEmail()).isEqualTo(email);
     }
-
 
     @Test
     void error_during_password_reset_uaa_exception() throws Exception {
@@ -194,6 +189,4 @@ class ResetPasswordAuthenticationFilterTest {
 
         return exception;
     }
-
-
 }

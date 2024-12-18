@@ -111,5 +111,4 @@ public abstract class AbstractPersistentDefaultTokenServicesTests extends Abstra
     protected abstract int getAccessTokenCount();
 
     protected abstract int getRefreshTokenCount();
-
 }

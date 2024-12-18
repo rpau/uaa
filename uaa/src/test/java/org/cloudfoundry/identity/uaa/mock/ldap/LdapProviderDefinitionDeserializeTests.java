@@ -15,7 +15,6 @@
 
 package org.cloudfoundry.identity.uaa.mock.ldap;
 
-
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.cloudfoundry.identity.uaa.constants.OriginKeys;
 import org.cloudfoundry.identity.uaa.provider.IdentityProvider;
@@ -41,8 +40,8 @@ class LdapProviderDefinitionDeserializeTests {
                   "name": "test-identity-provider-9bmlg",
                   "originKey": "ldap",
                   "type": "ldap"
-                }\
-                """;
+                }""";
+
         IdentityProvider<LdapIdentityProviderDefinition> def = JsonUtils.readValue(json, new TypeReference<IdentityProvider<LdapIdentityProviderDefinition>>() {
         });
         assertThat(def.getType()).isEqualTo(OriginKeys.LDAP);
@@ -65,5 +64,4 @@ class LdapProviderDefinitionDeserializeTests {
         assertThat(def.getType()).isEqualTo(OriginKeys.LDAP);
         assertThat(def.getConfig().getBaseUrl()).isEqualTo("ldap://test-identity-provider-9bmlg.url");
     }
-
 }

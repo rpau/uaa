@@ -15,7 +15,6 @@
 
 package org.cloudfoundry.identity.uaa.provider.ldap;
 
-
 import org.cloudfoundry.identity.uaa.provider.AbstractIdentityProviderDefinition;
 import org.cloudfoundry.identity.uaa.provider.IdentityProvider;
 import org.cloudfoundry.identity.uaa.provider.LdapIdentityProviderDefinition;

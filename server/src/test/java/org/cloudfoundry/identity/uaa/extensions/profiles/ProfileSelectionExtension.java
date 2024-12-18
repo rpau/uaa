@@ -1,6 +1,5 @@
 package org.cloudfoundry.identity.uaa.extensions.profiles;
 
-
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.extension.BeforeTestExecutionCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;

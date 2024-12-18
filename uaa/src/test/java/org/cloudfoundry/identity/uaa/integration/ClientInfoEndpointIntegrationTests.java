@@ -43,7 +43,7 @@ class ClientInfoEndpointIntegrationTests {
     private static final UaaTestAccounts testAccounts = UaaTestAccounts.standard(serverRunning);
 
     @RegisterExtension
-    private static final TestAccountExtension testAccountSetup = TestAccountExtension.standard(serverRunning, testAccounts);
+    private static final TestAccountExtension testAccountExtension = TestAccountExtension.standard(serverRunning, testAccounts);
 
     @Test
     void getClientInfo() {

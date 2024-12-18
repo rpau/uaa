@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils.getClientCredentialsOAuthAccessToken;
 import static org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils.getUserOAuthAccessToken;
@@ -55,7 +56,6 @@ class TokenRevocationEndpointMockMvcTest extends AbstractTokenMockMvcTests {
                     "client_credentials,password"
                     , true
             );
-
 
             //this is the token we will revoke
             String clientToken =
@@ -106,15 +106,12 @@ class TokenRevocationEndpointMockMvcTest extends AbstractTokenMockMvcTests {
                         true
                 );
 
-
-        UaaClientDetails targetClient =
-                setUpClients(resourceClientId,
-                        "uaa.none",
-                        "openid",
-                        "client_credentials,password",
-                        true
-                );
-
+        setUpClients(resourceClientId,
+                "uaa.none",
+                "openid",
+                "client_credentials,password",
+                true
+        );
 
         //this is the token we will revoke
         String revokeAccessToken =
@@ -141,13 +138,10 @@ class TokenRevocationEndpointMockMvcTest extends AbstractTokenMockMvcTests {
                         .header("Authorization", "Bearer " + revokeAccessToken))
                 .andExpect(status().isOk());
 
-
-        try {
-            revocableTokenProvisioning.retrieve(tokenToBeRevoked, IdentityZoneHolder.get().getId());
-            fail("Token should have been deleted");
-        } catch (EmptyResultDataAccessException e) {
-            //expected
-        }
+        String zoneId = IdentityZoneHolder.get().getId();
+        assertThatThrownBy(() -> revocableTokenProvisioning.retrieve(tokenToBeRevoked, zoneId))
+                .as("Token should have been deleted")
+                .isInstanceOf(EmptyResultDataAccessException.class);
     }
 
     @Test
@@ -172,15 +166,12 @@ class TokenRevocationEndpointMockMvcTest extends AbstractTokenMockMvcTests {
                         true
                 );
 
-
-        UaaClientDetails targetClient =
-                setUpClients(resourceClientId,
-                        "uaa.none",
-                        "openid",
-                        "client_credentials,password",
-                        true
-                );
-
+        setUpClients(resourceClientId,
+                "uaa.none",
+                "openid",
+                "client_credentials,password",
+                true
+        );
 
         //this is the token we will revoke
         String revokeAccessToken =
@@ -207,7 +198,6 @@ class TokenRevocationEndpointMockMvcTest extends AbstractTokenMockMvcTests {
                         .header("Authorization", "Bearer " + revokeAccessToken))
                 .andExpect(status().isOk());
 
-
         try {
             revocableTokenProvisioning.retrieve(tokenToBeRevoked, IdentityZoneHolder.get().getId());
             fail("Token should have been deleted");
@@ -219,7 +209,7 @@ class TokenRevocationEndpointMockMvcTest extends AbstractTokenMockMvcTests {
     @Test
     void revokeOtherClientTokenForbidden() throws Exception {
         String resourceClientId = generator.generate();
-        UaaClientDetails resourceClient = setUpClients(
+        setUpClients(
                 resourceClientId,
                 "uaa.resource",
                 "uaa.resource",
@@ -234,7 +224,6 @@ class TokenRevocationEndpointMockMvcTest extends AbstractTokenMockMvcTests {
                 "client_credentials,password",
                 true
         );
-
 
         //this is the token we will revoke
         String revokeAccessToken =
@@ -335,10 +324,9 @@ class TokenRevocationEndpointMockMvcTest extends AbstractTokenMockMvcTests {
         assertThat(tokenRevocationEventListener.getEventCount()).isOne();
         assertThat(tokenRevocationEventListener.getEvents().get(0).getClientId()).isEqualTo(client.getClientId());
         assertThat(tokenRevocationEventListener.getEvents().get(0).getUserId()).as("Event for client based revocation should not contain userid").isNull();
-        assertThat(tokenRevocationEventListener.getEvents().get(0).getAuditEvent().getData()).contains(client.getClientId());
-        assertThat(tokenRevocationEventListener.getEvents().get(0).getAuditEvent().getData()).doesNotContain("UserID");
+        assertThat(tokenRevocationEventListener.getEvents().get(0).getAuditEvent().getData()).contains(client.getClientId())
+                .doesNotContain("UserID");
         assertThat(tokenRevocationEventListener.getEvents().get(0).getAuditEvent().getOrigin()).contains("admin");
-
 
         //we should fail attempting to use the token
         mockMvc.perform(
@@ -347,7 +335,6 @@ class TokenRevocationEndpointMockMvcTest extends AbstractTokenMockMvcTests {
                 )
                 .andExpect(status().isUnauthorized())
                 .andExpect(content().string(containsString("\"error\":\"invalid_token\"")));
-
     }
 
     @Test
@@ -522,7 +509,6 @@ class TokenRevocationEndpointMockMvcTest extends AbstractTokenMockMvcTests {
                 )
                 .andExpect(status().isUnauthorized())
                 .andExpect(content().string(containsString("\"error\":\"invalid_token\"")));
-
 
         // ensure tokens issued for user to other clients still work
         mockMvc.perform(

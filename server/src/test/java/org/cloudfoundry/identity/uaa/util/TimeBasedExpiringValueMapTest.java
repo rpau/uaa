@@ -120,7 +120,7 @@ public class TimeBasedExpiringValueMapTest {
         for (Thread thread : threads) {
             thread.join();
         }
-        assertThat(map.size()).isGreaterThan(0);
+        assertThat(map.size()).isPositive();
 
         when(timeService.getCurrentTimeMillis()).thenReturn(Long.MAX_VALUE);
         map.get("random-key");

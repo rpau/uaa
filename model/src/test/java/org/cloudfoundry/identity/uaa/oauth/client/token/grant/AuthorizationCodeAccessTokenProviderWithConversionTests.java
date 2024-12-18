@@ -9,9 +9,6 @@ import org.cloudfoundry.identity.uaa.oauth.common.OAuth2AccessToken;
 import org.cloudfoundry.identity.uaa.oauth.common.exceptions.InvalidClientException;
 import org.cloudfoundry.identity.uaa.oauth.token.AccessTokenRequest;
 import org.cloudfoundry.identity.uaa.oauth.token.DefaultAccessTokenRequest;
-import org.hamcrest.Description;
-import org.hamcrest.Matcher;
-import org.hamcrest.TypeSafeMatcher;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -28,6 +25,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -48,7 +46,7 @@ class AuthorizationCodeAccessTokenProviderWithConversionTests {
 
         private final String responseBody;
 
-        {
+        static {
             DEFAULT_RESPONSE_HEADERS.setContentType(MediaType.APPLICATION_JSON);
         }
 
@@ -86,6 +84,7 @@ class AuthorizationCodeAccessTokenProviderWithConversionTests {
             }
         }
 
+        @Override
         public HttpMethod getMethod() {
             return HttpMethod.POST;
         }
@@ -101,8 +100,8 @@ class AuthorizationCodeAccessTokenProviderWithConversionTests {
                     return responseHeaders;
                 }
 
-                public InputStream getBody() throws IOException {
-                    return new ByteArrayInputStream(responseBody.getBytes("UTF-8"));
+                public InputStream getBody() {
+                    return new ByteArrayInputStream(responseBody.getBytes(StandardCharsets.UTF_8));
                 }
 
                 public String getStatusText() {
@@ -114,6 +113,7 @@ class AuthorizationCodeAccessTokenProviderWithConversionTests {
                 }
 
                 public void close() {
+                    // do nothing
                 }
 
                 public int getRawStatusCode() {
@@ -150,7 +150,7 @@ class AuthorizationCodeAccessTokenProviderWithConversionTests {
     }
 
     @Test
-    void getErrorFromJson() throws Exception {
+    void getErrorFromJson() {
         final InvalidClientException exception = new InvalidClientException("FOO");
         requestFactory = new ClientHttpRequestFactory() {
             public ClientHttpRequest createRequest(URI uri, HttpMethod httpMethod) throws IOException {
@@ -187,15 +187,11 @@ class AuthorizationCodeAccessTokenProviderWithConversionTests {
     }
 
     @Test
-    void getErrorFromForm() throws Exception {
+    void getErrorFromForm() {
         final HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        requestFactory = new ClientHttpRequestFactory() {
-            public ClientHttpRequest createRequest(URI uri, HttpMethod httpMethod) {
-                return new StubClientHttpRequest(HttpStatus.BAD_REQUEST, responseHeaders,
-                        "error=invalid_client&error_description=FOO");
-            }
-        };
+        requestFactory = (uri, httpMethod) -> new StubClientHttpRequest(HttpStatus.BAD_REQUEST, responseHeaders,
+                "error=invalid_client&error_description=FOO");
         AccessTokenRequest request = new DefaultAccessTokenRequest();
         request.setAuthorizationCode("foo");
         request.setPreservedState(new Object());
@@ -204,19 +200,5 @@ class AuthorizationCodeAccessTokenProviderWithConversionTests {
         assertThatThrownBy(() -> provider.obtainAccessToken(resource, request))
                 .isInstanceOf(OAuth2AccessDeniedException.class)
                 .hasCauseInstanceOf(InvalidClientException.class);
-    }
-
-    private Matcher<Throwable> hasCause(final Matcher<?> matcher) {
-        return new TypeSafeMatcher<>() {
-            public void describeTo(Description description) {
-                description.appendText("exception matching ");
-                description.appendDescriptionOf(matcher);
-            }
-
-            @Override
-            public boolean matchesSafely(Throwable item) {
-                return matcher.matches(item.getCause());
-            }
-        };
     }
 }

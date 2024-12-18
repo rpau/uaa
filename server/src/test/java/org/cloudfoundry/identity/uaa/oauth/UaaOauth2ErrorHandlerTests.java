@@ -1,6 +1,5 @@
 package org.cloudfoundry.identity.uaa.oauth;
 
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -14,7 +13,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class UaaOauth2ErrorHandlerTests {
-
 
     private final Map<HttpStatus, ClientHttpResponse> responses = new HashMap<>();
     private UaaOauth2ErrorHandler handler;

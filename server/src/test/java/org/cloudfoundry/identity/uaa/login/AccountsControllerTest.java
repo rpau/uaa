@@ -199,7 +199,6 @@ class AccountsControllerTest {
                 .andExpect(model().attribute("error_message_code", "form_error"));
     }
 
-
     @Test
     void verifyUser() throws Exception {
         when(accountCreationService.completeActivation("the_secret_code"))

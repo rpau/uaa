@@ -9,8 +9,8 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class InternalLimiterFactoryImplTest {
-    private static final String Global = WindowType.GLOBAL.windowType();
-    private static final String NotGlobal = "!" + Global;
+    private static final String GLOBAL = WindowType.GLOBAL.windowType();
+    private static final String NOT_GLOBAL = "!" + GLOBAL;
     private static final String NAME = "Test";
     private static final String REQUESTS_PER_WINDOW = "5r/2s";
 
@@ -20,33 +20,30 @@ class InternalLimiterFactoryImplTest {
     void constructorOptionsTest() {
         RequestsPerWindowSecs requests = RequestsPerWindowSecs.from("limiterName", "testData", REQUESTS_PER_WINDOW);
         InternalLimiterFactoryImpl factory = InternalLimiterFactoryImpl.builder()
-                .name(NAME).windowType(Global).requestsPerWindow(requests)
+                .name(NAME).windowType(GLOBAL).requestsPerWindow(requests)
                 .build();
 
-        assertThat(factory.getRequestsPerWindow().toString()).isEqualTo(REQUESTS_PER_WINDOW);
+        assertThat(factory.getRequestsPerWindow()).hasToString(REQUESTS_PER_WINDOW);
         assertThat(factory.getName()).isEqualTo(NAME);
-        assertThat(factory.getWindowType()).isEqualTo(Global);
+        assertThat(factory.getWindowType()).isEqualTo(GLOBAL);
         assertThat(factory.isGlobal()).isTrue();
 
         factory = InternalLimiterFactoryImpl.builder()
-                .name(NAME).windowType(NotGlobal).requestsPerWindow(requests)
+                .name(NAME).windowType(NOT_GLOBAL).requestsPerWindow(requests)
                 .build();
-
-        assertThat(factory.getRequestsPerWindow().toString()).isEqualTo(REQUESTS_PER_WINDOW);
+        assertThat(factory.getRequestsPerWindow()).hasToString(REQUESTS_PER_WINDOW);
         assertThat(factory.getName()).isEqualTo(NAME);
-        assertThat(factory.getWindowType()).isEqualTo(NotGlobal);
+        assertThat(factory.getWindowType()).isEqualTo(NOT_GLOBAL);
         assertThat(factory.isGlobal()).isFalse();
 
         int windowSecs = factory.getWindowSecs();
         CompoundKey compoundKey = CompoundKey.from(NAME, factory.getWindowType(), "whatever");
 
         InternalLimiter limiter = factory.newLimiter(compoundKey, mockCurrentTimeSupplier.nowAsInstant());
-
         assertThat(limiter.getCompoundKey()).isEqualTo(compoundKey);
         assertThat(limiter.getRequestsRemaining()).isEqualTo(factory.getInitialRequestsRemaining());
 
         mockCurrentTimeSupplier.add(windowSecs * 1000000000L); // Nanos
-
         assertThat(limiter.getWindowEndExclusive()).isEqualTo(mockCurrentTimeSupplier.nowAsInstant());
     }
 }

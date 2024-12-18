@@ -14,7 +14,6 @@
 package org.cloudfoundry.identity.uaa.integration;
 
 import org.apache.http.impl.client.BasicCookieStore;
-import org.apache.http.impl.cookie.BasicClientCookie;
 import org.cloudfoundry.identity.uaa.ServerRunningExtension;
 import org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils;
 import org.cloudfoundry.identity.uaa.oauth.client.resource.AuthorizationCodeResourceDetails;
@@ -30,7 +29,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.codec.Base64;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -57,7 +55,7 @@ class CheckTokenEndpointIntegrationTests {
     private static final UaaTestAccounts testAccounts = UaaTestAccounts.standard(serverRunning);
 
     @RegisterExtension
-    private static final TestAccountExtension testAccountSetup = TestAccountExtension.standard(serverRunning, testAccounts);
+    private static final TestAccountExtension testAccountExtension = TestAccountExtension.standard(serverRunning, testAccounts);
 
     @Test
     void decodeToken() {
@@ -70,22 +68,11 @@ class CheckTokenEndpointIntegrationTests {
         ResponseEntity<Void> result = serverRunning.getForResponse(uri.toString(), getHeaders(cookies));
         assertThat(result.getStatusCode()).isEqualTo(HttpStatus.FOUND);
         String location = result.getHeaders().getLocation().toString();
-
-        if (result.getHeaders().containsKey("Set-Cookie")) {
-            for (String cookie : result.getHeaders().get("Set-Cookie")) {
-                int nameLength = cookie.indexOf('=');
-                cookies.addCookie(new BasicClientCookie(cookie.substring(0, nameLength), cookie.substring(nameLength + 1)));
-            }
-        }
+        IntegrationTestUtils.extractCookies(result, cookies);
 
         ResponseEntity<String> response = serverRunning.getForString(location, getHeaders(cookies));
+        IntegrationTestUtils.extractCookies(response, cookies);
 
-        if (response.getHeaders().containsKey("Set-Cookie")) {
-            for (String cookie : response.getHeaders().get("Set-Cookie")) {
-                int nameLength = cookie.indexOf('=');
-                cookies.addCookie(new BasicClientCookie(cookie.substring(0, nameLength), cookie.substring(nameLength + 1)));
-            }
-        }
         // should be directed to the login screen...
         assertThat(response.getBody()).contains("/login.do")
                 .contains("username")
@@ -100,21 +87,11 @@ class CheckTokenEndpointIntegrationTests {
         // Should be redirected to the original URL, but now authenticated
         result = serverRunning.postForResponse("/login.do", getHeaders(cookies), formData);
         assertThat(result.getStatusCode()).isEqualTo(HttpStatus.FOUND);
-
-        if (result.getHeaders().containsKey("Set-Cookie")) {
-            for (String cookie : result.getHeaders().get("Set-Cookie")) {
-                int nameLength = cookie.indexOf('=');
-                cookies.addCookie(new BasicClientCookie(cookie.substring(0, nameLength), cookie.substring(nameLength + 1)));
-            }
-        }
+        IntegrationTestUtils.extractCookies(result, cookies);
 
         response = serverRunning.getForString(result.getHeaders().getLocation().toString(), getHeaders(cookies));
-        if (response.getHeaders().containsKey("Set-Cookie")) {
-            for (String cookie : response.getHeaders().get("Set-Cookie")) {
-                int nameLength = cookie.indexOf('=');
-                cookies.addCookie(new BasicClientCookie(cookie.substring(0, nameLength), cookie.substring(nameLength + 1)));
-            }
-        }
+        IntegrationTestUtils.extractCookies(response, cookies);
+
         if (response.getStatusCode() == HttpStatus.OK) {
             // The grant access page should be returned
             assertThat(response.getBody()).contains("<h1>Application Authorization</h1>");
@@ -130,7 +107,7 @@ class CheckTokenEndpointIntegrationTests {
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FOUND);
             location = response.getHeaders().getLocation().toString();
         }
-        assertThat(location.matches(resource.getPreEstablishedRedirectUri() + ".*code=.+")).as("Wrong location: " + location).isTrue();
+        assertThat(location).as("Wrong location: " + location).matches(resource.getPreEstablishedRedirectUri() + ".*code=.+");
 
         formData.clear();
         formData.add("client_id", resource.getClientId());
@@ -158,13 +135,12 @@ class CheckTokenEndpointIntegrationTests {
 
         @SuppressWarnings("unchecked")
         Map<String, String> map = tokenResponse.getBody();
-        assertThat(map.get("iss")).isNotNull();
-        assertThat(map)
+        assertThat(map).containsKey("iss")
                 .containsEntry("user_name", testAccounts.getUserName())
                 .containsEntry("email", testAccounts.getEmail());
 
         // Test that Spring's default converter can create an auth from the response.
-        Authentication auth = (new DefaultUserAuthenticationConverter()).extractAuthentication(map);
+        (new DefaultUserAuthenticationConverter()).extractAuthentication(map);
     }
 
     @Test
@@ -242,8 +218,7 @@ class CheckTokenEndpointIntegrationTests {
 
         @SuppressWarnings("unchecked")
         Map<String, String> map = tokenResponse.getBody();
-        assertThat(map.get("iss")).isNotNull();
-        assertThat(map)
+        assertThat(map).containsKey("iss")
                 .containsEntry("user_name", testAccounts.getUserName())
                 .containsEntry("email", testAccounts.getEmail());
     }
@@ -267,8 +242,7 @@ class CheckTokenEndpointIntegrationTests {
 
         @SuppressWarnings("unchecked")
         Map<String, String> map = tokenResponse.getBody();
-        assertThat(map.get("iss")).isNotNull();
-        assertThat(map)
+        assertThat(map).containsKey("iss")
                 .containsEntry("user_name", testAccounts.getUserName())
                 .containsEntry("email", testAccounts.getEmail());
     }
@@ -290,7 +264,7 @@ class CheckTokenEndpointIntegrationTests {
 
         @SuppressWarnings("unchecked")
         Map<String, String> map = tokenResponse.getBody();
-        assertThat(map.get("az_attr")).isNull();
+        assertThat(map).doesNotContainKey("az_attr");
     }
 
     @SuppressWarnings("unchecked")

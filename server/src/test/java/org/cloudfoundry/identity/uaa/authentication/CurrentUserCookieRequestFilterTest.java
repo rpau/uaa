@@ -61,9 +61,9 @@ class CurrentUserCookieRequestFilterTest {
 
         assertThat(res.getCookie("Current-User").getValue()).isEqualTo("current-user-cookie-value");
         String setCookieHeaderValue = res.getHeader("Set-Cookie");
-        assertThat(setCookieHeaderValue).contains("Path=/some-path");
-        assertThat(setCookieHeaderValue).contains("Max-Age=47");
-        assertThat(setCookieHeaderValue).contains("SameSite=Strict");
+        assertThat(setCookieHeaderValue).contains("Path=/some-path")
+                .contains("Max-Age=47")
+                .contains("SameSite=Strict");
         verify(filterChain).doFilter(req, res);
     }
 

@@ -54,7 +54,6 @@ import org.cloudfoundry.identity.uaa.zone.MultitenantClientServices;
 import org.cloudfoundry.identity.uaa.zone.TokenPolicy;
 import org.cloudfoundry.identity.uaa.zone.beans.IdentityZoneManagerImpl;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -84,8 +83,8 @@ import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.assertj.core.api.HamcrestCondition.matching;
 import static org.cloudfoundry.identity.uaa.oauth.TokenTestSupport.CLIENT_AUTHORITIES;
@@ -128,8 +127,8 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.emptyString;
 import static org.hamcrest.number.OrderingComparison.greaterThan;
-import static org.hamcrest.text.IsEmptyString.isEmptyString;
 import static org.junit.jupiter.api.Named.named;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.Mockito.any;
@@ -160,9 +159,7 @@ class DeprecatedUaaTokenServicesTests {
 
     void initDeprecatedUaaTokenServicesTests(TestTokenEnhancer enhancer) {
         this.tokenEnhancer = enhancer;
-        Assertions.assertDoesNotThrow(() -> {
-            tokenSupport = new TokenTestSupport(tokenEnhancer, new KeyInfoService("https://uaa.url"));
-        });
+        assertThatNoException().isThrownBy(() -> tokenSupport = new TokenTestSupport(tokenEnhancer, new KeyInfoService("https://uaa.url")));
 
         Set<String> thousandScopes = new HashSet<>();
         for (int i = 0; i < 1000; i++) {
@@ -281,7 +278,7 @@ class DeprecatedUaaTokenServicesTests {
         clientDetails.setScope(Sets.newHashSet("openid"));
 
         MultitenantClientServices mockMultitenantClientServices = mock(MultitenantClientServices.class);
-        when(mockMultitenantClientServices.loadClientByClientId(eq(TokenTestSupport.CLIENT_ID)))
+        when(mockMultitenantClientServices.loadClientByClientId(TokenTestSupport.CLIENT_ID))
                 .thenReturn(clientDetails);
 
         TokenValidityResolver tokenValidityResolver = mock(TokenValidityResolver.class);
@@ -430,12 +427,9 @@ class DeprecatedUaaTokenServicesTests {
         map.put("grant_type", "refresh_token");
         AuthorizationRequest authorizationRequest = new AuthorizationRequest(map, null, null, null, null, false, null, null, null);
         String refreshTokenValue = "dasdasdasdasdas";
-        try {
-            tokenServices.refreshAccessToken(refreshTokenValue, tokenSupport.requestFactory.createTokenRequest(authorizationRequest, "refresh_token"));
-            fail("Expected Exception was not thrown");
-        } catch (InvalidTokenException e) {
-            assertThat(e.getMessage()).doesNotContain(refreshTokenValue);
-        }
+        assertThatThrownBy(() -> tokenServices.refreshAccessToken(refreshTokenValue, tokenSupport.requestFactory.createTokenRequest(authorizationRequest, "refresh_token")))
+                .isInstanceOf(InvalidTokenException.class)
+                .hasMessageNotContaining(refreshTokenValue);
     }
 
     @MethodSource("data")
@@ -443,7 +437,8 @@ class DeprecatedUaaTokenServicesTests {
     void misconfigured_keys_throws_proper_error(TestTokenEnhancer enhancer) {
         initDeprecatedUaaTokenServicesTests(enhancer);
         IdentityZoneHolder.get().getConfig().getTokenPolicy().setActiveKeyId("invalid");
-        assertThatThrownBy(() -> performPasswordGrant(JWT.getStringValue()))
+        String jwtValue = JWT.getStringValue();
+        assertThatThrownBy(() -> performPasswordGrant(jwtValue))
                 .isInstanceOf(InternalAuthenticationServiceException.class)
                 .hasMessageContaining("Unable to sign token, misconfigured JWT signing keys");
     }
@@ -515,17 +510,14 @@ class DeprecatedUaaTokenServicesTests {
         initDeprecatedUaaTokenServicesTests(enhancer);
         String subdomain = "test-zone-subdomain";
         IdentityZone identityZone = getIdentityZone(subdomain);
-        try {
-            identityZone.setConfig(
-                    JsonUtils.readValue(
-                            "{\"issuer\": \"notAnURL\"}",
-                            IdentityZoneConfiguration.class
-                    )
-            );
-            fail("");
-        } catch (JsonUtils.JsonUtilException e) {
-            assertThat(e.getMessage()).contains("Invalid issuer format. Must be valid URL.");
-        }
+        assertThatThrownBy(() -> identityZone.setConfig(
+                JsonUtils.readValue(
+                        "{\"issuer\": \"notAnURL\"}",
+                        IdentityZoneConfiguration.class
+                ))
+        )
+                .isInstanceOf(JsonUtils.JsonUtilException.class)
+                .hasMessageContaining("Invalid issuer format. Must be valid URL.");
     }
 
     @MethodSource("data")
@@ -757,23 +749,22 @@ class DeprecatedUaaTokenServicesTests {
         when(tokenSupport.timeService.getCurrentTimeMillis()).thenCallRealMethod();
         OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
         //normal token validation
-        tokenServices.loadAuthentication(accessToken.getValue());
+        String accessTokenValue = accessToken.getValue();
+        tokenServices.loadAuthentication(accessTokenValue);
 
         //add a 2nd secret
         tokenSupport.defaultClient.setClientSecret(tokenSupport.defaultClient.getClientSecret() + " newsecret");
-        tokenServices.loadAuthentication(accessToken.getValue());
+        tokenServices.loadAuthentication(accessTokenValue);
 
         //generate a token when we have two secrets
         OAuth2AccessToken accessToken2 = tokenServices.createAccessToken(authentication);
 
         //remove the 1st secret
         tokenSupport.defaultClient.setClientSecret("newsecret");
-        try {
-            tokenServices.loadAuthentication(accessToken.getValue());
-            fail("Token should fail to validate on the revocation signature");
-        } catch (InvalidTokenException e) {
-            assertThat(e.getMessage()).contains("revocable signature mismatch");
-        }
+        assertThatThrownBy(() -> tokenServices.loadAuthentication(accessTokenValue))
+                .isInstanceOf(InvalidTokenException.class)
+                .hasMessageContaining("revocable signature mismatch");
+
         tokenServices.loadAuthentication(accessToken2.getValue());
 
         OAuth2AccessToken accessToken3 = tokenServices.createAccessToken(authentication);
@@ -1378,7 +1369,6 @@ class DeprecatedUaaTokenServicesTests {
         refreshAzParameters.put(GRANT_TYPE, GRANT_TYPE_REFRESH_TOKEN);
         reducedScopeAuthorizationRequest.setRequestParameters(refreshAzParameters);
 
-        OAuth2Authentication reducedScopeAuthentication = new OAuth2Authentication(reducedScopeAuthorizationRequest.createOAuth2Request(), userAuthentication);
         OAuth2AccessToken reducedScopeAccessToken = tokenServices.refreshAccessToken(accessToken.getRefreshToken().getValue(), tokenSupport.requestFactory.createTokenRequest(reducedScopeAuthorizationRequest, "refresh_token"));
 
         // AT should have the new scopes, RT should be the same
@@ -1422,7 +1412,6 @@ class DeprecatedUaaTokenServicesTests {
         Map<String, String> refreshAzParameters = new HashMap<>(expandedScopeAuthorizationRequest.getRequestParameters());
         refreshAzParameters.put(GRANT_TYPE, GRANT_TYPE_REFRESH_TOKEN);
         expandedScopeAuthorizationRequest.setRequestParameters(refreshAzParameters);
-        OAuth2Authentication expandedScopeAuthentication = new OAuth2Authentication(expandedScopeAuthorizationRequest.createOAuth2Request(), userAuthentication);
         assertThatExceptionOfType(InvalidScopeException.class).isThrownBy(() ->
                 tokenServices.refreshAccessToken(accessToken.getRefreshToken().getValue(), tokenSupport.requestFactory.createTokenRequest(expandedScopeAuthorizationRequest, "refresh_token")));
     }
@@ -1544,12 +1533,9 @@ class DeprecatedUaaTokenServicesTests {
         refreshAzParameters.put(GRANT_TYPE, GRANT_TYPE_REFRESH_TOKEN);
         refreshAuthorizationRequest.setRequestParameters(refreshAzParameters);
 
-        try {
-            tokenServices.refreshAccessToken(accessToken.getRefreshToken().getValue(), tokenSupport.requestFactory.createTokenRequest(refreshAuthorizationRequest, "refresh_token"));
-            fail("Expected Exception was not thrown");
-        } catch (InvalidTokenException e) {
-            assertThat(e.getMessage()).doesNotContain(accessToken.getRefreshToken().getValue());
-        }
+        assertThatThrownBy(() -> tokenServices.refreshAccessToken(accessToken.getRefreshToken().getValue(), tokenSupport.requestFactory.createTokenRequest(refreshAuthorizationRequest, "refresh_token")))
+                .isInstanceOf(InvalidTokenException.class)
+                .hasMessageNotContaining(accessToken.getRefreshToken().getValue());
     }
 
     @MethodSource("data")
@@ -1970,12 +1956,10 @@ class DeprecatedUaaTokenServicesTests {
         OAuth2Authentication authentication = new OAuth2Authentication(authorizationRequest.createOAuth2Request(), userAuthentication);
         when(tokenSupport.timeService.getCurrentTimeMillis()).thenCallRealMethod().thenReturn(2001L);
         OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
-        try {
-            tokenServices.loadAuthentication(accessToken.getValue());
-            fail("Expected Exception was not thrown");
-        } catch (InvalidTokenException e) {
-            assertThat(e.getMessage()).doesNotContain(accessToken.getValue());
-        }
+        String accessTokenValue = accessToken.getValue();
+        assertThatThrownBy(() -> tokenServices.loadAuthentication(accessTokenValue))
+                .isInstanceOf(InvalidTokenException.class)
+                .hasMessageNotContaining(accessTokenValue);
     }
 
     @MethodSource("data")
@@ -2002,7 +1986,7 @@ class DeprecatedUaaTokenServicesTests {
         OAuth2RefreshToken refreshToken = token.getRefreshToken();
         this.assertCommonUserRefreshTokenProperties(refreshToken);
         assertThat(refreshToken).is(matching(OAuth2RefreshTokenMatchers.issuerUri(is(ISSUER_URI))));
-        //assertThat(refreshToken).is(matching(OAuth2RefreshTokenMatchers.validFor(greaterThan(60 * 60 * 24 * 30));
+        //assertThat(refreshToken).is(matching(OAuth2RefreshTokenMatchers.validFor(greaterThan(60 * 60 * 24 * 30))))
 
         this.assertCommonEventProperties(token, tokenSupport.userId, buildJsonString(tokenSupport.requestedAuthScopes));
 
@@ -2016,17 +2000,13 @@ class DeprecatedUaaTokenServicesTests {
     @ParameterizedTest(name = "{index}: {0}")
     void wrongClientDoesNotLeakToken(TestTokenEnhancer enhancer) {
         initDeprecatedUaaTokenServicesTests(enhancer);
-        AuthorizationRequest ar = mock(AuthorizationRequest.class);
         OAuth2AccessToken accessToken = getOAuth2AccessToken();
         TokenRequest refreshTokenRequest = getRefreshTokenRequest();
-        try {
-            refreshTokenRequest.setClientId("invalidClientForToken");
-            tokenServices.refreshAccessToken(accessToken.getRefreshToken().getValue(), refreshTokenRequest);
-            fail("");
-        } catch (InvalidGrantException e) {
-            assertThat(e.getMessage()).startsWith("Wrong client for this refresh token")
-                    .doesNotContain(accessToken.getRefreshToken().getValue());
-        }
+        refreshTokenRequest.setClientId("invalidClientForToken");
+        assertThatThrownBy(() -> tokenServices.refreshAccessToken(accessToken.getRefreshToken().getValue(), refreshTokenRequest))
+                .isInstanceOf(InvalidGrantException.class)
+                .hasMessageStartingWith("Wrong client for this refresh token")
+                .hasMessageNotContaining(accessToken.getRefreshToken().getValue());
     }
 
     @MethodSource("data")
@@ -2072,7 +2052,6 @@ class DeprecatedUaaTokenServicesTests {
         claims.setRevocable(false);
 
         boolean revocable = tokenServices.isRevocable(new Claims(), true);
-
         assertThat(revocable).isTrue();
     }
 
@@ -2084,7 +2063,6 @@ class DeprecatedUaaTokenServicesTests {
         claims.setRevocable(true);
 
         boolean revocable = tokenServices.isRevocable(new Claims(), true);
-
         assertThat(revocable).isTrue();
     }
 
@@ -2141,15 +2119,13 @@ class DeprecatedUaaTokenServicesTests {
         OAuth2Authentication authentication = new OAuth2Authentication(authorizationRequest.createOAuth2Request(), userAuthentication);
         when(tokenSupport.timeService.getCurrentTimeMillis()).thenCallRealMethod();
         OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
-        assertThat(tokenServices.readAccessToken(accessToken.getValue())).isEqualTo(accessToken);
+        String accessTokenValue = accessToken.getValue();
+        assertThat(tokenServices.readAccessToken(accessTokenValue)).isEqualTo(accessToken);
 
         tokenSupport.approvalStore.revokeApproval(approval, IdentityZoneHolder.get().getId());
-        try {
-            tokenServices.readAccessToken(accessToken.getValue());
-            fail("Approval has been revoked");
-        } catch (InvalidTokenException x) {
-            assertThat(x.getMessage()).as("Exception should be about approvals").contains("some requested scopes are not approved");
-        }
+        assertThatThrownBy(() -> tokenServices.readAccessToken(accessTokenValue))
+                .isInstanceOf(InvalidTokenException.class)
+                .hasMessageContaining("some requested scopes are not approved");
     }
 
     private Jwt getIdToken(List<String> scopes) {
@@ -2158,7 +2134,7 @@ class DeprecatedUaaTokenServicesTests {
     }
 
     private String buildJsonString(List<String> list) {
-        StringBuffer buf = new StringBuffer("[");
+        StringBuilder buf = new StringBuilder("[");
         int count = list.size();
         for (String s : list) {
             buf.append("\"");
@@ -2305,7 +2281,7 @@ class DeprecatedUaaTokenServicesTests {
                 .is(matching(cid(is(CLIENT_ID))))
                 .is(matching(scope(is(tokenSupport.clientScopes))))
                 .is(matching(audience(containsInAnyOrder(tokenSupport.resourceIds.toArray(new String[]{})))))
-                .is(matching(jwtId(not(isEmptyString()))))
+                .is(matching(jwtId(not(emptyString()))))
                 .is(matching(issuedAt(is(greaterThan(0)))))
                 .is(matching(expiry(is(greaterThan(0)))));
     }
@@ -2322,7 +2298,7 @@ class DeprecatedUaaTokenServicesTests {
                 .is(matching(cid(is(clientId))))
                 .is(matching(userId(is(tokenSupport.userId))))
                 .is(matching(email(is(tokenSupport.email))))
-                .is(matching(jwtId(not(isEmptyString()))))
+                .is(matching(jwtId(not(emptyString()))))
                 .is(matching(issuedAt(is(greaterThan(0)))))
                 .is(matching(expiry(is(greaterThan(0)))));
     }
@@ -2336,7 +2312,7 @@ class DeprecatedUaaTokenServicesTests {
                 .is(matching(OAuth2RefreshTokenMatchers.audience(containsInAnyOrder(tokenSupport.resourceIds.toArray(new String[]{})))))
                 .is(matching(OAuth2RefreshTokenMatchers.origin(is(OriginKeys.UAA))))
                 .is(matching(OAuth2RefreshTokenMatchers.revocationSignature(is(not(nullValue())))))
-                .is(matching(OAuth2RefreshTokenMatchers.jwtId(not(isEmptyString()))))
+                .is(matching(OAuth2RefreshTokenMatchers.jwtId(not(emptyString()))))
                 .is(matching(OAuth2RefreshTokenMatchers.issuedAt(is(greaterThan(0)))))
                 .is(matching(OAuth2RefreshTokenMatchers.expiry(is(greaterThan(0)))));
     }
@@ -2371,5 +2347,4 @@ class DeprecatedUaaTokenServicesTests {
 
         ReflectionTestUtils.setField(clientTokenValidity, "identityZoneManager", new IdentityZoneManagerImpl());
     }
-
 }

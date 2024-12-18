@@ -101,10 +101,10 @@ class ScimGroupEndpointsIntegrationTests {
     private static final UaaTestAccounts testAccounts = UaaTestAccounts.standard(serverRunning);
 
     @RegisterExtension
-    private static final TestAccountExtension testAccountSetup = TestAccountExtension.standard(serverRunning, testAccounts);
+    private static final TestAccountExtension testAccountExtension = TestAccountExtension.standard(serverRunning, testAccounts);
 
     @RegisterExtension
-    private static final OAuth2ContextExtension context = OAuth2ContextExtension.withTestAccounts(serverRunning, testAccountSetup);
+    private static final OAuth2ContextExtension context = OAuth2ContextExtension.withTestAccounts(serverRunning, testAccountExtension);
 
     private RestTemplate client;
     private List<ScimGroup> scimGroups;
@@ -121,6 +121,7 @@ class ScimGroupEndpointsIntegrationTests {
 
             @Override
             public void handleError(ClientHttpResponse response) {
+                // pass through
             }
         });
 
@@ -176,8 +177,7 @@ class ScimGroupEndpointsIntegrationTests {
         ScimGroup g = new ScimGroup(null, name, IdentityZoneHolder.get().getId());
         List<ScimGroupMember> m = members != null ? Arrays.asList(members) : Collections.emptyList();
         g.setMembers(m);
-        @SuppressWarnings("rawtypes")
-        ResponseEntity<Map> r = client.exchange(serverRunning.getUrl(groupEndpoint + "/{id}"), HttpMethod.PUT,
+        client.exchange(serverRunning.getUrl(groupEndpoint + "/{id}"), HttpMethod.PUT,
                 new HttpEntity<>(g, headers), Map.class, id);
         ScimGroup g1 = client.exchange(serverRunning.getUrl(groupEndpoint + "/{id}"), HttpMethod.PUT,
                 new HttpEntity<>(g, headers), ScimGroup.class, id).getBody();
@@ -490,7 +490,7 @@ class ScimGroupEndpointsIntegrationTests {
     }
 
     @Test
-    void accessTokenReflectsGroupMembershipForPasswordGrant() throws Exception {
+    void accessTokenReflectsGroupMembershipForPasswordGrant() {
 
         createTestClient(deleteMe, "secret", cfid);
         ScimUser user = createUser(deleteMe, "Passwo3d");
@@ -611,13 +611,7 @@ class ScimGroupEndpointsIntegrationTests {
                 Void.class);
         assertThat(result.getStatusCode()).isEqualTo(HttpStatus.FOUND);
         String location = result.getHeaders().getLocation().toString();
-
-        if (result.getHeaders().containsKey("Set-Cookie")) {
-            for (String cookie : result.getHeaders().get("Set-Cookie")) {
-                int nameLength = cookie.indexOf('=');
-                cookies.addCookie(new BasicClientCookie(cookie.substring(0, nameLength), cookie.substring(nameLength + 1)));
-            }
-        }
+        IntegrationTestUtils.extractCookies(result, cookies);
 
         ResponseEntity<String> response = serverRunning.getForString(location, getHeaders(cookies));
         // should be directed to the login screen...
@@ -641,24 +635,15 @@ class ScimGroupEndpointsIntegrationTests {
         assertThat(result.getStatusCode()).isEqualTo(HttpStatus.FOUND);
 
         cookies.clear();
-        if (result.getHeaders().containsKey("Set-Cookie")) {
-            for (String cookie : result.getHeaders().get("Set-Cookie")) {
-                int nameLength = cookie.indexOf('=');
-                cookies.addCookie(new BasicClientCookie(cookie.substring(0, nameLength), cookie.substring(nameLength + 1)));
-            }
-        }
+        IntegrationTestUtils.extractCookies(result, cookies);
 
         response = serverRunning.createRestTemplate().exchange(
                 new URI(result.getHeaders().getLocation().toString()),
                 HttpMethod.GET,
                 new HttpEntity<>(null, getHeaders(cookies)),
                 String.class);
-        if (response.getHeaders().containsKey("Set-Cookie")) {
-            for (String cookie : response.getHeaders().get("Set-Cookie")) {
-                int nameLength = cookie.indexOf('=');
-                cookies.addCookie(new BasicClientCookie(cookie.substring(0, nameLength), cookie.substring(nameLength + 1)));
-            }
-        }
+        IntegrationTestUtils.extractCookies(response, cookies);
+
         if (response.getStatusCode() == HttpStatus.OK) {
             // The grant access page should be returned
             assertThat(response.getBody()).contains("<h1>Application Authorization</h1>");
@@ -691,5 +676,4 @@ class ScimGroupEndpointsIntegrationTests {
         OAuth2AccessToken accessToken = DefaultOAuth2AccessToken.valueOf(tokenResponse.getBody());
         return accessToken;
     }
-
 }

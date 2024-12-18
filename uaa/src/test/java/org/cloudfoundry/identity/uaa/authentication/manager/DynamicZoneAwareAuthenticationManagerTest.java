@@ -287,6 +287,4 @@ class DynamicZoneAwareAuthenticationManagerTest {
             );
         }
     }
-
-
 }

@@ -91,7 +91,7 @@ class ScimGroupBootstrapTests {
     }
 
     @Test
-    void canAddGroups() throws Exception {
+    void canAddGroups() {
         bootstrap.setGroups(StringUtils.commaDelimitedListToSet("org1.dev,org1.qa,org1.engg,org1.mgr,org1.hr").stream().collect(new MapCollector<>(s -> s, s -> null)));
         bootstrap.afterPropertiesSet();
         assertThat(gDB.retrieveAll(IdentityZone.getUaaZoneId())).hasSize(5);
@@ -103,7 +103,7 @@ class ScimGroupBootstrapTests {
     }
 
     @Test
-    void allowsBootstrapFromOtherInstance() throws Exception {
+    void allowsBootstrapFromOtherInstance() {
         //original bootstrap
         bootstrap.setGroups(StringUtils.commaDelimitedListToSet("multiple_bootstrap_group").stream().collect(new MapCollector<>(s -> s, s -> null)));
         bootstrap.afterPropertiesSet();
@@ -128,14 +128,14 @@ class ScimGroupBootstrapTests {
     }
 
     @Test
-    void nullGroups() throws Exception {
+    void nullGroups() {
         bootstrap.setGroups(null);
         bootstrap.afterPropertiesSet();
         assertThat(gDB.retrieveAll(IdentityZone.getUaaZoneId())).isEmpty();
     }
 
     @Test
-    void canAddMembers() throws Exception {
+    void canAddMembers() {
         IdentityZoneHolder.get().getConfig().getUserConfig().setDefaultGroups(emptyList());
 
         bootstrap.setGroupMembers(Arrays.asList(
@@ -157,7 +157,7 @@ class ScimGroupBootstrapTests {
     }
 
     @Test
-    void stripsWhitespaceFromGroupNamesAndDescriptions() throws Exception {
+    void stripsWhitespaceFromGroupNamesAndDescriptions() {
         Map<String, String> groups = new HashMap<>();
         groups.put("print", "Access the network printer");
         groups.put("   something", "        Do something else");
@@ -172,7 +172,7 @@ class ScimGroupBootstrapTests {
     }
 
     @Test
-    void fallsBackToMessagesProperties() throws Exception {
+    void fallsBackToMessagesProperties() {
         // set up default groups
         HashMap<String, Object> defaultDescriptions = new HashMap<>();
         defaultDescriptions.put("pets.cat", "Access the cat");
@@ -199,7 +199,7 @@ class ScimGroupBootstrapTests {
     }
 
     @Test
-    void prefersNonBlankYmlOverMessagesProperties() throws Exception {
+    void prefersNonBlankYmlOverMessagesProperties() {
         // set up default groups
         HashMap<String, Object> defaults = new HashMap<>();
         defaults.put("records.read", "");

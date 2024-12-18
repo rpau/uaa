@@ -180,7 +180,6 @@ class InvitationsControllerTest {
         mockMvc.perform(get).andExpect(status().isUnprocessableEntity());
     }
 
-
     @Test
     void acceptInvitePage_for_unverifiedSamlUser() throws Exception {
         Map<String, String> codeData = getInvitationsCode("test-saml");
@@ -222,7 +221,6 @@ class InvitationsControllerTest {
         provider.setType(OriginKeys.OIDC10);
         when(providerProvisioning.retrieveByOrigin(eq("test-oidc"), anyString())).thenReturn(provider);
         when(externalOAuthProviderConfigurator.getIdpAuthenticationUrl(any(), any(), any())).thenReturn("http://example.com");
-
 
         MockHttpServletRequestBuilder get = get("/invitations/accept")
                 .param("code", "the_secret_code");

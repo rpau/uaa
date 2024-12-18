@@ -277,8 +277,8 @@ class AuthorizeEndpointDocs extends EndpointDocs {
                         responseHeaders,
                         requestParameters)).andReturn();
         String location = mvcResult.getResponse().getHeader("Location");
-        assertThat(location).contains("id_token=");
-        assertThat(location).contains("access_token=");
+        assertThat(location).contains("id_token=")
+                .contains("access_token=");
     }
 
     @Test
@@ -315,8 +315,8 @@ class AuthorizeEndpointDocs extends EndpointDocs {
                         responseHeaders,
                         requestParameters)).andReturn();
         String location = mvcResult.getResponse().getHeader("Location");
-        assertThat(location).contains("id_token=");
-        assertThat(location).contains("code=");
+        assertThat(location).contains("id_token=")
+                .contains("code=");
     }
 
     private static void resetMarissaPassword(ScimUserProvisioning scimUserProvisioning) {

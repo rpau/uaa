@@ -188,7 +188,6 @@ class PasswordChangeEndpointMockMvcTests {
                 .andExpect(redirectedUrl("/"))
                 .andReturn().getRequest().getSession(false);
 
-
         assertThat(afterLoginSessionA.getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY)).isNotNull();
         assertThat(afterLoginSessionB.getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY)).isNotNull();
 

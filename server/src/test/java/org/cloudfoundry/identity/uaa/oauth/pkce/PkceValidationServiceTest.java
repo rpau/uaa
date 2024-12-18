@@ -35,54 +35,54 @@ class PkceValidationServiceTest {
     private final String invalidCodeChallengeMethod = "InvalidMethod";
 
     @BeforeEach
-    void createPkceValidationService() throws Exception {
+    void createPkceValidationService() {
         pkceValidationService = new PkceValidationService(createPkceVerifiers());
         authorizeRequestParameters = new HashMap<>();
     }
 
     @Test
-    void longCodeChallengeParameter() throws Exception {
+    void longCodeChallengeParameter() {
         assertThat(PkceValidationService.matchWithPattern(longCodeChallengeOrCodeVerifierParameter)).isFalse();
     }
 
     @Test
-    void shortCodeChallengeParameter() throws Exception {
+    void shortCodeChallengeParameter() {
         assertThat(PkceValidationService.matchWithPattern(shortCodeChallengeOrCodeVerifierParameter)).isFalse();
     }
 
     @Test
-    void containsForbiddenCharactersCodeChallengeParameter() throws Exception {
+    void containsForbiddenCharactersCodeChallengeParameter() {
         assertThat(PkceValidationService
                 .matchWithPattern(containsForbiddenCharactersCodeChallengeOrCodeVerifierParameter)).isFalse();
     }
 
     @Test
-    void nullCodeChallengeOrCodeVerifierParameters() throws Exception {
+    void nullCodeChallengeOrCodeVerifierParameters() {
         assertThat(PkceValidationService.matchWithPattern(null)).isFalse();
     }
 
     @Test
-    void validCodeChallengeParameter() throws Exception {
+    void validCodeChallengeParameter() {
         assertThat(PkceValidationService.matchWithPattern(validPlainCodeChallengeOrCodeVerifierParameter)).isTrue();
     }
 
     @Test
-    void invalidCodeChallengeMethodParameter() throws Exception {
+    void invalidCodeChallengeMethodParameter() {
         assertThat(pkceValidationService.isCodeChallengeMethodSupported(invalidCodeChallengeMethod)).isFalse();
     }
 
     @Test
-    void nullCodeChallengeMethodParameter() throws Exception {
+    void nullCodeChallengeMethodParameter() {
         assertThat(pkceValidationService.isCodeChallengeMethodSupported(null)).isFalse();
     }
 
     @Test
-    void s256CodeChallengeMethodParameter() throws Exception {
+    void s256CodeChallengeMethodParameter() {
         assertThat(pkceValidationService.isCodeChallengeMethodSupported("S256")).isTrue();
     }
 
     @Test
-    void plainCodeChallengeMethodParameter() throws Exception {
+    void plainCodeChallengeMethodParameter() {
         assertThat(pkceValidationService.isCodeChallengeMethodSupported("plain")).isTrue();
     }
 
@@ -111,17 +111,17 @@ class PkceValidationServiceTest {
         authorizeRequestParameters.put(PkceValidationService.CODE_CHALLENGE,
                 validPlainCodeChallengeOrCodeVerifierParameter);
         assertThat(pkceValidationService.checkAndValidate(authorizeRequestParameters,
-                validPlainCodeChallengeOrCodeVerifierParameter, null)).isEqualTo(true);
+                validPlainCodeChallengeOrCodeVerifierParameter, null)).isTrue();
     }
 
     @Test
-    void pkceValidationServiceConstructorWithCodeChallengeMethodsMap() throws Exception {
+    void pkceValidationServiceConstructorWithCodeChallengeMethodsMap() {
         Set<String> testHashSet = new HashSet<>(Arrays.asList("S256", "plain"));
         assertThat(pkceValidationService.getSupportedCodeChallengeMethods()).isEqualTo(testHashSet);
     }
 
     @Test
-    void plainCodeChallengeMethodForPublicUse() throws Exception {
+    void plainCodeChallengeMethodForPublicUse() {
         ClientDetails client = mock(ClientDetails.class);
         when(client.getAdditionalInformation()).thenReturn(Map.of(ClientConstants.ALLOW_PUBLIC, "true"));
         authorizeRequestParameters.put(PkceValidationService.CODE_CHALLENGE,
@@ -138,7 +138,7 @@ class PkceValidationServiceTest {
                 validPlainCodeChallengeOrCodeVerifierParameter);
         authorizeRequestParameters.put(PkceValidationService.CODE_CHALLENGE_METHOD, new PlainPkceVerifier().getCodeChallengeMethod());
         assertThat(pkceValidationService.checkAndValidate(authorizeRequestParameters,
-                validPlainCodeChallengeOrCodeVerifierParameter, null)).isEqualTo(true);
+                validPlainCodeChallengeOrCodeVerifierParameter, null)).isTrue();
     }
 
     private Map<String, PkceVerifier> createPkceVerifiers() {

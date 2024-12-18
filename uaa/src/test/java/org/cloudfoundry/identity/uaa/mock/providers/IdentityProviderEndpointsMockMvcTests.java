@@ -670,7 +670,6 @@ class IdentityProviderEndpointsMockMvcTests {
 
         identityProvider.getConfig().setTokenUrl(null);
 
-
         mockMvc.perform(put("/identity-providers/" + identityProvider.getId())
                 .header("Authorization", "bearer " + adminToken)
                 .content(JsonUtils.writeValueAsString(identityProvider))

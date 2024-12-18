@@ -24,7 +24,7 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DefaultTestContext
-public class CheckDefaultAuthoritiesMvcMockTests {
+class CheckDefaultAuthoritiesMvcMockTests {
     @Autowired
     public WebApplicationContext webApplicationContext;
 
@@ -55,7 +55,7 @@ public class CheckDefaultAuthoritiesMvcMockTests {
     void defaultAuthorities() {
         assertThat(defaultAuthorities).hasSize(14);
         for (String s : EXPECTED_DEFAULT_GROUPS) {
-            assertThat(defaultAuthorities.contains(s)).as("Expecting authority to be present:" + s).isTrue();
+            assertThat(defaultAuthorities).as("Expecting authority to be present:" + s).contains(s);
         }
     }
 }

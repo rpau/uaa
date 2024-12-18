@@ -16,7 +16,6 @@ package org.cloudfoundry.identity.uaa.util;
 
 import com.google.common.collect.Lists;
 import com.nimbusds.jose.JWSSigner;
-import com.nimbusds.jose.KeyLengthException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.LoggerContext;
@@ -64,7 +63,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -96,7 +94,7 @@ import static org.mockito.hamcrest.MockitoHamcrest.argThat;
 public class JwtTokenSignedByThisUAATest {
     public static final String CLIENT_ID = "app";
     public static final String USER_ID = "a7f07bf6-e720-4652-8999-e980189cef54";
-    private final SignatureVerifier verifier = new KeyInfo("some-key-id", macSigningKeySecret, DEFAULT_UAA_URL, "HS256", null).getVerifier();
+    private final SignatureVerifier verifier = new KeyInfo("some-key-id", MAC_SIGNING_KEY_SECRET, DEFAULT_UAA_URL, "HS256", null).getVerifier();
 
     private final Instant oneSecondAfterTheTokenExpires = Instant.ofEpochSecond(1458997132 + 1);
     private final Instant oneSecondBeforeTheTokenExpires = Instant.ofEpochSecond(1458997132 - 1);
@@ -144,15 +142,15 @@ public class JwtTokenSignedByThisUAATest {
         TestUtils.resetIdentityZoneHolder(null);
     }
 
-    private static final String macSigningKeySecret = "foobarfoobarfoobarfoobarfoobarfoofoobarfoobarfoobarfoobarfoobarfoobar";
+    private static final String MAC_SIGNING_KEY_SECRET = "foobarfoobarfoobarfoobarfoobarfoofoobarfoobarfoobarfoobarfoobarfoobar";
 
     @BeforeEach
-    void setup() throws KeyLengthException {
+    void setup() {
         String defaultKeyId = "some-key-id";
 
         IdentityZone uaaZone = IdentityZone.getUaa();
         uaaZone.getConfig().getTokenPolicy().setKeys(
-                map(entry(defaultKeyId, macSigningKeySecret))
+                map(entry(defaultKeyId, MAC_SIGNING_KEY_SECRET))
         );
         IdentityZoneProvisioning identityZoneProvisioning = mock(IdentityZoneProvisioning.class);
         when(identityZoneProvisioning.retrieve(anyString())).thenReturn(uaaZone);
@@ -187,8 +185,7 @@ public class JwtTokenSignedByThisUAATest {
                 entry("aud", Arrays.asList("app", "acme")),
                 entry("revocable", true)
         );
-
-        signer = new UaaMacSigner(new SecretKeySpec(macSigningKeySecret.getBytes(StandardCharsets.UTF_8), "HS256"));
+        signer = new UaaMacSigner(new SecretKeySpec(MAC_SIGNING_KEY_SECRET.getBytes(StandardCharsets.UTF_8), "HS256"));
 
         IdentityZoneManager mockIdentityZoneManager = mock(IdentityZoneManager.class);
         when(mockIdentityZoneManager.getCurrentIdentityZoneId()).thenReturn(IdentityZone.getUaaZoneId());
@@ -210,7 +207,7 @@ public class JwtTokenSignedByThisUAATest {
                 .withAuthorities(Collections.singletonList(new SimpleGrantedAuthority("acme.dev"))));
 
         uaaUser = userDb.retrieveUserById(USER_ID);
-        uaaUserGroups = uaaUser.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList());
+        uaaUserGroups = new ArrayList<>(uaaUser.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList());
     }
 
     @Test
@@ -309,8 +306,6 @@ public class JwtTokenSignedByThisUAATest {
     @Test
     void getClientById() {
         String token = getToken();
-
-
         ClientDetails clientDetails = JwtTokenSignedByThisUAA.buildAccessTokenValidator(token, new KeyInfoService("https://localhost"))
                 .getClientDetails(inMemoryMultitenantClientServices);
 
@@ -476,7 +471,7 @@ public class JwtTokenSignedByThisUAATest {
     @Test
     void buildIdTokenValidator_performsSignatureValidation() {
         ChainedSignatureVerifier signatureVerifier = mock(ChainedSignatureVerifier.class);
-        when(signatureVerifier.getDelegates()).thenReturn(Arrays.asList(verifier));
+        when(signatureVerifier.getDelegates()).thenReturn(List.of(verifier));
         buildIdTokenValidator(getToken(), signatureVerifier, new KeyInfoService("https://localhost"));
 
         verify(signatureVerifier).getDelegates();
@@ -494,7 +489,7 @@ public class JwtTokenSignedByThisUAATest {
         content.put(SCOPE, Lists.newArrayList("openid"));
         content.put(GRANTED_SCOPES, Lists.newArrayList("foo.read"));
         ChainedSignatureVerifier validator = mock(ChainedSignatureVerifier.class);
-        when(validator.getDelegates()).thenReturn(Arrays.asList(verifier));
+        when(validator.getDelegates()).thenReturn(List.of(verifier));
 
         List<String> scopes = buildIdTokenValidator(getToken(), validator, new KeyInfoService("https://localhost")).requestedScopes();
         assertThat(scopes).isEqualTo(Lists.newArrayList("openid"));
@@ -564,7 +559,6 @@ public class JwtTokenSignedByThisUAATest {
                 .withEmail("marissa@test.org")
                 .withAuthorities(Collections.singletonList(new SimpleGrantedAuthority("a.different.scope"))));
         assertThatExceptionOfType(InvalidTokenException.class).isThrownBy(() ->
-
                 buildAccessTokenValidator(getToken(), new KeyInfoService("https://localhost"))
                         .checkUser(userDb::retrieveUserById));
     }
@@ -588,7 +582,6 @@ public class JwtTokenSignedByThisUAATest {
         InMemoryClientDetailsService clientDetailsService = new InMemoryClientDetailsService();
         clientDetailsService.setClientDetailsStore(Collections.emptyMap());
         assertThatExceptionOfType(InvalidTokenException.class).isThrownBy(() ->
-
                 buildAccessTokenValidator(getToken(), new KeyInfoService("https://localhost"))
                         .checkClient(clientDetailsService::loadClientByClientId));
     }
@@ -603,7 +596,6 @@ public class JwtTokenSignedByThisUAATest {
                 )
         );
         assertThatExceptionOfType(InvalidTokenException.class).isThrownBy(() ->
-
                 buildAccessTokenValidator(getToken(), new KeyInfoService("https://localhost"))
                         .checkClient(clientDetailsService::loadClientByClientId));
     }
@@ -658,7 +650,6 @@ public class JwtTokenSignedByThisUAATest {
                 .thenThrow(new EmptyResultDataAccessException(1)); // should not occur
 
         content.remove("revocable");
-
         buildAccessTokenValidator(getToken(), new KeyInfoService("https://localhost"))
                 .checkRevocableTokenStore(revocableTokenProvisioning);
 
@@ -673,7 +664,6 @@ public class JwtTokenSignedByThisUAATest {
         content.put(GRANTED_SCOPES, Collections.singletonList("some-granted-scope"));
 
         String refreshToken = getToken();
-
         buildRefreshTokenValidator(refreshToken, new KeyInfoService("https://localhost"))
                 .checkRequestedScopesAreGranted("some-granted-scope");
     }
@@ -686,7 +676,6 @@ public class JwtTokenSignedByThisUAATest {
         content.remove(GRANTED_SCOPES);
 
         String refreshToken = getToken();
-
         buildRefreshTokenValidator(refreshToken, new KeyInfoService("https://localhost"))
                 .checkRequestedScopesAreGranted("some-granted-scope");
     }
@@ -699,7 +688,6 @@ public class JwtTokenSignedByThisUAATest {
         content.put(GRANTED_SCOPES, Collections.singletonList("some-granted-scope"));
 
         String refreshToken = getToken();
-
         buildRefreshTokenValidator(refreshToken, new KeyInfoService("https://localhost"))
                 .checkRequestedScopesAreGranted("some-granted-scope");
 
@@ -730,16 +718,10 @@ public class JwtTokenSignedByThisUAATest {
                 refreshToken,
                 new KeyInfoService("https://localhost")
         );
-        assertThatThrownBy(() -> {
-            try {
-                jwtToken.checkRequestedScopesAreGranted(grantedScopes);
-            } catch (InvalidTokenException e) {
-                assertThat(logEvents).contains("ERROR -- " + expectedErrorMessage);
-                throw e; // rethrow so that expectedException can see the exception
-            }
-        })
+        assertThatThrownBy(() -> jwtToken.checkRequestedScopesAreGranted(grantedScopes))
                 .isInstanceOf(InvalidTokenException.class)
                 .hasMessageContaining(expectedErrorMessage);
+        assertThat(logEvents).contains("ERROR -- " + expectedErrorMessage);
     }
 
     @Test

@@ -13,7 +13,6 @@
  *******************************************************************************/
 package org.cloudfoundry.identity.uaa.mock.token;
 
-
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.Lists;
 import org.apache.directory.api.util.Base64;
@@ -66,7 +65,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class RefreshTokenMockMvcTests extends AbstractTokenMockMvcTests {
 
-    private final String signingKey1 = """
+    private static final String SIGNING_KEY_1 = """
             -----BEGIN RSA PRIVATE KEY-----
             MIIBOQIBAAJAcPh8sj6TdTGYUTAn7ywyqNuzPD8pNtmSFVm87yCIhKDdIdEQ+g8H
             xq8zBWtMN9uaxyEomLXycgTbnduW6YOpyQIDAQABAkAE2qiBAC9V2cuxsWAF5uBG
@@ -77,7 +76,7 @@ class RefreshTokenMockMvcTests extends AbstractTokenMockMvcTests {
             L5WgVmzexrNmKxmGQQhNzfgO0Lk7o+iNNZXbkxw=
             -----END RSA PRIVATE KEY-----""";
 
-    private final String signingKey2 = """
+    private static final String SIGNING_KEY_2 = """
             -----BEGIN RSA PRIVATE KEY-----
             MIIBOQIBAAJBAKIuxhxq0SyeITbTw3SeyHz91eB6xEwRn9PPgl+klu4DRUmVs0h+
             UlVjXSTLiJ3r1bJXVded4JzVvNSh5Nw+7zsCAwEAAQJAYeVH8klL39nHhLfIiHF7
@@ -88,7 +87,7 @@ class RefreshTokenMockMvcTests extends AbstractTokenMockMvcTests {
             Jkd0KaxkobLdyDrW13QnEaG5TXO0Y85kfu3nP5o=
             -----END RSA PRIVATE KEY-----""";
 
-    private final String signingKey3 = """
+    private static final String SIGNING_KEY_3 = """
             -----BEGIN RSA PRIVATE KEY-----
             MIIBOgIBAAJBAOnndOyLh8axLMyjX+gCglBCeU5Cumjxz9asho5UvO8zf03PWciZ
             DGWce+B+n23E1IXbRKHWckCY0UH7fEgbrKkCAwEAAQJAGR9aCJoH8EhRVn1prKKw
@@ -151,8 +150,8 @@ class RefreshTokenMockMvcTests extends AbstractTokenMockMvcTests {
         IdentityZoneHolder.clear();
 
         keys = new HashMap<>();
-        keys.put("key1", signingKey1);
-        keys.put("key2", signingKey2);
+        keys.put("key1", SIGNING_KEY_1);
+        keys.put("key2", SIGNING_KEY_2);
         zone.getConfig().getTokenPolicy().setKeys(keys);
         zone.getConfig().getTokenPolicy().setActiveKeyId("key1");
         if (refreshTokenFormat != null) {
@@ -274,8 +273,8 @@ class RefreshTokenMockMvcTests extends AbstractTokenMockMvcTests {
         assertThat(refreshResponse.getStatus()).isEqualTo(HttpStatus.SC_OK);
         validateAccessTokenExists(refreshResponse.getContentAsString());
 
-        keys.put("key2", signingKey2);
-        keys.put("key3", signingKey3);
+        keys.put("key2", SIGNING_KEY_2);
+        keys.put("key3", SIGNING_KEY_3);
         zone.getConfig().getTokenPolicy().setKeys(keys);
         zone.getConfig().getTokenPolicy().setActiveKeyId("key3");
         zone = identityZoneProvisioning.update(zone);
@@ -323,7 +322,7 @@ class RefreshTokenMockMvcTests extends AbstractTokenMockMvcTests {
         IdentityZoneHolder.set(zone);
         String token = revocableTokenProvisioning.retrieve(tokenId, IdentityZoneHolder.get().getId()).getValue();
         Map<String, Object> claims = UaaTokenUtils.getClaims(token, Map.class);
-        assertThat(claims.get(ClaimConstants.REVOCABLE)).isNotNull();
+        assertThat(claims).containsKey(ClaimConstants.REVOCABLE);
         assertThat((Boolean) claims.get(ClaimConstants.REVOCABLE)).isTrue();
     }
 
@@ -353,34 +352,30 @@ class RefreshTokenMockMvcTests extends AbstractTokenMockMvcTests {
         assertThat(idClaims.get("iss")).isNotNull();
         assertThat(idClaims).containsEntry("iss", originalIdClaims.get("iss"));
 
-        assertThat(originalIdClaims.get("sub")).isNotNull();
-        assertThat(idClaims).containsEntry("sub", originalIdClaims.get("sub"));
-
-        assertThat(idClaims.get("azp")).isNotNull();
-        assertThat(idClaims).containsEntry("azp", originalIdClaims.get("azp"));
+        assertThat(originalIdClaims).containsKey("sub");
+        assertThat(idClaims).containsEntry("sub", originalIdClaims.get("sub"))
+                .containsKey("azp")
+                .containsEntry("azp", originalIdClaims.get("azp"));
 
         // These claims should be different in the old and new id token: iat
         // http://openid.net/specs/openid-connect-core-1_0.html#RefreshTokenResponse
-        assertThat(originalIdClaims.get("iat")).isNotNull();
-        assertThat(idClaims.get("iat")).isNotNull();
-        assertThat(idClaims.get("iat")).isNotEqualTo(originalIdClaims.get("iat"));
+        assertThat(originalIdClaims).containsKey("iat");
 
-        // The spec doesn't say much about these claims in the refresh case, but
-        // they still need to be populated according to http://openid.net/specs/openid-connect-core-1_0.html#IDToken
-        assertThat(idClaims.get("aud")).isNotNull();
-        assertThat(originalIdClaims.get("aud")).isNotNull();
+        assertThat(idClaims).isNotNull().doesNotContainEntry("iat", originalIdClaims.get("iat"))
+                // The spec doesn't say much about these claims in the refresh case, but
+                // they still need to be populated according to http://openid.net/specs/openid-connect-core-1_0.html#IDToken
+                .containsKey("aud");
+        assertThat(originalIdClaims).containsKey("aud");
         assertThat(idClaims)
                 .containsEntry("aud", originalIdClaims.get("aud"))
                 .containsEntry("scope", Lists.newArrayList("openid"));
-        assertThat(originalIdClaims).containsEntry("scope", Lists.newArrayList("openid"));
+        assertThat(originalIdClaims).containsEntry("scope", Lists.newArrayList("openid"))
+                .containsKey("amr");
+        assertThat(idClaims).containsKey("amr")
+                .containsEntry("amr", originalIdClaims.get("amr"));
 
-        assertThat(originalIdClaims.get("amr")).isNotNull();
-        assertThat(idClaims.get("amr")).isNotNull();
-        assertThat(idClaims).containsEntry("amr", originalIdClaims.get("amr"));
-
-        assertThat(originalIdClaims.get("jti")).isNotNull();
-        assertThat(idClaims.get("jti")).isNotNull();
-        assertThat(idClaims.get("jti")).isNotEqualTo(originalIdClaims.get("jti"));
+        assertThat(originalIdClaims).containsKey("jti");
+        assertThat(idClaims).isNotNull().doesNotContainEntry("jti", originalIdClaims.get("jti"));
     }
 
     @Test
@@ -437,8 +432,7 @@ class RefreshTokenMockMvcTests extends AbstractTokenMockMvcTests {
         CompositeToken newTokenResponse = getTokensWithPasswordGrant(client.getClientId(), SECRET, user.getUserName(), SECRET, getZoneHostUrl(zone), "jwt");
         String newRefreshToken = newTokenResponse.getRefreshToken().getValue();
 
-        assertThat(getClaims(newRefreshToken, Map.class).get(EXPIRY_IN_SECONDS)).isNotNull();
-        assertThat(getClaims(newRefreshToken, Map.class).get(EXPIRY_IN_SECONDS)).isNotEqualTo(getClaims(refreshToken, Map.class).get(EXPIRY_IN_SECONDS));
+        assertThat(getClaims(newRefreshToken, Map.class)).isNotNull().doesNotContainEntry(EXPIRY_IN_SECONDS, getClaims(refreshToken, Map.class).get(EXPIRY_IN_SECONDS));
     }
 
     @Test
@@ -481,7 +475,6 @@ class RefreshTokenMockMvcTests extends AbstractTokenMockMvcTests {
         identityZoneProvisioning.update(zone);
 
         MockHttpServletResponse refreshResponse = useRefreshToken(refreshToken, client.getClientId(), SECRET, getZoneHostUrl(zone));
-
         assertThat(refreshResponse.getStatus()).isEqualTo(HttpStatus.SC_UNAUTHORIZED);
     }
 

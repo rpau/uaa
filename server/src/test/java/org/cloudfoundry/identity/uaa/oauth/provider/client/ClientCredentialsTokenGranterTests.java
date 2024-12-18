@@ -27,7 +27,7 @@ class ClientCredentialsTokenGranterTests {
     private TokenRequest tokenRequest;
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
         tokenServices = mock(AuthorizationServerTokenServices.class);
         clientDetailsService = mock(ClientDetailsService.class);
         requestFactory = mock(OAuth2RequestFactory.class);

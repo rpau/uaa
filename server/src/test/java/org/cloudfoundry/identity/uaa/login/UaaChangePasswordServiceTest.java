@@ -103,17 +103,6 @@ class UaaChangePasswordServiceTest {
         verify(scimUserProvisioning).changePassword("id", "currentPassword", "validPassword", zoneId);
     }
 
-    @Test
-    void queryContainsOriginUaa() {
-        List<ScimUser> results = getScimUsers();
-        String zoneId = IdentityZoneHolder.get().getId();
-        when(scimUserProvisioning.retrieveByUsernameAndOriginAndZone(anyString(), eq(OriginKeys.UAA), eq(zoneId))).thenReturn(results);
-        subject.changePassword("username", "currentPassword", "validPassword");
-        verify(passwordValidator).validate("validPassword");
-        verify(scimUserProvisioning).retrieveByUsernameAndOriginAndZone(anyString(), eq(OriginKeys.UAA), eq(zoneId));
-        verify(scimUserProvisioning).changePassword("id", "currentPassword", "validPassword", zoneId);
-    }
-
     private List<ScimUser> getScimUsers() {
         ScimUser.Email email = new ScimUser.Email();
         email.setValue("username@test.com");

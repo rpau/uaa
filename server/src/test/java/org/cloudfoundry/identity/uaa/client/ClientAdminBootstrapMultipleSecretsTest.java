@@ -3,7 +3,6 @@ package org.cloudfoundry.identity.uaa.client;
 import org.cloudfoundry.identity.uaa.zone.MultitenantClientServices;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.stubbing.Answer;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.HashMap;
@@ -20,7 +19,6 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-
 class ClientAdminBootstrapMultipleSecretsTest {
 
     private ClientAdminBootstrap clientAdminBootstrap;
@@ -29,8 +27,6 @@ class ClientAdminBootstrapMultipleSecretsTest {
     private final String clientId = "client1";
     private String password1;
     private String password2;
-    private final String oldOneSecret = "oldOneSecret";
-    private final String oldTwoSecret = "oldTwoSecret";
     private MultitenantClientServices clientRegistrationService;
     private UaaClientDetails oneSecretClient;
     private UaaClientDetails twoSecretClient;
@@ -46,24 +42,24 @@ class ClientAdminBootstrapMultipleSecretsTest {
         PasswordEncoder passwordEncoder = mock(PasswordEncoder.class);
 
         clientRegistrationService = mock(MultitenantClientServices.class);
-        doAnswer((Answer) invocation -> {
+        doAnswer(invocation -> {
             verifyClient.setClientId(invocation.getArgument(0));
             verifyClient.setClientSecret(invocation.getArgument(1));
             return null;
         }).when(clientRegistrationService).updateClientSecret(anyString(), anyString(), anyString());
 
-        doAnswer((Answer) invocation -> {
+        doAnswer(invocation -> {
             verifyClient = invocation.getArgument(0);
             return null;
         }).when(clientRegistrationService).updateClientDetails(any(), any());
 
-        doAnswer((Answer) invocation -> {
+        doAnswer(invocation -> {
             String password = verifyClient.getClientSecret();
             verifyClient.setClientSecret(password + " " + invocation.getArgument(1));
             return null;
         }).when(clientRegistrationService).addClientSecret(anyString(), anyString(), anyString());
 
-        doAnswer((Answer) invocation -> {
+        doAnswer(invocation -> {
             verifyClient = invocation.getArgument(0);
             return null;
         }).when(clientRegistrationService).addClientDetails(any(), any());
@@ -79,6 +75,8 @@ class ClientAdminBootstrapMultipleSecretsTest {
 
         twoSecretClient = new UaaClientDetails();
         twoSecretClient.setClientId(clientId);
+        String oldOneSecret = "oldOneSecret";
+        String oldTwoSecret = "oldTwoSecret";
         twoSecretClient.setClientSecret(oldOneSecret + " " + oldTwoSecret);
     }
 
@@ -95,131 +93,129 @@ class ClientAdminBootstrapMultipleSecretsTest {
      * - one password list null
      */
 
-
     // Test one secret
     @Test
-    void newClientOneSecret() throws Exception {
+    void newClientOneSecret() {
         buildClient("123");
         clientAdminBootstrap.afterPropertiesSet();
         assertClient(password1);
     }
 
     @Test
-    void updateOneSecretClientOneSecret() throws Exception {
+    void updateOneSecretClientOneSecret() {
         when(clientRegistrationService.loadClientByClientId(any(), any())).thenReturn(oneSecretClient);
         newClientOneSecret();
     }
 
     @Test
-    void updateTwoSecretClientOneSecret() throws Exception {
+    void updateTwoSecretClientOneSecret() {
         when(clientRegistrationService.loadClientByClientId(any(), any())).thenReturn(twoSecretClient);
         newClientOneSecret();
     }
 
     // test one null secret
     @Test
-    void newClientOneNullSecret() throws Exception {
+    void newClientOneNullSecret() {
         buildClient(null);
         clientAdminBootstrap.afterPropertiesSet();
         assertClient(null);
     }
 
     @Test
-    void updateOneSecretClientOneNullSecret() throws Exception {
+    void updateOneSecretClientOneNullSecret() {
         when(clientRegistrationService.loadClientByClientId(any(), any())).thenReturn(oneSecretClient);
         newClientOneNullSecret();
     }
 
     @Test
-    void updateTwoSecretClientOneNullSecret() throws Exception {
+    void updateTwoSecretClientOneNullSecret() {
         when(clientRegistrationService.loadClientByClientId(any(), any())).thenReturn(twoSecretClient);
         newClientOneNullSecret();
     }
 
-
     // Test two secrets
     @Test
-    void newClientTwoSecrets() throws Exception {
+    void newClientTwoSecrets() {
         buildClientList("123", "abc");
         clientAdminBootstrap.afterPropertiesSet();
         assertClient(password1 + " " + password2);
     }
 
     @Test
-    void updateOneSecretClientTwoSecrets() throws Exception {
+    void updateOneSecretClientTwoSecrets() {
         when(clientRegistrationService.loadClientByClientId(any(), any())).thenReturn(oneSecretClient);
         newClientTwoSecrets();
     }
 
     @Test
-    void updateTwoSecretClientTwoSecrets() throws Exception {
+    void updateTwoSecretClientTwoSecrets() {
         when(clientRegistrationService.loadClientByClientId(any(), any())).thenReturn(twoSecretClient);
         newClientTwoSecrets();
     }
 
     // Test two passwords, first null
     @Test
-    void newClientFirstNullSecret() throws Exception {
+    void newClientFirstNullSecret() {
         buildClientList(null, "123");
         clientAdminBootstrap.afterPropertiesSet();
         assertClient(" " + password2);
     }
 
     @Test
-    void updateOneSecretClientFirstNullSecret() throws Exception {
+    void updateOneSecretClientFirstNullSecret() {
         when(clientRegistrationService.loadClientByClientId(any(), any())).thenReturn(oneSecretClient);
         newClientFirstNullSecret();
     }
 
     @Test
-    void updateTwoSecretClientFirstNullSecret() throws Exception {
+    void updateTwoSecretClientFirstNullSecret() {
         when(clientRegistrationService.loadClientByClientId(any(), any())).thenReturn(twoSecretClient);
         newClientFirstNullSecret();
     }
 
     // Test two passwords, second null
     @Test
-    void newClientSecondNullSecret() throws Exception {
+    void newClientSecondNullSecret() {
         buildClientList("123", null);
         clientAdminBootstrap.afterPropertiesSet();
         assertClient(password1 + " ");
     }
 
     @Test
-    void updateOneSecretClientSecondNullSecret() throws Exception {
+    void updateOneSecretClientSecondNullSecret() {
         when(clientRegistrationService.loadClientByClientId(any(), any())).thenReturn(oneSecretClient);
         newClientSecondNullSecret();
     }
 
     @Test
-    void updateTwoSecretClientSecondNullSecret() throws Exception {
+    void updateTwoSecretClientSecondNullSecret() {
         when(clientRegistrationService.loadClientByClientId(any(), any())).thenReturn(twoSecretClient);
         newClientSecondNullSecret();
     }
 
-    // Test two secrets, both null
+    // Test two secrets, both nulls
     @Test
-    void newClientBothNullSecrets() throws Exception {
+    void newClientBothNullSecrets() {
         buildClientList(null, null);
         clientAdminBootstrap.afterPropertiesSet();
         assertClient(" ");
     }
 
     @Test
-    void updateOneSecretClientBothNullSecrets() throws Exception {
+    void updateOneSecretClientBothNullSecrets() {
         when(clientRegistrationService.loadClientByClientId(any(), any())).thenReturn(oneSecretClient);
         newClientBothNullSecrets();
     }
 
     @Test
-    void updateTwoSecretClientBothNullSecrets() throws Exception {
+    void updateTwoSecretClientBothNullSecrets() {
         when(clientRegistrationService.loadClientByClientId(any(), any())).thenReturn(twoSecretClient);
         newClientBothNullSecrets();
     }
 
     // Test empty password list
     @Test
-    void newClientEmptyPasswordList() throws Exception {
+    void newClientEmptyPasswordList() {
         buildClient(null);
         clients.get(clientId).put("secret", new LinkedList<>());
         clientAdminBootstrap.afterPropertiesSet();
@@ -227,53 +223,53 @@ class ClientAdminBootstrapMultipleSecretsTest {
     }
 
     @Test
-    void updateOnePasswordClientEmptyPasswordList() throws Exception {
+    void updateOnePasswordClientEmptyPasswordList() {
         when(clientRegistrationService.loadClientByClientId(any(), any())).thenReturn(oneSecretClient);
         newClientEmptyPasswordList();
     }
 
     @Test
-    void updateTwoPasswordClientEmptyPaswordList() throws Exception {
+    void updateTwoPasswordClientEmptyPasswordList() {
         when(clientRegistrationService.loadClientByClientId(any(), any())).thenReturn(twoSecretClient);
         newClientEmptyPasswordList();
     }
 
-    // Test one password as list
+    // Test one password as a list
     @Test
-    void newClientSingletonPasswordList() throws Exception {
+    void newClientSingletonPasswordList() {
         buildClientSingletonList("123");
         clientAdminBootstrap.afterPropertiesSet();
         assertClient(password1);
     }
 
     @Test
-    void updateOneSecretClientSingletonPasswordList() throws Exception {
+    void updateOneSecretClientSingletonPasswordList() {
         when(clientRegistrationService.loadClientByClientId(any(), any())).thenReturn(oneSecretClient);
         newClientSingletonPasswordList();
     }
 
     @Test
-    void updateTwoSecretClientSingletonPasswordList() throws Exception {
+    void updateTwoSecretClientSingletonPasswordList() {
         when(clientRegistrationService.loadClientByClientId(any(), any())).thenReturn(twoSecretClient);
         newClientSingletonPasswordList();
     }
 
-    // Test one null password as list
+    // Test one null password as a list
     @Test
-    void newClientSingletonNullList() throws Exception {
+    void newClientSingletonNullList() {
         buildClientSingletonList(null);
         clientAdminBootstrap.afterPropertiesSet();
         assertClient("");
     }
 
     @Test
-    void updateOneSecretClientSingletonNullList() throws Exception {
+    void updateOneSecretClientSingletonNullList() {
         when(clientRegistrationService.loadClientByClientId(any(), any())).thenReturn(oneSecretClient);
         newClientSingletonNullList();
     }
 
     @Test
-    void updateTwoSecretClientSingletonNullList() throws Exception {
+    void updateTwoSecretClientSingletonNullList() {
         when(clientRegistrationService.loadClientByClientId(any(), any())).thenReturn(twoSecretClient);
         newClientSingletonNullList();
     }

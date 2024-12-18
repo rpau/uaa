@@ -301,7 +301,6 @@ class TokenKeyEndpointMockMvcTests {
                 .isInstanceOf(String.class)
                 .isEqualTo("sig");
 
-
         Object keyOps = key.get("key_ops");
         //an String[] containing values like
         //sign, verify, encrypt, decrypt, wrapKey, unwrapKey, deriveKey, deriveBits
@@ -339,7 +338,6 @@ class TokenKeyEndpointMockMvcTests {
         Object actual = key.get("value");
         assertThat(actual).isInstanceOf(String.class)
                 .isEqualTo(VERIFY_KEY);
-
 
         Object e = key.get("e");
         assertThat(e).isInstanceOf(String.class)

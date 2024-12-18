@@ -51,7 +51,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
@@ -136,8 +135,6 @@ class ScimUserEndpointsTests {
     @Autowired
     private IdentityZoneManager identityZoneManager;
 
-    private ScimUserAliasHandler scimUserAliasHandler;
-
     @Autowired
     private TransactionTemplate transactionTemplate;
 
@@ -190,12 +187,11 @@ class ScimUserEndpointsTests {
 
         mockJdbcIdentityProviderProvisioning = mock(JdbcIdentityProviderProvisioning.class);
         mockPasswordValidator = mock(PasswordValidator.class);
-        ApplicationEventPublisher mockApplicationEventPublisher = mock(ApplicationEventPublisher.class);
 
         doThrow(new InvalidPasswordException("Password must be at least 1 characters in length."))
                 .when(mockPasswordValidator).validate(null);
         doThrow(new InvalidPasswordException("Password must be at least 1 characters in length."))
-                .when(mockPasswordValidator).validate(eq(""));
+                .when(mockPasswordValidator).validate("");
 
         jdbcScimGroupProvisioning.createOrGet(new ScimGroup(null, "uaa.user", identityZone.getId()), identityZone.getId());
 
@@ -204,7 +200,7 @@ class ScimUserEndpointsTests {
 
         spiedScimGroupMembershipManager = spy(scimGroupMembershipManager);
 
-        scimUserAliasHandler = mock(ScimUserAliasHandler.class);
+        ScimUserAliasHandler scimUserAliasHandler = mock(ScimUserAliasHandler.class);
         when(scimUserAliasHandler.aliasPropertiesAreValid(any(), any())).thenReturn(true);
         when(scimUserAliasHandler.ensureConsistencyOfAliasEntity(any(), any()))
                 .then(invocationOnMock -> invocationOnMock.getArgument(0));
@@ -386,7 +382,9 @@ class ScimUserEndpointsTests {
         user.setOrigin(OriginKeys.UAA);
         user.setPassword("some bad password");
 
-        assertThatThrownBy(() -> scimUserEndpoints.createUser(user, new MockHttpServletRequest(), new MockHttpServletResponse()))
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        assertThatThrownBy(() -> scimUserEndpoints.createUser(user, request, response))
                 .isInstanceOf(InvalidPasswordException.class)
                 .hasMessageContaining("whaddup")
                 .extracting("status")
@@ -400,7 +398,9 @@ class ScimUserEndpointsTests {
     void userWithNoEmailNotAllowed() {
         ScimUser user = new ScimUser(null, "dave", "David", "Syer");
         user.setPassword("password");
-        assertThatThrownBy(() -> scimUserEndpoints.createUser(user, new MockHttpServletRequest(), new MockHttpServletResponse()))
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        assertThatThrownBy(() -> scimUserEndpoints.createUser(user, request, response))
                 .isInstanceOf(InvalidScimResourceException.class)
                 .hasMessageContaining("email");
         int count = jdbcTemplate.queryForObject("select count(*) from users where userName=?", new Object[]{"dave"}, Integer.class);
@@ -455,7 +455,6 @@ class ScimUserEndpointsTests {
         converted.render(Collections.emptyMap(), request, response);
         String body = response.getContentAsString();
         assertThat(response.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
-        // System.err.println(body);
         assertThat(body).as("Wrong body: " + body).contains("message\":\"foo");
     }
 
@@ -489,7 +488,7 @@ class ScimUserEndpointsTests {
         ScimGroup g1 = new ScimGroup(null, "scimgroup", identityZone.getId());
         g1 = jdbcScimGroupProvisioning.create(g1, identityZone.getId());
         ScimGroupMember m1 = new ScimGroupMember(newUser.getId(), ScimGroupMember.Type.USER);
-        ScimGroupMember m2 = scimGroupMembershipManager.addMember(g1.getId(), m1, identityZone.getId());
+        scimGroupMembershipManager.addMember(g1.getId(), m1, identityZone.getId());
         assertThat(scimGroupMembershipManager.getMembers(g1.getId(), false, identityZone.getId())).hasSize(1);
         scimUserEndpoints.deleteUser(newUser.getId(), Integer.toString(newUser.getMeta().getVersion()),
                 new MockHttpServletRequest(), new MockHttpServletResponse());
@@ -768,7 +767,7 @@ class ScimUserEndpointsTests {
     void findIdsByUserName() {
         SearchResults<?> results = scimUserEndpoints.findUsers("id", "userName eq \"jdsa\"", null, "ascending", 1, 100);
         assertThat(results.getTotalResults()).isOne();
-        assertThat(results.getSchemas()).hasSize(1); // System.err.println(results.getValues());
+        assertThat(results.getSchemas()).hasSize(1);
         assertThat(((Map<String, Object>) results.getResources().iterator().next())).containsEntry("id", joel.getId());
     }
 
@@ -777,7 +776,7 @@ class ScimUserEndpointsTests {
     void findIdsByEmailApostrophe() {
         SearchResults<?> results = scimUserEndpoints.findUsers("id", "emails.value eq \"" + JDSA_VMWARE_COM + "\"", null, "ascending", 1, 100);
         assertThat(results.getTotalResults()).isOne();
-        assertThat(results.getSchemas()).hasSize(1); // System.err.println(results.getValues());
+        assertThat(results.getSchemas()).hasSize(1);
         assertThat(((Map<String, Object>) results.getResources().iterator().next())).containsEntry("id", joel.getId());
     }
 
@@ -903,7 +902,7 @@ class ScimUserEndpointsTests {
     void legacyTestFindIdsByUserName() {
         SearchResults<?> results = scimUserEndpoints.findUsers("id", "userName eq 'jdsa'", null, "ascending", 1, 100);
         assertThat(results.getTotalResults()).isOne();
-        assertThat(results.getSchemas()).hasSize(1); // System.err.println(results.getValues());
+        assertThat(results.getSchemas()).hasSize(1);
         assertThat(((Map<String, Object>) results.getResources().iterator().next())).containsEntry("id", joel.getId());
     }
 
@@ -1103,7 +1102,9 @@ class ScimUserEndpointsTests {
         oidcProvider.getConfig().setEmailDomain(Collections.singletonList("example.org"));
         when(mockJdbcIdentityProviderProvisioning.retrieveActive(anyString())).thenReturn(asList(ldapProvider, oidcProvider));
 
-        assertThatThrownBy(() -> scimUserEndpoints.createUser(user, new MockHttpServletRequest(), new MockHttpServletResponse()))
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        assertThatThrownBy(() -> scimUserEndpoints.createUser(user, request, response))
                 .isInstanceOf(ScimException.class)
                 .hasMessageContaining("The user account is set up for single sign-on. Please use one of these origin(s) : [ldap, oidc1]");
         verify(mockJdbcIdentityProviderProvisioning).retrieveActive(anyString());
@@ -1167,7 +1168,7 @@ class ScimUserEndpointsTests {
         expectedAuthorities.add("uaa.user");
         assertThat(user.getGroups()).isNotNull();
         Logger logger = LoggerFactory.getLogger(getClass());
-        logger.debug("user's groups: " + user.getGroups() + ", expecting: " + expectedAuthorities);
+        logger.debug("user's groups: {}, expecting: {}", user.getGroups(), expectedAuthorities);
         assertThat(user.getGroups()).hasSameSizeAs(expectedAuthorities);
         for (ScimUser.Group g : user.getGroups()) {
             assertThat(expectedAuthorities).contains(g.getDisplay());

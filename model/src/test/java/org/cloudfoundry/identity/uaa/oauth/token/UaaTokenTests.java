@@ -16,7 +16,6 @@ import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -93,7 +92,7 @@ class UaaTokenTests {
         ClientCredentialsAccessTokenProvider clientCredentialsAccessTokenProvider = new ClientCredentialsAccessTokenProvider();
         assertThat(accessTokenProviderChain.supportsResource(resourceDetails)).isFalse();
         assertThat(accessTokenProviderChain.supportsRefresh(resourceDetails)).isFalse();
-        accessTokenProviderChain = new AccessTokenProviderChain(Arrays.asList(clientCredentialsAccessTokenProvider));
+        accessTokenProviderChain = new AccessTokenProviderChain(List.of(clientCredentialsAccessTokenProvider));
         assertThat(accessTokenProviderChain.supportsResource(new ClientCredentialsResourceDetails())).isTrue();
         assertThat(accessTokenProviderChain.supportsRefresh(new ClientCredentialsResourceDetails())).isFalse();
         assertThat(authorizationCodeAccessTokenProvider.supportsRefresh(new AuthorizationCodeResourceDetails())).isTrue();
@@ -102,7 +101,7 @@ class UaaTokenTests {
     @Test
     void accessTokenProviderChainException() {
         ClientCredentialsAccessTokenProvider clientCredentialsAccessTokenProvider = new ClientCredentialsAccessTokenProvider();
-        AccessTokenProviderChain accessTokenProviderChain = new AccessTokenProviderChain(Arrays.asList(clientCredentialsAccessTokenProvider));
+        AccessTokenProviderChain accessTokenProviderChain = new AccessTokenProviderChain(List.of(clientCredentialsAccessTokenProvider));
         assertThatExceptionOfType(OAuth2AccessDeniedException.class).isThrownBy(() ->
                 accessTokenProviderChain.refreshAccessToken(new ClientCredentialsResourceDetails(), new DefaultOAuth2RefreshToken(""), null));
     }
@@ -110,7 +109,7 @@ class UaaTokenTests {
     @Test
     void defaultAccessTokenRequest() {
         DefaultAccessTokenRequest accessTokenRequest = new DefaultAccessTokenRequest();
-        MultiValueMap parameters = new LinkedMultiValueMap();
+        MultiValueMap parameters = new LinkedMultiValueMap<>();
         parameters.add("empty", "");
         accessTokenRequest.setCookie("cookie-value");
         accessTokenRequest.setHeaders(null);
@@ -135,7 +134,7 @@ class UaaTokenTests {
 
         // object compare
         accessTokenRequest.clear();
-        parameters = new LinkedMultiValueMap();
+        parameters = new LinkedMultiValueMap<>();
         parameters.addAll("key", List.of("value"));
         assertThat(new DefaultAccessTokenRequest(null)).isEqualTo(accessTokenRequest);
         DefaultAccessTokenRequest newAccessTokenRequest = new DefaultAccessTokenRequest(Map.of("scope", new String[]{"x"}, "client_id", new String[]{"x"}));

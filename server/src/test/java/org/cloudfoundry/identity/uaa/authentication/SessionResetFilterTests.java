@@ -130,7 +130,6 @@ class SessionResetFilterTests {
         IdentityZoneHolder.clear();
     }
 
-
     @Test
     void noAuthenticationPresent() throws Exception {
         filter.doFilterInternal(request, response, chain);

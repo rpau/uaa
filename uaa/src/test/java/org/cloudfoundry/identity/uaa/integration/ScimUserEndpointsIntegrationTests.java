@@ -65,10 +65,10 @@ class ScimUserEndpointsIntegrationTests {
     private static final UaaTestAccounts testAccounts = UaaTestAccounts.standard(serverRunning);
 
     @RegisterExtension
-    private static final TestAccountExtension testAccountSetup = TestAccountExtension.standard(serverRunning, testAccounts);
+    private static final TestAccountExtension testAccountExtension = TestAccountExtension.standard(serverRunning, testAccounts);
 
     @RegisterExtension
-    private static final OAuth2ContextExtension context = OAuth2ContextExtension.withTestAccounts(serverRunning, testAccountSetup);
+    private static final OAuth2ContextExtension context = OAuth2ContextExtension.withTestAccounts(serverRunning, testAccountExtension);
 
     private RestTemplate client;
     private List<ScimUser> scimUsers;
@@ -85,6 +85,7 @@ class ScimUserEndpointsIntegrationTests {
 
             @Override
             public void handleError(ClientHttpResponse response) {
+                // pass through
             }
         });
     }
@@ -275,8 +276,7 @@ class ScimUserEndpointsIntegrationTests {
         ResponseEntity<Map> response = client.exchange(serverRunning.getUrl(userEndpoint) + "/{id}", HttpMethod.PUT,
                 new HttpEntity<Map>(map, headers), Map.class, joe.getId());
         Map<String, Object> joe1 = response.getBody();
-        assertThat(((String) joe1.get("message")).toLowerCase()
-                .contains("unrecognized field")).as("Wrong message: " + joe1).isTrue();
+        assertThat(((String) joe1.get("message")).toLowerCase()).as("Wrong message: " + joe1).contains("unrecognized field");
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -440,8 +440,8 @@ class ScimUserEndpointsIntegrationTests {
         @SuppressWarnings("rawtypes")
         Map results = response.getBody();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat((Integer) results.get("totalResults") > 0).as("There should be more than zero users").isTrue();
-        assertThat(((Collection<?>) results.get("resources")).isEmpty()).as("There should be some resources").isFalse();
+        assertThat((Integer) results.get("totalResults")).as("There should be more than zero users").isPositive();
+        assertThat(((Collection<?>) results.get("resources"))).as("There should be some resources").isNotEmpty();
         @SuppressWarnings("rawtypes")
         Map firstUser = (Map) ((List) results.get("resources")).get(0);
         // [cfid-111] All attributes should be returned if no attributes
@@ -459,7 +459,7 @@ class ScimUserEndpointsIntegrationTests {
         ResponseEntity<Map> response = serverRunning.getForObject(usersEndpoint + "?attributes=id,userName", Map.class);
         Map<String, Object> results = response.getBody();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat((Integer) results.get("totalResults") > 0).as("There should be more than zero users").isTrue();
+        assertThat((Integer) results.get("totalResults")).as("There should be more than zero users").isPositive();
         Map firstUser = (Map) ((List) results.get("resources")).get(0);
         // All attributes should be returned if no attributes supplied in query
         assertThat(firstUser).containsKey("id")

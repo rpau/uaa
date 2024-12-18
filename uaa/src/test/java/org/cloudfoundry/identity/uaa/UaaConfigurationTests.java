@@ -37,7 +37,7 @@ class UaaConfigurationTests {
     }
 
     @Test
-    void validYamlIsOk() throws Exception {
+    void validYamlIsOk() {
         createValidator(
                 """
                         name: uaa
@@ -56,7 +56,7 @@ class UaaConfigurationTests {
     }
 
     @Test
-    void validClientIsOk() throws Exception {
+    void validClientIsOk() {
         createValidator(
                 """
                         oauth:

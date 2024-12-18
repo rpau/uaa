@@ -4,8 +4,8 @@ import org.junit.jupiter.api.Test;
 
 import javax.servlet.http.HttpServletRequest;
 import java.security.Principal;
-import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -73,8 +73,8 @@ class RequestInfoImplTest {
         when(mockRequest.getContextPath()).thenReturn("/testContext");
         when(mockRequest.getServletPath()).thenReturn("/testServlet");
         when(mockRequest.getHeader("Authorization")).thenReturn("Bearer eyasdf");
-        when(mockRequest.getHeaders("authorization")).thenReturn(Collections.enumeration(Arrays.asList("Bearer eyasdf")));
-        when(mockRequest.getHeaderNames()).thenReturn(Collections.enumeration(Arrays.asList("Authorization", "X-Forwarded-For")));
+        when(mockRequest.getHeaders("authorization")).thenReturn(Collections.enumeration(List.of("Bearer eyasdf")));
+        when(mockRequest.getHeaderNames()).thenReturn(Collections.enumeration(List.of("Authorization", "X-Forwarded-For")));
         Principal principal = mock(Principal.class);
         when(mockRequest.getUserPrincipal()).thenReturn(principal);
         when(mockRequest.getAuthType()).thenReturn("someType");
@@ -101,16 +101,17 @@ class RequestInfoImplTest {
         assertThat(request.getRemoteUser()).isEqualTo("fake@example.org");
 
         String toString = request.toString();
-        assertThat(toString).contains("authType='someType'");
-        assertThat(toString).contains("contextPath='/testContext'");
-        assertThat(toString).contains("method='GET'");
-        assertThat(toString).contains("requestURI='requestURI'");
-        assertThat(toString).contains("remoteAddr='127.0.0.1'");
-        assertThat(toString).contains("remoteUser='fake@example.org'");
-        assertThat(toString).contains("servletPath='/testServlet'");
-        assertThat(toString).contains("principal="); //No details as Mock object is used
-        assertThat(toString).contains("hasHeaderNames=true");
-        assertThat(toString).contains("headerNames=[Authorization, X-Forwarded-For]");
-        assertThat(toString).contains("header:Authorization=Bearer eyasdf");
+        assertThat(toString).contains("authType='someType'")
+                .contains("contextPath='/testContext'")
+                .contains("method='GET'")
+                .contains("requestURI='requestURI'")
+                .contains("remoteAddr='127.0.0.1'")
+                .contains("remoteUser='fake@example.org'")
+                .contains("servletPath='/testServlet'")
+                .contains("principal=")
+                //No details as Mock object are used
+                .contains("hasHeaderNames=true")
+                .contains("headerNames=[Authorization, X-Forwarded-For]")
+                .contains("header:Authorization=Bearer eyasdf");
     }
 }

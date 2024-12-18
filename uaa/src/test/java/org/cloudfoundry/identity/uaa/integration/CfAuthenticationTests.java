@@ -67,7 +67,7 @@ class CfAuthenticationTests {
                 params);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FOUND);
         String location = response.getHeaders().getLocation().toString();
-        assertThat(location.contains("access_token")).as("Not authenticated (no access token): " + location).isTrue();
+        assertThat(location).as("Not authenticated (no access token): " + location).contains("access_token");
     }
 
     @Test

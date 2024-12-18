@@ -145,7 +145,6 @@ class IdentityProviderEndpointsTest {
         return identityProvider;
     }
 
-
     IdentityProvider<LdapIdentityProviderDefinition> getLdapDefinition() {
         String ldapProfile = "ldap-search-and-bind.xml";
         //String ldapProfile = "ldap-search-and-compare.xml";

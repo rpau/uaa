@@ -21,14 +21,15 @@ import org.junit.jupiter.api.Test;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.cloudfoundry.identity.uaa.oauth.jwk.JsonWebKey.KeyUse.sig;
 
-public class JsonWebKeySetTests {
+class JsonWebKeySetTests {
 
-    public static final String singleKeyJson = """
+    private static final String SINGLE_KEY_JSON = """
             {
                 "alg": "RS256",
                 "e": "AQAB",
@@ -37,10 +38,9 @@ public class JsonWebKeySetTests {
                 "n": "AMcWv4ogKaz625PU5cnCEJSZHZ0pXLumxrzHMSVLLOrHugnJ8nUlnI7NOiP1PlJ9Mirf3pqBsclZV9imE1qG9n_u4xeofF_5kf0EvWCT1jqQKdszlHrSB_CPJbX91A-M7Of03f3jN3YUmgUfB2r1CzTAG6CylQtlU1HGru96r9_P",
                 "use": "sig",
                 "value": "-----BEGIN PUBLIC KEY-----\\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDHFr+KICms+tuT1OXJwhCUmR2d\\nKVy7psa8xzElSyzqx7oJyfJ1JZyOzToj9T5SfTIq396agbHJWVfYphNahvZ/7uMX\\nqHxf+ZH9BL1gk9Y6kCnbM5R60gfwjyW1/dQPjOzn9N394zd2FJoFHwdq9Qs0wBug\\nspULZVNRxq7veq/fzwIDAQAB\\n-----END PUBLIC KEY-----"
-            }\
-            """;
+            }""";
 
-    public static final String unknownKeyJson = """
+    private static final String UNKNOWN_KEY_JSON = """
             {
                 "alg": "RS256",
                 "e": "AQAB",
@@ -49,10 +49,9 @@ public class JsonWebKeySetTests {
                 "n": "AMcWv4ogKaz625PU5cnCEJSZHZ0pXLumxrzHMSVLLOrHugnJ8nUlnI7NOiP1PlJ9Mirf3pqBsclZV9imE1qG9n_u4xeofF_5kf0EvWCT1jqQKdszlHrSB_CPJbX91A-M7Of03f3jN3YUmgUfB2r1CzTAG6CylQtlU1HGru96r9_P",
                 "use": "sig",
                 "value": "-----BEGIN PUBLIC KEY-----\\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDHFr+KICms+tuT1OXJwhCUmR2d\\nKVy7psa8xzElSyzqx7oJyfJ1JZyOzToj9T5SfTIq396agbHJWVfYphNahvZ/7uMX\\nqHxf+ZH9BL1gk9Y6kCnbM5R60gfwjyW1/dQPjOzn9N394zd2FJoFHwdq9Qs0wBug\\nspULZVNRxq7veq/fzwIDAQAB\\n-----END PUBLIC KEY-----"
-            }\
-            """;
+            }""";
 
-    public static final String multiKeyJson = """
+    private static final String MULTI_KEY_JSON = """
             {
                 "keys": [
                     {
@@ -88,10 +87,9 @@ public class JsonWebKeySetTests {
                         "key_ops": ["verify"]
                     }
                 ]
-            }\
-            """;
+            }""";
 
-    public static final String someUnknownKeysJson = """
+    private static final String SOME_UNKNOWN_KEYS_JSON = """
             {
                 "keys": [
                     {
@@ -120,13 +118,11 @@ public class JsonWebKeySetTests {
                         "key_ops": ["sign","verify"]
                     }
                 ]
-            }\
-            """;
-
+            }""";
 
     @Test
     void multi_key() {
-        JsonWebKeySet<JsonWebKey> keys = test_key(multiKeyJson);
+        JsonWebKeySet<JsonWebKey> keys = test_key(MULTI_KEY_JSON);
         assertThat(keys.getKeys()).hasSize(3);
         JsonWebKey key = keys.getKeys().get(1);
         assertThat(key.getAlgorithm()).isEqualTo("HMACSHA256");
@@ -141,7 +137,7 @@ public class JsonWebKeySetTests {
 
     @Test
     void multi_key_rfc7518() {
-        JsonWebKeySet<JsonWebKey> keys = test_key(multiKeyJson);
+        JsonWebKeySet<JsonWebKey> keys = test_key(MULTI_KEY_JSON);
         assertThat(keys.getKeys()).hasSize(3);
         JsonWebKey key = keys.getKeys().get(2);
         assertThat(key.getAlgorithm()).isEqualTo("HS256");
@@ -151,12 +147,12 @@ public class JsonWebKeySetTests {
         assertThat(key.getKeyProperties()).containsEntry("k", "test-oct-key");
 
         assertThat(key.getUse()).isNull();
-        assertThat(key.getKeyOps()).isEqualTo(new LinkedHashSet<>(Arrays.asList(JsonWebKey.KeyOperation.verify)));
+        assertThat(key.getKeyOps()).isEqualTo(new LinkedHashSet<>(List.of(JsonWebKey.KeyOperation.verify)));
     }
 
     @Test
     void single_key() {
-        test_key(singleKeyJson);
+        test_key(SINGLE_KEY_JSON);
     }
 
     public JsonWebKeySet<JsonWebKey> test_key(String json) {
@@ -172,13 +168,13 @@ public class JsonWebKeySetTests {
 
     @Test
     void unknownKeyType() {
-        JsonWebKeySet<JsonWebKey> keys = JsonWebKeyHelper.deserialize(unknownKeyJson);
+        JsonWebKeySet<JsonWebKey> keys = JsonWebKeyHelper.deserialize(UNKNOWN_KEY_JSON);
         assertThat(keys.getKeys()).isEmpty();
     }
 
     @Test
     void ignoreUnknownKeyTypes() {
-        JsonWebKeySet<JsonWebKey> keys = JsonWebKeyHelper.deserialize(someUnknownKeysJson);
+        JsonWebKeySet<JsonWebKey> keys = JsonWebKeyHelper.deserialize(SOME_UNKNOWN_KEYS_JSON);
         assertThat(keys.getKeys()).hasSize(1);
     }
 
@@ -205,7 +201,7 @@ public class JsonWebKeySetTests {
     }
 
     @Test
-    void jsonKeySetParseFailurePEM() throws ParseException {
+    void jsonKeySetParseFailurePEM() {
         String publicKey = "-----BEGIN PUBLIC KEY-----tokenKey-----END PUBLIC KEY-----";
         assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> JsonWebKeyHelper.parseConfiguration(publicKey));
     }

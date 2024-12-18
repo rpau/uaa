@@ -9,6 +9,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,16 +18,15 @@ import java.nio.charset.StandardCharsets;
 public class ScreenshotOnFailExtension implements AfterTestExecutionCallback {
     private static final Logger log = LoggerFactory.getLogger(ScreenshotOnFailExtension.class);
 
-    private WebDriver driver;
-
     @Override
-    public void afterTestExecution(ExtensionContext context) throws Exception {
+    public void afterTestExecution(ExtensionContext context) {
         if (context.getExecutionException().isEmpty()) {
             // No exception, test passed
             return;
         }
 
-        if (hasWebDriverQuit()) {
+        WebDriver driver = SpringExtension.getApplicationContext(context).getBean(WebDriver.class);
+        if (hasWebDriverQuit(driver)) {
             // WebDriver has already quit
             log.debug("ScreenshotOnFail Requested, but webdriver has quit.");
             return;
@@ -57,7 +57,10 @@ public class ScreenshotOnFailExtension implements AfterTestExecutionCallback {
         log.info("ScreenshotOnFail created source: {}", pageSourceFile);
     }
 
-    private boolean hasWebDriverQuit() {
+    private boolean hasWebDriverQuit(WebDriver driver) {
+        if (driver == null) {
+            return true;
+        }
         return ((RemoteWebDriver) driver).getSessionId() == null;
     }
 
@@ -65,9 +68,5 @@ public class ScreenshotOnFailExtension implements AfterTestExecutionCallback {
         String home = System.getProperty("user.home");
         String absoluteFileName = "%s/build/cloudfoundry/uaa/uaa/build/reports/tests/%s/%s.%s".formatted(home, className, description, extension);
         return new File(absoluteFileName);
-    }
-
-    public void setWebDriver(WebDriver webDriver) {
-        this.driver = webDriver;
     }
 }

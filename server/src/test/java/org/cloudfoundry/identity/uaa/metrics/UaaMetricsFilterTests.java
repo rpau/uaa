@@ -78,11 +78,10 @@ class UaaMetricsFilterTests {
     @Test
     void url_groups_loaded() throws Exception {
         List<UrlGroup> urlGroups = filter.getUrlGroups();
-        assertThat(urlGroups).isNotNull();
-        assertThat(urlGroups.size()).isPositive();
+        assertThat(urlGroups).isNotEmpty();
         UrlGroup first = urlGroups.get(0);
         assertThat(first.getPattern()).isEqualTo("/authenticate/**");
-        assertThat(first.getLimit()).isEqualTo(1000l);
+        assertThat(first.getLimit()).isEqualTo(1000L);
         assertThat(first.getCategory()).isEqualTo("API");
         assertThat(first.getGroup()).isEqualTo("/api");
     }
@@ -112,10 +111,7 @@ class UaaMetricsFilterTests {
         filter.setNotificationPublisher(publisher);
         String path = performTwoSimpleRequests();
         Map<String, String> summary = filter.getSummary();
-        assertThat(summary)
-                .isNotNull()
-                .isNotEmpty()
-                .hasSize(2);
+        assertThat(summary).hasSize(2);
         for (String uri : Arrays.asList(path, MetricsUtil.GLOBAL_GROUP)) {
             MetricsQueue totals = readValue(summary.get(filter.getUriGroup(request).getGroup()), MetricsQueue.class);
             assertThat(totals).as("URI:" + uri).isNotNull();
@@ -243,14 +239,12 @@ class UaaMetricsFilterTests {
         map.add("/identity-zones", "/identity-zones");
         map.add("/identity-zones", "/identity-zones/some/value");
         map.add("/saml/login", "/saml/login/value");
-        map.entrySet().forEach(
-                entry -> {
-                    for (String s : entry.getValue()) {
-                        setRequestData(s);
-                        assertThat(filter.getUriGroup(request).getGroup()).as("Testing URL: " + s).isEqualTo(FALLBACK.getGroup());
-                    }
-                }
-        );
+        map.forEach((key, value) -> {
+            for (String s : value) {
+                setRequestData(s);
+                assertThat(filter.getUriGroup(request).getGroup()).as("Testing URL: " + s).isEqualTo(FALLBACK.getGroup());
+            }
+        });
     }
 
     @Test

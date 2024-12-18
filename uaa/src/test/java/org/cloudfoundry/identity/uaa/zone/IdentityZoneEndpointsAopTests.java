@@ -9,34 +9,37 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DefaultTestContext
 class IdentityZoneEndpointsAopTests {
-
     @Autowired
     private IdentityZoneEndpoints identityZoneEndpoints;
 
     @Test
     void updateIdentityZone_WithObject() {
-        assertThatThrownBy(() -> identityZoneEndpoints.updateIdentityZone(IdentityZone.getUaa(), null))
+        IdentityZone uaaZone = IdentityZone.getUaa();
+        assertThatThrownBy(() -> identityZoneEndpoints.updateIdentityZone(uaaZone, null))
                 .isInstanceOf(AccessDeniedException.class)
                 .hasMessage("Access to UAA is not allowed.");
     }
 
     @Test
     void updateIdentityZone_WithId() {
-        assertThatThrownBy(() -> identityZoneEndpoints.updateIdentityZone(null, IdentityZone.getUaaZoneId()))
+        String uaaZoneId = IdentityZone.getUaaZoneId();
+        assertThatThrownBy(() -> identityZoneEndpoints.updateIdentityZone(null, uaaZoneId))
                 .isInstanceOf(AccessDeniedException.class)
                 .hasMessage("Access to UAA is not allowed.");
     }
 
     @Test
     void createClient() {
-        assertThatThrownBy(() -> identityZoneEndpoints.createClient(IdentityZone.getUaaZoneId(), null))
+        String uaaZoneId = IdentityZone.getUaaZoneId();
+        assertThatThrownBy(() -> identityZoneEndpoints.createClient(uaaZoneId, null))
                 .isInstanceOf(AccessDeniedException.class)
                 .hasMessage("Access to UAA is not allowed.");
     }
 
     @Test
     void deleteClient() {
-        assertThatThrownBy(() -> identityZoneEndpoints.deleteClient(IdentityZone.getUaaZoneId(), null))
+        String uaaZoneId = IdentityZone.getUaaZoneId();
+        assertThatThrownBy(() -> identityZoneEndpoints.deleteClient(uaaZoneId, null))
                 .isInstanceOf(AccessDeniedException.class)
                 .hasMessage("Access to UAA is not allowed.");
     }

@@ -14,7 +14,6 @@
 package org.cloudfoundry.identity.uaa.integration;
 
 import org.apache.http.impl.client.BasicCookieStore;
-import org.apache.http.impl.cookie.BasicClientCookie;
 import org.cloudfoundry.identity.uaa.ServerRunningExtension;
 import org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils;
 import org.cloudfoundry.identity.uaa.security.web.CookieBasedCsrfTokenRepository;
@@ -53,7 +52,7 @@ class ImplicitTokenGrantIntegrationTests {
     private static final UaaTestAccounts testAccounts = UaaTestAccounts.standard(serverRunning);
 
     @RegisterExtension
-    private static final TestAccountExtension testAccountSetup = TestAccountExtension.standard(serverRunning, testAccounts);
+    private static final TestAccountExtension testAccountExtension = TestAccountExtension.standard(serverRunning, testAccounts);
 
     private String implicitUrl() {
         URI uri = serverRunning.buildUri("/oauth/authorize").queryParam("response_type", "token")
@@ -121,24 +120,15 @@ class ImplicitTokenGrantIntegrationTests {
         ResponseEntity<Void> result = serverRunning.getForResponse(implicitUrl(), getHeaders(cookies));
         assertThat(result.getStatusCode()).isEqualTo(HttpStatus.FOUND);
         String location = result.getHeaders().getLocation().toString();
-        if (result.getHeaders().containsKey("Set-Cookie")) {
-            for (String cookie : result.getHeaders().get("Set-Cookie")) {
-                int nameLength = cookie.indexOf('=');
-                cookies.addCookie(new BasicClientCookie(cookie.substring(0, nameLength), cookie.substring(nameLength + 1)));
-            }
-        }
+        IntegrationTestUtils.extractCookies(result, cookies);
 
         ResponseEntity<String> response = serverRunning.getForString(location, getHeaders(cookies));
-        if (response.getHeaders().containsKey("Set-Cookie")) {
-            for (String cookie : response.getHeaders().get("Set-Cookie")) {
-                int nameLength = cookie.indexOf('=');
-                cookies.addCookie(new BasicClientCookie(cookie.substring(0, nameLength), cookie.substring(nameLength + 1)));
-            }
-        }
+        IntegrationTestUtils.extractCookies(response, cookies);
+
         // should be directed to the login screen...
-        assertThat(response.getBody()).contains("/login.do");
-        assertThat(response.getBody()).contains("username");
-        assertThat(response.getBody()).contains("password");
+        assertThat(response.getBody()).contains("/login.do")
+                .contains("username")
+                .contains("password");
 
         location = "/login.do";
 
@@ -148,9 +138,6 @@ class ImplicitTokenGrantIntegrationTests {
         formData.add(CookieBasedCsrfTokenRepository.DEFAULT_CSRF_COOKIE_NAME, IntegrationTestUtils.extractCookieCsrf(response.getBody()));
 
         result = serverRunning.postForRedirect(location, getHeaders(cookies), formData);
-
-        // System.err.println(result.getStatusCode());
-        // System.err.println(result.getHeaders());
 
         assertThat(result.getHeaders().getLocation()).isNotNull();
         assertThat(result.getHeaders().getLocation().toString()).matches(REDIRECT_URL_PATTERN);

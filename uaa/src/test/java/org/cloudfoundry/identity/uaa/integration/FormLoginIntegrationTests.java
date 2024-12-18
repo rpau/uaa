@@ -53,7 +53,7 @@ class FormLoginIntegrationTests {
     private static final UaaTestAccounts testAccounts = UaaTestAccounts.standard(serverRunning);
 
     @RegisterExtension
-    private static final TestAccountExtension testAccountSetup = TestAccountExtension.standard(serverRunning, testAccounts);
+    private static final TestAccountExtension testAccountExtension = TestAccountExtension.standard(serverRunning, testAccounts);
 
     Header header = new BasicHeader(HttpHeaders.ACCEPT, MediaType.TEXT_HTML_VALUE);
     List<Header> headers = Collections.singletonList(header);
@@ -74,7 +74,6 @@ class FormLoginIntegrationTests {
     void closeClient() throws Exception {
         httpclient.close();
     }
-
 
     @Test
     void unauthenticatedRedirect() throws Exception {

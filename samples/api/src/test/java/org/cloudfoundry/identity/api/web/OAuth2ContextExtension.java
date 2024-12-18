@@ -66,12 +66,13 @@ public final class OAuth2ContextExtension implements BeforeAllCallback, BeforeEa
 
     private OAuth2RestTemplate client;
 
-    private Map<String, String> parameters = new LinkedHashMap<>();
+    private final Map<String, String> parameters = new LinkedHashMap<>();
 
     private final RestTemplateHolder clientHolder;
 
     private final TestAccounts testAccounts;
-    private final TestAccountExtension testAccountSetup;
+
+    private final TestAccountExtension testAccountExtension;
 
     private OAuth2AccessToken accessToken;
 
@@ -135,20 +136,23 @@ public final class OAuth2ContextExtension implements BeforeAllCallback, BeforeEa
     }
 
     private OAuth2ContextExtension(RestTemplateHolder clientHolder,
-                                   TestAccountExtension testAccountSetup, Environment environment) {
+                                   TestAccountExtension testAccountExtension, Environment environment) {
         this.clientHolder = clientHolder;
-        this.testAccountSetup = testAccountSetup;
-        this.testAccounts = testAccountSetup.getTestAccounts();
+        this.testAccountExtension = testAccountExtension;
+        this.testAccounts = testAccountExtension.getTestAccounts();
         this.environment = environment;
     }
 
     @Override
     public void beforeAll(ExtensionContext context) {
-        testAccountSetup.beforeAll(context);
+        logger.warn("Applying OAuth2 context for: " + context.getRequiredTestClass());
     }
 
     @Override
     public void beforeEach(ExtensionContext context) {
+        logger.warn("Applying OAuth2 context for: " + context.getRequiredTestClass());
+        resetExtension();
+
         initializeIfNecessary(context);
         if (resource != null) {
             logger.info("Starting OAuth2 context for: " + resource);
@@ -174,7 +178,16 @@ public final class OAuth2ContextExtension implements BeforeAllCallback, BeforeEa
         }
     }
 
+    private void resetExtension() {
+        resource = null;
+        accessToken = null;
+    }
+
     private void initializeIfNecessary(ExtensionContext context) {
+        if (testAccountExtension != null) {
+            testAccountExtension.beforeAll(context);
+        }
+
         final TestClass testClass = new TestClass(context.getRequiredTestClass());
         OAuth2ContextConfiguration contextConfiguration = findOAuthContextConfiguration(context.getRequiredTestMethod(), testClass);
         if (contextConfiguration == null) {
@@ -182,8 +195,8 @@ public final class OAuth2ContextExtension implements BeforeAllCallback, BeforeEa
             return;
         }
 
-        this.initializeAccessToken = contextConfiguration.initialize();
-        this.resource = createResource(context.getRequiredTestInstance(), contextConfiguration);
+        initializeAccessToken = contextConfiguration.initialize();
+        resource = createResource(context.getRequiredTestInstance(), contextConfiguration);
 
         final List<FrameworkMethod> befores = testClass.getAnnotatedMethods(BeforeOAuth2Context.class);
         if (!befores.isEmpty()) {
@@ -194,11 +207,11 @@ public final class OAuth2ContextExtension implements BeforeAllCallback, BeforeEa
                 OAuth2ContextConfiguration beforeConfiguration = findOAuthContextConfiguration(before.getMethod(), testClass);
                 if (beforeConfiguration != null) {
 
-                    OAuth2ProtectedResourceDetails resource = createResource(context.getRequiredTestInstance(), beforeConfiguration);
+                    OAuth2ProtectedResourceDetails tempResource = createResource(context.getRequiredTestInstance(), beforeConfiguration);
                     AccessTokenRequest beforeRequest = new DefaultAccessTokenRequest();
                     beforeRequest.setAll(parameters);
-                    OAuth2RestTemplate client = createRestTemplate(resource, beforeRequest);
-                    clientHolder.setRestTemplate(client);
+                    OAuth2RestTemplate tempClient = createRestTemplate(tempResource, beforeRequest);
+                    clientHolder.setRestTemplate(tempClient);
                 }
 
                 AccessTokenRequest request = new DefaultAccessTokenRequest();
@@ -209,6 +222,7 @@ public final class OAuth2ContextExtension implements BeforeAllCallback, BeforeEa
                 try {
                     new RunBefores(new Statement() {
                         public void evaluate() {
+                            // do nothing
                         }
                     }, list, context.getRequiredTestInstance()).evaluate();
                 } catch (RuntimeException | AssertionError e) {
@@ -220,14 +234,6 @@ public final class OAuth2ContextExtension implements BeforeAllCallback, BeforeEa
                 }
             }
         }
-    }
-
-    public void setAccessTokenProvider(AccessTokenProvider accessTokenProvider) {
-        this.accessTokenProvider = accessTokenProvider;
-    }
-
-    public void setParameters(Map<String, String> parameters) {
-        this.parameters = parameters;
     }
 
     /**
@@ -261,34 +267,6 @@ public final class OAuth2ContextExtension implements BeforeAllCallback, BeforeEa
         }
     }
 
-    /**
-     * @return the client template
-     */
-    public OAuth2RestTemplate getRestTemplate() {
-        return client;
-    }
-
-    /**
-     * @return the current client resource details
-     */
-    public OAuth2ProtectedResourceDetails getResource() {
-        return resource;
-    }
-
-    /**
-     * @return the current access token request
-     */
-    public AccessTokenRequest getAccessTokenRequest() {
-        return client.getOAuth2ClientContext().getAccessTokenRequest();
-    }
-
-    /**
-     * @return the current OAuth2 context
-     */
-    public OAuth2ClientContext getOAuth2ClientContext() {
-        return client.getOAuth2ClientContext();
-    }
-
     private OAuth2RestTemplate createRestTemplate(
             OAuth2ProtectedResourceDetails resource, AccessTokenRequest request) {
         OAuth2ClientContext context = new DefaultOAuth2ClientContext(request);
@@ -296,7 +274,8 @@ public final class OAuth2ContextExtension implements BeforeAllCallback, BeforeEa
         setupConnectionFactory(client);
         client.setErrorHandler(new DefaultResponseErrorHandler() {
             // Pass errors through in response entity for status code analysis
-            public boolean hasError(ClientHttpResponse response) throws IOException {
+            @Override
+            public boolean hasError(ClientHttpResponse response) {
                 return false;
             }
         });

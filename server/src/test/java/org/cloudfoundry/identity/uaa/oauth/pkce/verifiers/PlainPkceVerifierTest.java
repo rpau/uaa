@@ -12,32 +12,31 @@ class PlainPkceVerifierTest {
 
     private PlainPkceVerifier plainPkceVerifier;
 
-    private final String matchParameter = "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM";
-    private final String mismatchParameter = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk";
+    private static final String MATCH_PARAMETER = "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM";
+    private static final String MISMATCH_PARAMETER = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk";
 
     @BeforeEach
-    void createPlainCodeChallengeMethod() throws Exception {
+    void createPlainCodeChallengeMethod() {
         plainPkceVerifier = new PlainPkceVerifier();
     }
 
     @Test
-    void codeVerifierMethodWithMatchParameters() throws Exception {
-        assertThat(plainPkceVerifier.verify(matchParameter, matchParameter)).isTrue();
+    void codeVerifierMethodWithMatchParameters() {
+        assertThat(plainPkceVerifier.verify(MATCH_PARAMETER, MATCH_PARAMETER)).isTrue();
     }
 
     @Test
-    void codeVerifierMethodWithMismatchParameters() throws Exception {
-        assertThat(plainPkceVerifier.verify(matchParameter, mismatchParameter)).isFalse();
+    void codeVerifierMethodWithMismatchParameters() {
+        assertThat(plainPkceVerifier.verify(MATCH_PARAMETER, MISMATCH_PARAMETER)).isFalse();
     }
 
     @Test
-    void codeChallengeIsNull() throws Exception {
-        assertThat(plainPkceVerifier.verify(matchParameter, null)).isFalse();
+    void codeChallengeIsNull() {
+        assertThat(plainPkceVerifier.verify(MATCH_PARAMETER, null)).isFalse();
     }
 
     @Test
-    void codeVerifierIsNull() throws Exception {
-        assertThat(plainPkceVerifier.verify(null, matchParameter)).isFalse();
+    void codeVerifierIsNull() {
+        assertThat(plainPkceVerifier.verify(null, MATCH_PARAMETER)).isFalse();
     }
-
 }

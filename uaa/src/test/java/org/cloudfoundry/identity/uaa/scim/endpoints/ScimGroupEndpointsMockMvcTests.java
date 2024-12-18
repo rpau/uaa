@@ -1027,7 +1027,6 @@ class ScimGroupEndpointsMockMvcTests {
         assertThat(responseBody).isEqualTo(JsonUtils.writeValueAsString(scimGroupMember));
     }
 
-
     @Test
     void add_member_to_group_with_useless_role() throws Exception {
         ScimUser user = createUserAndAddToGroups(IdentityZone.getUaa(), Collections.emptySet());
@@ -1223,7 +1222,6 @@ class ScimGroupEndpointsMockMvcTests {
             return null;
         }
     }
-
 
     void checkGetExternalGroupsPagination(int pageSize) throws Exception {
         List<SearchResults<ScimGroupExternalMember>> pages = new ArrayList<>();

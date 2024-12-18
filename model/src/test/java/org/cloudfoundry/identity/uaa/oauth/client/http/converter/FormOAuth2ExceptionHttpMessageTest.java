@@ -22,21 +22,21 @@ class FormOAuth2ExceptionHttpMessageTest {
     FormOAuth2AccessTokenMessageConverter auth2AccessTokenMessageConverter;
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
         converter = new FormOAuth2ExceptionHttpMessageConverter();
         auth2AccessTokenMessageConverter = new FormOAuth2AccessTokenMessageConverter();
     }
 
     @Test
     void canRead() {
-        assertThat(converter.canRead(new OAuth2Exception("").getClass(), MediaType.APPLICATION_FORM_URLENCODED)).isTrue();
-        assertThat(auth2AccessTokenMessageConverter.canRead(new BadClientCredentialsException().getClass(), MediaType.APPLICATION_FORM_URLENCODED)).isFalse();
+        assertThat(converter.canRead(OAuth2Exception.class, MediaType.APPLICATION_FORM_URLENCODED)).isTrue();
+        assertThat(auth2AccessTokenMessageConverter.canRead(BadClientCredentialsException.class, MediaType.APPLICATION_FORM_URLENCODED)).isFalse();
     }
 
     @Test
     void canWrite() {
-        assertThat(converter.canWrite(new OAuth2Exception("").getClass(), MediaType.APPLICATION_FORM_URLENCODED)).isTrue();
-        assertThat(auth2AccessTokenMessageConverter.canWrite(new BadClientCredentialsException().getClass(), MediaType.APPLICATION_FORM_URLENCODED)).isFalse();
+        assertThat(converter.canWrite(OAuth2Exception.class, MediaType.APPLICATION_FORM_URLENCODED)).isTrue();
+        assertThat(auth2AccessTokenMessageConverter.canWrite(BadClientCredentialsException.class, MediaType.APPLICATION_FORM_URLENCODED)).isFalse();
     }
 
     @Test
@@ -46,7 +46,7 @@ class FormOAuth2ExceptionHttpMessageTest {
 
     @Test
     void read() throws IOException {
-        assertThat(converter.read(new OAuth2Exception("").getClass(), new MockHttpInputMessage("".getBytes()))).isNotNull();
+        assertThat(converter.read(OAuth2Exception.class, new MockHttpInputMessage("".getBytes()))).isNotNull();
     }
 
     @Test

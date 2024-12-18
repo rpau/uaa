@@ -14,7 +14,6 @@
 
 package org.cloudfoundry.identity.uaa.mock.token;
 
-
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
 import org.cloudfoundry.identity.uaa.constants.OriginKeys;
@@ -55,11 +54,11 @@ class UserTokenMockMvcTests extends AbstractTokenMockMvcTests {
     @Test
     void user_managed_token() throws Exception {
         String recipientId = "recipientClient" + new RandomValueStringGenerator().generate();
-        UaaClientDetails recipient = setUpClients(recipientId, "uaa.user", "uaa.user,test.scope", "password," + GRANT_TYPE_REFRESH_TOKEN, true, TEST_REDIRECT_URI,
+        setUpClients(recipientId, "uaa.user", "uaa.user,test.scope", "password," + GRANT_TYPE_REFRESH_TOKEN, true, TEST_REDIRECT_URI,
                 Collections.singletonList("uaa"), 50000);
 
         String requestorId = "requestingClient" + new RandomValueStringGenerator().generate();
-        UaaClientDetails requestor = setUpClients(requestorId, "uaa.user", "uaa.user", "password," + GRANT_TYPE_USER_TOKEN, true, TEST_REDIRECT_URI,
+        setUpClients(requestorId, "uaa.user", "uaa.user", "password," + GRANT_TYPE_USER_TOKEN, true, TEST_REDIRECT_URI,
                 Collections.singletonList("uaa"));
 
         String username = "testuser" + new RandomValueStringGenerator().generate();
@@ -117,11 +116,11 @@ class UserTokenMockMvcTests extends AbstractTokenMockMvcTests {
     @Test
     void client_credentials_token() throws Exception {
         String recipientId = "recipientClient" + new RandomValueStringGenerator().generate();
-        UaaClientDetails recipient = setUpClients(recipientId, "uaa.user", "uaa.user,test.scope", "password," + GRANT_TYPE_REFRESH_TOKEN, true, TEST_REDIRECT_URI,
+        setUpClients(recipientId, "uaa.user", "uaa.user,test.scope", "password," + GRANT_TYPE_REFRESH_TOKEN, true, TEST_REDIRECT_URI,
                 Collections.singletonList("uaa"), 50000);
 
         String requestorId = "requestingClient" + new RandomValueStringGenerator().generate();
-        UaaClientDetails requestor = setUpClients(requestorId, "uaa.user", "uaa.user", "client_credentials," + GRANT_TYPE_USER_TOKEN, true, TEST_REDIRECT_URI,
+        setUpClients(requestorId, "uaa.user", "uaa.user", "client_credentials," + GRANT_TYPE_USER_TOKEN, true, TEST_REDIRECT_URI,
                 Collections.singletonList("uaa"));
 
         String username = "testuser" + new RandomValueStringGenerator().generate();
@@ -153,11 +152,11 @@ class UserTokenMockMvcTests extends AbstractTokenMockMvcTests {
     @Test
     void invalid_grant_type() throws Exception {
         String recipientId = "recipientClient" + new RandomValueStringGenerator().generate();
-        UaaClientDetails recipient = setUpClients(recipientId, "uaa.user", "uaa.user,test.scope", "password," + GRANT_TYPE_REFRESH_TOKEN, true, TEST_REDIRECT_URI,
+        setUpClients(recipientId, "uaa.user", "uaa.user,test.scope", "password," + GRANT_TYPE_REFRESH_TOKEN, true, TEST_REDIRECT_URI,
                 Collections.singletonList("uaa"), 50000);
 
         String requestorId = "requestingClient" + new RandomValueStringGenerator().generate();
-        UaaClientDetails requestor = setUpClients(requestorId, "uaa.user", "uaa.user", "password", true, TEST_REDIRECT_URI,
+        setUpClients(requestorId, "uaa.user", "uaa.user", "password", true, TEST_REDIRECT_URI,
                 Collections.singletonList("uaa"));
 
         String username = "testuser" + new RandomValueStringGenerator().generate();

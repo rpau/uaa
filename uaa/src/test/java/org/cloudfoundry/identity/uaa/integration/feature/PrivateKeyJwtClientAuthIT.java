@@ -101,8 +101,8 @@ class PrivateKeyJwtClientAuthIT {
         String accessToken = getClientCredentialsGrantToken(usedClientId, "access_token", OK);
         // Then
         assertThat(accessToken).isNotNull();
-        assertThat(getTokenClaims(accessToken)).containsAllEntriesOf(expectedClaims);
-        assertThat(getTokenClaims(accessToken)).doesNotContainKeys("user_name", "origin");
+        assertThat(getTokenClaims(accessToken)).containsAllEntriesOf(expectedClaims)
+                .doesNotContainKeys("user_name", "origin");
     }
 
     @Test
@@ -119,8 +119,8 @@ class PrivateKeyJwtClientAuthIT {
         String accessToken = getClientCredentialsGrantToken(usedClientId, "access_token", OK);
         // Then
         assertThat(accessToken).isNotNull();
-        assertThat(getTokenClaims(accessToken)).containsAllEntriesOf(expectedClaims);
-        assertThat(getTokenClaims(accessToken)).doesNotContainKeys("user_name", "origin");
+        assertThat(getTokenClaims(accessToken)).containsAllEntriesOf(expectedClaims)
+                .doesNotContainKeys("user_name", "origin");
     }
 
     @Test
@@ -246,8 +246,8 @@ class PrivateKeyJwtClientAuthIT {
         // When
         String response = getPasswordGrantToken("admin", "access_token", UNAUTHORIZED);
         // Then
-        assertThat(response).isNotNull();
-        assertThat(response).contains("401");
+        assertThat(response).isNotNull()
+                .contains("401");
     }
 
     @Test
@@ -255,8 +255,8 @@ class PrivateKeyJwtClientAuthIT {
         // When
         String response = getClientCredentialsGrantToken("any-other-not-existing-client", "access_token", UNAUTHORIZED);
         // Then
-        assertThat(response).isNotNull();
-        assertThat(response).contains("401");
+        assertThat(response).isNotNull()
+                .contains("401");
     }
 
     private String getClientCredentialsGrantToken(String clientId, String returnToken, HttpStatus expected) {
@@ -355,5 +355,4 @@ class PrivateKeyJwtClientAuthIT {
         identityProvider.setIdentityZoneId("uaa");
         return identityProvider;
     }
-
 }

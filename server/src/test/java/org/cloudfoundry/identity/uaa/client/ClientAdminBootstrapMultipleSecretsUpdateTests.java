@@ -31,7 +31,6 @@ class ClientAdminBootstrapMultipleSecretsUpdateTests {
     private JdbcTemplate jdbcTemplate;
     @Autowired
     private NamedParameterJdbcTemplate namedJdbcTemplate;
-    private RandomValueStringGenerator randomValueStringGenerator;
     private String autoApproveId;
     private String allowPublicId;
 
@@ -39,7 +38,7 @@ class ClientAdminBootstrapMultipleSecretsUpdateTests {
 
     @BeforeEach
     void setUpClientAdminTests() {
-        randomValueStringGenerator = new RandomValueStringGenerator();
+        RandomValueStringGenerator randomValueStringGenerator = new RandomValueStringGenerator();
         autoApproveId = "autoapprove-" + randomValueStringGenerator.generate().toLowerCase();
         allowPublicId = "public-" + randomValueStringGenerator.generate().toLowerCase();
         clients = new HashMap<>();
@@ -63,17 +62,19 @@ class ClientAdminBootstrapMultipleSecretsUpdateTests {
                 Collections.emptySet(),
                 null,
                 Collections.singleton(allowPublicId));
+
         /* setup first a client with 2 secrets */
         Map<String, Object> map = ClientAdminBootstrapTests.createClientMap("foo");
         map.put("secret", Arrays.asList("bar", "bar"));
         ClientDetails created = ClientAdminBootstrapTests.doSimpleTest(map, localAdminBootstrap, localJdbcClientDetailsService, clients);
         ClientAdminBootstrapTests.assertSet((String) map.get("redirect-uri"), null, created.getRegisteredRedirectUri(), String.class);
         ClientDetails details = localJdbcClientDetailsService.loadClientByClientId("foo");
-        assertThat(details.getClientSecret().contains(" ")).as("Secret database field expected to have a space, since we have 2 secrets.").isTrue();
+        assertThat(details.getClientSecret()).as("Secret database field expected to have a space, since we have 2 secrets.").contains(" ");
         assertThat(encoder.matches("bar", details.getClientSecret().split(" ")[0])).as("First secret should match bar").isTrue();
+
         /* update now client but provide only one secret to admin bootstrap */
         ClientAdminBootstrapTests.doSimpleTest(ClientAdminBootstrapTests.createClientMap("foo"), localAdminBootstrap, localJdbcClientDetailsService, clients);
-        assertThat(details.getClientSecret().contains(" ")).as("Secret database field expected to have a space, since we have 2 secrets.").isTrue();
+        assertThat(details.getClientSecret()).as("Secret database field expected to have a space, since we have 2 secrets.").contains(" ");
         assertThat(encoder.matches("bar", details.getClientSecret().split(" ")[0])).as("First secret should match bar").isTrue();
     }
 }

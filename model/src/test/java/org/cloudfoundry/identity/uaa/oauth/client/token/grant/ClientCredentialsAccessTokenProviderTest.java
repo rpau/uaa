@@ -8,7 +8,6 @@ import org.cloudfoundry.identity.uaa.oauth.common.DefaultOAuth2RefreshToken;
 import org.cloudfoundry.identity.uaa.oauth.common.OAuth2AccessToken;
 import org.cloudfoundry.identity.uaa.oauth.token.AccessTokenRequest;
 import org.cloudfoundry.identity.uaa.oauth.token.DefaultAccessTokenRequest;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.util.LinkedMultiValueMap;
@@ -32,10 +31,6 @@ class ClientCredentialsAccessTokenProviderTest {
             return new DefaultOAuth2AccessToken("FOO");
         }
     };
-
-    @BeforeEach
-    void setUp() throws Exception {
-    }
 
     @Test
     void supportsResource() {

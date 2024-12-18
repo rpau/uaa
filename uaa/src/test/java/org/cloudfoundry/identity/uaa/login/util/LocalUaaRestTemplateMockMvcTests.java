@@ -26,9 +26,9 @@ class LocalUaaRestTemplateMockMvcTests {
     @Test
     void localUaaRestTemplateAcquireToken() {
         OAuth2AccessToken token = localUaaRestTemplate.acquireAccessToken(new DefaultOAuth2ClientContext());
-        assertThat(token.getScope().contains("oauth.login")).as("Scopes should contain oauth.login").isTrue();
-        assertThat(token.getScope().contains("notifications.write")).as("Scopes should contain notifications.write").isTrue();
-        assertThat(token.getScope().contains("critical_notifications.write")).as("Scopes should contain critical_notifications.write").isTrue();
+        assertThat(token.getScope()).as("Scopes should contain oauth.login").contains("oauth.login")
+                .as("Scopes should contain notifications.write").contains("notifications.write")
+                .as("Scopes should contain critical_notifications.write").contains("critical_notifications.write");
     }
 
     @Test
@@ -37,7 +37,7 @@ class LocalUaaRestTemplateMockMvcTests {
         Method createRequest = OAuth2RestTemplate.class.getDeclaredMethod("createRequest", URI.class, HttpMethod.class);
         ReflectionUtils.makeAccessible(createRequest);
         ClientHttpRequest request = (ClientHttpRequest) createRequest.invoke(localUaaRestTemplate, new URI("http://localhost/oauth/token"), HttpMethod.POST);
-        assertThat(request.getHeaders().get("Authorization").size()).as("authorization bearer header should be present").isOne();
+        assertThat(request.getHeaders().get("Authorization")).as("authorization bearer header should be present").hasSize(1);
         assertThat(request.getHeaders().get("Authorization").get(0)).as("authorization bearer header should be present").isNotNull();
         assertThat(request.getHeaders().get("Authorization").get(0).toLowerCase()).startsWith("bearer ");
         assertThat(request.getHeaders().get("Authorization").get(0)).endsWith(token.getValue());

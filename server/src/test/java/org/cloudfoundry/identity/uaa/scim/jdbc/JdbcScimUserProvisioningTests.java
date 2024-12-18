@@ -156,7 +156,6 @@ class JdbcScimUserProvisioningTests {
         jdbcTemplate.execute("delete from users");
     }
 
-
     @WithDatabaseContext
     @Nested
     class WhenFindingByEmailAndZone {

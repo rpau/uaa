@@ -39,7 +39,7 @@ import static org.assertj.core.api.Assertions.fail;
  * @author Dave Syer
  * @author Luke Taylor
  */
-public class AuthorizationCodeGrantIntegrationTests {
+class AuthorizationCodeGrantIntegrationTests {
 
     @RegisterExtension
     private static final ServerRunningExtension serverRunning = ServerRunningExtension.connect();
@@ -47,12 +47,12 @@ public class AuthorizationCodeGrantIntegrationTests {
     private static final UaaTestAccounts testAccounts = UaaTestAccounts.standard(serverRunning);
 
     @RegisterExtension
-    private static final TestAccountExtension testAccountSetup = TestAccountExtension.standard(serverRunning, testAccounts);
+    private static final TestAccountExtension testAccountExtension = TestAccountExtension.standard(serverRunning, testAccounts);
 
     @Test
     void successfulAuthorizationCodeFlow() {
-        testSuccessfulAuthorizationCodeFlow_Internal();
-        testSuccessfulAuthorizationCodeFlow_Internal();
+        successfulAuthorizationCodeFlow_Internal();
+        successfulAuthorizationCodeFlow_Internal();
     }
 
     @Test
@@ -119,7 +119,7 @@ public class AuthorizationCodeGrantIntegrationTests {
     }
 
     @Test
-    void invalidCodeVerifier() throws Exception {
+    void invalidCodeVerifier() {
         AuthorizationCodeResourceDetails resource = testAccounts.getDefaultAuthorizationCodeResource();
         ResponseEntity<Map> tokenResponse = IntegrationTestUtils.getTokens(serverRunning,
                 resource.getClientId(),
@@ -203,8 +203,7 @@ public class AuthorizationCodeGrantIntegrationTests {
                 null,
                 null,
                 false);
-
-        assertThat(body.get("access_token")).as("Token not received").isNotNull();
+        assertThat(body).as("Token not received").containsKey("access_token");
 
         try {
             IntegrationTestUtils.getAuthorizationCodeTokenMap(serverRunning, "app", "appclientsecret",
@@ -217,7 +216,7 @@ public class AuthorizationCodeGrantIntegrationTests {
         fail("Token retrival not allowed");
     }
 
-    public void testSuccessfulAuthorizationCodeFlow_Internal() {
+    public void successfulAuthorizationCodeFlow_Internal() {
         AuthorizationCodeResourceDetails resource = testAccounts.getDefaultAuthorizationCodeResource();
 
         Map<String, String> body = IntegrationTestUtils.getAuthorizationCodeTokenMap(serverRunning,
@@ -227,18 +226,17 @@ public class AuthorizationCodeGrantIntegrationTests {
                 testAccounts.getUserName(),
                 testAccounts.getPassword());
         Jwt token = JwtHelper.decode(body.get("access_token"));
-        assertThat(token.getClaims().contains("\"aud\"")).as("Wrong claims: " + token.getClaims()).isTrue();
-        assertThat(token.getClaims().contains("\"user_id\"")).as("Wrong claims: " + token.getClaims()).isTrue();
+        assertThat(token.getClaims()).as("Wrong claims: " + token.getClaims()).contains("\"aud\"")
+                .as("Wrong claims: " + token.getClaims()).contains("\"user_id\"");
     }
 
     private void testAuthorizationCodeFlowWithPkce_Internal(String codeChallenge, String codeChallengeMethod, String codeVerifier) throws Exception {
-
         ResponseEntity<Map> tokenResponse = doAuthorizeAndTokenRequest(codeChallenge, codeChallengeMethod, codeVerifier);
         assertThat(tokenResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
         Map<String, String> body = tokenResponse.getBody();
         Jwt token = JwtHelper.decode(body.get("access_token"));
-        assertThat(token.getClaims().contains("\"aud\"")).as("Wrong claims: " + token.getClaims()).isTrue();
-        assertThat(token.getClaims().contains("\"user_id\"")).as("Wrong claims: " + token.getClaims()).isTrue();
+        assertThat(token.getClaims()).as("Wrong claims: " + token.getClaims()).contains("\"aud\"")
+                .as("Wrong claims: " + token.getClaims()).contains("\"user_id\"");
         IntegrationTestUtils.callCheckToken(serverRunning,
                 body.get("access_token"),
                 testAccounts.getDefaultAuthorizationCodeResource().getClientId(),

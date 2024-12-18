@@ -126,7 +126,6 @@ class ExternalOAuthIdentityProviderConfigValidatorTest {
         validator.validate(definition);
     }
 
-
     @Test
     void configCannotBeNull() {
         assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() ->

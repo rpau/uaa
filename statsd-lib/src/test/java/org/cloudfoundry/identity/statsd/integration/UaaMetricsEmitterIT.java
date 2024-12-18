@@ -1,11 +1,9 @@
 package org.cloudfoundry.identity.statsd.integration;
 
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.ArgumentsProvider;
-import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -97,27 +95,23 @@ class UaaMetricsEmitterIT {
         secondBatch = getMessages(METRIC_FRAGMENTS);
     }
 
-    static class MetricFragmentArguments implements ArgumentsProvider {
-
-        @Override
-        public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-            return METRIC_FRAGMENTS.stream().map(Arguments::of);
-        }
+    public static Stream<Arguments> parameters() {
+        return METRIC_FRAGMENTS.stream().map(Arguments::of);
     }
 
     @ParameterizedTest(name = "{index}: fragment[{0}]")
-    @ArgumentsSource(MetricFragmentArguments.class)
+    @MethodSource("parameters")
     void assertGenericMetrics(String statsDKey) {
         String data1 = firstBatch.get(statsDKey);
         String data2 = secondBatch.get(statsDKey);
 
         assertThat(data1).as("Expected to find message for:'" + statsDKey + "' in the first batch.").isNotNull();
         long first = IntegrationTestUtils.getStatsDValueFromMessage(data1);
-        assertThat(first).as(statsDKey + " first value must have a positive value.").isGreaterThanOrEqualTo(0L);
+        assertThat(first).as(statsDKey + " first value must have a positive value.").isNotNegative();
 
         assertThat(data2).as("Expected to find message for:'" + statsDKey + "' in the second batch.").isNotNull();
         long second = IntegrationTestUtils.getStatsDValueFromMessage(data2);
-        assertThat(second).as(statsDKey + " second value must have a positive value.").isGreaterThanOrEqualTo(0L);
+        assertThat(second).as(statsDKey + " second value must have a positive value.").isNotNegative();
     }
 
     private static Map<String, String> getMessages(List<String> fragments) throws IOException {
@@ -151,11 +145,7 @@ class UaaMetricsEmitterIT {
                 new HttpEntity<>(null, headers),
                 String.class);
 
-        if (loginResponse.getHeaders().containsKey("Set-Cookie")) {
-            for (String cookie : loginResponse.getHeaders().get("Set-Cookie")) {
-                headers.add("Cookie", cookie);
-            }
-        }
+        IntegrationTestUtils.copyCookies(loginResponse, headers);
         String csrf = IntegrationTestUtils.extractCookieCsrf(loginResponse.getBody());
 
         LinkedMultiValueMap<String, String> body = new LinkedMultiValueMap<>();

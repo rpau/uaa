@@ -33,10 +33,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.constants.OriginKeys.LOGIN_SERVER;
 import static org.cloudfoundry.identity.uaa.oauth.client.ClientConstants.ALLOWED_PROVIDERS;
 
-public class DomainFilterTest {
+class DomainFilterTest {
 
-    private static final String alias = "saml";
-    private static final String idpMetaData = """
+    private static final String ALIAS = "saml";
+
+    private static final String IDP_META_DATA = """
             <?xml version="1.0"?>
             <md:EntityDescriptor xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" entityID="http://%1$s.cfapps.io/saml2/idp/metadata.php" ID="pfx06ad4153-c17c-d286-194c-dec30bb92796"><ds:Signature>
               <ds:SignedInfo><ds:CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/>
@@ -67,7 +68,7 @@ public class DomainFilterTest {
                 <md:SurName>Hanik</md:SurName>
                 <md:EmailAddress>fhanik@pivotal.io</md:EmailAddress>
               </md:ContactPerson>
-            </md:EntityDescriptor>""".formatted(alias);
+            </md:EntityDescriptor>""".formatted(ALIAS);
 
     UaaClientDetails client;
     List<IdentityProvider> activeProviders = emptyList();
@@ -76,8 +77,6 @@ public class DomainFilterTest {
     IdentityProvider samlProvider1;
     IdentityProvider samlProvider2;
     IdentityProvider loginServerProvider;
-
-    DomainFilter filter = new DomainFilter();
 
     String email = "test@test.org";
     private UaaIdentityProviderDefinition uaaDef;
@@ -91,7 +90,7 @@ public class DomainFilterTest {
         uaaDef = new UaaIdentityProviderDefinition(null, null);
         ldapDef = new LdapIdentityProviderDefinition();
         samlDef1 = new SamlIdentityProviderDefinition()
-                .setMetaDataLocation(idpMetaData)
+                .setMetaDataLocation(IDP_META_DATA)
                 .setIdpEntityAlias("")
                 .setNameID("")
                 .setMetadataTrustCheck(true)
@@ -99,7 +98,7 @@ public class DomainFilterTest {
                 .setIconUrl("")
                 .setZoneId(IdentityZone.getUaaZoneId());
         samlDef2 = new SamlIdentityProviderDefinition()
-                .setMetaDataLocation(idpMetaData)
+                .setMetaDataLocation(IDP_META_DATA)
                 .setIdpEntityAlias("")
                 .setNameID("")
                 .setMetadataTrustCheck(true)
@@ -120,31 +119,31 @@ public class DomainFilterTest {
 
     @Test
     void null_arguments() {
-        assertThat(filter.filter(null, null, null)).containsExactlyInAnyOrder();
-        assertThat(filter.filter(null, null, email)).containsExactlyInAnyOrder();
-        assertThat(filter.filter(null, client, null)).containsExactlyInAnyOrder();
-        assertThat(filter.filter(null, client, email)).containsExactlyInAnyOrder();
-        assertThat(filter.filter(activeProviders, null, null)).containsExactlyInAnyOrder();
-        assertThat(filter.filter(activeProviders, client, null)).containsExactlyInAnyOrder();
-        assertThat(filter.filter(activeProviders, client, email)).containsExactlyInAnyOrder(uaaProvider);
+        assertThat(DomainFilter.filter(null, null, null)).containsExactlyInAnyOrder();
+        assertThat(DomainFilter.filter(null, null, email)).containsExactlyInAnyOrder();
+        assertThat(DomainFilter.filter(null, client, null)).containsExactlyInAnyOrder();
+        assertThat(DomainFilter.filter(null, client, email)).containsExactlyInAnyOrder();
+        assertThat(DomainFilter.filter(activeProviders, null, null)).containsExactlyInAnyOrder();
+        assertThat(DomainFilter.filter(activeProviders, client, null)).containsExactlyInAnyOrder();
+        assertThat(DomainFilter.filter(activeProviders, client, email)).containsExactlyInAnyOrder(uaaProvider);
     }
 
     @Test
     void default_idp_and_client_setup() {
-        assertThat(filter.filter(activeProviders, null, email)).containsExactlyInAnyOrder(uaaProvider);
-        assertThat(filter.filter(activeProviders, client, email)).containsExactlyInAnyOrder(uaaProvider);
-        assertThat(filter.filter(Collections.singletonList(ldapProvider), null, email)).containsExactlyInAnyOrder();
-        assertThat(filter.filter(Collections.singletonList(ldapProvider), client, email)).containsExactlyInAnyOrder();
-        assertThat(filter.filter(Arrays.asList(uaaProvider, samlProvider2), null, email)).containsExactlyInAnyOrder(uaaProvider);
-        assertThat(filter.filter(Arrays.asList(uaaProvider, samlProvider2), client, email)).containsExactlyInAnyOrder(uaaProvider);
-        assertThat(filter.filter(Collections.singletonList(uaaProvider), null, email)).containsExactlyInAnyOrder(uaaProvider);
-        assertThat(filter.filter(Collections.singletonList(uaaProvider), client, email)).containsExactlyInAnyOrder(uaaProvider);
+        assertThat(DomainFilter.filter(activeProviders, null, email)).containsExactlyInAnyOrder(uaaProvider);
+        assertThat(DomainFilter.filter(activeProviders, client, email)).containsExactlyInAnyOrder(uaaProvider);
+        assertThat(DomainFilter.filter(Collections.singletonList(ldapProvider), null, email)).containsExactlyInAnyOrder();
+        assertThat(DomainFilter.filter(Collections.singletonList(ldapProvider), client, email)).containsExactlyInAnyOrder();
+        assertThat(DomainFilter.filter(Arrays.asList(uaaProvider, samlProvider2), null, email)).containsExactlyInAnyOrder(uaaProvider);
+        assertThat(DomainFilter.filter(Arrays.asList(uaaProvider, samlProvider2), client, email)).containsExactlyInAnyOrder(uaaProvider);
+        assertThat(DomainFilter.filter(Collections.singletonList(uaaProvider), null, email)).containsExactlyInAnyOrder(uaaProvider);
+        assertThat(DomainFilter.filter(Collections.singletonList(uaaProvider), client, email)).containsExactlyInAnyOrder(uaaProvider);
     }
 
     @Test
     void no_allowed_client_providers() {
         client.addAdditionalInformation(ALLOWED_PROVIDERS, emptyList());
-        assertThat(filter.filter(activeProviders, client, email)).containsExactlyInAnyOrder();
+        assertThat(DomainFilter.filter(activeProviders, client, email)).containsExactlyInAnyOrder();
     }
 
     @Test
@@ -154,8 +153,8 @@ public class DomainFilterTest {
         samlDef2.setEmailDomain(emptyList());
         ldapDef.setEmailDomain(Collections.singletonList("test.org"));
         configureTestData();
-        assertThat(filter.filter(activeProviders, client, email)).containsExactlyInAnyOrder(ldapProvider);
-        assertThat(filter.filter(activeProviders, client, "some@other.domain")).containsExactlyInAnyOrder(uaaProvider);
+        assertThat(DomainFilter.filter(activeProviders, client, email)).containsExactlyInAnyOrder(ldapProvider);
+        assertThat(DomainFilter.filter(activeProviders, client, "some@other.domain")).containsExactlyInAnyOrder(uaaProvider);
     }
 
     @Test
@@ -165,7 +164,7 @@ public class DomainFilterTest {
         samlDef2.setEmailDomain(Arrays.asList("test.org", "test2.org"));
         ldapDef.setEmailDomain(Collections.singletonList("test.org"));
         configureTestData();
-        assertThat(filter.filter(activeProviders, client, email)).containsExactlyInAnyOrder(ldapProvider, samlProvider2);
+        assertThat(DomainFilter.filter(activeProviders, client, email)).containsExactlyInAnyOrder(ldapProvider, samlProvider2);
     }
 
     @Test
@@ -175,7 +174,7 @@ public class DomainFilterTest {
         samlDef2.setEmailDomain(Collections.singletonList("*.org"));
         ldapDef.setEmailDomain(Collections.singletonList("*.org"));
         configureTestData();
-        assertThat(filter.filter(activeProviders, client, email)).containsExactlyInAnyOrder(ldapProvider, samlProvider2);
+        assertThat(DomainFilter.filter(activeProviders, client, email)).containsExactlyInAnyOrder(ldapProvider, samlProvider2);
     }
 
     @Test
@@ -185,7 +184,7 @@ public class DomainFilterTest {
         samlDef2.setEmailDomain(Collections.singletonList("*.*.*.com"));
         ldapDef.setEmailDomain(Collections.singletonList("*.*.test2.com"));
         configureTestData();
-        assertThat(filter.filter(activeProviders, client, "user@test.test1.test2.com")).containsExactlyInAnyOrder(ldapProvider, samlProvider2);
+        assertThat(DomainFilter.filter(activeProviders, client, "user@test.test1.test2.com")).containsExactlyInAnyOrder(ldapProvider, samlProvider2);
     }
 
     @Test
@@ -196,39 +195,39 @@ public class DomainFilterTest {
         ldapDef.setEmailDomain(Collections.singletonList("test.org"));
         client.addAdditionalInformation(ALLOWED_PROVIDERS, Collections.singletonList(samlProvider2.getOriginKey()));
         configureTestData();
-        assertThat(filter.filter(activeProviders, client, email)).containsExactlyInAnyOrder(samlProvider2);
+        assertThat(DomainFilter.filter(activeProviders, client, email)).containsExactlyInAnyOrder(samlProvider2);
 
         client.addAdditionalInformation(ALLOWED_PROVIDERS, Arrays.asList(samlProvider2.getOriginKey(), samlProvider1.getOriginKey()));
         configureTestData();
-        assertThat(filter.filter(activeProviders, client, email)).containsExactlyInAnyOrder(samlProvider2);
+        assertThat(DomainFilter.filter(activeProviders, client, email)).containsExactlyInAnyOrder(samlProvider2);
 
         client.addAdditionalInformation(ALLOWED_PROVIDERS, Collections.singletonList(samlProvider1.getOriginKey()));
         configureTestData();
-        assertThat(filter.filter(activeProviders, client, email)).containsExactlyInAnyOrder();
+        assertThat(DomainFilter.filter(activeProviders, client, email)).containsExactlyInAnyOrder();
     }
 
     @Test
     void single_client_allowed_provider() {
         client.addAdditionalInformation(ALLOWED_PROVIDERS, Collections.singletonList(ldapProvider.getOriginKey()));
-        assertThat(filter.filter(activeProviders, client, email)).containsExactlyInAnyOrder();
+        assertThat(DomainFilter.filter(activeProviders, client, email)).containsExactlyInAnyOrder();
 
         ldapDef.setEmailDomain(Collections.singletonList("test.org"));
         configureTestData();
-        assertThat(filter.filter(activeProviders, client, email)).containsExactlyInAnyOrder(ldapProvider);
+        assertThat(DomainFilter.filter(activeProviders, client, email)).containsExactlyInAnyOrder(ldapProvider);
     }
 
     @Test
     void multiple_client_allowed_providers() {
         client.addAdditionalInformation(ALLOWED_PROVIDERS, Arrays.asList(ldapProvider.getOriginKey(), uaaProvider.getOriginKey()));
-        assertThat(filter.filter(activeProviders, client, email)).containsExactlyInAnyOrder(uaaProvider);
+        assertThat(DomainFilter.filter(activeProviders, client, email)).containsExactlyInAnyOrder(uaaProvider);
 
         client.addAdditionalInformation(ALLOWED_PROVIDERS, Arrays.asList(ldapProvider.getOriginKey(), samlProvider2.getOriginKey()));
-        assertThat(filter.filter(activeProviders, client, email)).containsExactlyInAnyOrder();
+        assertThat(DomainFilter.filter(activeProviders, client, email)).containsExactlyInAnyOrder();
 
         ldapDef.setEmailDomain(Collections.singletonList("test.org"));
         configureTestData();
         client.addAdditionalInformation(ALLOWED_PROVIDERS, Arrays.asList(ldapProvider.getOriginKey(), uaaProvider.getOriginKey()));
-        assertThat(filter.filter(activeProviders, client, email)).containsExactlyInAnyOrder(ldapProvider);
+        assertThat(DomainFilter.filter(activeProviders, client, email)).containsExactlyInAnyOrder(ldapProvider);
 
     }
 
@@ -238,7 +237,7 @@ public class DomainFilterTest {
         samlDef1.setEmailDomain(emptyList());
         samlDef2.setEmailDomain(emptyList());
         configureTestData();
-        assertThat(filter.filter(activeProviders, client, email)).containsExactlyInAnyOrder(uaaProvider);
+        assertThat(DomainFilter.filter(activeProviders, client, email)).containsExactlyInAnyOrder(uaaProvider);
     }
 
     @Test
@@ -247,7 +246,7 @@ public class DomainFilterTest {
         samlDef1.setEmailDomain(emptyList());
         samlDef2.setEmailDomain(emptyList());
         configureTestData();
-        assertThat(filter.filter(activeProviders, client, email, false)).doesNotContain(uaaProvider);
+        assertThat(DomainFilter.filter(activeProviders, client, email, false)).doesNotContain(uaaProvider);
     }
 
     @Test
@@ -256,17 +255,17 @@ public class DomainFilterTest {
         samlDef1.setEmailDomain(null);
         samlDef2.setEmailDomain(null);
         configureTestData();
-        assertThat(filter.filter(activeProviders, client, email)).containsExactlyInAnyOrder(uaaProvider);
+        assertThat(DomainFilter.filter(activeProviders, client, email)).containsExactlyInAnyOrder(uaaProvider);
     }
 
     @Test
     void domain_filter_match() {
-        assertThat(filter.doesEmailDomainMatchProvider(uaaProvider, "test.org", true)).isFalse();
-        assertThat(filter.doesEmailDomainMatchProvider(uaaProvider, "test.org", false)).isTrue();
-        assertThat(filter.doesEmailDomainMatchProvider(ldapProvider, "test.org", false)).isFalse();
-        assertThat(filter.doesEmailDomainMatchProvider(ldapProvider, "test.org", true)).isFalse();
-        assertThat(filter.doesEmailDomainMatchProvider(samlProvider1, "test.org", false)).isFalse();
-        assertThat(filter.doesEmailDomainMatchProvider(samlProvider1, "test.org", true)).isFalse();
+        assertThat(DomainFilter.doesEmailDomainMatchProvider(uaaProvider, "test.org", true)).isFalse();
+        assertThat(DomainFilter.doesEmailDomainMatchProvider(uaaProvider, "test.org", false)).isTrue();
+        assertThat(DomainFilter.doesEmailDomainMatchProvider(ldapProvider, "test.org", false)).isFalse();
+        assertThat(DomainFilter.doesEmailDomainMatchProvider(ldapProvider, "test.org", true)).isFalse();
+        assertThat(DomainFilter.doesEmailDomainMatchProvider(samlProvider1, "test.org", false)).isFalse();
+        assertThat(DomainFilter.doesEmailDomainMatchProvider(samlProvider1, "test.org", true)).isFalse();
     }
 
     @Test
@@ -274,7 +273,7 @@ public class DomainFilterTest {
         samlProvider1.getConfig().setEmailDomain(Collections.singletonList("test.org"));
         samlProvider2.getConfig().setEmailDomain(Collections.singletonList("test.org"));
 
-        List<IdentityProvider> idpsForEmailDomain = filter.getIdpsForEmailDomain(activeProviders, "abc@test.org");
+        List<IdentityProvider> idpsForEmailDomain = DomainFilter.getIdpsForEmailDomain(activeProviders, "abc@test.org");
 
         assertThat(idpsForEmailDomain).hasSize(2)
                 .containsExactlyInAnyOrder(samlProvider1, samlProvider2);
@@ -284,7 +283,7 @@ public class DomainFilterTest {
     void idp_with_wildcard_for_email_domain() {
         samlProvider1.getConfig().setEmailDomain(Collections.singletonList("t*.org"));
 
-        List<IdentityProvider> idpsForEmailDomain = filter.getIdpsForEmailDomain(activeProviders, "abc@test.org");
+        List<IdentityProvider> idpsForEmailDomain = DomainFilter.getIdpsForEmailDomain(activeProviders, "abc@test.org");
 
         assertThat(idpsForEmailDomain).hasSize(1)
                 .containsExactlyInAnyOrder(samlProvider1);
@@ -293,7 +292,7 @@ public class DomainFilterTest {
     @Test
     void idp_with_no_matching_email_domain() {
         samlDef1.setEmailDomain(Collections.singletonList("example.org"));
-        List<IdentityProvider> idpsForEmailDomain = filter.getIdpsForEmailDomain(activeProviders, "abc@test.org");
+        List<IdentityProvider> idpsForEmailDomain = DomainFilter.getIdpsForEmailDomain(activeProviders, "abc@test.org");
         assertThat(idpsForEmailDomain).isEmpty();
     }
 }

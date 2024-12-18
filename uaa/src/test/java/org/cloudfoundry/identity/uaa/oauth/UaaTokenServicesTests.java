@@ -83,8 +83,7 @@ class UaaTokenServicesTests {
     private UaaTokenServices tokenServices;
 
     private String clientId = "jku_test";
-    private final String clientSecret = "secret";
-    private final String clientScopes = "openid,oauth.approvals,user_attributes";
+    private static final String CLIENT_SCOPES = "openid,oauth.approvals,user_attributes";
 
     @Autowired
     private JdbcUaaUserDatabase jdbcUaaUserDatabase;
@@ -230,7 +229,7 @@ class UaaTokenServicesTests {
 
     @Test
     void ensureJKUHeaderIsSetWhenBuildingAnAccessToken() {
-        AuthorizationRequest authorizationRequest = constructAuthorizationRequest(clientId, GRANT_TYPE_CLIENT_CREDENTIALS, clientScopes.split(","));
+        AuthorizationRequest authorizationRequest = constructAuthorizationRequest(clientId, GRANT_TYPE_CLIENT_CREDENTIALS, CLIENT_SCOPES.split(","));
 
         OAuth2Authentication authentication = new OAuth2Authentication(authorizationRequest.createOAuth2Request(), null);
 
@@ -367,9 +366,7 @@ class UaaTokenServicesTests {
                         .containsKey(ClaimConstants.ACR);
                 assertThat((Map<String, Object>) claims.get(ClaimConstants.ACR)).containsKey("values");
                 List<String> values = (List<String>) ((Map<String, Object>) claims.get(ClaimConstants.ACR)).get("values");
-                assertThat(values)
-                        .isNotNull()
-                        .containsExactlyInAnyOrderElementsOf(acrs);
+                assertThat(values).containsExactlyInAnyOrderElementsOf(acrs);
             }
         }
 
@@ -482,17 +479,14 @@ class UaaTokenServicesTests {
                 assumeTrue(waitForClient("jku_test", 5), "Test client needs to be setup for this test");
                 CompositeToken refreshedToken = (CompositeToken) tokenServices.refreshAccessToken(
                         refreshToken.getValue(),
-                        new TokenRequest(
-                                Maps.newHashMap(), "jku_test", Lists.newArrayList("openid", "user_attributes"), GRANT_TYPE_REFRESH_TOKEN
-                        )
+                        new TokenRequest(Maps.newHashMap(), "jku_test", Lists.newArrayList("openid", "user_attributes"), GRANT_TYPE_REFRESH_TOKEN)
                 );
-
                 assertThat(refreshedToken).isNotNull();
 
                 Map<String, Object> claims = UaaTokenUtils.getClaims(refreshedToken.getIdTokenValue(), Map.class);
                 assertThat(claims).isNotEmpty()
+                        .containsKey(ClaimConstants.AMR)
                         .containsKey(ClaimConstants.AMR);
-                assertThat(claims.get(ClaimConstants.AMR)).isNotNull();
                 List<String> actualAmrs = (List<String>) claims.get(ClaimConstants.AMR);
                 assertThat(actualAmrs).containsExactlyInAnyOrderElementsOf(amrs);
             }
@@ -608,13 +602,7 @@ class UaaTokenServicesTests {
         List<String> validAcrsWithNull = Lists.newArrayList("val1", null, "val2");
         List<String> intAcrs = Lists.newArrayList("2");
 
-        return Stream.of(
-                validAcrs,
-                nullAcrs,
-                validAcrsWithNull,
-                intAcrs
-        );
-
+        return Stream.of(validAcrs, nullAcrs, validAcrsWithNull, intAcrs);
     }
 
     private AuthorizationRequest constructAuthorizationRequest(String clientId, String grantType, String... scopes) {

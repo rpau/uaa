@@ -13,7 +13,6 @@ public class OAuth2RefreshTokenMatchers extends AbstractOAuth2AccessTokenMatcher
 
     private final String key;
 
-
     public OAuth2RefreshTokenMatchers(String key, Matcher<?> value) {
         super(value);
         this.key = key;
@@ -104,8 +103,8 @@ public class OAuth2RefreshTokenMatchers extends AbstractOAuth2AccessTokenMatcher
             @Override
             protected boolean matchesSafely(OAuth2RefreshToken token) {
                 Map<String, Object> claims = getClaims(token);
-                assertThat(((Integer) claims.get(ClaimConstants.IAT)) > 0).isTrue();
-                assertThat(((Integer) claims.get(ClaimConstants.EXPIRY_IN_SECONDS)) > 0).isTrue();
+                assertThat(((Integer) claims.get(ClaimConstants.IAT))).isPositive();
+                assertThat(((Integer) claims.get(ClaimConstants.EXPIRY_IN_SECONDS))).isPositive();
                 return validFor.matches(((Integer) claims.get(ClaimConstants.EXPIRY_IN_SECONDS)) - ((Integer) claims.get(ClaimConstants.IAT)));
             }
 

@@ -135,7 +135,6 @@ class LoginPagePerformanceMockMvcTest {
         System.out.println(totalTimeMillis + "ms");
     }
 
-
     private static String createOIDCProvider(JdbcIdentityProviderProvisioning jdbcIdentityProviderProvisioning, AlphanumericRandomValueStringGenerator generator, IdentityZone zone, String responseType, String domain) throws Exception {
         String originKey = generator.generate();
         AbstractExternalOAuthIdentityProviderDefinition definition = new OIDCIdentityProviderDefinition();

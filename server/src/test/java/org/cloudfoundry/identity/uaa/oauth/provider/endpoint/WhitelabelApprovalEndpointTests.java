@@ -42,11 +42,11 @@ class WhitelabelApprovalEndpointTests {
         ModelAndView result = endpoint.getAccessConfirmation(model, request);
         result.getView().render(result.getModel(), request, response);
         String content = response.getContentAsString();
-        assertThat(content.contains("<form")).as("Wrong content: " + content).isTrue();
-        assertThat(content.contains("/foo/oauth/authorize")).as("Wrong content: " + content).isTrue();
-        assertThat(content.contains("${")).as("Wrong content: " + content).isFalse();
-        assertThat(content.contains("_csrf")).as("Wrong content: " + content).isFalse();
-        assertThat(content.contains("%")).as("Wrong content: " + content).isFalse();
+        assertThat(content).contains("<form")
+                .contains("/foo/oauth/authorize")
+                .doesNotContain("${")
+                .doesNotContain("_csrf")
+                .doesNotContain("%");
     }
 
     @Test
@@ -59,12 +59,12 @@ class WhitelabelApprovalEndpointTests {
         ModelAndView result = endpoint.getAccessConfirmation(model, request);
         result.getView().render(result.getModel(), request, response);
         String content = response.getContentAsString();
-        assertThat(content.contains("scope.read")).as("Wrong content: " + content).isTrue();
-        assertThat(content.contains("checked")).as("Wrong content: " + content).isTrue();
-        assertThat(content.contains("/foo/oauth/authorize")).as("Wrong content: " + content).isTrue();
-        assertThat(content.contains("${")).as("Wrong content: " + content).isFalse();
-        assertThat(content.contains("_csrf")).as("Wrong content: " + content).isFalse();
-        assertThat(content.contains("%")).as("Wrong content: " + content).isFalse();
+        assertThat(content).contains("scope.read")
+                .contains("checked")
+                .contains("/foo/oauth/authorize")
+                .doesNotContain("${")
+                .doesNotContain("_csrf")
+                .doesNotContain("%");
     }
 
     @Test
@@ -77,9 +77,9 @@ class WhitelabelApprovalEndpointTests {
         ModelAndView result = endpoint.getAccessConfirmation(model, request);
         result.getView().render(result.getModel(), request, response);
         String content = response.getContentAsString();
-        assertThat(content.contains("_csrf")).as("Wrong content: " + content).isTrue();
-        assertThat(content.contains("/foo/oauth/authorize")).as("Wrong content: " + content).isTrue();
-        assertThat(content.contains("${")).as("Wrong content: " + content).isFalse();
+        assertThat(content).contains("_csrf")
+                .contains("/foo/oauth/authorize")
+                .doesNotContain("${");
     }
 
     // gh-1340
@@ -95,8 +95,8 @@ class WhitelabelApprovalEndpointTests {
         ModelAndView result = endpoint.getAccessConfirmation(model, request);
         result.getView().render(result.getModel(), request, response);
         String content = response.getContentAsString();
-        assertThat(content.contains(scope)).as("Wrong content: " + content).isFalse();
-        assertThat(content.contains(escapedScope)).as("Wrong content: " + content).isTrue();
+        assertThat(content).doesNotContain(scope)
+                .contains(escapedScope);
     }
 
     @Test
@@ -116,7 +116,7 @@ class WhitelabelApprovalEndpointTests {
         ModelAndView result = endpoint.getAccessConfirmation(model, request);
         result.getView().render(result.getModel(), request, response);
         String content = response.getContentAsString();
-        assertThat(expectedContent).as("Wrong content: " + content).isEqualTo(content);
+        assertThat(expectedContent).isEqualTo(content);
     }
 
     @Test
@@ -136,6 +136,6 @@ class WhitelabelApprovalEndpointTests {
         ModelAndView result = endpoint.getAccessConfirmation(model, request);
         result.getView().render(result.getModel(), request, response);
         String content = response.getContentAsString();
-        assertThat(expectedContent).as("Wrong content: " + content).isEqualTo(content);
+        assertThat(expectedContent).isEqualTo(content);
     }
 }

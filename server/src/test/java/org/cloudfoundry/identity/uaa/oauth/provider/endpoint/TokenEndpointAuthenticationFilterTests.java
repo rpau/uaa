@@ -1,8 +1,6 @@
 package org.cloudfoundry.identity.uaa.oauth.provider.endpoint;
 
 import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
-import org.cloudfoundry.identity.uaa.oauth.common.exceptions.OAuth2Exception;
-import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetails;
 import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetailsService;
 import org.cloudfoundry.identity.uaa.oauth.provider.OAuth2Authentication;
 import org.cloudfoundry.identity.uaa.oauth.provider.OAuth2RequestFactory;
@@ -44,11 +42,7 @@ class TokenEndpointAuthenticationFilterTests {
     private final UaaClientDetails client = new UaaClientDetails("foo", "resource", "scope", "authorization_code",
             "ROLE_CLIENT");
 
-    private final ClientDetailsService clientDetailsService = new ClientDetailsService() {
-        public ClientDetails loadClientByClientId(String clientId) throws OAuth2Exception {
-            return client;
-        }
-    };
+    private final ClientDetailsService clientDetailsService = clientId -> client;
 
     private final OAuth2RequestFactory oAuth2RequestFactory = new DefaultOAuth2RequestFactory(clientDetailsService);
 
@@ -75,7 +69,7 @@ class TokenEndpointAuthenticationFilterTests {
         TokenEndpointAuthenticationFilter filter = new TokenEndpointAuthenticationFilter(authenticationManager, oAuth2RequestFactory);
         filter.doFilter(request, response, chain);
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        assertThat(authentication instanceof OAuth2Authentication).isTrue();
+        assertThat(authentication).isInstanceOf(OAuth2Authentication.class);
         assertThat(authentication.isAuthenticated()).isTrue();
     }
 
@@ -90,7 +84,7 @@ class TokenEndpointAuthenticationFilterTests {
         TokenEndpointAuthenticationFilter filter = new TokenEndpointAuthenticationFilter(authenticationManager, oAuth2RequestFactory);
         filter.doFilter(request, response, chain);
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        assertThat(authentication instanceof OAuth2Authentication).isTrue();
+        assertThat(authentication).isInstanceOf(OAuth2Authentication.class);
         assertThat(authentication.isAuthenticated()).isFalse();
     }
 
@@ -99,7 +93,7 @@ class TokenEndpointAuthenticationFilterTests {
         TokenEndpointAuthenticationFilter filter = new TokenEndpointAuthenticationFilter(authenticationManager, oAuth2RequestFactory);
         filter.doFilter(request, response, chain);
         // Just the client
-        assertThat(SecurityContextHolder.getContext().getAuthentication() instanceof UsernamePasswordAuthenticationToken).isTrue();
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isInstanceOf(UsernamePasswordAuthenticationToken.class);
     }
 
     @Test

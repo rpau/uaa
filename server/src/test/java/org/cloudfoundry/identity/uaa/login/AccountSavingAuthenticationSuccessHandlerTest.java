@@ -20,37 +20,27 @@ import javax.servlet.http.Cookie;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Optional;
+import java.util.stream.Stream;
 
-import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-
 public class AccountSavingAuthenticationSuccessHandlerTest {
-
-    // Parameterized fields:
-    private boolean secure;
-
-    public void initAccountSavingAuthenticationSuccessHandlerTest(boolean secure) {
-        this.secure = secure;
-    }
 
     private AccountSavingAuthenticationSuccessHandler successHandler;
     private SavedRequestAwareAuthenticationSuccessHandler redirectingHandler;
     private CurrentUserCookieFactory currentUserCookieFactory;
 
-    public static Collection parameters() {
-        return asList(new Object[][]{
-                {false}, {true}
-        });
+    public static Stream<Boolean> parameters() {
+        return Stream.of(false, true);
     }
 
     @BeforeEach
@@ -64,22 +54,21 @@ public class AccountSavingAuthenticationSuccessHandlerTest {
     @MethodSource("parameters")
     @ParameterizedTest
     void invalid_principal_throws(boolean secure) {
-        initAccountSavingAuthenticationSuccessHandlerTest(secure);
         Authentication a = mock(Authentication.class);
         when(a.getPrincipal()).thenReturn(new Object());
-        try {
-            successHandler.setSavedAccountOptionCookie(new MockHttpServletRequest(), new MockHttpServletResponse(), a);
-        } catch (IllegalArgumentException x) {
-            assertThat(x.getMessage()).isEqualTo("Unrecognized authentication principle.");
-        }
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setSecure(secure);
+        MockHttpServletResponse response = new MockHttpServletResponse();
 
+        assertThatThrownBy(() -> successHandler.setSavedAccountOptionCookie(request, response, a))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Unrecognized authentication principle.");
     }
 
     @MethodSource("parameters")
     @SuppressWarnings("deprecation")
     @ParameterizedTest
     void whenSuccessfullyAuthenticated_accountGetsSavedViaCookie(boolean secure) throws IOException, ServletException, CurrentUserCookieFactory.CurrentUserCookieEncodingException {
-        initAccountSavingAuthenticationSuccessHandlerTest(secure);
         IdentityZoneHolder.get().getConfig().setAccountChooserEnabled(true);
         Date yesterday = new Date(System.currentTimeMillis() - (1000 * 60 * 60 * 24));
         UaaUser user = new UaaUser(
@@ -144,7 +133,6 @@ public class AccountSavingAuthenticationSuccessHandlerTest {
     @MethodSource("parameters")
     @ParameterizedTest
     void empty_Account_Cookie(boolean secure) throws IOException, ServletException {
-        initAccountSavingAuthenticationSuccessHandlerTest(secure);
         IdentityZoneHolder.get().getConfig().setAccountChooserEnabled(false);
         Date yesterday = new Date(System.currentTimeMillis() - (1000 * 60 * 60 * 24));
         UaaUser user = new UaaUser(

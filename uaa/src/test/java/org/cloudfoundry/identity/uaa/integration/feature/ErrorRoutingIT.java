@@ -34,8 +34,8 @@ class ErrorRoutingIT {
     void methodNotAllowedRoutedToErrorPage() {
         webDriver.get(baseUrl + "/authenticate");
 
-        assertThat(webDriver.findElement(By.tagName("h2")).getText().contains("Uh oh.")).as("Check if on the error page").isTrue();
-        assertThat(webDriver.findElement(By.tagName("h2")).getText().contains("Something went amiss.")).as("Check if on the error page").isTrue();
+        assertThat(webDriver.findElement(By.tagName("h2")).getText()).as("Check if on the error page").contains("Uh oh.")
+                .as("Check if on the error page").contains("Something went amiss.");
     }
 
     @Test
@@ -53,7 +53,7 @@ class ErrorRoutingIT {
     @Test
     void responseToErrorPage() throws IOException {
         String body = CallErrorPageAndCheckHttpStatusCode("/info", "TRACE", 405);
-        assertThat(body.indexOf("<html")).as("Expected no response HTML body, but received: " + body).isEqualTo(-1);
+        assertThat(body).as("Expected no response HTML body, but received: " + body).doesNotContain("<html");
     }
 
     @Test
@@ -61,7 +61,7 @@ class ErrorRoutingIT {
         final String rejectedEndpoint = "/login;endpoint=x"; // spring securiy throws RequestRejectedException and by default status 500, but now 400
         webDriver.get(baseUrl + rejectedEndpoint);
 
-        assertThat(webDriver.findElement(By.tagName("h2")).getText().contains("The request was rejected because it contained a potentially malicious character.")).as("Check if on the error page").isTrue();
+        assertThat(webDriver.findElement(By.tagName("h2")).getText()).as("Check if on the error page").contains("The request was rejected because it contained a potentially malicious character.");
 
         CallErrorPageAndCheckHttpStatusCode(rejectedEndpoint, "GET", 400);
     }
@@ -85,11 +85,11 @@ class ErrorRoutingIT {
         }
 
         StringBuilder sb = new StringBuilder();
-        int BUFFER = 4096;
-        char[] buffer = new char[4096];
+        int bufferSize = 4096;
+        char[] buffer = new char[bufferSize];
         int charsRead = 0;
         try {
-            while ((charsRead = reader.read(buffer, 0, BUFFER)) != -1) {
+            while ((charsRead = reader.read(buffer, 0, bufferSize)) != -1) {
                 sb.append(buffer, 0, charsRead);
             }
         } catch (IOException ie) {

@@ -35,5 +35,4 @@ public interface UrlHelper {
     String getUsersUri();
 
     String getUserUri();
-
 }

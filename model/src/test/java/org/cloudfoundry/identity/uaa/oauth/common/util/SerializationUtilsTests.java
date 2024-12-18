@@ -47,14 +47,6 @@ class SerializationUtilsTests {
     }
 
     @Test
-    void deserializeNotAllowedCustomClasses() {
-        OAuth2AccessToken accessToken = new DefaultOAuth2AccessToken("FOO");
-        byte[] bytes = SerializationUtils.serialize(accessToken);
-        OAuth2AccessToken clone = (OAuth2AccessToken) SerializationUtils.deserialize(bytes);
-        assertThat(clone).isEqualTo(accessToken);
-    }
-
-    @Test
     void paserQuery() {
         Map<String, String> queryMap = OAuth2Utils.extractMap("param=value&param2=value2&param3=");
         assertThat(queryMap).hasSize(3);

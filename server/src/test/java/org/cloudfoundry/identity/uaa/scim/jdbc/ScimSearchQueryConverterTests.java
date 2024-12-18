@@ -137,7 +137,7 @@ class ScimSearchQueryConverterTests {
 
     private void validate(ProcessedFilter filter, String expectedWhereClauseBeforeIdentityZoneCheck, String expectedOrderByClause, int expectedParamCount, Class... types) {
         assertThat(filter).isNotNull();
-        assertThat(filter.getParamPrefix().contains("-")).as("Filter's param prefix cannot contain '-': " + filter.getParamPrefix()).isFalse();
+        assertThat(filter.getParamPrefix()).as("Filter's param prefix cannot contain '-': " + filter.getParamPrefix()).doesNotContain("-");
 
         // There is always an implied "and also the identity zone must match the zone in which the
         // user performed the query" clause, which also causes an extra param on the filter, so
@@ -153,7 +153,6 @@ class ScimSearchQueryConverterTests {
         expectedSql = expectedSql.replaceAll("__value_", filter.getParamPrefix());
 
         assertThat(filter.getSql()).isEqualTo(expectedSql);
-
         assertThat(filter.getParams()).hasSize(expectedParamCount + 1);
 
         int count = 0;

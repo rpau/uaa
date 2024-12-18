@@ -52,7 +52,6 @@ class LdapLoginAuthenticationManagerTests {
     private static final String GIVEN_NAME_ATTRIBUTE = "firstname";
     private static final String FAMILY_NAME_ATTRIBUTE = "surname";
     private static final String PHONE_NUMBER_ATTTRIBUTE = "digits";
-    private static LdapUserDetails userDetails;
 
     private static final String DENVER_CO = "Denver,CO";
     private static final String COST_CENTER = "costCenter";
@@ -64,17 +63,15 @@ class LdapLoginAuthenticationManagerTests {
 
     private LdapLoginAuthenticationManager am;
     private ApplicationEventPublisher publisher;
-    private String origin = "test";
-    private Map<String, String[]> info = new HashMap<>();
+    private final String origin = "test";
+    private final Map<String, String[]> info = new HashMap<>();
     private UaaUser dbUser;
     private Authentication auth;
     private ExtendedLdapUserImpl authUserDetail;
-    private IdentityProviderProvisioning provisioning;
-    private IdentityProvider provider;
     private LdapIdentityProviderDefinition definition;
 
     private static LdapUserDetails mockLdapUserDetails() {
-        userDetails = mock(LdapUserDetails.class);
+        LdapUserDetails userDetails = mock(LdapUserDetails.class);
         setupGeneralExpectations(userDetails);
         when(userDetails.getDn()).thenReturn(DN);
         return userDetails;
@@ -101,7 +98,7 @@ class LdapLoginAuthenticationManagerTests {
         IdentityZoneHolder.setProvisioning(null);
 
         dbUser = getUaaUser();
-        provisioning = mock(IdentityProviderProvisioning.class);
+        IdentityProviderProvisioning provisioning = mock(IdentityProviderProvisioning.class);
         am = new LdapLoginAuthenticationManager(provisioning);
         publisher = mock(ApplicationEventPublisher.class);
         am.setApplicationEventPublisher(publisher);
@@ -115,10 +112,9 @@ class LdapLoginAuthenticationManagerTests {
         am.setUserDatabase(db);
         when(auth.getAuthorities()).thenReturn(null);
 
-        provider = mock(IdentityProvider.class);
+        IdentityProvider provider = mock(IdentityProvider.class);
 
         when(provisioning.retrieveByOrigin(anyString(), anyString())).thenReturn(provider);
-        Map attributeMappings = new HashMap<>();
         definition = LdapIdentityProviderDefinition.searchAndBindMapGroupToScopes(
                 "baseUrl",
                 "bindUserDn",
@@ -245,7 +241,6 @@ class LdapLoginAuthenticationManagerTests {
                 )
         );
 
-
         definition.setExternalGroupsWhitelist(emptyList());
         assertThat(am.getExternalUserAuthorities(authDetails)).containsExactlyInAnyOrder();
 
@@ -302,7 +297,6 @@ class LdapLoginAuthenticationManagerTests {
         am.setOrigin(OriginKeys.LDAP);
         am.setUserDatabase(db);
 
-
         //set the config flag
         definition.setStoreCustomAttributes(storeUserInfo);
 
@@ -316,17 +310,17 @@ class LdapLoginAuthenticationManagerTests {
             verify(db, never()).storeUserInfo(anyString(), eq(info));
         }
 
-        assertThat(authentication.getUserAttributes().size()).as("Expected two user attributes").isEqualTo(2);
-        assertThat(authentication.getUserAttributes().get(COST_CENTERS)).as("Expected cost center attribute").isNotNull();
+        assertThat(authentication.getUserAttributes()).as("Expected two user attributes")
+                .hasSize(2)
+                .as("Expected cost center attribute").containsKey(COST_CENTERS);
         assertThat(authentication.getUserAttributes().getFirst(COST_CENTERS)).isEqualTo(DENVER_CO);
 
-        assertThat(authentication.getUserAttributes().get(MANAGERS)).as("Expected manager attribute").isNotNull();
-        assertThat(authentication.getUserAttributes().get(MANAGERS).size()).as("Expected 2 manager attribute values").isEqualTo(2);
-        assertThat(authentication.getUserAttributes().get(MANAGERS)).containsExactlyInAnyOrder(JOHN_THE_SLOTH, KARI_THE_ANT_EATER);
+        assertThat(authentication.getUserAttributes()).as("Expected manager attribute").containsKey(MANAGERS);
+        assertThat(authentication.getUserAttributes().get(MANAGERS)).as("Expected 2 manager attribute values")
+                .hasSize(2)
+                .containsExactlyInAnyOrder(JOHN_THE_SLOTH, KARI_THE_ANT_EATER);
 
         assertThat(authentication.getAuthenticationMethods()).containsExactlyInAnyOrder("ext", "pwd");
-
-
     }
 
     private ExtendedLdapUserImpl getAuthDetails(String email, String givenName, String familyName, String phoneNumber, AttributeInfo... attributes) {
@@ -369,7 +363,6 @@ class LdapLoginAuthenticationManagerTests {
                 .withSalt(null)
                 .withPasswordLastModified(null));
     }
-
 
     public static class AttributeInfo {
         final String name;

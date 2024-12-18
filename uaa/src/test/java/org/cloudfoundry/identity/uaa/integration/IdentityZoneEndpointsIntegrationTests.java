@@ -50,10 +50,10 @@ class IdentityZoneEndpointsIntegrationTests {
     private static final UaaTestAccounts testAccounts = UaaTestAccounts.standard(serverRunning);
 
     @RegisterExtension
-    private static final TestAccountExtension testAccountSetup = TestAccountExtension.standard(serverRunning, testAccounts);
+    private static final TestAccountExtension testAccountExtension = TestAccountExtension.standard(serverRunning, testAccounts);
 
     @RegisterExtension
-    private static final OAuth2ContextExtension context = OAuth2ContextExtension.withTestAccounts(serverRunning, testAccountSetup);
+    private static final OAuth2ContextExtension context = OAuth2ContextExtension.withTestAccounts(serverRunning, testAccountExtension);
 
     private RestTemplate client;
     private String zoneId;
@@ -70,6 +70,7 @@ class IdentityZoneEndpointsIntegrationTests {
 
             @Override
             public void handleError(ClientHttpResponse response) {
+                // pass through
             }
         });
     }
@@ -221,7 +222,6 @@ class IdentityZoneEndpointsIntegrationTests {
 
         assertThat(clientDeleteResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
-
 
     @Test
     void createZoneWithNonUniqueSubdomain() {

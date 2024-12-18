@@ -18,7 +18,6 @@ class JsonUtilsTest {
     @Test
     void writeValueAsString() {
         String testObjectString = JsonUtils.writeValueAsString(getTestObject());
-        assertThat(testObjectString).isNotNull();
         assertThat(testObjectString).isEqualTo(JSON_TEST_OBJECT_STRING);
     }
 
@@ -45,13 +44,15 @@ class JsonUtilsTest {
     void readValueAsMap() {
         final String jsonInput = "{\"prop1\":\"abc\",\"prop2\":{\"prop2a\":\"def\",\"prop2b\":\"ghi\"},\"prop3\":[\"jkl\",\"mno\"]}";
         final Map<String, Object> map = JsonUtils.readValueAsMap(jsonInput);
-        assertThat(map).isNotNull();
-        assertThat(map.get("prop1")).isNotNull().isEqualTo("abc");
-        assertThat(map.get("prop2")).isNotNull().isInstanceOf(Map.class);
-        assertThat(((Map<String, Object>) map.get("prop2")).get("prop2a")).isNotNull().isEqualTo("def");
-        assertThat(((Map<String, Object>) map.get("prop2")).get("prop2b")).isNotNull().isEqualTo("ghi");
-        assertThat(map.get("prop3")).isNotNull().isInstanceOf(List.class);
-        assertThat((List<String>) map.get("prop3")).containsExactly("jkl", "mno");
+        assertThat(map).containsEntry("prop1", "abc")
+                .containsKey("prop3");
+        assertThat(((Map<String, Object>) map.get("prop2")))
+                .isInstanceOf(Map.class)
+                .containsEntry("prop2a", "def")
+                .containsEntry("prop2b", "ghi");
+        assertThat((List<String>) map.get("prop3"))
+                .isInstanceOf(List.class)
+                .containsExactly("jkl", "mno");
     }
 
     @ParameterizedTest

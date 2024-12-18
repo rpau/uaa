@@ -40,11 +40,10 @@ import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYP
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_JWT_BEARER;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_SAML2_BEARER;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_USER_TOKEN;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class ClientAdminEndpointsValidatorTests {
+class ClientAdminEndpointsValidatorTests {
 
     UaaClientDetails client;
     UaaClientDetails caller;
@@ -80,7 +79,7 @@ public class ClientAdminEndpointsValidatorTests {
         String clientId = caller.getClientId();
         when(mockSecurityContextAccessor.getClientId()).thenReturn(clientId);
         String zoneId = IdentityZoneHolder.get().getId();
-        when(clientDetailsService.retrieve(eq(clientId), eq(zoneId))).thenReturn(caller);
+        when(clientDetailsService.retrieve(clientId, zoneId)).thenReturn(caller);
         validator.setClientDetailsService(clientDetailsService);
     }
 

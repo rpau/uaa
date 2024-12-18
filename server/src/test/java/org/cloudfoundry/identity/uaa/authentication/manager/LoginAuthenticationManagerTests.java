@@ -29,8 +29,8 @@ import org.springframework.security.core.context.SecurityContextImpl;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -139,7 +139,8 @@ class LoginAuthenticationManagerTests {
         @Test
         void uaaOriginNotAllowedForExternalLogin() {
             AuthzAuthenticationRequest req1 = UaaAuthenticationTestFactory.getAuthenticationRequest("user", true);
-            assertThatThrownBy(() -> manager.getUser(req1, Collections.singletonMap(OriginKeys.ORIGIN, OriginKeys.UAA)))
+            Map<String, String> info = Map.of(OriginKeys.ORIGIN, OriginKeys.UAA);
+            assertThatThrownBy(() -> manager.getUser(req1, info))
                     .isInstanceOf(BadCredentialsException.class)
                     .hasMessage("uaa origin not allowed for external login server");
         }
@@ -169,8 +170,7 @@ class LoginAuthenticationManagerTests {
         @Test
         void withoutOrigin() {
             AuthzAuthenticationRequest req1 = UaaAuthenticationTestFactory.getAuthenticationRequest("user", true);
-            HashMap<String, String> info = new HashMap<>();
-            info.put("email", "user@example.com");
+            Map<String, String> info = Map.of("email", "user@example.com");
             UaaUser user = manager.getUser(req1, info);
 
             assertThat(user).is(matching(aUaaUser()

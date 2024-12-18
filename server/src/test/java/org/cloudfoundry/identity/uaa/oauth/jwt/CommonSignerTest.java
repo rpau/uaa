@@ -30,7 +30,7 @@ import org.junit.jupiter.api.Test;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
-import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -106,7 +106,7 @@ class CommonSignerTest {
         Base64URL signature = signer.sign(header, new SignedJWT(header, claimsSet).getSigningInput());
         assertThat(signature).isEqualTo(inJwt.getSignature());
         UaaMacSigner uaaMacSigner = new UaaMacSigner(macSigningKey);
-        assertThat(uaaMacSigner.getSecret().length).isEqualTo(new SecretKeySpec(macSigningKey.getBytes(StandardCharsets.UTF_8), "HS256").getEncoded().length);
+        assertThat(uaaMacSigner.getSecret()).hasSameSizeAs(new SecretKeySpec(macSigningKey.getBytes(StandardCharsets.UTF_8), "HS256").getEncoded());
     }
 
     @Test
@@ -119,7 +119,7 @@ class CommonSignerTest {
     @Test
     void nimbus_singing_with_single_aud_value() throws JOSEException, ParseException {
         // given
-        Map<String, Object> objectMap = Map.of("sub", "1234567890", "name", "John Doe", "aud", Arrays.asList("single"));
+        Map<String, Object> objectMap = Map.of("sub", "1234567890", "name", "John Doe", "aud", List.of("single"));
         // when
         CommonSigner signer = new CommonSigner("id", rsaSigningKey, "http://localhost/uaa");
         assertThat(signer.algorithm()).isEqualTo("RS256");
@@ -136,7 +136,7 @@ class CommonSignerTest {
     @Test
     void uaa_singing_with_single_aud_value() throws ParseException {
         // given
-        Map<String, Object> objectMap = Map.of("sub", "1234567890", "name", "John Doe", "aud", Arrays.asList("single"));
+        Map<String, Object> objectMap = Map.of("sub", "1234567890", "name", "John Doe", "aud", List.of("single"));
         // when
         String uaaResultedJwt = JwtHelper.encode(objectMap, KeyInfoBuilder.build("id", rsaSigningKey, "http://localhost/uaa")).getEncoded();
         String payLoadString = JWTParser.parse(uaaResultedJwt).getParsedParts()[1].decodeToString();

@@ -76,6 +76,4 @@ class UaaScopesTests {
             assertThat(uaaScopes.isUaaScope(scope)).isTrue();
         }
     }
-
-
 }

@@ -22,6 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -50,9 +51,6 @@ class IdentityZoneEndpointsTests {
 
     @Mock
     private JdbcIdentityProviderProvisioning mockIdentityProviderProvisioning;
-
-    @Mock
-    private IdentityZoneEndpointClientRegistrationService mockIdentityZoneEndpointClientRegistrationService;
 
     @Mock
     private ApplicationEventPublisher mockApplicationEventPublisher;
@@ -150,7 +148,7 @@ class IdentityZoneEndpointsTests {
         identityZone.getConfig().getUserConfig().setAllowedGroups(List.of("sps.write", "sps.read", "idps.write", "idps.read"));
         when(mockIdentityZoneProvisioning.retrieveIgnoreActiveFlag(identityZone.getId())).thenReturn(identityZone);
         when(mockIdentityZoneProvisioning.update(same(identityZone))).thenReturn(identityZone);
-        List<ScimGroup> existingScimGroups = List.of("sps.write", "sps.read").stream()
+        List<ScimGroup> existingScimGroups = Stream.of("sps.write", "sps.read")
                 .map(e -> new ScimGroup(e, e, identityZone.getId()))
                 .toList();
         when(mockScimGroupProvisioning.retrieveAll(identityZone.getId())).thenReturn(existingScimGroups);
@@ -164,14 +162,15 @@ class IdentityZoneEndpointsTests {
 
         identityZone = createZone();
         identityZone.getConfig().getUserConfig().setAllowedGroups(List.of("clients.admin", "clients.write", "clients.read", "clients.secret"));
-        when(mockIdentityZoneProvisioning.retrieveIgnoreActiveFlag(identityZone.getId())).thenReturn(identityZone);
-        List<ScimGroup> existingScimGroups = List.of("sps.write", "sps.read", "idps.write", "idps.read",
+        String id = identityZone.getId();
+        when(mockIdentityZoneProvisioning.retrieveIgnoreActiveFlag(id)).thenReturn(identityZone);
+        List<ScimGroup> existingScimGroups = Stream.of("sps.write", "sps.read", "idps.write", "idps.read",
                         "clients.admin", "clients.write", "clients.read", "clients.secret", "scim.write", "scim.read", "scim.create", "scim.userids",
-                        "scim.zones", "groups.update", "password.write", "oauth.login", "uaa.admin").stream()
-                .map(e -> new ScimGroup(e, e, identityZone.getId()))
+                        "scim.zones", "groups.update", "password.write", "oauth.login", "uaa.admin")
+                .map(e -> new ScimGroup(e, e, id))
                 .toList();
-        when(mockScimGroupProvisioning.retrieveAll(identityZone.getId())).thenReturn(existingScimGroups);
-        assertThatThrownBy(() -> endpoints.updateIdentityZone(identityZone, identityZone.getId()))
+        when(mockScimGroupProvisioning.retrieveAll(id)).thenReturn(existingScimGroups);
+        assertThatThrownBy(() -> endpoints.updateIdentityZone(identityZone, id))
                 .isInstanceOf(UaaException.class)
                 .hasMessage("The identity zone user configuration contains not-allowed groups.");
     }

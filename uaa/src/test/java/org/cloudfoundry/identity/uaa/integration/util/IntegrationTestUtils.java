@@ -3,7 +3,6 @@ package org.cloudfoundry.identity.uaa.integration.util;
 import com.dumbster.smtp.SimpleSmtpServer;
 import com.dumbster.smtp.SmtpMessage;
 import com.fasterxml.jackson.core.type.TypeReference;
-import org.apache.commons.io.FileUtils;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.BasicCookieStore;
@@ -45,8 +44,6 @@ import org.hamcrest.Description;
 import org.hamcrest.TypeSafeMatcher;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
-import org.openqa.selenium.OutputType;
-import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
@@ -68,8 +65,6 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestOperations;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.File;
-import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -77,11 +72,9 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -145,7 +138,6 @@ public class IntegrationTestUtils {
 
     public static final String OIDC_ACCEPTANCE_URL = "https://oidc10.uaa-acceptance.cf-app.com/";
     private static final Base64.Encoder BASE_64_ENCODER = Base64.getEncoder();
-
 
     private static final DefaultResponseErrorHandler fiveHundredErrorHandler = new DefaultResponseErrorHandler() {
         @Override
@@ -984,7 +976,7 @@ public class IntegrationTestUtils {
         String email = new RandomValueStringGenerator().generate() + "@samltesting.org";
         ScimUser user = IntegrationTestUtils.createUser(adminClient, baseUrl, email, "firstname", "lastname", email, true);
 
-        String groupName = "zones." + zoneId + ".admin";
+        String groupName = "zones.%s.admin".formatted(zoneId);
         ensureGroupExists(getClientCredentialsToken(baseUrl, "admin", "adminsecret"), "", baseUrl, groupName);
         String groupId = IntegrationTestUtils.findGroupId(adminClient, baseUrl, groupName);
         assertThat(groupId).as("Couldn't find group : " + groupId).isNotNull();
@@ -1254,19 +1246,10 @@ public class IntegrationTestUtils {
                 );
         assertThat(result.getStatusCode()).isEqualTo(HttpStatus.FOUND);
         String location = result.getHeaders().getLocation().toString();
-        if (result.getHeaders().containsKey("Set-Cookie")) {
-            for (String header : result.getHeaders().get("Set-Cookie")) {
-                int nameLength = header.indexOf('=');
-                cookies.addCookie(new BasicClientCookie(header.substring(0, nameLength), header.substring(nameLength + 1)));
-            }
-        }
+        extractCookies(result, cookies);
+
         ResponseEntity<String> response = serverRunning.getForString(location, getHeaders(cookies));
-        if (response.getHeaders().containsKey("Set-Cookie")) {
-            for (String cookie : response.getHeaders().get("Set-Cookie")) {
-                int nameLength = cookie.indexOf('=');
-                cookies.addCookie(new BasicClientCookie(cookie.substring(0, nameLength), cookie.substring(nameLength + 1)));
-            }
-        }
+        extractCookies(response, cookies);
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         assertThat(response.getBody()).contains("/login.do")
                 .contains("username")
@@ -1279,21 +1262,12 @@ public class IntegrationTestUtils {
         result = serverRunning.postForResponse("/login.do", getHeaders(cookies), formData);
         assertThat(result.getStatusCode()).isEqualTo(HttpStatus.FOUND);
         cookies.clear();
-        if (result.getHeaders().containsKey("Set-Cookie")) {
-            for (String cookie : result.getHeaders().get("Set-Cookie")) {
-                int nameLength = cookie.indexOf('=');
-                cookies.addCookie(new BasicClientCookie(cookie.substring(0, nameLength), cookie.substring(nameLength + 1)));
-            }
-        }
+        extractCookies(result, cookies);
+
         response = serverRunning.createRestTemplate().exchange(
                 result.getHeaders().getLocation().toString(), HttpMethod.GET, new HttpEntity<>(null, getHeaders(cookies)),
                 String.class);
-        if (response.getHeaders().containsKey("Set-Cookie")) {
-            for (String cookie : response.getHeaders().get("Set-Cookie")) {
-                int nameLength = cookie.indexOf('=');
-                cookies.addCookie(new BasicClientCookie(cookie.substring(0, nameLength), cookie.substring(nameLength + 1)));
-            }
-        }
+        extractCookies(response, cookies);
         if (response.getStatusCode() == HttpStatus.OK) {
             // The grant access page should be returned
             assertThat(response.getBody()).contains("<h1>Application Authorization</h1>");
@@ -1318,7 +1292,7 @@ public class IntegrationTestUtils {
                                                 String clientSecret,
                                                 String redirectUri,
                                                 String codeVerifier,
-                                                String authorizationCode) throws Exception {
+                                                String authorizationCode) {
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.clear();
         formData.add("client_id", clientId);
@@ -1418,22 +1392,10 @@ public class IntegrationTestUtils {
 
         assertThat(result.getStatusCode()).isEqualTo(HttpStatus.FOUND);
         String location = result.getHeaders().getLocation().toString();
-
-        if (result.getHeaders().containsKey("Set-Cookie")) {
-            for (String header : result.getHeaders().get("Set-Cookie")) {
-                int nameLength = header.indexOf('=');
-                cookies.addCookie(new BasicClientCookie(header.substring(0, nameLength), header.substring(nameLength + 1)));
-            }
-        }
+        extractCookies(result, cookies);
 
         ResponseEntity<String> response = serverRunning.getForString(location, getHeaders(cookies));
-
-        if (response.getHeaders().containsKey("Set-Cookie")) {
-            for (String cookie : response.getHeaders().get("Set-Cookie")) {
-                int nameLength = cookie.indexOf('=');
-                cookies.addCookie(new BasicClientCookie(cookie.substring(0, nameLength), cookie.substring(nameLength + 1)));
-            }
-        }
+        extractCookies(response, cookies);
 
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         if (!hasText(jSessionId)) {
@@ -1452,24 +1414,14 @@ public class IntegrationTestUtils {
             assertThat(result.getStatusCode()).isEqualTo(HttpStatus.FOUND);
 
             cookies.clear();
-            if (result.getHeaders().containsKey("Set-Cookie")) {
-                for (String cookie : result.getHeaders().get("Set-Cookie")) {
-                    int nameLength = cookie.indexOf('=');
-                    cookies.addCookie(new BasicClientCookie(cookie.substring(0, nameLength), cookie.substring(nameLength + 1)));
-                }
-            }
+            extractCookies(result, cookies);
         }
 
         response = serverRunning.createRestTemplate().exchange(
                 result.getHeaders().getLocation().toString(), HttpMethod.GET, new HttpEntity<>(null, getHeaders(cookies)),
                 String.class);
+        extractCookies(response, cookies);
 
-        if (response.getHeaders().containsKey("Set-Cookie")) {
-            for (String cookie : response.getHeaders().get("Set-Cookie")) {
-                int nameLength = cookie.indexOf('=');
-                cookies.addCookie(new BasicClientCookie(cookie.substring(0, nameLength), cookie.substring(nameLength + 1)));
-            }
-        }
         if (response.getStatusCode() == HttpStatus.OK) {
             // The grant access page should be returned
             assertThat(response.getBody()).contains("<h1>Application Authorization</h1>");
@@ -1532,6 +1484,23 @@ public class IntegrationTestUtils {
         return body;
     }
 
+    public static void extractCookies(ResponseEntity<?> response, BasicCookieStore cookies) {
+        if (response.getHeaders().containsKey("Set-Cookie")) {
+            for (String cookie : response.getHeaders().get("Set-Cookie")) {
+                int nameLength = cookie.indexOf('=');
+                cookies.addCookie(new BasicClientCookie(cookie.substring(0, nameLength), cookie.substring(nameLength + 1)));
+            }
+        }
+    }
+
+    public static void copyCookies(ResponseEntity<?> response, HttpHeaders headers) {
+        if (response.getHeaders().containsKey("Set-Cookie")) {
+            for (String cookie : response.getHeaders().get("Set-Cookie")) {
+                headers.add("Cookie", cookie);
+            }
+        }
+    }
+
     public static String extractCookieCsrf(String body) {
         String pattern = "\\<input type=\\\"hidden\\\" name=\\\"X-Uaa-Csrf\\\" value=\\\"(.*?)\\\"";
 
@@ -1541,21 +1510,6 @@ public class IntegrationTestUtils {
             return matcher.group(1);
         }
         return null;
-    }
-
-    public static void takeScreenShot(WebDriver webDriver) {
-        takeScreenShot("testscreenshot-", webDriver);
-    }
-
-    public static void takeScreenShot(String prefix, WebDriver webDriver) {
-        File scrFile = ((TakesScreenshot) webDriver).getScreenshotAs(OutputType.FILE);
-        try {
-            SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd-HHmmss.SSS");
-            String now = format.format(new Date(System.currentTimeMillis()));
-            FileUtils.copyFile(scrFile, new File("build/reports/", prefix + now + ".png"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     public static void validateAccountChooserCookie(String baseUrl, WebDriver webDriver, IdentityZone identityZone) {
@@ -1665,5 +1619,4 @@ public class IntegrationTestUtils {
             super(true, true);
         }
     }
-
 }

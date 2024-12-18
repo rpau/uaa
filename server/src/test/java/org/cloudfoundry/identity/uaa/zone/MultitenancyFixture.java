@@ -1,6 +1,5 @@
 package org.cloudfoundry.identity.uaa.zone;
 
-
 import org.cloudfoundry.identity.uaa.provider.AbstractIdentityProviderDefinition;
 import org.cloudfoundry.identity.uaa.provider.IdentityProvider;
 

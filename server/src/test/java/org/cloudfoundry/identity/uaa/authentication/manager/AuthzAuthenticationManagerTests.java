@@ -203,7 +203,7 @@ class AuthzAuthenticationManagerTests {
 
     @Test
     void missingUserPublishesNotFoundEvent() {
-        when(db.retrieveUserByName(eq("aguess"), eq(OriginKeys.UAA))).thenThrow(new UsernameNotFoundException("mocked"));
+        when(db.retrieveUserByName("aguess", OriginKeys.UAA)).thenThrow(new UsernameNotFoundException("mocked"));
         assertThatExceptionOfType(BadCredentialsException.class).isThrownBy(() -> mgr.authenticate(createAuthRequest("aguess", "password")));
         verify(publisher).publishEvent(isA(UserNotFoundEvent.class));
     }

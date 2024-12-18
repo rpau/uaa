@@ -25,8 +25,7 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-
-public class IdentityZoneModifiedEventTest {
+class IdentityZoneModifiedEventTest {
 
     private IdentityZone zone;
 
@@ -44,7 +43,6 @@ public class IdentityZoneModifiedEventTest {
         Map<String, String> keys = new HashMap<>();
         keys.put("kid", "key");
         zone.getConfig().getTokenPolicy().setKeys(keys);
-
     }
 
     @Test

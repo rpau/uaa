@@ -66,11 +66,6 @@ import static org.assertj.core.api.Assertions.fail;
  * }
  * </pre>
  *
- * <p>
- * The Extension can be declared as static so that it only has to check once for all
- * tests in the enclosing test case.
- * </p>
- *
  * @author Dave Syer
  * @author Duane May
  * <p>
@@ -304,9 +299,9 @@ public final class ServerRunningExtension implements BeforeAllCallback, RestTemp
     }
 
     public RestTemplate createRestTemplate() {
-        RestTemplate client = new RestTemplate();
-        client.setRequestFactory(new StatelessRequestFactory());
-        client.setErrorHandler(new ResponseErrorHandler() {
+        RestTemplate newClient = new RestTemplate();
+        newClient.setRequestFactory(new StatelessRequestFactory());
+        newClient.setErrorHandler(new ResponseErrorHandler() {
             // Pass errors through in response entity for status code analysis
             @Override
             public boolean hasError(ClientHttpResponse response) {
@@ -315,9 +310,10 @@ public final class ServerRunningExtension implements BeforeAllCallback, RestTemp
 
             @Override
             public void handleError(ClientHttpResponse response) {
+                // pass through
             }
         });
-        return client;
+        return newClient;
     }
 
     public UriBuilder buildUri(String url) {
@@ -335,7 +331,7 @@ public final class ServerRunningExtension implements BeforeAllCallback, RestTemp
 
         private final String url;
 
-        private MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        private final MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
 
         public UriBuilder(String url) {
             this.url = url;

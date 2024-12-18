@@ -142,9 +142,7 @@ class ScimGroupEndpointDocs extends EndpointDocs {
 
         scimGroup.setDisplayName("Cooler Group Name for Update");
 
-
         // Update
-
         MockHttpServletRequestBuilder put = put("/Groups/{groupId}", scimGroup.getId())
                 .header("Authorization", "Bearer " + scimWriteToken)
                 .header("If-Match", scimGroup.getVersion())
@@ -208,9 +206,7 @@ class ScimGroupEndpointDocs extends EndpointDocs {
                         ),
                         responseFields));
 
-
         // List
-
         scimGroup = JsonUtils.readValue(retrieveResult.andReturn().getResponse().getContentAsString(), ScimGroup.class);
 
         Snippet requestParameters = requestParameters(

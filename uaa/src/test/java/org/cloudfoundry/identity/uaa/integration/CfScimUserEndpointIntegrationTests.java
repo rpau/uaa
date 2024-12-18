@@ -47,7 +47,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Dave Syer
  */
 @OAuth2ContextConfiguration(OAuth2ContextConfiguration.Implicit.class)
-public class CfScimUserEndpointIntegrationTests {
+class CfScimUserEndpointIntegrationTests {
 
     private final String JOE = "joe" + new RandomValueStringGenerator().generate().toLowerCase();
 
@@ -61,10 +61,10 @@ public class CfScimUserEndpointIntegrationTests {
     private static final UaaTestAccounts testAccounts = UaaTestAccounts.standard(serverRunning);
 
     @RegisterExtension
-    private static final TestAccountExtension testAccountSetup = TestAccountExtension.standard(serverRunning, testAccounts);
+    private static final TestAccountExtension testAccountExtension = TestAccountExtension.standard(serverRunning, testAccounts);
 
     @RegisterExtension
-    private static final OAuth2ContextExtension context = OAuth2ContextExtension.withTestAccounts(serverRunning, testAccountSetup);
+    private static final OAuth2ContextExtension context = OAuth2ContextExtension.withTestAccounts(serverRunning, testAccountExtension);
 
     @BeforeOAuth2Context
     @OAuth2ContextConfiguration(OAuth2ContextConfiguration.ClientCredentials.class)
@@ -153,7 +153,6 @@ public class CfScimUserEndpointIntegrationTests {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
         @SuppressWarnings("unchecked")
         Map<String, String> error = response.getBody();
-        // System.err.println(error);
         assertThat(error).containsEntry("error", "insufficient_scope");
     }
 
@@ -164,6 +163,6 @@ public class CfScimUserEndpointIntegrationTests {
         @SuppressWarnings("unchecked")
         Map<String, Object> results = response.getBody();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
-        assertThat(results.get("error")).as("There should be an error").isNotNull();
+        assertThat(results).as("There should be an error").containsKey("error");
     }
 }

@@ -51,6 +51,6 @@ class LimiterImplTest {
         LimiterImpl limiter = LimiterImpl.from(iLimiters, LoggingOption.AllCallsWithDetails);
         assertThat(limiter.shouldLimit()).as(callID).isEqualTo(shouldLimitExpected);
         String expected = String.join("\n", toStringLines);
-        assertThat(limiter.toString()).as(callID).isEqualTo(expected);
+        assertThat(limiter).as(callID).hasToString(expected);
     }
 }

@@ -83,7 +83,5 @@ class RestrictUaaScopesClientValidatorTest {
                 fail("Scope:" + s + " should be valid during " + m + " mode.");
             }
         }
-    }
-
-
+  }
 }

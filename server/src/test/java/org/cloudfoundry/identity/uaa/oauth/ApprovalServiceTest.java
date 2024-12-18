@@ -1,6 +1,5 @@
 package org.cloudfoundry.identity.uaa.oauth;
 
-import com.google.common.collect.Lists;
 import org.cloudfoundry.identity.uaa.approval.Approval;
 import org.cloudfoundry.identity.uaa.approval.ApprovalService;
 import org.cloudfoundry.identity.uaa.approval.ApprovalStore;
@@ -13,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Date;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_AUTHORIZATION_CODE;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_PASSWORD;
@@ -48,10 +48,11 @@ class ApprovalServiceTest {
         when(timeService.getCurrentTimeMillis()).thenReturn(approvalExpiry - 1L);
         when(timeService.getCurrentDate()).thenCallRealMethod();
 
-        List<Approval> approvals = Lists.newArrayList(approval);
+        List<Approval> approvals = List.of(approval);
         when(approvalStore.getApprovals(eq(USER_ID), eq(CLIENT_ID), anyString())).thenReturn(approvals);
 
-        approvalService.ensureRequiredApprovals(USER_ID, Lists.newArrayList("foo.read"), GRANT_TYPE_AUTHORIZATION_CODE, clientDetails);
+        List<String> requestedScopes = List.of("foo.read");
+        approvalService.ensureRequiredApprovals(USER_ID, requestedScopes, GRANT_TYPE_AUTHORIZATION_CODE, clientDetails);
     }
 
     @Test
@@ -64,9 +65,10 @@ class ApprovalServiceTest {
         when(timeService.getCurrentTimeMillis()).thenReturn(approvalExpiry + 1L);
         when(timeService.getCurrentDate()).thenCallRealMethod();
 
-        List<Approval> approvals = Lists.newArrayList(approval);
+        List<Approval> approvals = List.of(approval);
         when(approvalStore.getApprovals(eq(USER_ID), eq(CLIENT_ID), anyString())).thenReturn(approvals);
-        assertThatThrownBy(() -> approvalService.ensureRequiredApprovals(USER_ID, Lists.newArrayList("foo.read"), GRANT_TYPE_AUTHORIZATION_CODE, clientDetails))
+        List<String> requestedScopes = List.of("foo.read");
+        assertThatThrownBy(() -> approvalService.ensureRequiredApprovals(USER_ID, requestedScopes, GRANT_TYPE_AUTHORIZATION_CODE, clientDetails))
                 .isInstanceOf(InvalidTokenException.class)
                 .hasMessageContaining("approvals expired");
     }
@@ -81,10 +83,11 @@ class ApprovalServiceTest {
         when(timeService.getCurrentTimeMillis()).thenReturn(approvalExpiry - 1L);
         when(timeService.getCurrentDate()).thenCallRealMethod();
 
-        List<Approval> approvals = Lists.newArrayList(approval);
+        List<Approval> approvals = List.of(approval);
         when(approvalStore.getApprovals(eq(USER_ID), eq(CLIENT_ID), anyString())).thenReturn(approvals);
+        List<String> requestedScopes = List.of("foo.read");
         assertThatThrownBy(() ->
-                approvalService.ensureRequiredApprovals(USER_ID, Lists.newArrayList("foo.read"), GRANT_TYPE_AUTHORIZATION_CODE, clientDetails))
+                approvalService.ensureRequiredApprovals(USER_ID, requestedScopes, GRANT_TYPE_AUTHORIZATION_CODE, clientDetails))
                 .isInstanceOf(InvalidTokenException.class)
                 .hasMessageContaining("requested scopes are not approved");
     }
@@ -108,10 +111,11 @@ class ApprovalServiceTest {
         when(timeService.getCurrentTimeMillis()).thenReturn(approvalExpiry - 1L);
         when(timeService.getCurrentDate()).thenCallRealMethod();
 
-        List<Approval> approvals = Lists.newArrayList(approval1, approval2, approval3);
+        List<Approval> approvals = List.of(approval1, approval2, approval3);
         when(approvalStore.getApprovals(eq(USER_ID), eq(CLIENT_ID), anyString())).thenReturn(approvals);
 
-        approvalService.ensureRequiredApprovals(USER_ID, Lists.newArrayList("foo.read", "bar.read"), GRANT_TYPE_AUTHORIZATION_CODE, clientDetails);
+        assertThatNoException().isThrownBy(() ->
+                approvalService.ensureRequiredApprovals(USER_ID, List.of("foo.read", "bar.read"), GRANT_TYPE_AUTHORIZATION_CODE, clientDetails));
     }
 
     @Test
@@ -133,9 +137,10 @@ class ApprovalServiceTest {
         when(timeService.getCurrentTimeMillis()).thenReturn(approvalExpiry - 1L);
         when(timeService.getCurrentDate()).thenCallRealMethod();
 
-        List<Approval> approvals = Lists.newArrayList(approval1, approval2, approval3);
+        List<Approval> approvals = List.of(approval1, approval2, approval3);
         when(approvalStore.getApprovals(eq(USER_ID), eq(CLIENT_ID), anyString())).thenReturn(approvals);
-        assertThatThrownBy(() -> approvalService.ensureRequiredApprovals(USER_ID, Lists.newArrayList("foo.read", "bar.read"), GRANT_TYPE_AUTHORIZATION_CODE, clientDetails))
+        List<String> requestedScopes = List.of("foo.read", "bar.read");
+        assertThatThrownBy(() -> approvalService.ensureRequiredApprovals(USER_ID, requestedScopes, GRANT_TYPE_AUTHORIZATION_CODE, clientDetails))
                 .isInstanceOf(InvalidTokenException.class)
                 .hasMessageContaining("requested scopes are not approved");
     }
@@ -150,26 +155,28 @@ class ApprovalServiceTest {
         when(timeService.getCurrentTimeMillis()).thenReturn(approvalExpiry - 5L);
         when(timeService.getCurrentDate()).thenCallRealMethod();
 
-        List<Approval> approvals = Lists.newArrayList(approval);
+        List<Approval> approvals = List.of(approval);
         when(approvalStore.getApprovals(eq(USER_ID), eq(CLIENT_ID), anyString())).thenReturn(approvals);
 
+        List<String> requestedScopes = List.of("foo.read");
         assertThatThrownBy(() ->
-                approvalService.ensureRequiredApprovals(USER_ID, Lists.newArrayList("foo.read"), GRANT_TYPE_AUTHORIZATION_CODE, clientDetails))
+                approvalService.ensureRequiredApprovals(USER_ID, requestedScopes, GRANT_TYPE_AUTHORIZATION_CODE, clientDetails))
                 .isInstanceOf(InvalidTokenException.class)
                 .hasMessageContaining("requested scopes are not approved");
     }
 
     @Test
     void ensureRequiredApprovals_IfNoApprovalsNorScopes() {
-        List<Approval> approvals = Lists.newArrayList();
+        List<Approval> approvals = List.of();
         when(approvalStore.getApprovals(eq(USER_ID), eq(CLIENT_ID), anyString())).thenReturn(approvals);
 
-        approvalService.ensureRequiredApprovals(USER_ID, Lists.newArrayList(), GRANT_TYPE_AUTHORIZATION_CODE, clientDetails);
+        assertThatNoException().isThrownBy(() ->
+                approvalService.ensureRequiredApprovals(USER_ID, List.of(), GRANT_TYPE_AUTHORIZATION_CODE, clientDetails));
     }
 
     @Test
-    void ensureRequiredApprovals_whenPasswordGrantType_autoapprovesAllScopes() {
-        approvalService.ensureRequiredApprovals(USER_ID, Lists.newArrayList("hithere"), GRANT_TYPE_PASSWORD, clientDetails);
-        // no exception expected
+    void ensureRequiredApprovals_whenPasswordGrantType_autoApprovesAllScopes() {
+        assertThatNoException().isThrownBy(() ->
+                approvalService.ensureRequiredApprovals(USER_ID, List.of("hithere"), GRANT_TYPE_PASSWORD, clientDetails));
     }
 }

@@ -53,11 +53,6 @@ import static org.assertj.core.api.Assertions.fail;
  * }
  * </pre>
  *
- * <p>
- * The Extension can be declared as static so that it only has to check once for all
- * tests in the enclosing test case.
- * </p>
- *
  * @author Dave Syer
  * @author Duane May
  * <p>

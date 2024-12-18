@@ -75,7 +75,6 @@ class IsSelfCheckTest {
         bean = new IsSelfCheck(tokenProvisioning);
     }
 
-
     @AfterEach
     void clearContext() {
         SecurityContextHolder.clearContext();
@@ -143,7 +142,6 @@ class IsSelfCheckTest {
         request.setPathInfo("/oauth/token/revoke/user/" + "other-user-id");
         assertThat(bean.isUserTokenRevocationForSelf(request, 4)).isFalse();
     }
-
 
     @Test
     void selfClientToken() {

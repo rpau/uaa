@@ -81,7 +81,6 @@ class SanitizedLogFactoryTest {
         assertThat(log.isDebugEnabled()).isFalse();
     }
 
-
     @Test
     void sanitizeWarn() {
         when(mockLog.isWarnEnabled()).thenReturn(true);

@@ -22,7 +22,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
@@ -40,7 +39,7 @@ import static org.mockito.Mockito.when;
 /**
  * @author Dave Syer
  */
-public class RemoteTokenServicesTests {
+class RemoteTokenServicesTests {
 
     private final RemoteTokenServices services = new RemoteTokenServices();
 
@@ -75,8 +74,8 @@ public class RemoteTokenServicesTests {
         assertThat(result.getOAuth2Request().getClientId()).isEqualTo("remote");
         assertThat(result.getUserAuthentication().getName()).isEqualTo("olds");
         assertThat(((RemoteUserAuthentication) result.getUserAuthentication()).getId()).isEqualTo("HDGFJSHGDF");
-        assertThat(result.getOAuth2Request().getRequestParameters()).isNotNull();
-        assertThat(result.getOAuth2Request().getRequestParameters().get(ClaimConstants.ISS)).isNull();
+        assertThat(result.getOAuth2Request().getRequestParameters()).isNotNull()
+                .doesNotContainKey(ClaimConstants.ISS);
     }
 
     @Test
@@ -87,8 +86,8 @@ public class RemoteTokenServicesTests {
         assertThat(result.getOAuth2Request().getClientId()).isEqualTo("remote");
         assertThat(result.getUserAuthentication().getName()).isEqualTo("olds");
         assertThat(((RemoteUserAuthentication) result.getUserAuthentication()).getId()).isEqualTo("HDGFJSHGDF");
-        assertThat(result.getOAuth2Request().getRequestParameters()).isNotNull();
-        assertThat(result.getOAuth2Request().getRequestParameters().get(ClaimConstants.ISS)).isNotNull();
+        assertThat(result.getOAuth2Request().getRequestParameters()).isNotNull()
+                .containsKey(ClaimConstants.ISS);
     }
 
     @Test
@@ -111,7 +110,7 @@ public class RemoteTokenServicesTests {
     void noBodyReceived() {
         RestTemplate restTemplate = mock(RestTemplate.class);
         ResponseEntity responseEntity = mock(ResponseEntity.class);
-        when(restTemplate.exchange(anyString(), (HttpMethod) any(), (HttpEntity<MultiValueMap<String, String>>) any(), (Class) any())).thenReturn(responseEntity);
+        when(restTemplate.exchange(anyString(), (HttpMethod) any(), any(), (Class) any())).thenReturn(responseEntity);
         when(responseEntity.getBody()).thenReturn(null);
         services.setRestTemplate(restTemplate);
         assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> services.loadAuthentication("FOO"));
@@ -119,7 +118,7 @@ public class RemoteTokenServicesTests {
 
     @Test
     void tokenRetrievalWithAdditionalAuthorizationAttributes() {
-        Map additionalAuthorizationAttributesMap = Collections.singletonMap("test", 1);
+        Map<String, Integer> additionalAuthorizationAttributesMap = Map.of("test", 1);
         body.put(ClaimConstants.ADDITIONAL_AZ_ATTR, additionalAuthorizationAttributesMap);
 
         OAuth2Authentication result = services.loadAuthentication("FOO");

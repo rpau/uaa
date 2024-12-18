@@ -66,8 +66,9 @@ class ScimUtilsTest {
                 eq("REGISTRATION"),
                 eq(currentZoneId));
 
-        assertThat(timestampArgumentCaptor.getValue().after(before)).isEqualTo(true);
-        assertThat(timestampArgumentCaptor.getValue().before(after)).isEqualTo(true);
+        assertThat(timestampArgumentCaptor.getValue())
+                .isAfter(before)
+                .isBefore(after);
     }
 
     @Nested
@@ -102,12 +103,9 @@ class ScimUtilsTest {
             @Test
             void getVerificationURL() throws MalformedURLException {
                 URL actual = ScimUtils.getVerificationURL(mockExpiringCode, IdentityZone.getUaa());
-
                 URL expected = new URL("http://localhost:8080/uaa/verify_user?code=code");
-
                 assertThat(actual).hasToString(expected.toString());
             }
-
         }
 
         @Nested
@@ -119,9 +117,7 @@ class ScimUtilsTest {
                 when(mockIdentityZone.getSubdomain()).thenReturn("subdomain");
 
                 URL actual = ScimUtils.getVerificationURL(mockExpiringCode, mockIdentityZone);
-
                 URL expected = new URL("http://subdomain.localhost:8080/uaa/verify_user?code=code");
-
                 assertThat(actual).hasToString(expected.toString());
             }
         }
@@ -162,5 +158,4 @@ class ScimUtilsTest {
 
         assertThatExceptionOfType(InvalidScimResourceException.class).isThrownBy(() -> ScimUtils.validate(user));
     }
-
 }

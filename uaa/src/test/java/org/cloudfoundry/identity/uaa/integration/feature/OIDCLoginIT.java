@@ -44,6 +44,7 @@ import org.cloudfoundry.identity.uaa.zone.TokenPolicy;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
@@ -80,6 +81,7 @@ import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYP
 import static org.cloudfoundry.identity.uaa.provider.ExternalIdentityProviderDefinition.USER_NAME_ATTRIBUTE_NAME;
 
 @SpringJUnitConfig(classes = DefaultIntegrationTestConfig.class)
+@ExtendWith(ScreenshotOnFailExtension.class)
 public class OIDCLoginIT {
 
     private static final String PASSWORD_AUTHN_CTX = "urn:oasis:names:tc:SAML:2.0:ac:classes:Password";
@@ -87,9 +89,6 @@ public class OIDCLoginIT {
     @Autowired
     @RegisterExtension
     private IntegrationTestExtension integrationTestExtension;
-
-    @RegisterExtension
-    private static final ScreenshotOnFailExtension screenshotExtension = new ScreenshotOnFailExtension();
 
     @Autowired
     WebDriver webDriver;
@@ -124,8 +123,6 @@ public class OIDCLoginIT {
     @BeforeEach
     void setUp() throws Exception {
         assertThat(doesSupportZoneDNS()).as("/etc/hosts should contain the host 'oidcloginit.localhost' for this test to work").isTrue();
-
-        screenshotExtension.setWebDriver(webDriver);
 
         subdomain = "oidcloginit";
         //identity client token

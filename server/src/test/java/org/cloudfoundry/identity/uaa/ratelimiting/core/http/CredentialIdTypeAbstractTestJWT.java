@@ -21,23 +21,23 @@ public abstract class CredentialIdTypeAbstractTestJWT<CitJWT extends CredentialI
     public static final String JSON_HEADER = "{ \"alg\": \"HS256\", \"typ\": \"JWT\" }";
     public static final String JSON_CLAIMS = SIMPLE_CLAIMS_EMAIL_PREFIX + EMAIL_DEVIN + SIMPLE_CLAIMS_EMAIL_SUFFIX;
     public static final String RAW_SIGNATURE = "The quick brown fox jumped over the lazy moon‼"; // any bytes... note non-ascii char
-    public static final String RAW_4th_SECTION = "No clue what goes in here";
+    public static final String RAW_4TH_SECTION = "No clue what goes in here";
 
-    public static final String b64section_HEADER = encodeSection(JSON_HEADER);
-    public static final String b64section_CLAIMS = encodeSection(JSON_CLAIMS);
-    public static final String b64section_SIGNATURE = encodeSection(RAW_SIGNATURE);
-    public static final String b64section_4th_SECTION = encodeSection(RAW_4th_SECTION);
+    public static final String B64_SECTION_HEADER = encodeSection(JSON_HEADER);
+    public static final String B64_SECTION_CLAIMS = encodeSection(JSON_CLAIMS);
+    public static final String B64_SECTION_SIGNATURE = encodeSection(RAW_SIGNATURE);
+    public static final String B64_SECTION_4TH_SECTION = encodeSection(RAW_4TH_SECTION);
 
-    public static final String JWT2 = b64section_HEADER + "." + b64section_CLAIMS; // 1 dot
+    public static final String JWT2 = B64_SECTION_HEADER + "." + B64_SECTION_CLAIMS; // 1 dot
 
-    public static final String JWT3 = JWT2 + "." + b64section_SIGNATURE; // 2 dots
+    public static final String JWT3 = JWT2 + "." + B64_SECTION_SIGNATURE; // 2 dots
 
-    public static final String JWT4 = JWT3 + "." + b64section_4th_SECTION; // 3 dots
+    public static final String JWT4 = JWT3 + "." + B64_SECTION_4TH_SECTION; // 3 dots
 
     public static final String JWT = JWT3;
 
-    public static String AUTH_HEADER_VALUE_PREFIX_UC = "Bearer ";
-    public static String AUTH_HEADER_VALUE_PREFIX_LC = "bearer ";
+    public static final String AUTH_HEADER_VALUE_PREFIX_UC = "Bearer ";
+    public static final String AUTH_HEADER_VALUE_PREFIX_LC = "bearer ";
 
     protected final List<Exception> exceptionCollector = new ArrayList<>();
 
@@ -54,39 +54,37 @@ public abstract class CredentialIdTypeAbstractTestJWT<CitJWT extends CredentialI
 
     @Test
     public void roundTripDecode() {
-        String header = decodeSection(b64section_HEADER, "header");
-        String claims = decodeSection(b64section_CLAIMS, "claims");
-        String signature = decodeSection(b64section_SIGNATURE, "signature");
-        String fourth = decodeSection(b64section_4th_SECTION, "fourth");
+        String header = decodeSection(B64_SECTION_HEADER, "header");
+        String claims = decodeSection(B64_SECTION_CLAIMS, "claims");
+        String signature = decodeSection(B64_SECTION_SIGNATURE, "signature");
+        String fourth = decodeSection(B64_SECTION_4TH_SECTION, "fourth");
 
         assertThat(header).isEqualTo(JSON_HEADER);
         assertThat(claims).isEqualTo(JSON_CLAIMS);
         assertThat(signature).isEqualTo(RAW_SIGNATURE);
-        assertThat(fourth).isEqualTo(RAW_4th_SECTION);
+        assertThat(fourth).isEqualTo(RAW_4TH_SECTION);
     }
 
     @Test
-    public void checkJWTparts() {
+    public void checkJwtParts() {
         assertThat(JWTparts.from((RequestInfo) null)).isNull();
         assertThat(JWTparts.from((String) null)).isNull();
         assertThat(JWTparts.from("!" + AUTH_HEADER_VALUE_PREFIX_UC + JWT)).as("Not 'Bearer '").isNull();
-        assertThat(JWTparts.from(AUTH_HEADER_VALUE_PREFIX_UC + b64section_HEADER)).as("Only 1 section").isNull();
+        assertThat(JWTparts.from(AUTH_HEADER_VALUE_PREFIX_UC + B64_SECTION_HEADER)).as("Only 1 section").isNull();
         assertThat(JWTparts.from(AUTH_HEADER_VALUE_PREFIX_UC + JWT2)).as("Only 2 sections").isNull();
-        assertThat(JWTparts.from(AUTH_HEADER_VALUE_PREFIX_UC + JWT2 + " ." + b64section_SIGNATURE)).as("space next to dot").isNull();
-        checkJWTparts(AUTH_HEADER_VALUE_PREFIX_UC);
-        checkJWTparts(AUTH_HEADER_VALUE_PREFIX_LC);
+        assertThat(JWTparts.from(AUTH_HEADER_VALUE_PREFIX_UC + JWT2 + " ." + B64_SECTION_SIGNATURE)).as("space next to dot").isNull();
+        checkJwtParts(AUTH_HEADER_VALUE_PREFIX_UC);
+        checkJwtParts(AUTH_HEADER_VALUE_PREFIX_LC);
     }
 
-    private void checkJWTparts(String authHeaderValuePrefix) {
+    private void checkJwtParts(String authHeaderValuePrefix) {
         JWTparts parts = JWTparts.from(authHeaderValuePrefix + JWT);
         assertThat(parts).as(authHeaderValuePrefix + "JWTparts").isNotNull();
         assertThat(parts.token).as(authHeaderValuePrefix + "JWTparts.token").isEqualTo(JWT);
         String[] sections = parts.parts;
-        assertThat(sections).as("JWTparts.parts.sections").isNotNull();
-        assertThat(sections.length).as(authHeaderValuePrefix + "JWTparts.sections").isEqualTo(3);
-        assertThat(sections[0]).as(authHeaderValuePrefix + "JWTparts.header").isEqualTo(b64section_HEADER);
-        assertThat(sections[1]).as(authHeaderValuePrefix + "JWTpart.claims").isEqualTo(b64section_CLAIMS);
-        assertThat(sections[2]).as(authHeaderValuePrefix + "JWTpart.signature").isEqualTo(b64section_SIGNATURE);
+        assertThat(sections).as("JWTparts.parts.sections")
+                .as(authHeaderValuePrefix + "JWTparts.sections").hasSize(3)
+                .containsExactly(B64_SECTION_HEADER, B64_SECTION_CLAIMS, B64_SECTION_SIGNATURE);
     }
 
     @Test

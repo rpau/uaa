@@ -11,6 +11,7 @@ import org.cloudfoundry.identity.uaa.oauth.provider.RequestTokenFactory;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 
+import java.io.Serial;
 import java.util.Collection;
 import java.util.Date;
 import java.util.UUID;
@@ -21,17 +22,17 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-public abstract class TokenStoreBaseTests {
+abstract class TokenStoreBaseTests {
 
     public abstract TokenStore getTokenStore();
 
     @Test
-    public void readingAuthenticationForTokenThatDoesNotExist() {
+    void readingAuthenticationForTokenThatDoesNotExist() {
         assertThat(getTokenStore().readAuthentication("tokenThatDoesNotExist")).isNull();
     }
 
     @Test
-    public void storeAccessToken() {
+    void storeAccessToken() {
         OAuth2Authentication expectedAuthentication = new OAuth2Authentication(RequestTokenFactory.createOAuth2Request("id", false), new TestAuthentication("test2", false));
         OAuth2AccessToken expectedOAuth2AccessToken = new DefaultOAuth2AccessToken("testToken");
         getTokenStore().storeAccessToken(expectedOAuth2AccessToken, expectedAuthentication);
@@ -46,7 +47,7 @@ public abstract class TokenStoreBaseTests {
     }
 
     @Test
-    public void storeAccessTokenTwice() {
+    void storeAccessTokenTwice() {
         OAuth2Authentication expectedAuthentication = new OAuth2Authentication(
                 RequestTokenFactory.createOAuth2Request("id", false), new TestAuthentication("test2", false));
         OAuth2AccessToken expectedOAuth2AccessToken = new DefaultOAuth2AccessToken("testToken");
@@ -62,7 +63,7 @@ public abstract class TokenStoreBaseTests {
     }
 
     @Test
-    public void retrieveAccessToken() {
+    void retrieveAccessToken() {
         //Test approved request
         OAuth2Request storedOAuth2Request = RequestTokenFactory.createOAuth2Request("id", true);
         OAuth2Authentication authentication = new OAuth2Authentication(storedOAuth2Request, new TestAuthentication("test2", true));
@@ -87,7 +88,7 @@ public abstract class TokenStoreBaseTests {
     }
 
     @Test
-    public void findAccessTokensByClientIdAndUserName() {
+    void findAccessTokensByClientIdAndUserName() {
         String clientId = "id" + UUID.randomUUID();
         String name = "test2" + UUID.randomUUID();
         OAuth2Authentication expectedAuthentication = new OAuth2Authentication(RequestTokenFactory.createOAuth2Request(clientId, false), new TestAuthentication(name, false));
@@ -99,7 +100,7 @@ public abstract class TokenStoreBaseTests {
     }
 
     @Test
-    public void findAccessTokensByClientId() {
+    void findAccessTokensByClientId() {
         String clientId = "id" + UUID.randomUUID();
         OAuth2Authentication expectedAuthentication = new OAuth2Authentication(RequestTokenFactory.createOAuth2Request(clientId, false), new TestAuthentication("test2", false));
         OAuth2AccessToken expectedOAuth2AccessToken = new DefaultOAuth2AccessToken("testToken");
@@ -110,12 +111,12 @@ public abstract class TokenStoreBaseTests {
     }
 
     @Test
-    public void readingAccessTokenForTokenThatDoesNotExist() {
+    void readingAccessTokenForTokenThatDoesNotExist() {
         assertThat(getTokenStore().readAccessToken("tokenThatDoesNotExist")).isNull();
     }
 
     @Test
-    public void refreshTokenIsNotStoredDuringAccessToken() {
+    void refreshTokenIsNotStoredDuringAccessToken() {
         OAuth2Authentication expectedAuthentication = new OAuth2Authentication(RequestTokenFactory.createOAuth2Request("id", false), new TestAuthentication("test2", false));
         DefaultOAuth2AccessToken expectedOAuth2AccessToken = new DefaultOAuth2AccessToken("testToken");
         expectedOAuth2AccessToken.setRefreshToken(new DefaultOAuth2RefreshToken("refreshToken"));
@@ -127,11 +128,12 @@ public abstract class TokenStoreBaseTests {
         assertThat(getTokenStore().readRefreshToken("refreshToken")).isNull();
     }
 
-    @Test
     /**
-     * NB: This used to test expiring refresh tokens. That test has been moved to sub-classes since not all stores support the functionality
+     * NB: This used to test expiring refresh tokens.
+     * That test has been moved to subclasses since not all stores support the functionality
      */
-    public void storeRefreshToken() {
+    @Test
+    void storeRefreshToken() {
         String refreshToken = "testToken" + UUID.randomUUID();
         DefaultOAuth2RefreshToken expectedRefreshToken = new DefaultOAuth2RefreshToken(refreshToken);
         OAuth2Authentication expectedAuthentication = new OAuth2Authentication(RequestTokenFactory.createOAuth2Request("id", false), new TestAuthentication("test2", false));
@@ -146,12 +148,12 @@ public abstract class TokenStoreBaseTests {
     }
 
     @Test
-    public void readingRefreshTokenForTokenThatDoesNotExist() {
+    void readingRefreshTokenForTokenThatDoesNotExist() {
         assertThat(getTokenStore().readRefreshToken("tokenThatDoesNotExist")).isNull();
     }
 
     @Test
-    public void getAccessTokenForDeletedUser() throws Exception {
+    void getAccessTokenForDeletedUser() {
         //Test approved request
         OAuth2Request storedOAuth2Request = RequestTokenFactory.createOAuth2Request("id", true);
         OAuth2Authentication expectedAuthentication = new OAuth2Authentication(storedOAuth2Request, new TestAuthentication("test", true));
@@ -173,7 +175,7 @@ public abstract class TokenStoreBaseTests {
     }
 
     @Test
-    public void removeRefreshToken() {
+    void removeRefreshToken() {
         OAuth2RefreshToken expectedExpiringRefreshToken = new DefaultExpiringOAuth2RefreshToken("testToken",
                 new Date());
         OAuth2Authentication expectedAuthentication = new OAuth2Authentication(RequestTokenFactory.createOAuth2Request("id", false), new TestAuthentication("test2", false));
@@ -184,21 +186,21 @@ public abstract class TokenStoreBaseTests {
     }
 
     @Test
-    public void removedTokenCannotBeFoundByUsername() {
+    void removedTokenCannotBeFoundByUsername() {
         OAuth2AccessToken token = new DefaultOAuth2AccessToken("testToken");
         OAuth2Authentication expectedAuthentication = new OAuth2Authentication(RequestTokenFactory.createOAuth2Request(
                 "id", false), new TestAuthentication("test2", false));
         getTokenStore().storeAccessToken(token, expectedAuthentication);
         getTokenStore().removeAccessToken(token);
         Collection<OAuth2AccessToken> tokens = getTokenStore().findTokensByClientIdAndUserName("id", "test2");
-        assertThat(tokens).doesNotContain(token);
-        assertThat(tokens).isEmpty();
+        assertThat(tokens).doesNotContain(token)
+                .isEmpty();
     }
 
     protected static class TestAuthentication extends AbstractAuthenticationToken {
-
+        @Serial
         private static final long serialVersionUID = 1L;
-        private String principal;
+        private final String principal;
 
         public TestAuthentication(String name, boolean authenticated) {
             super(null);
@@ -214,5 +216,4 @@ public abstract class TokenStoreBaseTests {
             return this.principal;
         }
     }
-
 }

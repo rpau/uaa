@@ -15,7 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-public class InMemoryTokenStoreTests extends TokenStoreBaseTests {
+class InMemoryTokenStoreTests extends TokenStoreBaseTests {
 
     private InMemoryTokenStore tokenStore;
 

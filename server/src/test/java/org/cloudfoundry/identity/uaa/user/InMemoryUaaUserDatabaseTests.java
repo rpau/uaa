@@ -22,7 +22,6 @@ class InMemoryUaaUserDatabaseTests {
         db = new InMemoryUaaUserDatabase(Collections.singleton(user));
     }
 
-
     @Test
     void retrieveUserByName() {
         assertThat(db.retrieveUserByName(user.getUsername(), user.getOrigin())).isSameAs(user);

@@ -42,7 +42,7 @@ import static org.mockito.Mockito.when;
 @WithDatabaseContext
 class UaaClientAuthenticationProviderTest {
 
-    private AlphanumericRandomValueStringGenerator generator = new AlphanumericRandomValueStringGenerator();
+    private final AlphanumericRandomValueStringGenerator generator = new AlphanumericRandomValueStringGenerator();
     private MultitenantJdbcClientDetailsService jdbcClientDetailsService;
     private ClientDetails client;
     private ClientDetailsAuthenticationProvider authenticationProvider;
@@ -100,14 +100,14 @@ class UaaClientAuthenticationProviderTest {
         return getAuthenticationToken(request);
     }
 
-    private UsernamePasswordAuthenticationToken getAuthenticationTokenClientJwt(String grant_type) {
+    private UsernamePasswordAuthenticationToken getAuthenticationTokenClientJwt(String grantType) {
         MockHttpServletRequest request = new MockHttpServletRequest("POST", "/oauth/token");
         request.addParameter("code_verifier", "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM");
         request.addParameter("code", "1234567890");
         request.addParameter("client_assertion", "id");
         request.addParameter("client_assertion_type", "id");
         request.addParameter("redirect_uri", "http://localhost:8080/uaa");
-        request.addParameter("grant_type", grant_type);
+        request.addParameter("grant_type", grantType);
         return getAuthenticationToken(request);
     }
 
@@ -231,7 +231,8 @@ class UaaClientAuthenticationProviderTest {
         when(a.getDetails()).thenReturn(uaaAuthenticationDetails);
         Map<String, String[]> requestParameters = new HashMap<>();
         when(uaaAuthenticationDetails.getParameterMap()).thenReturn(requestParameters);
-        assertThatThrownBy(() -> authenticationProvider.additionalAuthenticationChecks(new UaaClient("client", null, Collections.emptyList(), client.getAdditionalInformation(), null), a))
+        UaaClient uaaClient = new UaaClient("client", null, Collections.emptyList(), client.getAdditionalInformation(), null);
+        assertThatThrownBy(() -> authenticationProvider.additionalAuthenticationChecks(uaaClient, a))
                 .isInstanceOf(BadCredentialsException.class)
                 .hasMessage("Missing credentials");
     }

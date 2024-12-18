@@ -169,7 +169,6 @@ public class ResetPasswordControllerMockMvcTests {
         String renderedEmail = findInRenderedPage(content, "\\<input type=\\\"hidden\\\" name=\\\"email\\\" value=\\\"(.*?)\\\"\\/\\>");
         assertThat(user.getPrimaryEmail()).isEqualTo(renderedEmail);
 
-
         mockMvc.perform(createChangePasswordRequest(user, renderedCode, true, "secret1", "secret1"))
                 .andExpect(status().isFound())
                 .andExpect(redirectedUrl("/login?success=password_reset"));
@@ -217,7 +216,6 @@ public class ResetPasswordControllerMockMvcTests {
         user.setPassword("secret");
         String token = MockMvcUtils.getClientCredentialsOAuthAccessToken(mockMvc, "admin", "adminsecret", null, null);
         user = MockMvcUtils.createUser(mockMvc, token, user);
-
 
         PredictableGenerator generator = new PredictableGenerator();
         JdbcExpiringCodeStore store = webApplicationContext.getBean(JdbcExpiringCodeStore.class);

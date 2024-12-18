@@ -21,7 +21,7 @@ class FrameworkEndpointHandlerMappingTests {
     private final FrameworkEndpointHandlerMapping mapping = new FrameworkEndpointHandlerMapping();
 
     @Test
-    void defaults() throws Exception {
+    void defaults() {
         assertThat(mapping.getPath("/oauth/token")).isEqualTo("/oauth/token");
         assertThat(mapping.getPath("/oauth/authorize")).isEqualTo("/oauth/authorize");
         assertThat(mapping.getPath("/oauth/error")).isEqualTo("/oauth/error");
@@ -41,13 +41,13 @@ class FrameworkEndpointHandlerMappingTests {
     }
 
     @Test
-    void redirect() throws Exception {
+    void redirect() {
         mapping.setMappings(Collections.singletonMap("/oauth/confirm_access", "redirect:/approve"));
         assertThat(mapping.getPath("/oauth/confirm_access")).isEqualTo("/approve");
     }
 
     @Test
-    void prefix() throws Exception {
+    void prefix() {
         mapping.setPrefix("/uaa/");
         assertThat(mapping.getServletPath("/oauth/token")).isEqualTo("/uaa/oauth/token");
         mapping.setPrefix(null);

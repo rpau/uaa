@@ -21,7 +21,7 @@ class OAuth2RequestTests {
     private OAuth2Request oAuth2Request;
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
 
         oAuth2Request = new OAuth2Request(Map.of("client_id", "id"), "id", Collections.emptyList(), true, Set.of("client"),
                 Set.of(), null, null, Map.of("extra", "param"));
@@ -112,7 +112,7 @@ class OAuth2RequestTests {
     @Test
     void equals() {
         OAuth2Request copyOf = new OAuth2Request(oAuth2Request);
-        assertThat(copyOf).isEqualTo(oAuth2Request);
-        assertThat(copyOf.hashCode()).isEqualTo(oAuth2Request.hashCode());
+        assertThat(copyOf).isEqualTo(oAuth2Request)
+                .hasSameHashCodeAs(oAuth2Request);
     }
 }

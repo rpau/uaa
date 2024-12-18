@@ -5,8 +5,7 @@ import org.cloudfoundry.identity.uaa.ratelimiting.core.LoggingOption;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
-import java.util.Arrays;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -73,7 +72,7 @@ class InternalLimiterTest {
         coordinator.waitForDone();
 
         List<String> problemStream = new StreamProcessor(compressCalls()).process();
-        assertThat(problemStream.isEmpty()).as("unexpected sequence from:\n" + problemStream).isTrue();
+        assertThat(problemStream).as("unexpected sequence from:\n" + problemStream).isEmpty();
     }
 
     // Start of stream:   A1ok B2ok Z1ok Z1-- A1-- Z2ok Z2-- B2-- B2ok Z2ok A1ok Z2-- B2-- Z1ok Z1-- A1--
@@ -85,7 +84,7 @@ class InternalLimiterTest {
         String nextNode;
 
         public StreamProcessor(String compressCalls) {
-            stream = new LinkedList<>(Arrays.asList(compressCalls.split(" ")));
+            stream = new ArrayList<>(List.of(compressCalls.split(" ")));
         }
 
         private String getNode(int offsetIndex) {
@@ -141,8 +140,7 @@ class InternalLimiterTest {
                     case "B2ok":
                         processSet("B2", "Z2");
                         break;
-                    case "A1no": // Done with A1s
-                    case "B2no": // Done with B2s
+                    case "A1no", "B2no": // Done with B2s
                         dropNode(currentOffsetIndex);
                         break;
                     default:
@@ -254,7 +252,7 @@ class InternalLimiterTest {
     private String compressCalls() {
         StringBuilder sb = new StringBuilder();
         calls.forEach(s -> {
-            if (sb.length() != 0) {
+            if (!sb.isEmpty()) {
                 sb.append(' ');
             }
             sb.append(s);

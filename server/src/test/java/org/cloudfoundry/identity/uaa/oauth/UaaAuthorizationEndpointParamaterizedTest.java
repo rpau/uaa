@@ -42,19 +42,16 @@ public class UaaAuthorizationEndpointParamaterizedTest {
     private MockHttpServletResponse response;
     private MultitenantClientServices clientDetailsService;
     private RedirectResolver redirectResolver;
-    private OpenIdSessionStateCalculator calculator;
 
-    private String responseType;
     private String redirectUrl;
 
     public void initUaaAuthorizationEndpointParamaterizedTest(String responseType) {
-        this.responseType = responseType;
         redirectUrl = REDIRECT_URI;
 
         client = new UaaClientDetails("id", "", "openid", GRANT_TYPE_AUTHORIZATION_CODE, "", redirectUrl);
         clientDetailsService = mock(MultitenantClientServices.class);
         redirectResolver = mock(RedirectResolver.class);
-        calculator = mock(OpenIdSessionStateCalculator.class);
+        OpenIdSessionStateCalculator calculator = mock(OpenIdSessionStateCalculator.class);
 
         String zoneID = IdentityZoneHolder.get().getId();
         when(clientDetailsService.loadClientByClientId(eq(client.getClientId()), eq(zoneID))).thenReturn(client);
@@ -131,7 +128,7 @@ public class UaaAuthorizationEndpointParamaterizedTest {
     @ParameterizedTest(name = "{index}: {0}")
     void redirect_honors_ant_matcher(String responseType) throws Exception {
         initUaaAuthorizationEndpointParamaterizedTest(responseType);
-        UaaClientDetails client = new UaaClientDetails("ant", "", "openid", "implicit", "", "http://example.com/**");
+        client = new UaaClientDetails("ant", "", "openid", "implicit", "", "http://example.com/**");
         request.setParameter(OAuth2Utils.REDIRECT_URI, "http://example.com/some/path");
         request.setParameter(OAuth2Utils.CLIENT_ID, client.getClientId());
         String zoneID = IdentityZoneHolder.get().getId();

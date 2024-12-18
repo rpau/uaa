@@ -1,19 +1,10 @@
 package org.cloudfoundry.identity.uaa.zone;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
-
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class BannerValidatorTest {
-
-    @BeforeEach
-    void setup() {
-
-    }
-
     @Test
     void validatesUrls() throws InvalidIdentityZoneConfigurationException {
         String[] validUrls = {
@@ -58,14 +49,11 @@ class BannerValidatorTest {
         }
 
         for (String url : invalidUrls) {
-            try {
-                BrandingInformation.Banner testBanner = new BrandingInformation.Banner();
-                testBanner.setLink(url);
-                BannerValidator.validate(testBanner);
-                fail("Didn't throw error on " + url);
-            } catch (InvalidIdentityZoneConfigurationException e) {
-                assertThat(e.getMessage()).contains("Invalid banner link: " + url + ". Must be a properly formatted URI beginning with http:// or https://");
-            }
+            BrandingInformation.Banner testBanner = new BrandingInformation.Banner();
+            testBanner.setLink(url);
+            assertThatThrownBy(() -> BannerValidator.validate(testBanner))
+                    .isInstanceOf(InvalidIdentityZoneConfigurationException.class)
+                    .hasMessageContaining("Invalid banner link: " + url + ". Must be a properly formatted URI beginning with http:// or https://");
         }
     }
 
@@ -94,24 +82,21 @@ class BannerValidatorTest {
         }
 
         for (String color : invalidColors) {
-            try {
-                BrandingInformation.Banner testBanner = new BrandingInformation.Banner();
-                testBanner.setTextColor(color);
-                BannerValidator.validate(testBanner);
-                fail("Didn't throw error on " + color);
-            } catch (InvalidIdentityZoneConfigurationException e) {
-                assertThat(e.getMessage()).contains("Invalid banner text color: " + color + ". Must be a properly formatted hexadecimal color code.");
-            }
+            BrandingInformation.Banner testBanner = new BrandingInformation.Banner();
+            testBanner.setTextColor(color);
+
+            assertThatThrownBy(() -> BannerValidator.validate(testBanner))
+                    .isInstanceOf(InvalidIdentityZoneConfigurationException.class)
+                    .hasMessageContaining("Invalid banner text color: " + color + ". Must be a properly formatted hexadecimal color code.");
         }
+
         for (String color : invalidColors) {
-            try {
-                BrandingInformation.Banner testBanner = new BrandingInformation.Banner();
-                testBanner.setBackgroundColor(color);
-                BannerValidator.validate(testBanner);
-                fail("Didn't throw error on " + color);
-            } catch (InvalidIdentityZoneConfigurationException e) {
-                assertThat(e.getMessage()).contains("Invalid banner background color: " + color + ". Must be a properly formatted hexadecimal color code.");
-            }
+            BrandingInformation.Banner testBanner = new BrandingInformation.Banner();
+            testBanner.setBackgroundColor(color);
+
+            assertThatThrownBy(() -> BannerValidator.validate(testBanner))
+                    .isInstanceOf(InvalidIdentityZoneConfigurationException.class)
+                    .hasMessageContaining("Invalid banner background color: " + color + ". Must be a properly formatted hexadecimal color code.");
         }
     }
 
@@ -133,15 +118,11 @@ class BannerValidatorTest {
         }
 
         for (String base64 : invalidBase64) {
-            try {
-                BrandingInformation.Banner testBanner = new BrandingInformation.Banner();
-                testBanner.setLogo(base64);
-                BannerValidator.validate(testBanner);
-                fail("Didn't throw error on " + base64);
-            } catch (InvalidIdentityZoneConfigurationException e) {
-                assertThat(e.getMessage()).contains("Invalid banner logo. Must be in BASE64 format.");
-            }
+            BrandingInformation.Banner testBanner = new BrandingInformation.Banner();
+            testBanner.setLogo(base64);
+            assertThatThrownBy(() -> BannerValidator.validate(testBanner))
+                    .isInstanceOf(InvalidIdentityZoneConfigurationException.class)
+                    .hasMessageContaining("Invalid banner logo. Must be in BASE64 format.");
         }
     }
-
 }

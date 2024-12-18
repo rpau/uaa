@@ -28,8 +28,7 @@ import static org.cloudfoundry.identity.uaa.util.UaaMapUtils.prettyPrintYaml;
 import static org.cloudfoundry.identity.uaa.util.UaaMapUtils.redactValues;
 import static org.cloudfoundry.identity.uaa.util.UaaMapUtils.sortByKeys;
 
-
-public class UaaMapUtilsTest {
+class UaaMapUtilsTest {
 
     private Map<String, Object> top;
     private Map<String, Object> secondA;
@@ -164,5 +163,4 @@ public class UaaMapUtilsTest {
             }
         }
     }
-
 }

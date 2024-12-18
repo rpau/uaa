@@ -72,7 +72,7 @@ class OAuth2AuthenticationProcessingFilterTests {
     }
 
     @Test
-    void detailsSetter() throws Exception {
+    void detailsSetter() {
         filter.setAuthenticationEntryPoint(new OAuth2AuthenticationEntryPoint());
         filter.setAuthenticationDetailsSource(new OAuth2AuthenticationDetailsSource());
         filter.setTokenExtractor(new BearerTokenExtractor());
@@ -145,5 +145,4 @@ class OAuth2AuthenticationProcessingFilterTests {
         Mockito.verify(eventPublisher).publishAuthenticationFailure(Mockito.any(AuthenticationException.class), Mockito.any(Authentication.class));
         Mockito.verify(eventPublisher, Mockito.never()).publishAuthenticationSuccess(Mockito.any(Authentication.class));
     }
-
 }

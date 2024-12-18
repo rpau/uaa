@@ -12,7 +12,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -29,22 +29,20 @@ class CompositeTokenGranterTests {
 
     private CompositeTokenGranter compositeTokenGranter;
     private AuthorizationServerTokenServices tokenServices;
-    private AuthenticationManager authenticationManager;
     private ClientDetailsService clientDetailsService;
     private OAuth2RequestFactory oAuth2RequestFactory;
-    private AuthorizationCodeServices authorizationCodeServices;
     private TokenRequest tokenRequest;
     private OAuth2Request oauth2Request;
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
         tokenServices = mock(AuthorizationServerTokenServices.class);
         clientDetailsService = mock(ClientDetailsService.class);
         tokenRequest = mock(TokenRequest.class);
         oauth2Request = mock(OAuth2Request.class);
-        authorizationCodeServices = mock(AuthorizationCodeServices.class);
+        AuthorizationCodeServices authorizationCodeServices = mock(AuthorizationCodeServices.class);
         oAuth2RequestFactory = mock(OAuth2RequestFactory.class);
-        authenticationManager = mock(AuthenticationManager.class);
+        AuthenticationManager authenticationManager = mock(AuthenticationManager.class);
         compositeTokenGranter = new CompositeTokenGranter(authenticationManager, oAuth2RequestFactory, clientDetailsService, authorizationCodeServices,
                 tokenServices);
     }
@@ -56,7 +54,7 @@ class CompositeTokenGranterTests {
 
     @Test
     void init() {
-        compositeTokenGranter = new CompositeTokenGranter(Arrays.asList(mock(ImplicitTokenGranter.class)));
+        compositeTokenGranter = new CompositeTokenGranter(List.of(mock(ImplicitTokenGranter.class)));
     }
 
     @Test

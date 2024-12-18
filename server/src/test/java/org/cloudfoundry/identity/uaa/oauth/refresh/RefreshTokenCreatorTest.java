@@ -16,6 +16,7 @@ import org.cloudfoundry.identity.uaa.zone.IdentityZoneHolder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -41,11 +42,10 @@ import static org.mockito.Mockito.when;
 
 class RefreshTokenCreatorTest {
     private RefreshTokenCreator refreshTokenCreator;
-    private TokenValidityResolver validityResolver;
 
     @BeforeEach
     void setup() throws Exception {
-        validityResolver = mock(TokenValidityResolver.class);
+        TokenValidityResolver validityResolver = mock(TokenValidityResolver.class);
         when(validityResolver.resolve("someclient")).thenReturn(new Date());
         TokenEndpointBuilder tokenEndpointBuilder = new TokenEndpointBuilder("http://localhost");
         refreshTokenCreator = new RefreshTokenCreator(false, validityResolver, tokenEndpointBuilder, new TimeServiceImpl(), new KeyInfoService("http://localhost"));
@@ -56,7 +56,8 @@ class RefreshTokenCreatorTest {
     @Test
     void whenRefreshGrantRestricted_throwsExceptionIfOfflineScopeMissing() {
         refreshTokenCreator.setRestrictRefreshGrant(true);
-        assertThatThrownBy(() -> refreshTokenCreator.ensureRefreshTokenCreationNotRestricted(Lists.newArrayList("openid")))
+        ArrayList<String> openid = Lists.newArrayList("openid");
+        assertThatThrownBy(() -> refreshTokenCreator.ensureRefreshTokenCreationNotRestricted(openid))
                 .isInstanceOf(InsufficientScopeException.class)
                 .hasMessageContaining("Expected scope uaa.offline_token is missing");
     }
@@ -127,9 +128,9 @@ class RefreshTokenCreatorTest {
         ExpiringOAuth2RefreshToken refreshToken = refreshTokenCreator.createRefreshToken(user, refreshTokenRequestData, "abcdef");
 
         Map<String, Object> refreshClaims = UaaTokenUtils.getClaims(refreshToken.getValue(), Map.class);
-        assertThat(refreshClaims.containsKey(AUTH_TIME)).isFalse();
-        assertThat(refreshClaims.containsKey(AMR)).isFalse();
-        assertThat(refreshClaims.containsKey(ACR)).isFalse();
+        assertThat(refreshClaims).doesNotContainKey(AUTH_TIME)
+                .doesNotContainKey(AMR)
+                .doesNotContainKey(ACR);
     }
 
     @Test

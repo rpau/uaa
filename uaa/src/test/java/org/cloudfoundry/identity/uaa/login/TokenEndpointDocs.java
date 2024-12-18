@@ -830,7 +830,6 @@ class TokenEndpointDocs extends AbstractTokenMockMvcTests {
         );
         UaaClientDetails client = createClient(adminToken, "openid", "client_credentials,password", "clients.read");
 
-
         String userInfoToken = getUserOAuthAccessToken(
                 mockMvc,
                 client.getClientId(),
@@ -851,7 +850,6 @@ class TokenEndpointDocs extends AbstractTokenMockMvcTests {
         );
         Snippet pathParameters = pathParameters(parameterWithName("userId").description("The id of the user"));
         MockHttpServletRequestBuilder get = RestDocumentationRequestBuilders.get("/oauth/token/revoke/user/{userId}", user.getId());
-
 
         mockMvc.perform(get
                 .header("Authorization", "Bearer " + adminToken))
@@ -876,7 +874,6 @@ class TokenEndpointDocs extends AbstractTokenMockMvcTests {
         );
         UaaClientDetails client = createClient(adminToken, "openid", "password", "");
         UaaClientDetails client2 = createClient(adminToken, "openid", "password", "");
-
 
         String userInfoTokenToRevoke = getUserOAuthAccessToken(
                 mockMvc,

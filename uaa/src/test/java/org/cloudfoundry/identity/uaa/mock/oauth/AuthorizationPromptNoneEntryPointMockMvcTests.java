@@ -228,7 +228,6 @@ class AuthorizationPromptNoneEntryPointMockMvcTests {
         assertThat(result.getResponse().getRedirectedUrl()).contains("session_state");
     }
 
-
     private void login(MockHttpSession session) throws Exception {
         mockMvc.perform(
                 post("/login.do")

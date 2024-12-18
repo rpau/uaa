@@ -159,6 +159,4 @@ class AutologinAuthenticationManagerTest {
 
         assertThatExceptionOfType(InvalidCodeException.class).isThrownBy(() -> manager.authenticate(authenticationToken));
     }
-
-
 }

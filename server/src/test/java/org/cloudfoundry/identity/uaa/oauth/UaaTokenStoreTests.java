@@ -65,7 +65,7 @@ class UaaTokenStoreTests {
     private OAuth2Authentication uaaAuthentication;
     private TimeService timeService;
 
-    private UaaPrincipal principal = new UaaPrincipal("userid", "username", "username@test.org", OriginKeys.UAA, null, IdentityZone.getUaaZoneId());
+    private final UaaPrincipal principal = new UaaPrincipal("userid", "username", "username@test.org", OriginKeys.UAA, null, IdentityZone.getUaaZoneId());
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -224,7 +224,6 @@ class UaaTokenStoreTests {
     @Test
     void cleanUpLegacyCodesCodesWithoutExpiresAtAfter3Days() {
         int count = 10;
-        long oneday = 1000 * 60 * 60 * 24;
         for (int i = 0; i < count; i++) {
             legacyCodeServices.createAuthorizationCode(clientAuthentication);
         }
@@ -292,6 +291,7 @@ class UaaTokenStoreTests {
             try {
                 store.consumeAuthorizationCode(lastCode);
             } catch (Exception ignore) {
+                // ignored
             }
             assertThat(template.queryForObject("SELECT count(*) FROM oauth_code", Integer.class)).isEqualTo(count - 1);
         } finally {
@@ -315,6 +315,7 @@ class UaaTokenStoreTests {
                 try {
                     store.consumeAuthorizationCode(code);
                 } catch (InvalidGrantException ignored) {
+                    // ignored
                 }
             }
         }
@@ -344,9 +345,9 @@ class UaaTokenStoreTests {
         }
         // Then
         Instant after = Instant.now();
-        assertThat(after.isAfter(before)).isTrue();
-        // Expect less than 5 minutes between the start and end of the tests
-        assertThat(after.compareTo(before) < Duration.ofMinutes(5).toNanos()).isTrue();
+        assertThat(after).isAfter(before)
+                // Expect less than 5 minutes between the start and end of the tests
+                .isBefore(before.plus(Duration.ofMinutes(5)));
         // Expect us to call the DB only once within 5 minutes. Check this when using the data source object
         verify(mockedDataSource, atMost(1)).getConnection();
         // When moving time to one hour later from now
@@ -467,17 +468,16 @@ class UaaTokenStoreTests {
             if (CLOSE_VAL.equals(method.getName())) {
                 // This breaks things
                 return null;
-            } else if (PREPARE_VAL.equals(method.getName())) {
-                if (args.length > 0) {
-                    String sql = (String) args[0];
-                    if (sql.startsWith("delete from oauth_code where expiresat ")) {
-                        PreparedStatement stmt = (PreparedStatement) method.invoke(con, args);
-                        return Proxy.newProxyInstance(getClass().getClassLoader(),
-                                new Class[]{PreparedStatement.class},
-                                new ExpirationLoserPreparedStatement(stmt));
-                    }
+            } else if (PREPARE_VAL.equals(method.getName()) && args.length > 0) {
+                String sql = (String) args[0];
+                if (sql.startsWith("delete from oauth_code where expiresat ")) {
+                    PreparedStatement stmt = (PreparedStatement) method.invoke(con, args);
+                    return Proxy.newProxyInstance(getClass().getClassLoader(),
+                            new Class[]{PreparedStatement.class},
+                            new ExpirationLoserPreparedStatement(stmt));
                 }
             }
+
             return method.invoke(con, args);
         }
     }

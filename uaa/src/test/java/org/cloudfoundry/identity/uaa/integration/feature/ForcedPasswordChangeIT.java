@@ -89,7 +89,7 @@ class ForcedPasswordChangeIT {
         ResponseEntity<Map> response = restTemplate.exchange(baseUrl + "/Users?filter=userName eq  \"{user-name}\"", HttpMethod.GET,
                 new HttpEntity<>(headers), Map.class, userEmail);
         Map results = response.getBody();
-        assertThat((Integer) results.get("totalResults") > 0).as("There should be more than zero users").isTrue();
+        assertThat((Integer) results.get("totalResults")).as("There should be more than zero users").isPositive();
         Map firstUser = (Map) ((List) results.get("resources")).get(0);
         userId = (String) firstUser.get("id");
     }

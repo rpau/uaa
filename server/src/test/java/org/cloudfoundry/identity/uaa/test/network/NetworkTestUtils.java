@@ -35,10 +35,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.cloudfoundry.identity.uaa.util.SocketUtils.getSelfCertificate;
 
-
 public class NetworkTestUtils {
-
-
     static final String commonName = "localhost";
     static final String organizationalUnit = "UAA";
     static final String organization = "Pivotal Software";
@@ -57,7 +54,6 @@ public class NetworkTestUtils {
         return getKeystore(directory, filename, issueDate, validityDays);
     }
 
-
     public static File getKeystore(File directory,
             String filename,
             Date issueDate,
@@ -72,7 +68,6 @@ public class NetworkTestUtils {
                 validityDays,
                 alias,
                 keyPass);
-
     }
 
     public static File getKeystore(File directory,
@@ -113,7 +108,6 @@ public class NetworkTestUtils {
         return httpServer;
     }
 
-
     public static HttpsServer startHttpsServer(File keystore, String keypass, HttpHandler handler) throws Exception {
         //some stack overflow goodness for testing only
         InetSocketAddress address = new InetSocketAddress(0);
@@ -152,18 +146,15 @@ public class NetworkTestUtils {
         httpsServer.setExecutor(new ThreadPoolExecutor(1, 1, 10, TimeUnit.SECONDS, new LinkedBlockingQueue<>()));
         httpsServer.start();
         return httpsServer;
-
     }
 
     public static class SimpleHttpResponseHandler implements HttpHandler {
 
-        private final int status;
         private final HttpHeaders headers;
         private final String responseBody;
         private volatile boolean wasInvoked;
 
-        public SimpleHttpResponseHandler(int status, HttpHeaders headers, String responseBody) {
-            this.status = status;
+        public SimpleHttpResponseHandler(HttpHeaders headers, String responseBody) {
             this.headers = headers;
             this.responseBody = responseBody;
         }
@@ -181,7 +172,6 @@ public class NetworkTestUtils {
                     exchange.getResponseHeaders().add(entry.getKey(), value);
                 }
             }
-
             exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
             exchange.sendResponseHeaders(200, responseBody.length());
             OutputStream os = exchange.getResponseBody();
@@ -191,6 +181,4 @@ public class NetworkTestUtils {
             httpExchange.close();
         }
     }
-
-
 }

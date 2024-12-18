@@ -26,7 +26,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringJUnitConfig(classes = DefaultIntegrationTestConfig.class)
 class UserTokenGrantIT {
-
     @Autowired
     @RegisterExtension
     private IntegrationTestExtension integrationTestExtension;
@@ -49,10 +48,10 @@ class UserTokenGrantIT {
     @Autowired
     TestAccounts testAccounts;
 
-    final String user_token_id = "oauth_showcase_user_token";
-    final String user_token_secret = "secret";
-    final String user_token_public_id = "oauth_showcase_user_token_public";
-    final String empty_string = "";
+    private static final String USER_TOKEN_ID = "oauth_showcase_user_token";
+    private static final String USER_TOKEN_SECRET = "secret";
+    private static final String USER_TOKEN_PUBLIC_ID = "oauth_showcase_user_token_public";
+    private static final String EMPTY_STRING = "";
 
     @AfterEach
     void logout_and_clear_cookies() {
@@ -69,7 +68,7 @@ class UserTokenGrantIT {
     @Test
     void exchangeFromConfidentialClientWithCfClientWithEmptySecret() {
         // Given Create password token from confidential client
-        String token = getPasswordGrantToken(user_token_id, user_token_secret);
+        String token = getPasswordGrantToken(USER_TOKEN_ID, USER_TOKEN_SECRET);
 
         // When do user_token grant flow using public cf client (public, because of empty secret)
         String newToken = doUserTokenGrant("cf", token, HttpStatus.OK);
@@ -82,10 +81,10 @@ class UserTokenGrantIT {
     @Test
     void exchangeFromConfidentialClientWithConfidentialClient() {
         // Given Create password token from confidential client
-        String token = getPasswordGrantToken(user_token_id, user_token_secret);
+        String token = getPasswordGrantToken(USER_TOKEN_ID, USER_TOKEN_SECRET);
 
         // When do user_token grant flow using confidential oauth_showcase_user_token client
-        String newToken = doUserTokenGrant(user_token_id, token, HttpStatus.OK);
+        String newToken = doUserTokenGrant(USER_TOKEN_ID, token, HttpStatus.OK);
 
         // Then validation expected result
         checkRefreshToken(newToken);
@@ -94,10 +93,10 @@ class UserTokenGrantIT {
     @Test
     void exchangeFromPublicClientWithPublicClient() {
         // Given Create password token from public client
-        String token = getPasswordGrantToken(user_token_public_id, empty_string);
+        String token = getPasswordGrantToken(USER_TOKEN_PUBLIC_ID, EMPTY_STRING);
 
         // When do user_token grant flow using public client
-        String newToken = doUserTokenGrant(user_token_public_id, token, HttpStatus.OK);
+        String newToken = doUserTokenGrant(USER_TOKEN_PUBLIC_ID, token, HttpStatus.OK);
 
         // Then validation expected result
         checkRefreshToken(newToken);
@@ -106,10 +105,10 @@ class UserTokenGrantIT {
     @Test
     void exchangeFromPublicClientWithConfidentialClient() {
         // Given Create password token from public client
-        String token = getPasswordGrantToken(user_token_public_id, empty_string);
+        String token = getPasswordGrantToken(USER_TOKEN_PUBLIC_ID, EMPTY_STRING);
 
         // When do user_token grant flow using confidential oauth_showcase_user_token client
-        String newToken = doUserTokenGrant(user_token_id, token, HttpStatus.OK);
+        String newToken = doUserTokenGrant(USER_TOKEN_ID, token, HttpStatus.OK);
 
         // Then validation expected result
         checkRefreshToken(newToken);
@@ -118,7 +117,7 @@ class UserTokenGrantIT {
     @Test
     void exchangeFromConfidentialClientWithAdminClientExpectUnauthorized() {
         // Given Create password token from public client
-        String token = getPasswordGrantToken(user_token_id, user_token_secret);
+        String token = getPasswordGrantToken(USER_TOKEN_ID, USER_TOKEN_SECRET);
 
         // When do user_token grant flow using admin client
         doUserTokenGrant("admin", token, HttpStatus.UNAUTHORIZED);
@@ -172,8 +171,8 @@ class UserTokenGrantIT {
     }
 
     private void checkRefreshToken(String token) {
-        assertThat(token).isNotNull();
-        assertThat(token.length()).isEqualTo(34);
-        assertThat(token.endsWith("-r")).isTrue();
+        assertThat(token).isNotNull()
+                .hasSize(34)
+                .endsWith("-r");
     }
 }

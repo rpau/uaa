@@ -42,6 +42,4 @@ public class UaaBaseSuite {
     static void suiteIsNotActive() {
         suiteActive = false;
     }
-
-
 }

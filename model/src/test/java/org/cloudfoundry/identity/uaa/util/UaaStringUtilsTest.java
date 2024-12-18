@@ -265,7 +265,6 @@ class UaaStringUtilsTest {
                 Collections.singletonList("saml.group.1")
         )).contains("saml.group.1");
 
-
         assertThat(UaaStringUtils.retainAllMatches(
                 Arrays.asList("saml.group.1",
                         "saml.group.2",
@@ -280,7 +279,6 @@ class UaaStringUtilsTest {
                         "saml.group1.3.1"),
                 Collections.singletonList("saml.group*.*")
         )).contains("saml.group.1", "saml.group.2", "saml.group1.3", "saml.group1.3.1");
-
 
         assertThat(UaaStringUtils.retainAllMatches(
                 Arrays.asList("saml-group-1",

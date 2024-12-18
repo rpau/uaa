@@ -44,8 +44,10 @@ class V2_7_3__StoreSubDomainAsLowerCase_Tests {
         try {
             connection.close();
         } catch (Exception ignore) {
+            // ignore
         }
     }
+
     @BeforeEach
     void setUpDuplicateZones() throws SQLException {
         provisioning = new JdbcIdentityZoneProvisioning(jdbcTemplate);
@@ -122,7 +124,6 @@ class V2_7_3__StoreSubDomainAsLowerCase_Tests {
             assertThat(zone.getSubdomain()).isEqualTo(zone.getSubdomain().toLowerCase());
         }
     }
-
 
     public void checkDbIsCaseSensitive() {
         String usubdomain = "TEST_UPPER_" + generator.generate();

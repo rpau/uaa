@@ -47,7 +47,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Dave Syer
  */
-public class PasswordChangeEndpointIntegrationTests {
+class PasswordChangeEndpointIntegrationTests {
 
     private final String JOE = "joe_" + new RandomValueStringGenerator().generate().toLowerCase();
 
@@ -59,10 +59,10 @@ public class PasswordChangeEndpointIntegrationTests {
     private static final UaaTestAccounts testAccounts = UaaTestAccounts.standard(serverRunning);
 
     @RegisterExtension
-    private static final TestAccountExtension testAccountSetup = TestAccountExtension.standard(serverRunning, testAccounts);
+    private static final TestAccountExtension testAccountExtension = TestAccountExtension.standard(serverRunning, testAccounts);
 
     @RegisterExtension
-    private static final OAuth2ContextExtension context = OAuth2ContextExtension.withTestAccounts(serverRunning, testAccountSetup);
+    private static final OAuth2ContextExtension context = OAuth2ContextExtension.withTestAccounts(serverRunning, testAccountExtension);
 
     private RestOperations client;
 
@@ -90,6 +90,7 @@ public class PasswordChangeEndpointIntegrationTests {
 
             @Override
             public void handleError(ClientHttpResponse response) {
+                // pass through
             }
         });
     }

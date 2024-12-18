@@ -5,7 +5,6 @@ import org.cloudfoundry.identity.uaa.oauth.jwk.JsonWebKeySet;
 import org.cloudfoundry.identity.uaa.util.JsonUtils;
 import org.junit.jupiter.api.Test;
 
-import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -56,8 +55,8 @@ class ClientJwtConfigurationTest {
     }
 
     @Test
-    void jwkSetInvalidSize() throws ParseException {
-        assertThatExceptionOfType(InvalidClientDetailsException.class).isThrownBy(() -> new ClientJwtConfiguration(null, new JsonWebKeySet(Collections.emptyList())));
+    void jwkSetInvalidSize() {
+        assertThatExceptionOfType(InvalidClientDetailsException.class).isThrownBy(() -> new ClientJwtConfiguration(null, new JsonWebKeySet<>(Collections.emptyList())));
     }
 
     @Test

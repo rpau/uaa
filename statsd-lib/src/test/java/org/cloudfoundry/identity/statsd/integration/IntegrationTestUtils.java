@@ -1,5 +1,8 @@
 package org.cloudfoundry.identity.statsd.integration;
 
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -10,6 +13,14 @@ public class IntegrationTestUtils {
     static final String UAA_BASE_URL = "http://localhost:8080/uaa";
     static final String TEST_USERNAME = "marissa";
     static final String TEST_PASSWORD = "koala";
+
+    static void copyCookies(ResponseEntity<?> response, HttpHeaders headers) {
+        if (response.getHeaders().containsKey("Set-Cookie")) {
+            for (String cookie : response.getHeaders().get("Set-Cookie")) {
+                headers.add("Cookie", cookie);
+            }
+        }
+    }
 
     static String extractCookieCsrf(String body) {
         String pattern = "\\<input type=\\\"hidden\\\" name=\\\"X-Uaa-Csrf\\\" value=\\\"(.*?)\\\"";
@@ -30,5 +41,4 @@ public class IntegrationTestUtils {
 
         return Long.valueOf(parts[1]);
     }
-
 }

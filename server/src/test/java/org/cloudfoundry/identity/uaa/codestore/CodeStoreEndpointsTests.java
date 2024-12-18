@@ -29,6 +29,8 @@ import static org.mockito.Mockito.when;
 
 @WithDatabaseContext
 class CodeStoreEndpointsTests {
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     private CodeStoreEndpoints codeStoreEndpoints;
     private ExpiringCodeStore spiedExpiringCodeStore;
@@ -37,7 +39,7 @@ class CodeStoreEndpointsTests {
     private String currentIdentityZoneId;
 
     @BeforeEach
-    void setUp(@Autowired JdbcTemplate jdbcTemplate) {
+    void setUp() {
         currentTime = new AtomicLong(System.currentTimeMillis());
 
         spiedExpiringCodeStore = spy(new JdbcExpiringCodeStore(jdbcTemplate.getDataSource(), new TimeService() {
@@ -150,18 +152,19 @@ class CodeStoreEndpointsTests {
         ExpiringCode expiringCode = new ExpiringCode(null, expiresAt, EMPTY_JSON, null);
         ExpiringCode generatedCode = codeStoreEndpoints.generateCode(expiringCode);
 
-        ExpiringCode retrievedCode = codeStoreEndpoints.retrieveCode(generatedCode.getCode());
+        String code = generatedCode.getCode();
+        ExpiringCode retrievedCode = codeStoreEndpoints.retrieveCode(code);
 
         assertThat(retrievedCode).isEqualTo(generatedCode);
-        assertThatThrownBy(() -> codeStoreEndpoints.retrieveCode(generatedCode.getCode()))
+        assertThatThrownBy(() -> codeStoreEndpoints.retrieveCode(code))
                 .isInstanceOf(CodeStoreException.class)
-                .hasMessage("Code not found: " + generatedCode.getCode())
+                .hasMessage("Code not found: " + code)
                 .extracting("status")
                 .isEqualTo(HttpStatus.NOT_FOUND);
 
         InOrder inOrder = inOrder(spiedExpiringCodeStore);
         inOrder.verify(spiedExpiringCodeStore).generateCode(EMPTY_JSON, expiresAt, null, currentIdentityZoneId);
-        inOrder.verify(spiedExpiringCodeStore).retrieveCode(generatedCode.getCode(), currentIdentityZoneId);
+        inOrder.verify(spiedExpiringCodeStore).retrieveCode(code, currentIdentityZoneId);
     }
 
     @Test
@@ -212,11 +215,12 @@ class CodeStoreEndpointsTests {
         ExpiringCode generatedCode = codeStoreEndpoints.generateCode(expiringCode);
         currentTime.addAndGet(expiresIn + 1);
 
-        assertThatThrownBy(() -> codeStoreEndpoints.retrieveCode(generatedCode.getCode()))
+        String code = generatedCode.getCode();
+        assertThatThrownBy(() -> codeStoreEndpoints.retrieveCode(code))
                 .isInstanceOf(CodeStoreException.class)
-                .hasMessage("Code not found: " + generatedCode.getCode())
+                .hasMessage("Code not found: " + code)
                 .extracting("status")
                 .isEqualTo(HttpStatus.NOT_FOUND);
-        verify(spiedExpiringCodeStore).retrieveCode(generatedCode.getCode(), currentIdentityZoneId);
+        verify(spiedExpiringCodeStore).retrieveCode(code, currentIdentityZoneId);
     }
 }

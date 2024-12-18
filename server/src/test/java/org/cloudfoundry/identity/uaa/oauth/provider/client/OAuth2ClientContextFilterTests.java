@@ -25,7 +25,7 @@ import static org.mockito.Mockito.mock;
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-public class OAuth2ClientContextFilterTests {
+class OAuth2ClientContextFilterTests {
 
     @Test
     void testdoFilter() throws Exception {
@@ -211,7 +211,7 @@ public class OAuth2ClientContextFilterTests {
             // OAuth2ClientContextFilter.calculateCurrentUri() internally uses
             // ServletUriComponentsBuilder.fromRequest(), which behaves differently in Spring Framework 5
             // and throws an IllegalStateException for a malformed URI.
-            // Previous to Spring Framework 5, 'null' would be returned by OAuth2ClientContextFilter.calculateCurrentUri()
+            // Previously to Spring Framework 5, 'null' would be returned by OAuth2ClientContextFilter.calculateCurrentUri()
             // instead of the thrown IllegalStateException.
         }
     }

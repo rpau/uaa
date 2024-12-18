@@ -37,7 +37,7 @@ class HeaderFilterTest {
         filter.doFilter(request, response, mockChain);
         ArgumentCaptor<HttpHeadersFilterRequestWrapper> args = ArgumentCaptor.forClass(HttpHeadersFilterRequestWrapper.class);
         Mockito.verify(mockChain, Mockito.times(1)).doFilter(args.capture(), any());
-        assertThat(args.getValue() instanceof HttpHeadersFilterRequestWrapper).isTrue();
+        assertThat(args.getValue()).isInstanceOf(HttpHeadersFilterRequestWrapper.class);
     }
 
     @Test

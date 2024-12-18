@@ -34,7 +34,6 @@ class TokenValidityResolverTest {
         assertThat(validity.getTime()).isEqualTo(101_000l);
     }
 
-
     @Test
     void whenClientValidityNotConfigured_fallsBackToZoneConfiguration() {
         when(clientTokenValidity.getZoneValiditySeconds()).thenReturn(50);

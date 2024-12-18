@@ -191,8 +191,8 @@ class JdbcIdentityProviderProvisioningTests {
         assertThat(createdIdp.getOriginKey()).isEqualTo(rawCreatedIdp.get("origin_key"));
         assertThat(createdIdp.getType()).isEqualTo(UAA); //we don't allow other types anymore
         assertThat(createdIdp.getConfig()).isEqualTo(idp.getConfig());
-        assertThat(Math.abs(idp.getLastModified().getTime() - createdIdp.getLastModified().getTime()) < 1001).isTrue();
-        assertThat(createdIdp.getVersion()).isEqualTo(Integer.valueOf(rawCreatedIdp.get("version").toString()) + 1);
+        assertThat(Math.abs(idp.getLastModified().getTime() - createdIdp.getLastModified().getTime())).isLessThan(1001);
+        assertThat(createdIdp.getVersion()).isEqualTo(Integer.parseInt(rawCreatedIdp.get("version").toString()) + 1);
         assertThat(createdIdp.getIdentityZoneId()).isEqualTo(uaaZoneId);
     }
 

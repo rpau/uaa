@@ -46,11 +46,11 @@ class ScimUserUpdateDiffTest {
     }
 
     private void assertUpdateIsNotAllowed() {
-        assertThat(scimUserUpdateDiff.isAnythingOtherThanNameDifferent(scimUserID, scimUserFromRequest)).isEqualTo(false);
+        assertThat(scimUserUpdateDiff.isAnythingOtherThanNameDifferent(scimUserID, scimUserFromRequest)).isFalse();
     }
 
     private void assertUpdateIsAllowed() {
-        assertThat(scimUserUpdateDiff.isAnythingOtherThanNameDifferent(scimUserID, scimUserFromRequest)).isEqualTo(true);
+        assertThat(scimUserUpdateDiff.isAnythingOtherThanNameDifferent(scimUserID, scimUserFromRequest)).isTrue();
     }
 
     private void setRequestContent() {

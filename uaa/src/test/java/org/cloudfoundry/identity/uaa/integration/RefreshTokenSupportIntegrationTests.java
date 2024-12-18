@@ -14,7 +14,6 @@
 package org.cloudfoundry.identity.uaa.integration;
 
 import org.apache.http.impl.client.BasicCookieStore;
-import org.apache.http.impl.cookie.BasicClientCookie;
 import org.cloudfoundry.identity.uaa.ServerRunningExtension;
 import org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils;
 import org.cloudfoundry.identity.uaa.oauth.client.resource.AuthorizationCodeResourceDetails;
@@ -23,7 +22,6 @@ import org.cloudfoundry.identity.uaa.oauth.common.OAuth2AccessToken;
 import org.cloudfoundry.identity.uaa.oauth.jwt.JwtHelper;
 import org.cloudfoundry.identity.uaa.test.TestAccountExtension;
 import org.cloudfoundry.identity.uaa.test.UaaTestAccounts;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.http.HttpEntity;
@@ -39,6 +37,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils.getHeaders;
 import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.USER_OAUTH_APPROVAL;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_AUTHORIZATION_CODE;
@@ -56,7 +55,7 @@ class RefreshTokenSupportIntegrationTests {
     private static final UaaTestAccounts testAccounts = UaaTestAccounts.standard(serverRunning);
 
     @RegisterExtension
-    private static final TestAccountExtension testAccountSetup = TestAccountExtension.standard(serverRunning, testAccounts);
+    private static final TestAccountExtension testAccountExtension = TestAccountExtension.standard(serverRunning, testAccounts);
 
     @Test
     void tokenRefreshedCorrectFlow() {
@@ -70,21 +69,12 @@ class RefreshTokenSupportIntegrationTests {
         ResponseEntity<Void> result = serverRunning.getForResponse(uri.toString(), getHeaders(cookies));
         assertThat(result.getStatusCode()).isEqualTo(HttpStatus.FOUND);
         String location = result.getHeaders().getLocation().toString();
+        IntegrationTestUtils.extractCookies(result, cookies);
 
-        if (result.getHeaders().containsKey("Set-Cookie")) {
-            for (String cookie : result.getHeaders().get("Set-Cookie")) {
-                int nameLength = cookie.indexOf('=');
-                cookies.addCookie(new BasicClientCookie(cookie.substring(0, nameLength), cookie.substring(nameLength + 1)));
-            }
-        }
 
         ResponseEntity<String> response = serverRunning.getForString(location, getHeaders(cookies));
-        if (response.getHeaders().containsKey("Set-Cookie")) {
-            for (String cookie : response.getHeaders().get("Set-Cookie")) {
-                int nameLength = cookie.indexOf('=');
-                cookies.addCookie(new BasicClientCookie(cookie.substring(0, nameLength), cookie.substring(nameLength + 1)));
-            }
-        }
+        IntegrationTestUtils.extractCookies(response, cookies);
+
         // should be directed to the login screen...
         assertThat(response.getBody()).contains("/login.do")
                 .contains("username")
@@ -98,22 +88,12 @@ class RefreshTokenSupportIntegrationTests {
         // Should be redirected to the original URL, but now authenticated
         result = serverRunning.postForResponse("/login.do", getHeaders(cookies), formData);
         cookies.clear();
-        if (result.getHeaders().containsKey("Set-Cookie")) {
-            for (String cookie : result.getHeaders().get("Set-Cookie")) {
-                int nameLength = cookie.indexOf('=');
-                cookies.addCookie(new BasicClientCookie(cookie.substring(0, nameLength), cookie.substring(nameLength + 1)));
-            }
-        }
+        IntegrationTestUtils.extractCookies(result, cookies);
         assertThat(result.getStatusCode()).isEqualTo(HttpStatus.FOUND);
 
-
         response = serverRunning.getForString(result.getHeaders().getLocation().toString(), getHeaders(cookies));
-        if (response.getHeaders().containsKey("Set-Cookie")) {
-            for (String cookie : response.getHeaders().get("Set-Cookie")) {
-                int nameLength = cookie.indexOf('=');
-                cookies.addCookie(new BasicClientCookie(cookie.substring(0, nameLength), cookie.substring(nameLength + 1)));
-            }
-        }
+        IntegrationTestUtils.extractCookies(response, cookies);
+
         if (response.getStatusCode() == HttpStatus.OK) {
             // The grant access page should be returned
             assertThat(response.getBody()).contains("<h1>Application Authorization</h1>");
@@ -129,7 +109,7 @@ class RefreshTokenSupportIntegrationTests {
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FOUND);
             location = response.getHeaders().getLocation().toString();
         }
-        assertThat(location.matches(resource.getPreEstablishedRedirectUri() + ".*code=.+")).as("Wrong location: " + location).isTrue();
+        assertThat(location).as("Wrong location: " + location).matches(resource.getPreEstablishedRedirectUri() + ".*code=.+");
 
         formData.clear();
         formData.add("client_id", resource.getClientId());
@@ -156,11 +136,9 @@ class RefreshTokenSupportIntegrationTests {
         assertThat(tokenResponse.getHeaders().getFirst("Cache-Control")).isEqualTo("no-store");
         @SuppressWarnings("unchecked")
         OAuth2AccessToken newAccessToken = DefaultOAuth2AccessToken.valueOf(tokenResponse.getBody());
-        Assertions.assertDoesNotThrow(() -> {
-            JwtHelper.decode(newAccessToken.getValue());
-        }, "Refreshed token was not a JWT");
+        assertThatNoException().as("Refreshed token was not a JWT")
+                .isThrownBy(() -> JwtHelper.decode(newAccessToken.getValue()));
         assertThat(accessToken.getValue()).as("New access token should be different to the old one.").isNotEqualTo(newAccessToken.getValue());
-
     }
 
     @Test

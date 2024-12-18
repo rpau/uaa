@@ -19,12 +19,11 @@ class SpringSessionAttributesTableTest {
     @Autowired
     private JdbcTemplate jdbcTemplate;
     private String primaryId;
-    private String sessionId;
 
     @BeforeEach
     void setUp() {
         primaryId = UUID.randomUUID().toString();
-        sessionId = UUID.randomUUID().toString();
+        String sessionId = UUID.randomUUID().toString();
         jdbcTemplate.update(
                 "insert into SPRING_SESSION (PRIMARY_ID, SESSION_ID, CREATION_TIME, LAST_ACCESS_TIME, MAX_INACTIVE_INTERVAL, EXPIRY_TIME) values (?, ?, ?, ?, ?, ?)",
                 primaryId, sessionId, 0, 0, 2000, 6000);
@@ -41,7 +40,7 @@ class SpringSessionAttributesTableTest {
         jdbcTemplate.query(
                 "select ATTRIBUTE_BYTES from SPRING_SESSION_ATTRIBUTES where SESSION_PRIMARY_ID = ?",
                 rs -> {
-                    assertThat(rs.getBytes(1).length).isEqualTo(valueSize);
+                    assertThat(rs.getBytes(1)).hasSize(valueSize);
                 },
                 primaryId);
     }

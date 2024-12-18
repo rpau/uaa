@@ -20,7 +20,6 @@ import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.mock.env.MockEnvironment;
-import org.springframework.mock.web.MockServletContext;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
 import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
@@ -41,7 +40,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.impl.config.YamlServletProfileInitializer.YML_ENV_VAR_NAME;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.contains;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.description;
 import static org.mockito.Mockito.mock;
@@ -58,7 +56,7 @@ class YamlServletProfileInitializerTest {
     private StandardServletEnvironment environment;
     private ServletContext servletContext;
 
-    private static final String NEW_LINE = System.getProperty("line.separator");
+    private static final String NEW_LINE = System.lineSeparator();
     private Path tempDirectory;
     private AlphanumericRandomValueStringGenerator randomValueStringGenerator;
 
@@ -145,7 +143,7 @@ class YamlServletProfileInitializerTest {
     @Test
     void loadServletConfiguredFilename() {
         System.setProperty("CLOUDFOUNDRY_CONFIG_PATH", "/config/path");
-        when(context.getResource(eq("file:/config/path/uaa.yml"))).thenReturn(
+        when(context.getResource("file:/config/path/uaa.yml")).thenReturn(
                 new ByteArrayResource("foo: bar\nspam:\n  foo: baz".getBytes()));
 
         initializer.initialize(context);
@@ -157,7 +155,7 @@ class YamlServletProfileInitializerTest {
     @Test
     void loadServletConfiguredResource() {
         System.setProperty("CLOUDFOUNDRY_CONFIG_PATH", "anywhere");
-        when(context.getResource(eq("file:anywhere/uaa.yml"))).thenReturn(
+        when(context.getResource("file:anywhere/uaa.yml")).thenReturn(
                 new ByteArrayResource("foo: bar\nspam:\n  foo: baz-from-config".getBytes()));
 
         initializer.initialize(context);
@@ -169,7 +167,7 @@ class YamlServletProfileInitializerTest {
     @Test
     void loadContextConfiguredResource() {
         System.setProperty("CLOUDFOUNDRY_CONFIG_PATH", "foo/bar");
-        when(context.getResource(eq("file:foo/bar/uaa.yml"))).thenReturn(
+        when(context.getResource("file:foo/bar/uaa.yml")).thenReturn(
                 new ByteArrayResource("foo: bar\nspam:\n  foo: baz-from-context".getBytes()));
 
         initializer.initialize(context);
@@ -182,7 +180,7 @@ class YamlServletProfileInitializerTest {
     void loadReplacedResource() {
         System.setProperty("CLOUDFOUNDRY_CONFIG_PATH", "foo");
 
-        when(context.getResource(eq("file:foo/uaa.yml"))).thenReturn(
+        when(context.getResource("file:foo/uaa.yml")).thenReturn(
                 new ByteArrayResource("foo: bar\nspam:\n  foo: baz".getBytes()));
 
         initializer.initialize(context);
@@ -195,7 +193,7 @@ class YamlServletProfileInitializerTest {
     void loadReplacedResourceFromFileLocation() {
         System.setProperty("CLOUDFOUNDRY_CONFIG_PATH", "bar");
 
-        when(context.getResource(eq("file:bar/uaa.yml"))).thenReturn(
+        when(context.getResource("file:bar/uaa.yml")).thenReturn(
                 new ByteArrayResource("foo: bar\nspam:\n  foo: baz".getBytes()));
 
         initializer.initialize(context);
@@ -207,7 +205,7 @@ class YamlServletProfileInitializerTest {
     @Test
     void loggingConfigVariableWorks() {
         System.setProperty("CLOUDFOUNDRY_CONFIG_PATH", "somewhere");
-        when(context.getResource(eq("file:somewhere/uaa.yml"))).thenReturn(
+        when(context.getResource("file:somewhere/uaa.yml")).thenReturn(
                 new ByteArrayResource("logging:\n  config: /some/path".getBytes()));
         initializer.initialize(context);
         assertThat(environment.getProperty("logging.config")).isEqualTo("/some/path");
@@ -218,7 +216,7 @@ class YamlServletProfileInitializerTest {
     @Test
     void loadsPropertiesFrom_CLOUDFOUNDRY_CONFIG_PATH() {
         System.setProperty("CLOUDFOUNDRY_CONFIG_PATH", "somewhere");
-        when(context.getResource(eq("file:somewhere/uaa.yml"))).thenReturn(
+        when(context.getResource("file:somewhere/uaa.yml")).thenReturn(
                 new ByteArrayResource("smtp:\n  user: marissa\n  password: koala".getBytes()));
         initializer.initialize(context);
         assertThat(environment.getProperty("smtp.user")).isEqualTo("marissa");
@@ -228,11 +226,11 @@ class YamlServletProfileInitializerTest {
     @Test
     void filesListedLaterOverrideDuplicatedConfiguration() {
         System.setProperty("UAA_CONFIG_PATH", "somewhere");
-        when(context.getResource(eq("file:somewhere/uaa.yml"))).thenReturn(
+        when(context.getResource("file:somewhere/uaa.yml")).thenReturn(
                 new ByteArrayResource("smtp:\n  user: marissa\n  password: koala".getBytes()));
 
         System.setProperty("CLOUDFOUNDRY_CONFIG_PATH", "elsewhere");
-        when(context.getResource(eq("file:elsewhere/uaa.yml"))).thenReturn(
+        when(context.getResource("file:elsewhere/uaa.yml")).thenReturn(
                 new ByteArrayResource("smtp:\n  user: donkey\n  password: kong".getBytes()));
         initializer.initialize(context);
 
@@ -243,11 +241,11 @@ class YamlServletProfileInitializerTest {
     @Test
     void filesDeepMergeYmlProperties() {
         System.setProperty("UAA_CONFIG_PATH", "somewhere");
-        when(context.getResource(eq("file:somewhere/uaa.yml"))).thenReturn(
+        when(context.getResource("file:somewhere/uaa.yml")).thenReturn(
                 new ByteArrayResource("smtp:\n  user: marissa\n  password: koala\n  host:\n    foo: bar".getBytes()));
 
         System.setProperty("CLOUDFOUNDRY_CONFIG_PATH", "elsewhere");
-        when(context.getResource(eq("file:elsewhere/uaa.yml"))).thenReturn(
+        when(context.getResource("file:elsewhere/uaa.yml")).thenReturn(
                 new ByteArrayResource("smtp:\n  host:\n    baz: foobar".getBytes()));
         initializer.initialize(context);
 
@@ -303,7 +301,7 @@ class YamlServletProfileInitializerTest {
         void ignoreDashDTomcatLoggingConfigVariable() {
             final String tomcatLogConfig = "-Djava.util.logging.config=/some/path/logging.properties";
             System.setProperty("CLOUDFOUNDRY_CONFIG_PATH", "foo");
-            when(context.getResource(eq("file:foo/uaa.yml")))
+            when(context.getResource("file:foo/uaa.yml"))
                     .thenReturn(new ByteArrayResource(("logging:\n  config: " + tomcatLogConfig).getBytes()));
             environment.getPropertySources().addFirst(new PropertySource<Object>(StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME) {
                 @Override
@@ -351,25 +349,23 @@ class YamlServletProfileInitializerTest {
     class ApplySpringProfiles {
 
         private MockEnvironment environment;
-        private MockServletContext context;
 
         @BeforeEach
         void setup() {
             initializer = new YamlServletProfileInitializer();
             environment = new MockEnvironment();
-            context = new MockServletContext();
         }
 
         @Test
         void tokenizeToStringArray_RemovesSpaces() {
             String profileString = "    database    ,  ldap ";
             String[] profiles = StringUtils.tokenizeToStringArray(profileString, ",", true, true);
-            assertThat(profiles.length).isEqualTo(2);
+            assertThat(profiles).hasSize(2);
             assertThat(profiles[0]).isEqualTo("database");
             assertThat(profiles[1]).isEqualTo("ldap");
             // And show what's wrong with commaDelimitedListToStringArray
             profiles = StringUtils.commaDelimitedListToStringArray(profileString);
-            assertThat(profiles.length).isEqualTo(2);
+            assertThat(profiles).hasSize(2);
             assertThat(profiles[0]).isEqualTo("    database    ");
             assertThat(profiles[1]).isEqualTo("  ldap ");
         }
@@ -377,21 +373,21 @@ class YamlServletProfileInitializerTest {
         @Test
         void ifNoProfilesAreSetUseHsqldb() {
             System.clearProperty("spring.profiles.active");
-            initializer.applySpringProfiles(environment);
+            YamlServletProfileInitializer.applySpringProfiles(environment);
             assertActiveProfilesAre(environment, "hsqldb");
         }
 
         @Test
         void ifProfilesAreSetUseThem() {
             System.setProperty("spring.profiles.active", "hsqldb,default");
-            initializer.applySpringProfiles(environment);
+            YamlServletProfileInitializer.applySpringProfiles(environment);
             assertActiveProfilesAre(environment, "hsqldb", "default");
         }
 
         @Test
         void defaultProfileUnset() {
             System.setProperty("spring.profiles.active", "hsqldb");
-            initializer.applySpringProfiles(environment);
+            YamlServletProfileInitializer.applySpringProfiles(environment);
             assertActiveProfilesAre(environment, "hsqldb");
             assertThat(environment.getDefaultProfiles()).containsExactly(new String[0]);
         }
@@ -400,7 +396,7 @@ class YamlServletProfileInitializerTest {
         void yamlConfiguredProfilesAreUsed() {
             System.setProperty("spring.profiles.active", "hsqldb,default");
             environment.setProperty("spring_profiles", "mysql,default");
-            initializer.applySpringProfiles(environment);
+            YamlServletProfileInitializer.applySpringProfiles(environment);
             assertActiveProfilesAre(environment, "mysql", "default");
         }
     }

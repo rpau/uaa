@@ -11,7 +11,6 @@ class RateLimitStatusControllerTest {
     @Test
     void rateLimitStatus() {
         String responseEntity = rateLimitStatusController.rateLimitStatus();
-        assertThat(responseEntity).isNotNull();
         assertThat(responseEntity).contains("\"status\" : \"DISABLED\"");
     }
 }

@@ -13,14 +13,16 @@ import java.util.Arrays;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @WithDatabaseContext
-class ClientDetailsSupportsExtendedAuthoritesAndScopes {
+class ClientDetailsSupportsExtendedAuthoritesAndScopesTest {
+    @Autowired
+    private DataSource dataSource;
 
     private String tableName = "oauth_client_details";
     private String scopeColumnName = "scope";
     private String authoritiesColumnName = "authorities";
 
     @Test
-    void authoritiesAndScopesAreExtended(@Autowired DataSource dataSource) throws Exception {
+    void authoritiesAndScopesAreExtended() throws Exception {
         try (Connection connection = dataSource.getConnection()) {
             DatabaseMetaData meta = connection.getMetaData();
             boolean foundTable = false;
@@ -33,7 +35,7 @@ class ClientDetailsSupportsExtendedAuthoritesAndScopes {
                 int columnSize = rs.getInt("COLUMN_SIZE");
                 if (tableName.equalsIgnoreCase(rstableName) && (scopeColumnName.equalsIgnoreCase(rscolumnName)
                         || authoritiesColumnName.equalsIgnoreCase(rscolumnName))) {
-                    assertThat(columnSize > 4000).as("Table: %s Column: %s should be over 4000 chars".formatted(rstableName, rscolumnName)).isTrue();
+                    assertThat(columnSize).as("Table: %s Column: %s should be over 4000 chars".formatted(rstableName, rscolumnName)).isGreaterThan(4000);
                     foundTable = true;
                     if (scopeColumnName.equalsIgnoreCase(rscolumnName)) {
                         foundColumnScope = true;

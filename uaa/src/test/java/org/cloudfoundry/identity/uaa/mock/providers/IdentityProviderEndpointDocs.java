@@ -279,7 +279,6 @@ class IdentityProviderEndpointDocs extends EndpointDocs {
     private final FieldDescriptor ldapAttributeMappingPhone = fieldWithPath("config.attributeMappings.phone_number").optional("telephonenumber").type(STRING).description(PHONE_NUMBER_DESC);
     private final FieldDescriptor ldapAttributeMappingUserName = fieldWithPath("config.attributeMappings.user_name").optional("user_name").type(STRING).description("Map `user_name` to the attribute for user name in the provider assertion or token. The default for LDAP is the User Name filter");
 
-
     private static final HeaderDescriptor IDENTITY_ZONE_ID_HEADER = headerWithName(IdentityZoneSwitchingFilter.HEADER).description("May include this header to administer another zone if using `zones.<zoneId>.admin` or `uaa.admin` scope against the default UAA zone.").optional();
     private static final HeaderDescriptor IDENTITY_ZONE_SUBDOMAIN_HEADER = headerWithName(IdentityZoneSwitchingFilter.SUBDOMAIN_HEADER).optional().description("If using a `zones.<zoneId>.admin` scope/token, indicates what Identity Zone this request goes to by supplying a subdomain.");
     private final FieldDescriptor[] ldapAllFields = ArrayUtils.addAll(commonProviderFields,
@@ -317,7 +316,6 @@ class IdentityProviderEndpointDocs extends EndpointDocs {
             ldapAttributeMappingPhone,
             ATTRIBUTE_MAPPING_EMAIL_VERIFIED_FIELD,
             EXTERNAL_GROUPS_WHITELIST);
-
 
     private final FieldDescriptor[] ldapSearchAndCompareGroupsAsScopes = ArrayUtils.addAll(
             commonProviderFields,
@@ -403,7 +401,6 @@ class IdentityProviderEndpointDocs extends EndpointDocs {
                     ALIAS_FIELDS_LDAP_CREATE
             )
     );
-
 
     private final FieldDescriptor[] ldapSearchAndBindGroupsToScopes = ArrayUtils.addAll(
             commonProviderFields,
@@ -786,7 +783,6 @@ class IdentityProviderEndpointDocs extends EndpointDocs {
         IdentityProvider identityProvider = MultitenancyFixture.identityProvider(OriginKeys.LDAP, "");
         identityProvider.setType(LDAP);
 
-
         LdapIdentityProviderDefinition providerDefinition = new LdapIdentityProviderDefinition();
         providerDefinition.setLdapProfileFile("ldap/ldap-simple-bind.xml");
         providerDefinition.setLdapGroupFile("ldap/ldap-groups-null.xml");
@@ -885,9 +881,7 @@ class IdentityProviderEndpointDocs extends EndpointDocs {
                         webApplicationContext,
                         admin, identityZoneManager.getCurrentIdentityZoneId());
 
-
         Snippet requestFields = requestFields(fields);
-
         Snippet responseFields = responseFields(ArrayUtils.addAll(
                 ldapAllFields,
                 ArrayUtils.addAll(
@@ -933,9 +927,7 @@ class IdentityProviderEndpointDocs extends EndpointDocs {
         )
         .andExpect(status().isFound())
                 .andExpect(redirectedUrl("/"));
-
     }
-
 
     @Test
     void getAllIdentityProviders() throws Exception {
@@ -1141,8 +1133,6 @@ class IdentityProviderEndpointDocs extends EndpointDocs {
                         ),
                         requestFields,
                         responseFields));
-
-
     }
 
     @Test
@@ -1198,7 +1188,6 @@ class IdentityProviderEndpointDocs extends EndpointDocs {
                 )
         );
     }
-
 
     private IdentityProvider getSamlProvider(String originKey) {
         IdentityProvider<SamlIdentityProviderDefinition> identityProvider = MultitenancyFixture.identityProvider(originKey, IdentityZone.getUaaZoneId());

@@ -15,7 +15,6 @@ package org.cloudfoundry.identity.uaa.integration.feature;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.impl.client.BasicCookieStore;
-import org.apache.http.impl.cookie.BasicClientCookie;
 import org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils;
 import org.cloudfoundry.identity.uaa.oauth.client.resource.ClientCredentialsResourceDetails;
 import org.cloudfoundry.identity.uaa.oauth.client.test.OAuth2ContextConfiguration;
@@ -25,7 +24,6 @@ import org.cloudfoundry.identity.uaa.oauth.jwt.Jwt;
 import org.cloudfoundry.identity.uaa.oauth.jwt.JwtHelper;
 import org.cloudfoundry.identity.uaa.oauth.token.ClaimConstants;
 import org.cloudfoundry.identity.uaa.scim.ScimUser;
-import org.cloudfoundry.identity.uaa.security.web.CookieBasedCsrfTokenRepository;
 import org.cloudfoundry.identity.uaa.util.UaaTokenUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -66,7 +64,6 @@ import static org.cloudfoundry.identity.uaa.security.web.CookieBasedCsrfTokenRep
 @SpringJUnitConfig(classes = DefaultIntegrationTestConfig.class)
 @OAuth2ContextConfiguration(OAuth2ContextConfiguration.ClientCredentials.class)
 class OpenIdTokenGrantsIT {
-
 
     @Autowired
     TestAccounts testAccounts;
@@ -172,10 +169,10 @@ class OpenIdTokenGrantsIT {
     private void validateToken(String paramName, Map params, String[] scopes, String[] aud) {
         Map<String, Object> claims = UaaTokenUtils.getClaims((String) params.get(paramName), Map.class);
 
-        assertThat(claims.get("jti")).isEqualTo(params.get("jti"));
-        assertThat(claims.get("client_id")).isEqualTo("cf");
-        assertThat(claims.get("cid")).isEqualTo("cf");
-        assertThat(claims.get("user_name")).isEqualTo(user.getUserName());
+        assertThat(claims).containsEntry("jti", params.get("jti"))
+                .containsEntry("client_id", "cf")
+                .containsEntry("cid", "cf")
+                .containsEntry("user_name", user.getUserName());
         assertThat(((List<String>) claims.get(ClaimConstants.SCOPE))).containsExactlyInAnyOrder(scopes);
         assertThat(((List<String>) claims.get(ClaimConstants.AUD))).containsExactlyInAnyOrder(aud);
     }
@@ -206,8 +203,8 @@ class OpenIdTokenGrantsIT {
 
         Map<String, Object> params = responseEntity.getBody();
 
-        assertThat(params.get("jti")).isNotNull();
-        assertThat(params.get("token_type")).isEqualTo("bearer");
+        assertThat(params).containsKey("jti")
+                .containsEntry("token_type", "bearer");
         assertThat((Integer) params.get("expires_in")).isGreaterThan(40000);
 
         String[] scopes = UriUtils.decode((String) params.get("scope"), "UTF-8").split(" ");
@@ -268,13 +265,7 @@ class OpenIdTokenGrantsIT {
         );
         assertThat(result.getStatusCode()).isEqualTo(HttpStatus.FOUND);
         String location = UriUtils.decode(result.getHeaders().getLocation().toString(), "UTF-8");
-
-        if (result.getHeaders().containsKey("Set-Cookie")) {
-            for (String cookie : result.getHeaders().get("Set-Cookie")) {
-                int nameLength = cookie.indexOf('=');
-                cookies.addCookie(new BasicClientCookie(cookie.substring(0, nameLength), cookie.substring(nameLength + 1)));
-            }
-        }
+        IntegrationTestUtils.extractCookies(result, cookies);
 
         ResponseEntity<String> response = restOperations.exchange(
                 location,
@@ -282,35 +273,23 @@ class OpenIdTokenGrantsIT {
                 new HttpEntity<>(null, getHeaders(cookies)),
                 String.class);
         // should be directed to the login screen...
-        assertThat(response.getBody().contains("/login.do")).isTrue();
-        assertThat(response.getBody().contains("username")).isTrue();
-        assertThat(response.getBody().contains("password")).isTrue();
+        assertThat(response.getBody()).contains("/login.do")
+                .contains("username")
+                .contains("password");
         String csrf = IntegrationTestUtils.extractCookieCsrf(response.getBody());
-
-        if (response.getHeaders().containsKey("Set-Cookie")) {
-            for (String cookie : response.getHeaders().get("Set-Cookie")) {
-                int nameLength = cookie.indexOf('=');
-                cookies.addCookie(new BasicClientCookie(cookie.substring(0, nameLength), cookie.substring(nameLength + 1)));
-            }
-        }
+        IntegrationTestUtils.extractCookies(response, cookies);
 
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("username", user.getUserName());
         formData.add("password", secret);
-        formData.add(CookieBasedCsrfTokenRepository.DEFAULT_CSRF_COOKIE_NAME, csrf);
+        formData.add(DEFAULT_CSRF_COOKIE_NAME, csrf);
 
         // Should be redirected to the original URL, but now authenticated
         result = restOperations.exchange(baseUrl + "/login.do", HttpMethod.POST, new HttpEntity<>(formData, getHeaders(cookies)), Void.class);
         assertThat(result.getStatusCode()).isEqualTo(HttpStatus.FOUND);
 
         cookies.clear();
-        if (result.getHeaders().containsKey("Set-Cookie")) {
-            for (String cookie : result.getHeaders().get("Set-Cookie")) {
-                int nameLength = cookie.indexOf('=');
-                cookies.addCookie(new BasicClientCookie(cookie.substring(0, nameLength), cookie.substring(nameLength + 1)));
-            }
-        }
-
+        IntegrationTestUtils.extractCookies(result, cookies);
 
         location = UriUtils.decode(result.getHeaders().getLocation().toString(), "UTF-8");
         response = restOperations.exchange(
@@ -318,15 +297,11 @@ class OpenIdTokenGrantsIT {
                 HttpMethod.GET,
                 new HttpEntity<>(null, getHeaders(cookies)),
                 String.class);
-        if (response.getHeaders().containsKey("Set-Cookie")) {
-            for (String cookie : response.getHeaders().get("Set-Cookie")) {
-                int nameLength = cookie.indexOf('=');
-                cookies.addCookie(new BasicClientCookie(cookie.substring(0, nameLength), cookie.substring(nameLength + 1)));
-            }
-        }
+        IntegrationTestUtils.extractCookies(response, cookies);
+
         if (response.getStatusCode() == HttpStatus.OK) {
             // The grant access page should be returned
-            assertThat(response.getBody().contains("You can change your approval of permissions")).isTrue();
+            assertThat(response.getBody()).contains("You can change your approval of permissions");
 
             formData.clear();
             formData.add(USER_OAUTH_APPROVAL, "true");
@@ -339,7 +314,7 @@ class OpenIdTokenGrantsIT {
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FOUND);
             location = UriUtils.decode(response.getHeaders().getLocation().toString(), "UTF-8");
         }
-        assertThat(location.matches(redirectUri + responseTypeMatcher)).as("Wrong location: " + location).isTrue();
+        assertThat(location).as("Wrong location: " + location).matches(redirectUri + responseTypeMatcher);
 
         formData.clear();
         formData.add("client_id", clientId);
@@ -357,8 +332,8 @@ class OpenIdTokenGrantsIT {
         @SuppressWarnings("unchecked")
         Map<String, String> body = tokenResponse.getBody();
         Jwt token = JwtHelper.decode(body.get("access_token"));
-        assertThat(token.getClaims().contains("\"aud\"")).as("Wrong claims: " + token.getClaims()).isTrue();
-        assertThat(token.getClaims().contains("\"user_id\"")).as("Wrong claims: " + token.getClaims()).isTrue();
+        assertThat(token.getClaims()).as("Wrong claims: " + token.getClaims()).contains("\"aud\"")
+                .as("Wrong claims: " + token.getClaims()).contains("\"user_id\"");
     }
 
     private MultiValueMap<String, String> parseFragmentParams(UriComponents locationComponents) {
@@ -370,6 +345,4 @@ class OpenIdTokenGrantsIT {
         }
         return params;
     }
-
-
 }

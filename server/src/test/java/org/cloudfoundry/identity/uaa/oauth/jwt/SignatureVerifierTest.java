@@ -15,7 +15,6 @@
 
 package org.cloudfoundry.identity.uaa.oauth.jwt;
 
-
 import com.nimbusds.jose.jwk.JWKParameterNames;
 import org.cloudfoundry.identity.uaa.oauth.jwk.JsonWebKey;
 import org.junit.jupiter.api.Test;

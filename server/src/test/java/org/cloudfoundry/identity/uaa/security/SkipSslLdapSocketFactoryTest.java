@@ -9,8 +9,7 @@ class SkipSslLdapSocketFactoryTest {
     @Test
     void defaultInstanceIsSkipSslLdapSocketFactory() {
         Object ldapFactory = SkipSslLdapSocketFactory.getDefault();
-        assertThat(ldapFactory).isNotNull();
-        assertThat(ldapFactory instanceof SkipSslLdapSocketFactory).isTrue();
-        assertThat(SkipSslLdapSocketFactory.getDefault() instanceof SkipSslLdapSocketFactory).isTrue();
+        assertThat(ldapFactory).isInstanceOf(SkipSslLdapSocketFactory.class);
+        assertThat(SkipSslLdapSocketFactory.getDefault()).isInstanceOf(SkipSslLdapSocketFactory.class);
     }
 }

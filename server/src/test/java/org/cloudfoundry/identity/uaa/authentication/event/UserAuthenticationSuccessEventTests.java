@@ -25,8 +25,8 @@ class UserAuthenticationSuccessEventTests {
                 "foobar");
         String origin = event.getOrigin(details);
 
-        assertThat(origin).contains("remoteAddress=127.10.10.10");
-        assertThat(origin).contains("clientId=client-id");
-        assertThat(origin).contains("sessionId=<SESSION>");
+        assertThat(origin).contains("remoteAddress=127.10.10.10")
+                .contains("clientId=client-id")
+                .contains("sessionId=<SESSION>");
     }
 }

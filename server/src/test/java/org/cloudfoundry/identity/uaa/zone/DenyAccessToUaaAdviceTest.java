@@ -34,7 +34,8 @@ class DenyAccessToUaaAdviceTest {
 
         @Test
         void checkIdentityZoneId() {
-            assertThatThrownBy(() -> denyAccessToUaaAdvice.checkIdentityZoneId(identityZone.getId()))
+            String id = identityZone.getId();
+            assertThatThrownBy(() -> denyAccessToUaaAdvice.checkIdentityZoneId(id))
                     .isInstanceOf(AccessDeniedException.class)
                     .hasMessage("Access to UAA is not allowed.");
         }

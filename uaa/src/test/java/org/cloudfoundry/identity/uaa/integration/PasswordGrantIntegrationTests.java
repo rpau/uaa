@@ -33,7 +33,6 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 class PasswordGrantIntegrationTests {
-
     @RegisterExtension
     private static final ServerRunningExtension serverRunning = ServerRunningExtension.connect();
 
@@ -56,7 +55,7 @@ class PasswordGrantIntegrationTests {
     }
 
     @Test
-    void password_grant_returns_correct_error() throws Exception {
+    void password_grant_returns_correct_error() {
         UaaClientDetails client = addUserGroupsRequiredClient();
         ResponseEntity<String> responseEntity = makePasswordGrantRequest(testAccounts.getUserName(), testAccounts.getPassword(), client.getClientId(), "secret", serverRunning.getAccessTokenUri());
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -142,7 +141,7 @@ class PasswordGrantIntegrationTests {
 
             @Override
             public void handleError(ClientHttpResponse response) {
-
+                // pass through
             }
         });
         return template;

@@ -14,7 +14,6 @@
 
 package org.cloudfoundry.identity.uaa.mock.token;
 
-
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.cloudfoundry.identity.uaa.constants.OriginKeys;
 import org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils;
@@ -99,7 +98,6 @@ class ListUserTokenMockMvcTests extends AbstractTokenMockMvcTests {
                 null,
                 null,
                 true);
-
     }
 
     @Test
@@ -115,7 +113,7 @@ class ListUserTokenMockMvcTests extends AbstractTokenMockMvcTests {
 
     void validateTokens(List<String> actual, List<String> expected) {
         for (String t : expected) {
-            assertThat(actual.contains(t)).as("Expecting token:" + t + " to be present in list.").isTrue();
+            assertThat(actual).as("Expecting token:" + t + " to be present in list.").contains(t);
         }
     }
 

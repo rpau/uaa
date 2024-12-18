@@ -27,7 +27,7 @@ public class JwtHelperX5tTest {
     @Test
     void jwtHeaderShouldContainX5tInTheHeader() {
         Jwt jwt = JwtHelper.encodePlusX5t(Map.of("sub", "testJwtContent"), keyInfo, keyInfo.verifierCertificate().orElse(null));
-        assertThat(THUMBPRINT).isEqualTo(jwt.getHeader().getX5t());
+        assertThat(jwt.getHeader().getX5t()).isEqualTo(THUMBPRINT);
     }
 
     @Test
@@ -77,10 +77,9 @@ public class JwtHelperX5tTest {
     }
 
     private static void validateThatNoX509InformationInMap(Map<String, Object> tokenKey) {
-        assertThat(tokenKey.get("x5t")).isNull();
-        assertThat(tokenKey.get("x5c")).isNull();
-        assertThat(tokenKey.get("value")).isNotNull();
-        assertThat(tokenKey)
+        assertThat(tokenKey).doesNotContainKey("x5t")
+                .doesNotContainKey("x5c")
+                .containsKey("value")
                 .containsEntry("kid", "testKid")
                 .containsEntry("alg", "RS256");
     }

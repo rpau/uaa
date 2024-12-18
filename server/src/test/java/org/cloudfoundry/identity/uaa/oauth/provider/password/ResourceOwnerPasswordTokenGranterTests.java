@@ -13,6 +13,7 @@ import org.cloudfoundry.identity.uaa.oauth.provider.TokenRequest;
 import org.cloudfoundry.identity.uaa.oauth.provider.request.DefaultOAuth2RequestFactory;
 import org.cloudfoundry.identity.uaa.oauth.provider.token.DefaultTokenServices;
 import org.cloudfoundry.identity.uaa.oauth.provider.token.InMemoryTokenStore;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -24,9 +25,9 @@ import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -36,10 +37,10 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOf
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-public class ResourceOwnerPasswordTokenGranterTests {
+class ResourceOwnerPasswordTokenGranterTests {
 
     private Authentication validUser = new UsernamePasswordAuthenticationToken("foo", "bar",
-            Arrays.asList(new SimpleGrantedAuthority("ROLE_USER")));
+            List.of(new SimpleGrantedAuthority("ROLE_USER")));
 
     private final UaaClientDetails client = new UaaClientDetails("foo", "resource", "scope", "password", "ROLE_USER");
 
@@ -73,11 +74,11 @@ public class ResourceOwnerPasswordTokenGranterTests {
         parameters.put("client_id", clientId);
 
         tokenRequest = requestFactory.createTokenRequest(parameters, clientDetails);
-
     }
 
-    //@Test
-    public void testSunnyDay() {
+    @Test
+    @Disabled("since 2024-05-08")
+    void testSunnyDay() {
         ResourceOwnerPasswordTokenGranter granter = new ResourceOwnerPasswordTokenGranter(authenticationManager,
                 providerTokenServices, clientDetailsService, requestFactory);
         OAuth2AccessToken token = granter.grant("password", tokenRequest);
@@ -85,14 +86,15 @@ public class ResourceOwnerPasswordTokenGranterTests {
         assertThat(authentication.isAuthenticated()).isTrue();
     }
 
-    //@Test
-    public void testPasswordRemoved() {
+    @Test
+    @Disabled("since 2024-05-08")
+    void testPasswordRemoved() {
         ResourceOwnerPasswordTokenGranter granter = new ResourceOwnerPasswordTokenGranter(authenticationManager,
                 providerTokenServices, clientDetailsService, requestFactory);
         OAuth2AccessToken token = granter.grant("password", tokenRequest);
         OAuth2Authentication authentication = providerTokenServices.loadAuthentication(token.getValue());
-        assertThat(authentication.getOAuth2Request().getRequestParameters().get("username")).isNotNull();
-        assertThat(authentication.getOAuth2Request().getRequestParameters().get("password")).isNull();
+        assertThat(authentication.getOAuth2Request().getRequestParameters()).containsKey("username")
+                .doesNotContainKey("password");
     }
 
     @Test

@@ -25,14 +25,14 @@ class CredentialIdTypeJWTTest extends CredentialIdTypeAbstractTestJWT<Credential
         checkFlavor(null, AllJWT.class, JWT);
         checkFlavor("", AllJWT.class, JWT);
         checkFlavor(" ", AllJWT.class, JWT);
-        checkFlavor(" 0 ", SectionJWT.class, b64section_HEADER);
-        checkFlavor("header", SectionJWT.class, b64section_HEADER);
-        checkFlavor("HEADERS", SectionJWT.class, b64section_HEADER);
-        checkFlavor("1", SectionJWT.class, b64section_CLAIMS);
-        checkFlavor("Payload", SectionJWT.class, b64section_CLAIMS);
-        checkFlavor("claimS", SectionJWT.class, b64section_CLAIMS);
-        checkFlavor("2", SectionJWT.class, b64section_SIGNATURE);
-        checkFlavor("signaTure", SectionJWT.class, b64section_SIGNATURE);
+        checkFlavor(" 0 ", SectionJWT.class, B64_SECTION_HEADER);
+        checkFlavor("header", SectionJWT.class, B64_SECTION_HEADER);
+        checkFlavor("HEADERS", SectionJWT.class, B64_SECTION_HEADER);
+        checkFlavor("1", SectionJWT.class, B64_SECTION_CLAIMS);
+        checkFlavor("Payload", SectionJWT.class, B64_SECTION_CLAIMS);
+        checkFlavor("claimS", SectionJWT.class, B64_SECTION_CLAIMS);
+        checkFlavor("2", SectionJWT.class, B64_SECTION_SIGNATURE);
+        checkFlavor("signaTure", SectionJWT.class, B64_SECTION_SIGNATURE);
         checkFlavor(EMAIL_FROM_CLAIMS, SectionRegexJWT.class, "|" + EMAIL_DEVIN + "|");
 
         AuthorizationCredentialIdExtractor factory = credentialIdType.factory("claims");

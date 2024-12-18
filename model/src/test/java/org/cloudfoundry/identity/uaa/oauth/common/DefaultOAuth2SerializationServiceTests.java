@@ -28,7 +28,6 @@ class DefaultOAuth2SerializationServiceTests {
     void defaultDeserialization() {
         Map<String, String> accessToken = Map.of("access_token", "FOO", "expires_in", "100", "token_type", "mac", "scope", "test,ok", "refresh_token", "");
         OAuth2AccessToken result = DefaultOAuth2AccessToken.valueOf(accessToken);
-        // System.err.println(result);
         assertThat(result.getValue()).isEqualTo("FOO");
         assertThat(result.getTokenType()).isEqualTo("mac");
         assertThat(result.getExpiration().getTime()).isGreaterThan(System.currentTimeMillis());
@@ -64,10 +63,9 @@ class DefaultOAuth2SerializationServiceTests {
         Map<String, String> exception = MapBuilder.create("error", "invalid_client").add("error_description", "FOO")
                 .build();
         OAuth2Exception result = OAuth2Exception.valueOf(exception);
-        // System.err.println(result);
         assertThat(result.getMessage()).isEqualTo("FOO");
         assertThat(result.getOAuth2ErrorCode()).isEqualTo("invalid_client");
-        assertThat(result instanceof InvalidClientException).isTrue();
+        assertThat(result).isInstanceOf(InvalidClientException.class);
     }
 
     @Test
@@ -77,7 +75,7 @@ class DefaultOAuth2SerializationServiceTests {
         assertThat(result.getSummary()).isNotNull();
         assertThat(result.getMessage()).isEqualTo("FOO");
         assertThat(result.getOAuth2ErrorCode()).isEqualTo("unauthorized_client");
-        assertThat(result instanceof UnauthorizedClientException).isTrue();
+        assertThat(result).isInstanceOf(UnauthorizedClientException.class);
     }
 
     @Test
@@ -89,9 +87,8 @@ class DefaultOAuth2SerializationServiceTests {
         assertThat(result.toString()).isNotNull();
         assertThat(result.getMessage()).isEqualTo("FOO");
         assertThat(result.getOAuth2ErrorCode()).isEqualTo("invalid_grant");
-        assertThat(result instanceof InvalidGrantException).isTrue();
+        assertThat(result).isInstanceOf(InvalidGrantException.class);
     }
-
 
     @Test
     void exceptionInvalidTokenException() {
@@ -100,7 +97,7 @@ class DefaultOAuth2SerializationServiceTests {
         assertThat(result.getSummary()).isNotNull();
         assertThat(result.getMessage()).isEqualTo("FOO");
         assertThat(result.getOAuth2ErrorCode()).isEqualTo("invalid_token");
-        assertThat(result instanceof InvalidTokenException).isTrue();
+        assertThat(result).isInstanceOf(InvalidTokenException.class);
     }
 
     @Test
@@ -110,7 +107,7 @@ class DefaultOAuth2SerializationServiceTests {
         assertThat(result.getSummary()).isNotNull();
         assertThat(result.getMessage()).isEqualTo("FOO");
         assertThat(result.getOAuth2ErrorCode()).isEqualTo("invalid_request");
-        assertThat(result instanceof InvalidRequestException).isTrue();
+        assertThat(result).isInstanceOf(InvalidRequestException.class);
     }
 
     @Test
@@ -120,7 +117,7 @@ class DefaultOAuth2SerializationServiceTests {
         assertThat(result.getSummary()).isNotNull();
         assertThat(result.getMessage()).isEqualTo("FOO");
         assertThat(result.getOAuth2ErrorCode()).isEqualTo("unsupported_grant_type");
-        assertThat(result instanceof UnsupportedGrantTypeException).isTrue();
+        assertThat(result).isInstanceOf(UnsupportedGrantTypeException.class);
     }
 
     @Test
@@ -130,7 +127,7 @@ class DefaultOAuth2SerializationServiceTests {
         assertThat(result.getSummary()).isNotNull();
         assertThat(result.getMessage()).isEqualTo("FOO");
         assertThat(result.getOAuth2ErrorCode()).isEqualTo("unsupported_response_type");
-        assertThat(result instanceof UnsupportedResponseTypeException).isTrue();
+        assertThat(result).isInstanceOf(UnsupportedResponseTypeException.class);
     }
 
     @Test
@@ -140,7 +137,7 @@ class DefaultOAuth2SerializationServiceTests {
         assertThat(result.getSummary()).isNotNull();
         assertThat(result.getMessage()).isEqualTo("FOO");
         assertThat(result.getOAuth2ErrorCode()).isEqualTo("invalid_grant");
-        assertThat(result instanceof RedirectMismatchException).isTrue();
+        assertThat(result).isInstanceOf(RedirectMismatchException.class);
     }
 
     @Test
@@ -150,7 +147,7 @@ class DefaultOAuth2SerializationServiceTests {
         assertThat(result.getSummary()).isNotNull();
         assertThat(result.getMessage()).isEqualTo("FOO");
         assertThat(result.getOAuth2ErrorCode()).isEqualTo("access_denied");
-        assertThat(result instanceof UserDeniedAuthorizationException).isTrue();
+        assertThat(result).isInstanceOf(UserDeniedAuthorizationException.class);
     }
 
     @Test
@@ -160,7 +157,7 @@ class DefaultOAuth2SerializationServiceTests {
         assertThat(result.getSummary()).isNotNull();
         assertThat(result.getMessage()).isEqualTo("FOO");
         assertThat(result.getOAuth2ErrorCode()).isEqualTo("invalid_scope");
-        assertThat(result instanceof InvalidScopeException).isTrue();
+        assertThat(result).isInstanceOf(InvalidScopeException.class);
     }
 
     @Test
@@ -170,11 +167,10 @@ class DefaultOAuth2SerializationServiceTests {
         assertThat(result.getSummary()).isNotNull();
         assertThat(result.getMessage()).isEqualTo("OAuth Error");
         assertThat(result.getOAuth2ErrorCode()).isEqualTo("invalid_request");
-        assertThat(result instanceof OAuth2Exception).isTrue();
+        assertThat(result).isInstanceOf(OAuth2Exception.class);
     }
 
     private static final class MapBuilder {
-
         private final HashMap<String, String> map = new HashMap<>();
 
         private MapBuilder(String key, String value) {

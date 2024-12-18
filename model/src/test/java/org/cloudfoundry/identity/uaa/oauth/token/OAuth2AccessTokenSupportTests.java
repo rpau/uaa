@@ -26,7 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
-import java.util.Arrays;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
@@ -57,7 +57,7 @@ class OAuth2AccessTokenSupportTests {
     };
 
     @BeforeEach
-    void init() throws Exception {
+    void init() {
         resource.setClientId("client");
         resource.setClientSecret("secret");
         resource.setAccessTokenUri("https://nowhere/token");
@@ -87,7 +87,7 @@ class OAuth2AccessTokenSupportTests {
     @Test
     void retrieveTokenFormEncoded() throws Exception {
         // SECOAUTH-306: no need to set message converters
-        requestHeaders.setAccept(Arrays.asList(MediaType.APPLICATION_FORM_URLENCODED));
+        requestHeaders.setAccept(List.of(MediaType.APPLICATION_FORM_URLENCODED));
         HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
         response.setBody("access_token=FOO");
@@ -99,7 +99,7 @@ class OAuth2AccessTokenSupportTests {
     @Test
     void requestEnhanced() throws Exception {
         DefaultRequestEnhancer enhancer = new DefaultRequestEnhancer();
-        enhancer.setParameterIncludes(Arrays.asList("foo"));
+        enhancer.setParameterIncludes(List.of("foo"));
         request.set("foo", "bar");
         support.setTokenRequestEnhancer(enhancer);
         response.setBody(objectMapper.writeValueAsString(accessToken));
@@ -120,7 +120,7 @@ class OAuth2AccessTokenSupportTests {
     @Test
     void requestEnhancedFromQuery() throws Exception {
         DefaultRequestEnhancer enhancer = new DefaultRequestEnhancer();
-        enhancer.setParameterIncludes(Arrays.asList("foo"));
+        enhancer.setParameterIncludes(List.of("foo"));
         request.set("foo", "bar");
         support.setTokenRequestEnhancer(enhancer);
         response.setBody(objectMapper.writeValueAsString(accessToken));
@@ -133,7 +133,7 @@ class OAuth2AccessTokenSupportTests {
     @Test
     void requestEnhancedEmptySecret() throws Exception {
         DefaultRequestEnhancer enhancer = new DefaultRequestEnhancer();
-        enhancer.setParameterIncludes(Arrays.asList("foo"));
+        enhancer.setParameterIncludes(List.of("foo"));
         request.set("foo", "bar");
         support.setTokenRequestEnhancer(enhancer);
         response.setBody(objectMapper.writeValueAsString(accessToken));
@@ -147,7 +147,7 @@ class OAuth2AccessTokenSupportTests {
     @Test
     void requestEnhancedNonScheme() throws Exception {
         DefaultRequestEnhancer enhancer = new DefaultRequestEnhancer();
-        enhancer.setParameterIncludes(Arrays.asList("foo"));
+        enhancer.setParameterIncludes(List.of("foo"));
         request.set("foo", "bar");
         support.setTokenRequestEnhancer(enhancer);
         response.setBody(objectMapper.writeValueAsString(accessToken));
@@ -190,6 +190,7 @@ class OAuth2AccessTokenSupportTests {
         }
 
         public void close() {
+            // do nothing
         }
 
         public InputStream getBody() throws IOException {
@@ -212,6 +213,7 @@ class OAuth2AccessTokenSupportTests {
             this.response = response;
         }
 
+        @Override
         public HttpMethod getMethod() {
             return HttpMethod.GET;
         }

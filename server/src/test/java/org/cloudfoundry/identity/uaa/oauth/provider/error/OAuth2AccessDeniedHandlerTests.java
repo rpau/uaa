@@ -9,6 +9,7 @@ import org.springframework.security.access.AccessDeniedException;
 import javax.servlet.http.HttpServletResponse;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
@@ -32,9 +33,9 @@ class OAuth2AccessDeniedHandlerTests {
     }
 
     @Test
-    void handleSetter() throws Exception {
+    void handleSetter() {
         handler.setExceptionRenderer(new DefaultOAuth2ExceptionRenderer());
         handler.setExceptionTranslator(new DefaultWebResponseExceptionTranslator());
-        handler.doHandle(request, response, new AccessDeniedException("Bad"));
+        assertThatNoException().isThrownBy(() -> handler.doHandle(request, response, new AccessDeniedException("Bad")));
     }
 }

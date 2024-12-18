@@ -10,7 +10,6 @@ import org.springframework.util.MultiValueMap;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -60,7 +59,8 @@ class SimpleSearchQueryConverterTests {
     void invalidFilterAttribute() {
         String query = "origin eq \"origin-value\" and externalGroup eq \"group-value\"";
 
-        assertThatThrownBy(() -> converter.getFilterValues(query, Arrays.asList("origin", "externalGroup")))
+        List<String> validAttributes = Arrays.asList("origin", "externalGroup");
+        assertThatThrownBy(() -> converter.getFilterValues(query, validAttributes))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Invalid filter attributes:externalGroup");
     }
@@ -106,7 +106,7 @@ class SimpleSearchQueryConverterTests {
         List<String> validAttributes = Arrays.asList("origin", "id".toLowerCase());
         JoinAttributeNameMapper joinAttributeNameMapper = new JoinAttributeNameMapper("prefix");
         converter.setAttributeNameMapper(joinAttributeNameMapper);
-        Map filterValues = converter.getFilterValues(query, validAttributes);
+        MultiValueMap<String, Object> filterValues = converter.getFilterValues(query, validAttributes);
         assertThat(filterValues).isNotNull();
         assertThat(filterValues.get("origin")).hasToString("[origin-value]");
         assertThat(filterValues.get("id")).hasToString("[group-value]");

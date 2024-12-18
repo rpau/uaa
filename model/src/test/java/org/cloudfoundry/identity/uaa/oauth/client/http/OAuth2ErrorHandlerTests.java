@@ -86,13 +86,14 @@ class OAuth2ErrorHandlerTests {
         }
 
         public void close() {
+            // do nothing
         }
     }
 
     private OAuth2ErrorHandler handler;
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
         handler = new OAuth2ErrorHandler(resource);
     }
 
@@ -255,13 +256,13 @@ class OAuth2ErrorHandlerTests {
             }
 
             @Override
-            public Object read(Class clazz, HttpInputMessage inputMessage) throws IOException, HttpMessageNotReadableException {
+            public Object read(Class clazz, HttpInputMessage inputMessage) throws HttpMessageNotReadableException {
                 throw new HttpMessageConversionException("error");
             }
 
             @Override
-            public void write(Object o, MediaType contentType, HttpOutputMessage outputMessage) throws IOException, HttpMessageNotWritableException {
-
+            public void write(Object o, MediaType contentType, HttpOutputMessage outputMessage) throws HttpMessageNotWritableException {
+                // do nothing
             }
         };
         ArrayList<HttpMessageConverter<?>> messageConverters = new ArrayList<>();

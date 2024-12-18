@@ -1,6 +1,5 @@
 package org.cloudfoundry.identity.uaa.util;
 
-import com.nimbusds.jose.KeyLengthException;
 import org.cloudfoundry.identity.uaa.oauth.common.exceptions.InvalidTokenException;
 import org.cloudfoundry.identity.uaa.oauth.jwt.UaaMacSigner;
 import org.cloudfoundry.identity.uaa.oauth.token.ClaimConstants;
@@ -8,7 +7,6 @@ import org.cloudfoundry.identity.uaa.oauth.token.Claims;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.util.StringUtils;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -29,7 +27,6 @@ import static org.cloudfoundry.identity.uaa.util.UaaTokenUtils.hasRequiredUserAu
 import static org.cloudfoundry.identity.uaa.util.UaaTokenUtils.isUserToken;
 
 class UaaTokenUtilsTest {
-
     @Test
     void revocationHash() {
         List<String> salts = new LinkedList<>();
@@ -38,14 +35,13 @@ class UaaTokenUtilsTest {
         }
         String hash1 = UaaTokenUtils.getRevocationHash(salts);
         String hash2 = UaaTokenUtils.getRevocationHash(salts);
-        assertThat(StringUtils.isEmpty(hash1)).as("Hash 1 should not be empty").isFalse();
-        assertThat(StringUtils.isEmpty(hash2)).as("Hash 2 should not be empty").isFalse();
-        assertThat(hash2).isEqualTo(hash1);
+        assertThat(hash1).isNotEmpty();
+        assertThat(hash2).isNotEmpty()
+                .isEqualTo(hash1);
     }
 
     @Test
     void isJwtToken() {
-
         AlphanumericRandomValueStringGenerator generator = new AlphanumericRandomValueStringGenerator(36);
         String regular = generator.generate();
         String jwt = generator.generate() + "." + generator.generate() + "." + generator.generate();
@@ -55,7 +51,7 @@ class UaaTokenUtilsTest {
 
     @Test
     void is_user_token() {
-        Map<String, Object> claims = new HashMap();
+        Map<String, Object> claims = new HashMap<>();
 
         //no grant type - always is a user token
         assertThat(isUserToken(claims)).isTrue();
@@ -68,7 +64,6 @@ class UaaTokenUtilsTest {
         assertThat(isUserToken(claims)).isFalse();
 
         claims.clear();
-
         //user_id present - must be user token
         claims.put(ClaimConstants.USER_ID, "id");
         assertThat(isUserToken(claims)).isTrue();
@@ -113,7 +108,6 @@ class UaaTokenUtilsTest {
         assertThat(UaaTokenUtils.hasRequiredUserAuthorities(requiredGroups, userGroups)).isTrue();
     }
 
-
     @Test
     void required_user_groups_invalid() {
         List<String> requiredGroups = Arrays.asList("scope1", "scope2", "scope3", "scope5");
@@ -129,7 +123,7 @@ class UaaTokenUtilsTest {
     }
 
     @Test
-    void getClaims() throws KeyLengthException {
+    void getClaims() {
         Map<String, Object> headers = new HashMap<>();
         headers.put("kid", "some-key");
         headers.put("alg", "HS256");
@@ -144,7 +138,7 @@ class UaaTokenUtilsTest {
         assertThat(claims)
                 .containsEntry("cid", "openidclient")
                 .containsEntry("origin", "uaa")
-                .containsEntry("aud", Arrays.asList("openidclient"));
+                .containsEntry("aud", List.of("openidclient"));
 
         Claims claimObject = UaaTokenUtils.getClaimsFromTokenString(jwt);
 
@@ -167,9 +161,6 @@ class UaaTokenUtilsTest {
         String tokenWithNoClaims = UaaTokenUtils.constructToken(headers, new HashMap<>(), new UaaMacSigner("foobar"));
 
         Map<String, Object> claims = UaaTokenUtils.getClaims(tokenWithNoClaims, Map.class);
-
-        assertThat(claims).isNotNull();
         assertThat(claims).isEmpty();
     }
-
 }

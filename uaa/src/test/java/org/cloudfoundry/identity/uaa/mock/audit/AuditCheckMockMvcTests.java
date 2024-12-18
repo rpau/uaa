@@ -890,7 +890,7 @@ class AuditCheckMockMvcTests {
                     createdUser.getId(),
                     scimUser.getUserName());
             String actualLogMessage = testLogger.getLatestMessage();
-            assertThat(actualLogMessage).startsWith(UserCreatedEvent.toString() + " ")
+            assertThat(actualLogMessage).startsWith(UserCreatedEvent.toString())
                     .contains("principal=%s,".formatted(createdUser.getId()))
                     .contains(logMessage)
                     .contains(", identityZoneId=[%s]".formatted(zoneSeeder.getIdentityZoneId()))
@@ -932,7 +932,7 @@ class AuditCheckMockMvcTests {
                     scimUser.getId(),
                     scimUser.getUserName());
             String actualLogMessage = testLogger.getLatestMessage();
-            assertThat(actualLogMessage).startsWith(UserDeletedEvent.toString() + " ")
+            assertThat(actualLogMessage).startsWith(UserDeletedEvent.toString())
                     .contains("principal=%s,".formatted(scimUser.getId()))
                     .contains(" ('%s'): ".formatted(logMessage))
                     .contains(", identityZoneId=[%s]".formatted(zoneSeeder.getIdentityZoneId()))
@@ -1338,6 +1338,7 @@ class AuditCheckMockMvcTests {
     private class DefaultApplicationListener<T extends ApplicationEvent> implements ApplicationListener<T> {
         @Override
         public void onApplicationEvent(T event) {
+            // do nothing
         }
     }
 
