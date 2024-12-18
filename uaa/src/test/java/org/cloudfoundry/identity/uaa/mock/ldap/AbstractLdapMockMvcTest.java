@@ -166,7 +166,7 @@ public abstract class AbstractLdapMockMvcTest {
 
     protected abstract void stopLdapServer();
 
-    protected abstract String getLdapOrLdapSBaseUrl();
+    protected abstract String getLdapUrl();
 
     // Called by child classes. Allows this abstract parent class to act like a parameterized test.
     AbstractLdapMockMvcTest(String ldapProfile, String ldapGroup, String tlsConfig) {
@@ -190,11 +190,13 @@ public abstract class AbstractLdapMockMvcTest {
         zone = MockMvcUtils.createZoneForInvites(getMockMvc(), getWebApplicationContext(), userId, REDIRECT_URI, IdentityZoneHolder.getCurrentZoneId());
 
         try {
+            ensureLdapServerIsRunning();
+
             LdapIdentityProviderDefinition definition = new LdapIdentityProviderDefinition();
             definition.setLdapProfileFile("ldap/" + ldapProfile);
             definition.setLdapGroupFile("ldap/" + ldapGroup);
             definition.setMaxGroupSearchDepth(10);
-            definition.setBaseUrl(getLdapOrLdapSBaseUrl());
+            definition.setBaseUrl(getLdapUrl());
             definition.setBindUserDn("cn=admin,ou=Users,dc=test,dc=com");
             definition.setBindPassword("adminsecret");
             definition.setSkipSSLVerification(false);
@@ -209,8 +211,6 @@ public abstract class AbstractLdapMockMvcTest {
 
             listener = (ApplicationListener<AbstractUaaEvent>) mock(ApplicationListener.class);
             configurableApplicationContext.addApplicationListener(listener);
-
-            ensureLdapServerIsRunning();
 
             testLogger = new InterceptingLogger();
             originalAuditServiceLogger = loggingAuditService.getLogger();
@@ -806,19 +806,14 @@ public abstract class AbstractLdapMockMvcTest {
     @Test
     void testTwoLdapServers() throws Exception {
         // Setup second ldap server
-        int port = 33000 + getRandomPortOffset();
-        int sslPort = 34000 + getRandomPortOffset();
-
         InMemoryLdapServer secondLdapServer;
-
         String ldapBaseUrl;
-        if (getLdapOrLdapSBaseUrl().contains("ldap://")) {
-            ldapBaseUrl = getLdapOrLdapSBaseUrl() + " ldap://localhost:" + port;
-            secondLdapServer = InMemoryLdapServer.startLdap(port);
+        if (getLdapUrl().contains("ldap://")) {
+            secondLdapServer = InMemoryLdapServer.startLdap();
         } else {
-            ldapBaseUrl = getLdapOrLdapSBaseUrl() + " ldaps://localhost:" + sslPort;
-            secondLdapServer = InMemoryLdapServer.startLdapWithTls(port, sslPort, KEYSTORE);
+            secondLdapServer = InMemoryLdapServer.startLdapWithTls(KEYSTORE);
         }
+        ldapBaseUrl = getLdapUrl() + " " + secondLdapServer.getUrl();
 
         provider.getConfig().setBaseUrl(ldapBaseUrl);
         updateLdapProvider();

@@ -300,8 +300,8 @@ class IdentityProviderEndpointsMockMvcTests {
         providerDefinition.setGroupRoleAttribute("description");
 
         try (InMemoryLdapServer ldapServer =
-                InMemoryLdapServer.startLdap(33389)) {
-            providerDefinition.setBaseUrl(ldapServer.getLdapBaseUrl());
+                InMemoryLdapServer.startLdap()) {
+            providerDefinition.setBaseUrl(ldapServer.getUrl());
             newIdp.setConfig(providerDefinition);
 
             // Create an ldap identity provider
