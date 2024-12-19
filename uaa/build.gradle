@@ -109,6 +109,19 @@ test {
     exclude("**/*IT.class")
     exclude("**/*Docs.class")
     systemProperty("mock.suite.test", "true")
+
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // Running tests in parallel
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    // Count available cores. We assume 2 logical cores per physical core.
+    // In case there is only one vCPU, we count 1 full core.
+    var availableCpus = Math.max(Runtime.getRuntime().availableProcessors() / 2, 1.0)
+
+    // We want some amount of parallelism, but it does not make sense to run too many
+    // tests in parallel, see docs/testing. We target 4 tests in parallel at most. If
+    // there are less CPUs available, we use all available CPUs but no more.
+    maxParallelForks = Math.min(availableCpus, 4)
 }
 
 task populateVersionfile {
