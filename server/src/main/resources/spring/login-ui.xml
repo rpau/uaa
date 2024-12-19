@@ -368,11 +368,6 @@
         <constructor-arg ref="globalPasswordPolicy"/>
     </bean>
 
-    <bean id="changePasswordService" class="org.cloudfoundry.identity.uaa.account.UaaChangePasswordService">
-        <constructor-arg ref="scimUserProvisioning"/>
-        <constructor-arg ref="uaaPasswordValidator"/>
-    </bean>
-
     <bean id="messagePropertiesSource" class="org.springframework.core.io.support.ResourcePropertySource">
         <constructor-arg value="messages.properties"/>
     </bean>
