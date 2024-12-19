@@ -463,10 +463,4 @@
         <constructor-arg ref="codeStore"/>
     </bean>
 
-    <bean id="activeKeyService" class="org.cloudfoundry.identity.uaa.cypto.EncryptionKeyService"/>
-
-    <bean id="encryptionService" class="org.cloudfoundry.identity.uaa.cypto.EncryptionService">
-        <constructor-arg index="0" ref="activeKeyService"/>
-    </bean>
-
 </beans>
