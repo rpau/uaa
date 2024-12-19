@@ -35,7 +35,7 @@ public class ForcePasswordChangeController {
 
     public ForcePasswordChangeController(
             final ResourcePropertySource resourcePropertySource,
-            final @Qualifier("resetPasswordService") ResetPasswordService resetPasswordService) {
+            ResetPasswordService resetPasswordService) {
         this.resourcePropertySource = resourcePropertySource;
         this.resetPasswordService = resetPasswordService;
     }

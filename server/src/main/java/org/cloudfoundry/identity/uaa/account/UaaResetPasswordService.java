@@ -27,6 +27,7 @@ import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.core.io.support.ResourcePropertySource;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
 import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetails;
 
 import java.sql.Timestamp;
@@ -39,6 +40,7 @@ import static java.util.Collections.emptyList;
 import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 import static org.springframework.util.StringUtils.isEmpty;
 
+@Service("resetPasswordService")
 public class UaaResetPasswordService implements ResetPasswordService, ApplicationEventPublisherAware {
 
     public static final int PASSWORD_RESET_LIFETIME = 30 * 60 * 1000;
