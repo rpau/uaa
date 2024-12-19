@@ -43,7 +43,7 @@ public class LoginServerConfig {
      *
      * @return -
      */
-    @Bean(name = "messageService")
+    @Bean
     public MessageService emailMessageService(
             // dgarnier: use DEFAULT_UAA_URL
             @Value("${login.url:http://localhost:8080/uaa}") String loginUrl,
@@ -100,7 +100,7 @@ public class LoginServerConfig {
          * @param notificationsProperties -
          * @return -
          */
-        @Bean(name = "messageService")
+        @Bean
         @Primary
         public MessageService notificationMessageService(
                 LocalUaaRestTemplate notificationsTemplate,
