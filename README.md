@@ -292,6 +292,27 @@ In CloudFoundry terms
 * `app` is a webapp that needs single sign on and access to the `api`
   service on behalf of users.
 
+## Generating API Documentation
+
+API documentation is generated using the [`spring-restdocs`](https://github.com/spring-projects/spring-restdocs) framework.
+The tests that run this are located in [`uaa/tests`](file:./uaa/src/test/java) folder and are very similar to MockMvc tests.
+
+The formatting of the output documentation is done by using Ruby and [Slate](https://github.com/slatedocs/slate).
+
+To be able to run the command `./gradlew generateDocs` having Ruby 3.3.5 and bundler installed is key.
+
+### Installing Ruby using brew and rbenv
+
+```shell
+brew install rbenv
+rbenv install 3.3.5
+rbenv global 3.3.5 # or use rbenv local 3.3.5
+gem install bundler
+./gradlew generateDocs
+```
+
+The produced documentation can be accessed via [index.html](file:./uaa/build/docs/version/0.0.0/index.html)
+
 # Running the UAA on Kubernetes
 
 __Prerequisites__
