@@ -101,6 +101,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.startsWith;
@@ -325,7 +326,8 @@ class AuditCheckMockMvcTests {
                 .andExpect(status().is3xxRedirection())
                 .andExpect(header().string("Location", "/login?error=login_failure"));
 
-        assertNumberOfAuditEventsReceived(3);
+        // When the profile is ldap, an extra event is emitted
+        assertNumberOfAuditEventsReceived(greaterThanOrEqualTo(3));
 
         IdentityProviderAuthenticationFailureEvent idpAuthFailEvent = (IdentityProviderAuthenticationFailureEvent) testListener.getEvents().get(0);
         assertEquals(testUser.getUserName(), idpAuthFailEvent.getUsername());
@@ -452,7 +454,8 @@ class AuditCheckMockMvcTests {
                 .andExpect(status().isUnauthorized())
                 .andExpect(content().string("{\"error\":\"authentication failed\"}"));
 
-        assertNumberOfAuditEventsReceived(3);
+        // When the profile is ldap, an extra event is emitted
+        assertNumberOfAuditEventsReceived(greaterThanOrEqualTo(3));
 
         IdentityProviderAuthenticationFailureEvent event1 = (IdentityProviderAuthenticationFailureEvent) testListener.getEvents().get(0);
         UserAuthenticationFailureEvent event2 = (UserAuthenticationFailureEvent) testListener.getEvents().get(1);
@@ -519,7 +522,8 @@ class AuditCheckMockMvcTests {
                 .andExpect(status().is3xxRedirection())
                 .andExpect(header().string("Location", "/login?error=login_failure"));
 
-        assertNumberOfAuditEventsReceived(2);
+        // When the profile is ldap, an extra event is emitted
+        assertNumberOfAuditEventsReceived(greaterThanOrEqualTo(2));
 
         UserNotFoundEvent event1 = (UserNotFoundEvent) testListener.getEvents().get(0);
         assertTrue(event1.getAuditEvent().getOrigin().contains("sessionId=<SESSION>"));
@@ -1370,8 +1374,12 @@ class AuditCheckMockMvcTests {
     }
 
     private void assertNumberOfAuditEventsReceived(int expectedEventCount) {
-        assertEquals(expectedEventCount, testListener.getEventCount());
-        assertEquals(expectedEventCount, testLogger.getMessageCount());
+        assertNumberOfAuditEventsReceived(equalTo(expectedEventCount));
+    }
+
+    private void assertNumberOfAuditEventsReceived(org.hamcrest.Matcher<Integer> matcher) {
+        assertThat(testListener.getEventCount(), matcher);
+        assertThat(testLogger.getMessageCount(), matcher);
     }
 
     private void assertSingleAuditEventFiredWith(AuditEventType expectedEventType, String[] expectedScopes, String[] expectedAuthorities) {
