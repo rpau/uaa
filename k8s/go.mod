@@ -1,11 +1,12 @@
 module github.com/cloudfoundry/uaa
 
 go 1.23.0
+
 toolchain go1.23.4
 
 require (
 	github.com/onsi/ginkgo v1.16.5
-	github.com/onsi/gomega v1.36.1
+	github.com/onsi/gomega v1.36.2
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.32.0
 	k8s.io/apimachinery v0.32.0
