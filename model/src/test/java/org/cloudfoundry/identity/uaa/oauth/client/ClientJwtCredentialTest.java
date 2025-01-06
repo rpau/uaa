@@ -23,9 +23,9 @@ class ClientJwtCredentialTest {
     @Test
     void testConstructor() {
         ClientJwtCredential jwtCredential = new ClientJwtCredential("subject", "issuer", "audience");
-        assertTrue(jwtCredential.getSubject().equals("subject"));
-        assertTrue(jwtCredential.getIssuer().equals("issuer"));
-        assertTrue(jwtCredential.getAudience().equals("audience"));
+        assertEquals("subject", jwtCredential.getSubject());
+        assertEquals("issuer", jwtCredential.getIssuer());
+        assertEquals("audience", jwtCredential.getAudience());
         assertTrue(jwtCredential.isValid());
         jwtCredential = new ClientJwtCredential();
         assertFalse(jwtCredential.isValid());

@@ -641,8 +641,8 @@ public class ClientAdminEndpointsIntegrationTests {
         assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
 
         def = new ClientJwtChangeRequest();
-        def.setIss("http://localhost:8080/uaa");
-        def.setSub("client-admin-id");
+        def.setIssuer("http://localhost:8080/uaa");
+        def.setSubject("client-admin-id");
         def.setClientId("admin");
 
         result = serverRunning.getRestTemplate().exchange(

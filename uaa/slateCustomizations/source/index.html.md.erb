@@ -2237,7 +2237,7 @@ If an Identity Provider is set up before, then the key material can be configure
 the configured issuer must support the [discovery standard](https://openid.net/specs/openid-connect-discovery-1_0.html). If no audience (`aud`) is set, then
 the UAA own token endpoint URL is expected.
 
-The limits are 10 keys and/or 10 external combinations of issuer and subject. Use jwks_uri/jwks for single entities and iss/sub/aud for system entities, e.g. another UAA landscapes, external system integrations,
+The limits are 10 keys and/or 10 external combinations of issuer and subject. Use jwks_uri/jwks for single entities and issuer/subject/audience for system entities, e.g. another UAA landscapes, external system integrations,
 [work load identities](https://www.ietf.org/archive/id/draft-ietf-wimse-workload-identity-bcp-01.html) or [SPIFFE](https://www.ietf.org/archive/id/draft-ietf-wimse-workload-identity-practices-00.html).
 
 <%= render('ClientAdminEndpointDocs/changeClientJwt/curl-request.md') %>

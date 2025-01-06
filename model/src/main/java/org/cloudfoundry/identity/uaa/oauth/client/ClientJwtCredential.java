@@ -35,7 +35,7 @@ public class ClientJwtCredential {
 
     @JsonIgnore
     public boolean isValid() {
-        return subject != null && issuer != null && subject.length() > 0 && issuer.length() > 0;
+        return subject != null && issuer != null && !subject.isEmpty() && !issuer.isEmpty();
     }
 
     @JsonIgnore

@@ -111,7 +111,7 @@ class JwtClientAuthenticationTest {
     }
 
     @Test
-    void testGetClientAssertionUsingFalseBooleanConfig() throws ParseException {
+    void testGetClientAssertionUsingFalseBooleanConfig() {
         // Given
         config.setJwtClientAuthentication(false);
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
@@ -177,7 +177,7 @@ class JwtClientAuthenticationTest {
     }
 
     @Test
-    void testGetClientAssertionUnknownSingingKey() throws ParseException {
+    void testGetClientAssertionUnknownSingingKey() {
         // Given
         HashMap customClaims = new HashMap<>();
         customClaims.put("kid", "wrong-key-id");
@@ -231,7 +231,7 @@ class JwtClientAuthenticationTest {
     }
 
     @Test
-    void testGetClientAssertionUsingCustomSingingKeyFromEnvironmentButEntryIsMissing() throws ParseException, JOSEException {
+    void testGetClientAssertionUsingCustomSingingKeyFromEnvironmentButEntryIsMissing() throws JOSEException {
         // Given: register 2 keys
         mockKeyInfoService("key-id-321", JwtHelperX5tTest.CERTIFICATE_1);
         HashMap customClaims = new HashMap<>();
@@ -315,7 +315,7 @@ class JwtClientAuthenticationTest {
     }
 
     @Test
-    void testGetClientAssertionUsingCustomSingingPrivateKeyFromEnvironment_DisabledForCustomZone() throws JOSEException, ParseException {
+    void testGetClientAssertionUsingCustomSingingPrivateKeyFromEnvironment_DisabledForCustomZone() throws JOSEException {
         arrangeCustomIdz();
 
         // Given: register 2 keys
@@ -532,7 +532,7 @@ class JwtClientAuthenticationTest {
     }
 
     @Test
-    void testClientJwtFederatedCreateAndValidateWrongIdPAndWrongIssuer() throws MalformedURLException, JOSEException, ParseException {
+    void testClientJwtFederatedCreateAndValidateWrongIdPAndWrongIssuer() throws MalformedURLException, JOSEException {
         // Given
         IdentityProvider idp = new IdentityProvider();
         SamlIdentityProviderDefinition idpConfig = new SamlIdentityProviderDefinition();
@@ -615,7 +615,7 @@ class JwtClientAuthenticationTest {
         }
     }
 
-    private Map<String, Object> mockJWKMap(String keyId, String privateKey) throws JOSEException {
+    private Map<String, Object> mockJWKMap(String keyId, String privateKey) {
         if (privateKey == null) {
             return new HashMap<>();
         }
