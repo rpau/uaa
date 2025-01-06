@@ -8,7 +8,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Builder;
 import lombok.Data;
 import org.cloudfoundry.identity.uaa.util.JsonUtils;
-import org.springframework.util.StringUtils;
 
 import java.util.List;
 
@@ -36,9 +35,10 @@ public class ClientJwtCredential {
 
     @JsonIgnore
     public boolean isValid() {
-        return StringUtils.hasText(subject) && StringUtils.hasText(issuer);
+        return subject != null && issuer != null && subject.length() > 0 && issuer.length() > 0;
     }
 
+    @JsonIgnore
     public static List<ClientJwtCredential> parse(String clientJwtCredentials) {
         try {
             return JsonUtils.readValue(clientJwtCredentials, new TypeReference<>() {});

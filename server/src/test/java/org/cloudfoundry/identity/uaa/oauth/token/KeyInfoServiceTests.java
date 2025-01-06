@@ -2,11 +2,10 @@ package org.cloudfoundry.identity.uaa.oauth.token;
 
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;
-import org.cloudfoundry.identity.uaa.extensions.PollutionPreventionExtension;
 import org.cloudfoundry.identity.uaa.impl.config.LegacyTokenKey;
 import org.cloudfoundry.identity.uaa.oauth.KeyInfo;
 import org.cloudfoundry.identity.uaa.oauth.KeyInfoService;
-import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
+import org.cloudfoundry.identity.uaa.extensions.PollutionPreventionExtension;
 import org.cloudfoundry.identity.uaa.zone.IdentityZone;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneConfiguration;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneHolder;
@@ -16,6 +15,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
 
 import java.net.URISyntaxException;
 import java.text.ParseException;
@@ -24,7 +24,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -46,7 +49,7 @@ class KeyInfoServiceTests {
             mIC4cmCLVI5jc+qEC30CQE+eOXomzxNNPxVnIp5k5f+savOWBBu83J2IoT2znnGb
             wTKZHjWybPHsW2q8Z6Moz5dvE+XMd11c5NtIG2/L97I=
             -----END RSA PRIVATE KEY-----""";
-    private final RandomValueStringGenerator generator = new RandomValueStringGenerator();
+    private RandomValueStringGenerator generator = new RandomValueStringGenerator();
 
     private KeyInfoService keyInfoService;
 
@@ -61,17 +64,17 @@ class KeyInfoServiceTests {
     }
 
     @Test
-    void signedProviderSymmetricKeys() {
+    void testSignedProviderSymmetricKeys() {
         String keyId = generator.generate();
         configureDefaultZoneKeys(Collections.singletonMap(keyId, "testkey"));
 
         KeyInfo key = keyInfoService.getKey(keyId);
-        assertThat(key.getSigner()).isNotNull();
-        assertThat(key.getVerifier()).isNotNull();
+        assertNotNull(key.getSigner());
+        assertNotNull(key.getVerifier());
     }
 
     @Test
-    void signedProviderAsymmetricKeys() {
+    void testSignedProviderAsymmetricKeys() {
         String signingKey = """
                 -----BEGIN RSA PRIVATE KEY-----
                 MIICXAIBAAKBgQDErZsZY70QAa7WdDD6eOv3RLBA4I5J0zZOiXMzoFB5yh64q0sm
@@ -91,8 +94,8 @@ class KeyInfoServiceTests {
         String keyId = generator.generate();
         configureDefaultZoneKeys(Collections.singletonMap(keyId, signingKey));
         KeyInfo key = keyInfoService.getKey(keyId);
-        assertThat(key.getSigner()).isNotNull();
-        assertThat(key.getVerifier()).isNotNull();
+        assertNotNull(key.getSigner());
+        assertNotNull(key.getVerifier());
         JWKSet jwkSet;
         List<JWK> jwkList = new ArrayList<>();
         keyInfoService.getKeys().values().forEach(keyInfo -> {
@@ -103,23 +106,23 @@ class KeyInfoServiceTests {
             }
         });
         jwkSet = new JWKSet(jwkList);
-        assertThat(jwkSet).isNotNull();
+        assertNotNull(jwkSet);
     }
 
     @Test
-    void signedProviderAsymmetricKeysShouldAddKeyURL() {
+    void testSignedProviderAsymmetricKeysShouldAddKeyURL() {
         String keyId = generator.generate();
         configureDefaultZoneKeys(Collections.singletonMap(keyId, SIGNING_KEY));
 
         KeyInfo key = keyInfoService.getKey(keyId);
-        assertThat(key.getSigner()).isNotNull();
-        assertThat(key.getVerifier()).isNotNull();
+        assertNotNull(key.getSigner());
+        assertNotNull(key.getVerifier());
 
-        assertThat(key.keyURL()).isEqualTo("https://localhost/uaa/token_keys");
+        assertThat(key.keyURL(), is("https://localhost/uaa/token_keys"));
     }
 
     @Test
-    void signedProviderAsymmetricKeysShouldAddKeyURLForCorrectZone() {
+    void testSignedProviderAsymmetricKeysShouldAddKeyURL_ForCorrectZone() {
         String keyId = generator.generate();
         IdentityZoneHolder.clear();
         IdentityZoneProvisioning provisioning = mock(IdentityZoneProvisioning.class);
@@ -136,25 +139,25 @@ class KeyInfoServiceTests {
         when(provisioning.retrieve("uaa")).thenReturn(zone);
 
         KeyInfo key = keyInfoService.getKey(keyId);
-        assertThat(key.getSigner()).isNotNull();
-        assertThat(key.getVerifier()).isNotNull();
+        assertNotNull(key.getSigner());
+        assertNotNull(key.getVerifier());
 
-        assertThat(key.keyURL()).isEqualTo("https://subdomain.localhost/uaa/token_keys");
+        assertThat(key.keyURL(), is("https://subdomain.localhost/uaa/token_keys"));
     }
 
     @Test
-    void activeKeyFallsBackToLegacyKey() {
+    void testActiveKeyFallsBackToLegacyKey() {
         configureDefaultZoneKeys(Collections.emptyMap());
 
-        assertThat(keyInfoService.getActiveKey().keyId()).isEqualTo(LegacyTokenKey.LEGACY_TOKEN_KEY_ID);
-        assertThat(keyInfoService.getActiveKey().verifierKey()).isEqualTo("testLegacyKey");
+        assertEquals(keyInfoService.getActiveKey().keyId(), LegacyTokenKey.LEGACY_TOKEN_KEY_ID);
+        assertEquals(keyInfoService.getActiveKey().verifierKey(), "testLegacyKey");
     }
 
     @Test
-    void tokenEndpointUrl() throws URISyntaxException {
+    void testTokenEndpointUrl() throws URISyntaxException {
         configureDefaultZoneKeys(Collections.emptyMap());
 
-        assertThat(keyInfoService.getTokenEndpointUrl()).isEqualTo("https://localhost/uaa/oauth/token");
+        assertEquals("https://localhost/uaa/oauth/token", keyInfoService.getTokenEndpointUrl());
     }
 
     private void configureDefaultZoneKeys(Map<String, String> keys) {

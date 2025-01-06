@@ -57,7 +57,6 @@ public class InMemoryMultitenantClientServices extends MultitenantClientServices
     @Override
     public void addClientJwtCredential(String clientId, ClientJwtCredential keyConfig, String zoneId, boolean overwrite)
             throws NoSuchClientException {
-        // ignore
     }
 
     @Override

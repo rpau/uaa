@@ -48,18 +48,23 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class JwtClientAuthenticationTest {
+
     private static final String KEY_ID = "tokenKeyId";
     private static final String INVALID_CLIENT_JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjYmEyZmRlN2ZkYTg0YzMzYTdkZDQ5MWVmMzljZWY5NiIsImF1ZCI6WyJodHRwOi8vbG9jYWxob3N0OjgwODAvdWFhL29hdXRoL3Rva2VuIl0sInN1YiI6ImlkZW50aXR5IiwiaXNzIjoic29tZVRoaW5nIn0.HLXpsPJw0SvF8DcGmmifzJJLxX4hmfwILAtAFedk48c";
     private static final String INVALID_CLIENT_ALG = "eyJhbGciOiJIUzI1NiIsImtpZCI6InRva2VuS2V5SWQiLCJ0eXAiOiJKV1QifQ.eyJleHAiOjE2OTU4NDEyMDYsImp0aSI6ImRhMzdjYzFjMjkzOTQzMWE4YjUzZTI5MmZiMjYxMDZhIiwiYXVkIjpbImh0dHA6Ly9sb2NhbGhvc3Q6ODA4MC91YWEvb2F1dGgvdG9rZW4iXSwic3ViIjoiaWRlbnRpdHkiLCJpc3MiOiJpZGVudGl0eSIsImlhdCI6MTY5NTg0MDc4NiwicmV2b2NhYmxlIjpmYWxzZX0.gFYuUjzupzeKNK2Uq3Ijp0rDIcJfI80wl3Pt5MSypPM";
-
     private OIDCIdentityProviderDefinition config;
     private final KeyInfoService keyInfoService = mock(KeyInfoService.class);
     private final OidcMetadataFetcher oidcMetadataFetcher = mock(OidcMetadataFetcher.class);
@@ -82,110 +87,110 @@ class JwtClientAuthenticationTest {
     }
 
     @Test
-    void getClientAssertion() throws ParseException {
+    void testGetClientAssertion() throws ParseException {
         // When
-        String clientAssertion = jwtClientAuthentication.getClientAssertion(config);
+        String clientAssertion = (String) jwtClientAuthentication.getClientAssertion(config);
         // Then
         validateClientAssertionOidcComplaint(clientAssertion);
     }
 
     @Test
-    void getClientAssertionUsingTrueBooleanConfig() throws ParseException {
+    void testGetClientAssertionUsingTrueBooleanConfig() throws ParseException {
         // Given
         config.setJwtClientAuthentication(true);
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         // When
         params = jwtClientAuthentication.getClientAuthenticationParameters(params, config);
         // Then
-        assertThat(params).containsKey("client_assertion")
-                .containsKey("client_assertion_type");
-        String clientAssertion = params.get("client_assertion").get(0);
+        assertTrue(params.containsKey("client_assertion"));
+        assertTrue(params.containsKey("client_assertion_type"));
+        String clientAssertion = (String) params.get("client_assertion").get(0);
         validateClientAssertionOidcComplaint(clientAssertion);
         JWSHeader header = getJwtHeader(clientAssertion);
-        assertThat(header.getKeyID()).isEqualTo(KEY_ID);
+        assertEquals(KEY_ID, header.getKeyID());
     }
 
     @Test
-    void getClientAssertionUsingFalseBooleanConfig() {
+    void testGetClientAssertionUsingFalseBooleanConfig() throws ParseException {
         // Given
         config.setJwtClientAuthentication(false);
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         // When
         params = jwtClientAuthentication.getClientAuthenticationParameters(params, config);
         // Then
-        assertThat(params).doesNotContainKey("client_assertion")
-                .doesNotContainKey("client_assertion_type");
+        assertFalse(params.containsKey("client_assertion"));
+        assertFalse(params.containsKey("client_assertion_type"));
     }
 
     @Test
-    void getClientAssertionUsingCustomConfig() throws ParseException {
+    void testGetClientAssertionUsingCustomConfig() throws ParseException {
         // Given
-        Map<Object, Object> customClaims = Map.of("iss", "identity");
+        HashMap customClaims = new HashMap<>();
+        customClaims.put("iss", "identity");
         config.setJwtClientAuthentication(customClaims);
         // When
-        String clientAssertion = jwtClientAuthentication.getClientAssertion(config);
+        String clientAssertion = (String) jwtClientAuthentication.getClientAssertion(config);
         // Then
         validateClientAssertionOidcComplaint(clientAssertion);
     }
 
     @Test
-    void getClientAssertionRfc7523Complaint() throws ParseException {
+    void testGetClientAssertionRfc7523Complaint() throws ParseException {
         // Given
-        Map<Object, Object> customClaims = new HashMap<>();
+        HashMap customClaims = new HashMap<>();
         customClaims.put("iss", "anotherIssuer");
         customClaims.put("aud", "ReceiverEndpoint");
         config.setJwtClientAuthentication(customClaims);
         // When
-        String clientAssertion = jwtClientAuthentication.getClientAssertion(config);
+        String clientAssertion = (String) jwtClientAuthentication.getClientAssertion(config);
         // Then
         validateClientAssertionRfc7523Complaint(clientAssertion, "anotherIssuer", "ReceiverEndpoint");
     }
 
     @Test
-    void getClientAuthenticationParameters() throws ParseException {
+    void testGetClientAuthenticationParameters() throws ParseException {
         // Given
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         // When
         params = jwtClientAuthentication.getClientAuthenticationParameters(params, config);
         // Then
-        assertThat(params).containsKey("client_assertion")
-                .containsKey("client_assertion_type")
-                .containsEntry("client_assertion_type", Collections.singletonList(JwtClientAuthentication.GRANT_TYPE));
-        assertThat(params.get("client_assertion").get(0)).isNotNull();
-        validateClientAssertionOidcComplaint(params.get("client_assertion").get(0));
+        assertTrue(params.containsKey("client_assertion"));
+        assertTrue(params.containsKey("client_assertion_type"));
+        assertEquals(Collections.singletonList(JwtClientAuthentication.GRANT_TYPE), params.get("client_assertion_type"));
+        assertNotNull(params.get("client_assertion").get(0));
+        validateClientAssertionOidcComplaint((String) params.get("client_assertion").get(0));
     }
 
     @Test
-    void getClientAuthenticationParametersNullParameter() {
+    void testGetClientAuthenticationParametersNullParameter() {
         // When
-        assertThat(jwtClientAuthentication.getClientAuthenticationParameters(null, null)).isNull();
+        assertNull(jwtClientAuthentication.getClientAuthenticationParameters(null, null));
     }
 
     @Test
-    void getClientAuthenticationParametersNullJwtClientConfiguration() {
+    void testGetClientAuthenticationParametersNullJwtClientConfiguration() {
         // Given
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         config.setJwtClientAuthentication(null);
         // When
-        assertThat(jwtClientAuthentication.getClientAuthenticationParameters(params, config)).isEqualTo(params);
+        assertEquals(params, jwtClientAuthentication.getClientAuthenticationParameters(params, config));
     }
 
     @Test
-    void getClientAssertionUnknownSingingKey() {
+    void testGetClientAssertionUnknownSingingKey() throws ParseException {
         // Given
-        Map<Object, Object> customClaims = new HashMap<>();
+        HashMap customClaims = new HashMap<>();
         customClaims.put("kid", "wrong-key-id");
         config.setJwtClientAuthentication(customClaims);
-
-        assertThatThrownBy(() -> jwtClientAuthentication.getClientAssertion(config))
-                .isExactlyInstanceOf(BadCredentialsException.class);
+        // When
+        assertThrowsExactly(BadCredentialsException.class, () -> jwtClientAuthentication.getClientAssertion(config));
     }
 
     @Test
-    void getClientAssertionUsingCustomSingingKeyFromEnvironment() throws ParseException, JOSEException {
+    void testGetClientAssertionUsingCustomSingingKeyFromEnvironment() throws ParseException, JOSEException {
         // Given: register 2 keys
         mockKeyInfoService("key-id-321", JwtHelperX5tTest.CERTIFICATE_1);
-        Map<Object, Object> customClaims = new HashMap<>();
+        HashMap customClaims = new HashMap<>();
         // reference to customer one key-id-321 and set default
         customClaims.put("kid", "${jwt.client.kid:" + KEY_ID + "}");
         config.setJwtClientAuthentication(customClaims);
@@ -195,20 +200,20 @@ class JwtClientAuthenticationTest {
         // When
         params = jwtClientAuthentication.getClientAuthenticationParameters(params, config);
         // Then
-        assertThat(params).containsKey("client_assertion")
-                .containsKey("client_assertion_type");
-        String clientAssertion = params.get("client_assertion").get(0);
+        assertTrue(params.containsKey("client_assertion"));
+        assertTrue(params.containsKey("client_assertion_type"));
+        String clientAssertion = (String) params.get("client_assertion").get(0);
         validateClientAssertionOidcComplaint(clientAssertion);
         JWSHeader header = getJwtHeader(clientAssertion);
-        assertThat(header.getKeyID()).isEqualTo("key-id-321");
-        assertThat(header.getJWKURL()).isNull();
+        assertEquals("key-id-321", header.getKeyID());
+        assertNull(header.getJWKURL());
     }
 
     @Test
-    void getClientAssertionUsingCustomSingingKeyFromEnvironmentNoDefault() throws ParseException, JOSEException {
+    void testGetClientAssertionUsingCustomSingingKeyFromEnvironmentNoDefault() throws ParseException, JOSEException {
         // Given: register 2 keys
         mockKeyInfoService("key-id-321", JwtHelperX5tTest.CERTIFICATE_1);
-        Map<Object, Object> customClaims = new HashMap<>();
+        HashMap customClaims = new HashMap<>();
         // reference to customer one key-id-321
         customClaims.put("kid", "${jwt.client.kid}");
         config.setJwtClientAuthentication(customClaims);
@@ -216,38 +221,37 @@ class JwtClientAuthenticationTest {
         // When
         MultiValueMap<String, String> params = jwtClientAuthentication.getClientAuthenticationParameters(new LinkedMultiValueMap<>(), config);
         // Then
-        assertThat(params).containsKey("client_assertion")
-                .containsKey("client_assertion_type");
-        String clientAssertion = params.get("client_assertion").get(0);
+        assertTrue(params.containsKey("client_assertion"));
+        assertTrue(params.containsKey("client_assertion_type"));
+        String clientAssertion = (String) params.get("client_assertion").get(0);
         validateClientAssertionOidcComplaint(clientAssertion);
         JWSHeader header = getJwtHeader(clientAssertion);
-        assertThat(header.getKeyID()).isEqualTo("key-id-321");
-        assertThat(header.getJWKURL()).isNull();
+        assertEquals("key-id-321", header.getKeyID());
+        assertNull(header.getJWKURL());
     }
 
     @Test
-    void getClientAssertionUsingCustomSingingKeyFromEnvironmentButEntryIsMissing() throws JOSEException {
+    void testGetClientAssertionUsingCustomSingingKeyFromEnvironmentButEntryIsMissing() throws ParseException, JOSEException {
         // Given: register 2 keys
         mockKeyInfoService("key-id-321", JwtHelperX5tTest.CERTIFICATE_1);
-        Map<Object, Object> customClaims = new HashMap<>();
-        // reference in jwtClientAuthentication to a customer key, but this does not exist, then use default KEY_ID
+        HashMap customClaims = new HashMap<>();
+        // reference in jwtClientAuthentication to customer key, but this does not exist, then use default KEY_ID
         customClaims.put("kid", "${jwt.client.kid:" + KEY_ID + "}");
         config.setJwtClientAuthentication(customClaims);
         // empty application context
         mockApplicationContext(Map.of());
         // Then
-        LinkedMultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-        assertThatThrownBy(() -> jwtClientAuthentication.getClientAuthenticationParameters(params, config))
-                .isInstanceOf(BadCredentialsException.class)
-                .hasMessage("Missing referenced signing entry");
+        Exception exception = assertThrows(BadCredentialsException.class, () ->
+                jwtClientAuthentication.getClientAuthenticationParameters(new LinkedMultiValueMap<>(), config));
+        assertEquals("Missing referenced signing entry", exception.getMessage());
     }
 
     @Test
-    void getClientAssertionUsingCustomSingingKeyFromEnvironmentButNotInDefaultZone() throws JOSEException {
+    void testGetClientAssertionUsingCustomSingingKeyFromEnvironmentButNotInDefaultZone() throws JOSEException {
         // Given: register 2 keys
         mockKeyInfoService("key-id-321", JwtHelperX5tTest.CERTIFICATE_1);
-        Map<Object, Object> customClaims = new HashMap<>();
-        // reference in jwtClientAuthentication to a custom key, but call it not from UAA zone
+        HashMap customClaims = new HashMap<>();
+        // reference in jwtClientAuthentication to custom key, but call it not from UAA zone
         customClaims.put("kid", "${jwt.client.kid}");
         config.setJwtClientAuthentication(customClaims);
         mockApplicationContext(Map.of("jwt.client.kid", "key-id-321"));
@@ -257,38 +261,38 @@ class JwtClientAuthenticationTest {
         currentZone.setSubdomain(new AlphanumericRandomValueStringGenerator().generate());
         IdentityZoneHolder.set(currentZone);
         // Expect
-        LinkedMultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-        assertThatThrownBy(() -> jwtClientAuthentication.getClientAuthenticationParameters(params, config))
-                .isInstanceOf(BadCredentialsException.class)
-                .hasMessage("Missing requested signing key");
+        Exception exception = assertThrows(BadCredentialsException.class, () ->
+                jwtClientAuthentication.getClientAuthenticationParameters(new LinkedMultiValueMap<>(), config));
+        assertEquals("Missing requested signing key", exception.getMessage());
     }
 
     @Test
-    void getClientAssertionCustomSingingKeyButNoCertificate() throws ParseException, JOSEException {
+    void testGetClientAssertionCustomSingingKeyButNoCertificate() throws ParseException, JOSEException {
         // Given
         mockKeyInfoService("myKey", null);
-        Map<Object, Object> customClaims = new HashMap<>();
+        HashMap customClaims = new HashMap<>();
         customClaims.put("kid", "myKey");
         config.setJwtClientAuthentication(customClaims);
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         // When
         params = jwtClientAuthentication.getClientAuthenticationParameters(params, config);
         // Then
-        assertThat(params).containsKey("client_assertion")
-                .containsKey("client_assertion_type");
-        String clientAssertion = params.get("client_assertion").get(0);
+        assertTrue(params.containsKey("client_assertion"));
+        assertTrue(params.containsKey("client_assertion_type"));
+        String clientAssertion = (String) params.get("client_assertion").get(0);
         validateClientAssertionOidcComplaint(clientAssertion);
         JWSHeader header = getJwtHeader(clientAssertion);
-        assertThat(header.getKeyID()).isEqualTo("myKey");
-        assertThat(header.getJWKURL()).hasToString("http://localhost:8080/uaa/token_key");
+        assertEquals("myKey", header.getKeyID());
+        assertNotNull(header.getJWKURL());
+        assertEquals("http://localhost:8080/uaa/token_key", header.getJWKURL().toString());
     }
 
     @Test
-    void getClientAssertionUsingCustomSingingPrivateKeyFromEnvironment() throws ParseException, JOSEException {
+    void testGetClientAssertionUsingCustomSingingPrivateKeyFromEnvironment() throws ParseException, JOSEException {
         // Given: register 2 keys
         mockKeyInfoService("key-id-321", JwtHelperX5tTest.CERTIFICATE_1);
         // add reference in jwtClientAuthentication to customer one key-id-321
-        Map<Object, Object> customClaims = new HashMap<>();
+        HashMap customClaims = new HashMap<>();
         customClaims.put("kid", "${jwt.client.kid}");
         customClaims.put("key", "${jwt.client.key}");
         customClaims.put("cert", "${jwt.client.cert}");
@@ -301,24 +305,24 @@ class JwtClientAuthenticationTest {
         // When
         params = jwtClientAuthentication.getClientAuthenticationParameters(params, config);
         // Then
-        assertThat(params).containsKey("client_assertion")
-                .containsKey("client_assertion_type");
-        String clientAssertion = params.get("client_assertion").get(0);
+        assertTrue(params.containsKey("client_assertion"));
+        assertTrue(params.containsKey("client_assertion_type"));
+        String clientAssertion = (String) params.get("client_assertion").get(0);
         validateClientAssertionOidcComplaint(clientAssertion);
         JWSHeader header = getJwtHeader(clientAssertion);
-        assertThat(header.getKeyID()).isEqualTo("key-id-321");
-        assertThat(header.getJWKURL()).isNull();
+        assertEquals("key-id-321", header.getKeyID());
+        assertNull(header.getJWKURL());
     }
 
     @Test
-    void getClientAssertionUsingCustomSingingPrivateKeyFromEnvironmentDisabledForCustomZone() throws JOSEException {
+    void testGetClientAssertionUsingCustomSingingPrivateKeyFromEnvironment_DisabledForCustomZone() throws JOSEException, ParseException {
         arrangeCustomIdz();
 
         // Given: register 2 keys
         mockKeyInfoService("key-id-321", JwtHelperX5tTest.CERTIFICATE_1);
 
         // add reference in jwtClientAuthentication to customer one key-id-321
-        Map<Object, Object> customClaims = new HashMap<>();
+        final Map<String, String> customClaims = new HashMap<>();
         customClaims.put("kid", "${jwt.client.kid}");
         customClaims.put("key", "${jwt.client.key}");
         customClaims.put("cert", "${jwt.client.cert}");
@@ -338,14 +342,14 @@ class JwtClientAuthenticationTest {
     }
 
     @Test
-    void getClientAssertionUsingCustomSingingPrivateKeyFromEnvironmentEnabledForCustomZone() throws ParseException, JOSEException {
+    void testGetClientAssertionUsingCustomSingingPrivateKeyFromEnvironment_EnabledForCustomZone() throws ParseException, JOSEException {
         arrangeCustomIdz();
 
         // Given: register 2 keys
         mockKeyInfoService("key-id-321", JwtHelperX5tTest.CERTIFICATE_1);
 
         // add reference in jwtClientAuthentication to customer one key-id-321
-        Map<Object, Object> customClaims = new HashMap<>();
+        final Map<String, String> customClaims = new HashMap<>();
         customClaims.put("kid", "${jwt.client.kid}");
         customClaims.put("key", "${jwt.client.key}");
         customClaims.put("cert", "${jwt.client.cert}");
@@ -363,13 +367,13 @@ class JwtClientAuthenticationTest {
         params = jwtClientAuthentication.getClientAuthenticationParameters(params, config, true);
 
         // Then
-        assertThat(params).containsKey("client_assertion")
-                .containsKey("client_assertion_type");
+        assertTrue(params.containsKey("client_assertion"));
+        assertTrue(params.containsKey("client_assertion_type"));
         final String clientAssertion = params.get("client_assertion").get(0);
         validateClientAssertionOidcComplaint(clientAssertion);
         final JWSHeader header = getJwtHeader(clientAssertion);
-        assertThat(header.getKeyID()).isEqualTo("key-id-321");
-        assertThat(header.getJWKURL()).isNull();
+        assertEquals("key-id-321", header.getKeyID());
+        assertNull(header.getJWKURL());
     }
 
     private static void arrangeCustomIdz() {
@@ -379,108 +383,107 @@ class JwtClientAuthenticationTest {
     }
 
     @Test
-    void getClientIdOfClientAssertion() {
+    void testGetClientIdOfClientAssertion() {
         // When
-        String clientAssertion = jwtClientAuthentication.getClientAssertion(config);
+        String clientAssertion = (String) jwtClientAuthentication.getClientAssertion(config);
         // Then
-        assertThat(JwtClientAuthentication.getClientId(clientAssertion)).isEqualTo("identity");
+        assertEquals("identity", jwtClientAuthentication.getClientId(clientAssertion));
     }
 
     @Test
-    void requestInvalidateClientAssertion() throws Exception {
+    void testRequestInvalidateClientAssertion() throws Exception {
         // Then
-        assertThat(jwtClientAuthentication.validateClientJwt(getMockedRequestParameter("test", INVALID_CLIENT_JWT), getMockedClientJwtConfiguration(), "identity")).isFalse();
+        assertFalse(jwtClientAuthentication.validateClientJwt(getMockedRequestParameter("test", INVALID_CLIENT_JWT), getMockedClientJwtConfiguration(), "identity"));
     }
 
     @Test
-    void wrongAssertionInvalidateClientId() {
+    void testWrongAssertionInvalidateClientId() {
         // Given
         jwtClientAuthentication = new JwtClientAuthentication(keyInfoService, oidcMetadataFetcher, externalOAuthAuthenticationManager);
         // Then
-        assertThatThrownBy(() -> jwtClientAuthentication.validateClientJwt(getMockedRequestParameter(null, jwtClientAuthentication.getClientAssertion(config)),
-                // pass a different client_id to the provided one from client_assertion JWT
-                getMockedClientJwtConfiguration(), "wrong_client_id"))
-                .isInstanceOf(BadCredentialsException.class)
-                .hasMessage("Wrong client_assertion");
+        Exception exception = assertThrows(BadCredentialsException.class, () ->
+                jwtClientAuthentication.validateClientJwt(getMockedRequestParameter(null, jwtClientAuthentication.getClientAssertion(config)),
+                        // pass a different client_id to the provided one from client_assertion JWT
+                        getMockedClientJwtConfiguration(), "wrong_client_id"));
+        assertEquals("Wrong client_assertion", exception.getMessage());
     }
 
     @Test
-    void badAlgorithmInvalidateClientId() throws Exception {
+    void testBadAlgorithmInvalidateClientId() throws Exception {
         // Given
         jwtClientAuthentication = new JwtClientAuthentication(keyInfoService, oidcMetadataFetcher, externalOAuthAuthenticationManager);
         ClientJwtConfiguration clientJwtConfiguration = getMockedClientJwtConfiguration();
         when(oidcMetadataFetcher.fetchWebKeySet(clientJwtConfiguration)).thenReturn(clientJwtConfiguration.getJwkSet());
         // Then
-        assertThatThrownBy(() -> jwtClientAuthentication.validateClientJwt(getMockedRequestParameter(null, INVALID_CLIENT_ALG),
-                clientJwtConfiguration, "identity"))
-                .isInstanceOf(BadCredentialsException.class)
-                .hasMessage("Bad client_assertion algorithm");
+        Exception exception = assertThrows(BadCredentialsException.class, () ->
+                jwtClientAuthentication.validateClientJwt(getMockedRequestParameter(null, INVALID_CLIENT_ALG),
+                        clientJwtConfiguration, "identity"));
+        assertEquals("Bad client_assertion algorithm", exception.getMessage());
     }
 
     @Test
-    void oidcFetchFailed() throws Exception {
+    void testOidcFetchFailed() throws Exception {
         // Given
         jwtClientAuthentication = new JwtClientAuthentication(keyInfoService, oidcMetadataFetcher, externalOAuthAuthenticationManager);
         ClientJwtConfiguration clientJwtConfiguration = getMockedClientJwtConfiguration();
         when(oidcMetadataFetcher.fetchWebKeySet(clientJwtConfiguration)).thenThrow(new OidcMetadataFetchingException(""));
         // Then
-        assertThatThrownBy(() -> jwtClientAuthentication.validateClientJwt(getMockedRequestParameter(null, jwtClientAuthentication.getClientAssertion(config)),
-                clientJwtConfiguration, "identity"))
-                .isInstanceOf(BadCredentialsException.class)
-                .hasMessage("Bad client_assertion");
+        Exception exception = assertThrows(BadCredentialsException.class, () ->
+                jwtClientAuthentication.validateClientJwt(getMockedRequestParameter(null, jwtClientAuthentication.getClientAssertion(config)),
+                        clientJwtConfiguration, "identity"));
+        assertEquals("Bad client_assertion", exception.getMessage());
     }
 
     @Test
-    void oidcFetchEmptyKeys() throws Exception {
+    void testOidcFetchEmptyKeys() throws Exception {
         // Given
         jwtClientAuthentication = new JwtClientAuthentication(keyInfoService, null, externalOAuthAuthenticationManager);
         ClientJwtConfiguration clientJwtConfiguration = getMockedClientJwtConfiguration();
         // Then
-        assertThatThrownBy(() -> jwtClientAuthentication.validateClientJwt(getMockedRequestParameter(null, jwtClientAuthentication.getClientAssertion(config)),
-                clientJwtConfiguration, "identity"))
-                .isInstanceOf(BadCredentialsException.class)
-                .hasMessage("Bad empty jwk_set");
+        Exception exception = assertThrows(BadCredentialsException.class, () ->
+                jwtClientAuthentication.validateClientJwt(getMockedRequestParameter(null, jwtClientAuthentication.getClientAssertion(config)),
+                        clientJwtConfiguration, "identity"));
+        assertEquals("Bad empty jwk_set", exception.getMessage());
     }
 
     @Test
-    void untrustedClientAssertion() throws Exception {
+    void testUntrustedClientAssertion() throws Exception {
         // Given
         jwtClientAuthentication = new JwtClientAuthentication(keyInfoService, oidcMetadataFetcher, externalOAuthAuthenticationManager);
-        // create client assertion with key ids which won't map to provide JWT,
-        // lead to failing validateClientJWToken check
+        // create client assertion with key ids which wont map to provide JWT, lead to failing validateClientJWToken check
         ClientJwtConfiguration clientJwtConfiguration = getMockedClientJwtConfiguration("extId");
         when(oidcMetadataFetcher.fetchWebKeySet(clientJwtConfiguration)).thenReturn(clientJwtConfiguration.getJwkSet());
         String clientAssertion = jwtClientAuthentication.getClientAssertion(config);
         // When
-        assertThatThrownBy(() -> jwtClientAuthentication.validateClientJwt(getMockedRequestParameter(null, clientAssertion), clientJwtConfiguration, "identity"))
-                // Then, expect key resolution error because of not matching configured keys to JWT kid
-                .isInstanceOf(BadCredentialsException.class)
-                .hasMessage("Untrusted client_assertion");
+        Exception exception = assertThrows(BadCredentialsException.class, () ->
+                jwtClientAuthentication.validateClientJwt(getMockedRequestParameter(null, clientAssertion), clientJwtConfiguration, "identity"));
+        // Then, expect key resolution error because of not maching configured keys to JWT kid
+        assertEquals("Untrusted client_assertion", exception.getMessage());
     }
 
     @Test
-    void signatureInvalidateClientAssertion() throws Exception {
+    void testSignatureInvalidateClientAssertion() throws Exception {
         // Given
         jwtClientAuthentication = new JwtClientAuthentication(keyInfoService, oidcMetadataFetcher, externalOAuthAuthenticationManager);
         ClientJwtConfiguration clientJwtConfiguration = getMockedClientJwtConfiguration();
         when(oidcMetadataFetcher.fetchWebKeySet(clientJwtConfiguration)).thenReturn(clientJwtConfiguration.getJwkSet());
         String clientAssertion = jwtClientAuthentication.getClientAssertion(config);
         // When
-        assertThatThrownBy(() -> jwtClientAuthentication.validateClientJwt(getMockedRequestParameter(null, clientAssertion), clientJwtConfiguration, "identity"))
-                // Then, expect signature failed because mockKeyInfoService creates a corrupted signature
-                .isInstanceOf(BadCredentialsException.class)
-                .hasMessage("Unauthorized client_assertion");
+        Exception exception = assertThrows(BadCredentialsException.class, () ->
+                jwtClientAuthentication.validateClientJwt(getMockedRequestParameter(null, clientAssertion), clientJwtConfiguration, "identity"));
+        // Then, expect signature failed because mockKeyInfoService creates corrupted signature
+        assertEquals("Unauthorized client_assertion", exception.getMessage());
     }
 
     @Test
-    void getClientIdOfInvalidClientAssertion() {
+    void testGetClientIdOfInvalidClientAssertion() {
         // Then
-        assertThat(JwtClientAuthentication.getClientId(INVALID_CLIENT_JWT)).isNull();
-        assertThatExceptionOfType(BadCredentialsException.class).isThrownBy(() -> JwtClientAuthentication.getClientId("eyXXX"));
+        assertNull(jwtClientAuthentication.getClientId(INVALID_CLIENT_JWT));
+        assertThrows(BadCredentialsException.class, () -> jwtClientAuthentication.getClientId("eyXXX"));
     }
 
     @Test
-    void clientJwtFederatedCreateAndValidateOwnAssertion() throws MalformedURLException, JOSEException {
+    void testClientJwtFederatedCreateAndValidateOwnAssertion() throws MalformedURLException, JOSEException {
         // Given
         jwtClientAuthentication = new JwtClientAuthentication(keyInfoService, oidcMetadataFetcher, externalOAuthAuthenticationManager);
         mockKeyInfoService(KEY_ID, JwtHelperX5tTest.CERTIFICATE_1, JwtHelperX5tTest.SIGNING_KEY_1);
@@ -489,12 +492,12 @@ class JwtClientAuthenticationTest {
         String clientAssertion = jwtClientAuthentication.getClientAssertion(config);
         when(externalOAuthAuthenticationManager.idTokenWasIssuedByTheUaa(issuer)).thenReturn(true);
         // Then
-        assertThat(jwtClientAuthentication.validateClientJwt(getMockedRequestParameter(null, clientAssertion),
-                getMockedClientJwtConfiguration(clientJwtCredential), "own_client_id")).isTrue();
+        assertTrue(jwtClientAuthentication.validateClientJwt(getMockedRequestParameter(null, clientAssertion),
+                        getMockedClientJwtConfiguration(clientJwtCredential), "own_client_id"));
     }
 
     @Test
-    void clientJwtFederatedCreateAndValidateTrustedIssuer() throws MalformedURLException, JOSEException, ParseException {
+    void testClientJwtFederatedCreateAndValidateTrustedIssuer() throws MalformedURLException, JOSEException, ParseException {
         // Given
         jwtClientAuthentication = new JwtClientAuthentication(keyInfoService, oidcMetadataFetcher, externalOAuthAuthenticationManager);
         mockKeyInfoService(KEY_ID, JwtHelperX5tTest.CERTIFICATE_1, JwtHelperX5tTest.SIGNING_KEY_1);
@@ -505,12 +508,12 @@ class JwtClientAuthenticationTest {
         when(externalOAuthAuthenticationManager.retrieveRegisteredIdentityProviderByIssuer("http://external-issuer")).thenThrow(new IncorrectResultSizeDataAccessException(0));
         when(externalOAuthAuthenticationManager.getTokenKeyFromOAuth(any())).thenReturn(JsonWebKeyHelper.deserialize(new JWKSet(JWK.parse(mockJWKMap(KEY_ID, JwtHelperX5tTest.SIGNING_KEY_1))).toString()));
         // Then
-        assertThat(jwtClientAuthentication.validateClientJwt(getMockedRequestParameter(null, clientAssertion),
-                getMockedClientJwtConfiguration(clientJwtCredential), "extern_client_id")).isTrue();
+        assertTrue(jwtClientAuthentication.validateClientJwt(getMockedRequestParameter(null, clientAssertion),
+                getMockedClientJwtConfiguration(clientJwtCredential), "extern_client_id"));
     }
 
     @Test
-    void clientJwtFederatedCreateAndValidateTrustedIdP() throws MalformedURLException, JOSEException, ParseException {
+    void testClientJwtFederatedCreateAndValidateTrustedIdP() throws MalformedURLException, JOSEException, ParseException {
         // Given
         IdentityProvider idp = new IdentityProvider();
         OIDCIdentityProviderDefinition idpConfig = new OIDCIdentityProviderDefinition();
@@ -524,12 +527,12 @@ class JwtClientAuthenticationTest {
         when(externalOAuthAuthenticationManager.retrieveRegisteredIdentityProviderByIssuer("http://external-issuer")).thenReturn(idp);
         when(externalOAuthAuthenticationManager.getTokenKeyFromOAuth(idpConfig)).thenReturn(JsonWebKeyHelper.deserialize(new JWKSet(JWK.parse(mockJWKMap(KEY_ID, JwtHelperX5tTest.SIGNING_KEY_1))).toString()));
         // Then
-        assertThat(jwtClientAuthentication.validateClientJwt(getMockedRequestParameter(null, clientAssertion),
-                getMockedClientJwtConfiguration(clientJwtCredential), "extern_client_id")).isTrue();
+        assertTrue(jwtClientAuthentication.validateClientJwt(getMockedRequestParameter(null, clientAssertion),
+                getMockedClientJwtConfiguration(clientJwtCredential), "extern_client_id"));
     }
 
     @Test
-    void clientJwtFederatedCreateAndValidateWrongIdPAndWrongIssuer() throws MalformedURLException, JOSEException {
+    void testClientJwtFederatedCreateAndValidateWrongIdPAndWrongIssuer() throws MalformedURLException, JOSEException, ParseException {
         // Given
         IdentityProvider idp = new IdentityProvider();
         SamlIdentityProviderDefinition idpConfig = new SamlIdentityProviderDefinition();
@@ -542,8 +545,8 @@ class JwtClientAuthenticationTest {
         when(externalOAuthAuthenticationManager.idTokenWasIssuedByTheUaa("external-issuer")).thenReturn(false);
         when(externalOAuthAuthenticationManager.retrieveRegisteredIdentityProviderByIssuer("external-issuer")).thenReturn(idp);
         // Then
-        assertThat(jwtClientAuthentication.validateClientJwt(getMockedRequestParameter(null, clientAssertion),
-                getMockedClientJwtConfiguration(clientJwtCredential), "extern_client_id")).isFalse();
+        assertFalse(jwtClientAuthentication.validateClientJwt(getMockedRequestParameter(null, clientAssertion),
+                getMockedClientJwtConfiguration(clientJwtCredential), "extern_client_id"));
     }
 
     private void mockKeyInfoService(String keyId, String x509Certificate) throws JOSEException {
@@ -572,6 +575,7 @@ class JwtClientAuthenticationTest {
         when(keyInfo.getSigner()).thenReturn(signer);
         when(keyInfo.getJwkMap()).thenReturn(mockJWKMap(keyInfoKid, privateKey));
         when(keyInfo.verifierCertificate()).thenReturn(x509Certificate != null ? Optional.of(X509CertUtils.parse(x509Certificate)) : Optional.of(X509CertUtils.parse(JwtHelperX5tTest.CERTIFICATE_1)));
+
     }
 
     private JWSSigner mockJWSigner(String keyId, String privateKey) throws JOSEException {
@@ -611,7 +615,7 @@ class JwtClientAuthenticationTest {
         }
     }
 
-    private Map<String, Object> mockJWKMap(String keyId, String privateKey) {
+    private Map<String, Object> mockJWKMap(String keyId, String privateKey) throws JOSEException {
         if (privateKey == null) {
             return new HashMap<>();
         }
@@ -625,16 +629,16 @@ class JwtClientAuthenticationTest {
 
     private static void validateClientAssertionOidcComplaint(String clientAssertion) throws ParseException {
         JWTClaimsSet jwtClaimsSet = JWTParser.parse(clientAssertion).getJWTClaimsSet();
-        assertThat(jwtClaimsSet.getAudience()).isEqualTo(Collections.singletonList("http://localhost:8080/uaa/oauth/token"));
-        assertThat(jwtClaimsSet.getSubject()).isEqualTo("identity");
-        assertThat(jwtClaimsSet.getIssuer()).isEqualTo("identity");
+        assertEquals(Collections.singletonList("http://localhost:8080/uaa/oauth/token"), jwtClaimsSet.getAudience());
+        assertEquals("identity", jwtClaimsSet.getSubject());
+        assertEquals("identity", jwtClaimsSet.getIssuer());
     }
 
     private static void validateClientAssertionRfc7523Complaint(String clientAssertion, String iss, String aud) throws ParseException {
         JWTClaimsSet jwtClaimsSet = JWTParser.parse(clientAssertion).getJWTClaimsSet();
-        assertThat(jwtClaimsSet.getAudience()).isEqualTo(Collections.singletonList(aud));
-        assertThat(jwtClaimsSet.getIssuer()).isEqualTo(iss);
-        assertThat(jwtClaimsSet.getSubject()).isEqualTo("identity");
+        assertEquals(Collections.singletonList(aud), jwtClaimsSet.getAudience());
+        assertEquals(iss, jwtClaimsSet.getIssuer());
+        assertEquals("identity", jwtClaimsSet.getSubject());
     }
 
     private static Map<String, String[]> getMockedRequestParameter(String type, String assertion) {

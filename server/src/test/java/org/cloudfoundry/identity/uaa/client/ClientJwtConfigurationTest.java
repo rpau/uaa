@@ -6,13 +6,17 @@ import org.cloudfoundry.identity.uaa.oauth.jwk.JsonWebKeySet;
 import org.cloudfoundry.identity.uaa.util.JsonUtils;
 import org.junit.jupiter.api.Test;
 
+import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -29,235 +33,233 @@ class ClientJwtConfigurationTest {
     private final String defaultJsonKey = "{\"jwks\":{\"keys\":[{\"kty\":\"RSA\",\"e\":\"AQAB\",\"alg\":\"RS256\",\"n\":\"u_A1S-WoVAnHlNQ_1HJmOPBVxIdy1uSNsp5JUF5N4KtOjir9EgG9HhCFRwz48ykEukrgaK4ofyy_wRXSUJKW7Q\",\"kid\":\"key-1\"}]}}";
 
     @Test
-    void jwksValidity() {
-        assertThat(ClientJwtConfiguration.parse("https://any.domain.net/openid/jwks-uri")).isNotNull();
-        assertThat(ClientJwtConfiguration.parse("http://any.localhost/openid/jwks-uri")).isNotNull();
+    void testJwksValidity() {
+        assertNotNull(ClientJwtConfiguration.parse("https://any.domain.net/openid/jwks-uri"));
+        assertNotNull(ClientJwtConfiguration.parse("http://any.localhost/openid/jwks-uri"));
     }
 
     @Test
-    void jwksInvalid() {
-        assertThatExceptionOfType(InvalidClientDetailsException.class).isThrownBy(() -> ClientJwtConfiguration.parse("custom://any.domain.net/openid/jwks-uri", null));
-        assertThatExceptionOfType(InvalidClientDetailsException.class).isThrownBy(() -> ClientJwtConfiguration.parse("test", null));
-        assertThatExceptionOfType(InvalidClientDetailsException.class).isThrownBy(() -> ClientJwtConfiguration.parse("http://any.domain.net/openid/jwks-uri"));
-        assertThatExceptionOfType(InvalidClientDetailsException.class).isThrownBy(() -> ClientJwtConfiguration.parse("https://"));
-        assertThatExceptionOfType(InvalidClientDetailsException.class).isThrownBy(() -> ClientJwtConfiguration.parse("ftp://any.domain.net/openid/jwks-uri"));
+    void testJwksInvalid() {
+        assertThrows(InvalidClientDetailsException.class, () -> ClientJwtConfiguration.parse("custom://any.domain.net/openid/jwks-uri", null));
+        assertThrows(InvalidClientDetailsException.class, () -> ClientJwtConfiguration.parse("test", null));
+        assertThrows(InvalidClientDetailsException.class, () -> ClientJwtConfiguration.parse("http://any.domain.net/openid/jwks-uri"));
+        assertThrows(InvalidClientDetailsException.class, () -> ClientJwtConfiguration.parse("https://"));
+        assertThrows(InvalidClientDetailsException.class, () -> ClientJwtConfiguration.parse("ftp://any.domain.net/openid/jwks-uri"));
     }
 
     @Test
-    void jwkSetValidity() {
-        assertThat(ClientJwtConfiguration.parse(jsonWebKey)).isNotNull();
-        assertThat(ClientJwtConfiguration.parse(jsonJwkSet)).isNotNull();
+    void testJwkSetValidity() {
+        assertNotNull(ClientJwtConfiguration.parse(jsonWebKey));
+        assertNotNull(ClientJwtConfiguration.parse(jsonJwkSet));
     }
 
     @Test
-    void jwkSetInvalid() {
-        assertThatExceptionOfType(InvalidClientDetailsException.class).isThrownBy(() -> ClientJwtConfiguration.parse(jsonJwkSetEmtpy));
-        assertThatExceptionOfType(InvalidClientDetailsException.class).isThrownBy(() -> ClientJwtConfiguration.parse(jsonWebKeyNoId));
-        assertThatExceptionOfType(InvalidClientDetailsException.class).isThrownBy(() -> ClientJwtConfiguration.parse("{\"keys\": \"x\"}"));
+    void testJwkSetInvalid() {
+        assertThrows(InvalidClientDetailsException.class, () -> ClientJwtConfiguration.parse(jsonJwkSetEmtpy));
+        assertThrows(InvalidClientDetailsException.class, () -> ClientJwtConfiguration.parse(jsonWebKeyNoId));
+        assertThrows(InvalidClientDetailsException.class, () -> ClientJwtConfiguration.parse("{\"keys\": \"x\"}"));
     }
 
     @Test
-    void jwkSetInvalidSize() {
-        assertThatExceptionOfType(InvalidClientDetailsException.class).isThrownBy(() -> new ClientJwtConfiguration(null, new JsonWebKeySet<>(Collections.emptyList())));
+    void testJwkSetInvalidSize() throws ParseException {
+        assertThrows(InvalidClientDetailsException.class, () -> new ClientJwtConfiguration(null, new JsonWebKeySet(Collections.emptyList())));
     }
 
     @Test
-    void getCleanConfig() {
-        assertThat(ClientJwtConfiguration.parse("https://any.domain.net/openid/jwks-uri").getCleanString()).isNotNull();
-        assertThat(ClientJwtConfiguration.parse(jsonWebKey).getCleanString()).isNotNull();
+    void testGetCleanConfig() {
+        assertNotNull(ClientJwtConfiguration.parse("https://any.domain.net/openid/jwks-uri").getCleanString());
+        assertNotNull(ClientJwtConfiguration.parse(jsonWebKey).getCleanString());
     }
 
     @Test
-    void jwtCredentials() {
+    void testJwtCredentials() {
         ClientJwtConfiguration config = new ClientJwtConfiguration(ClientJwtCredential.parse("[{\"iss\":\"http://localhost:8080/uaa\",\"sub\":\"client_with_jwks_trust\"}]"));
-        assertThat(config.getClientJwtCredentials()).hasSize(1);
-        assertThat(config.getCleanString()).contains("client_with_jwks_trust");
+        assertEquals(1, config.getClientJwtCredentials().size());
+        assertTrue(config.getCleanString().contains("client_with_jwks_trust"));
         ClientJwtConfiguration mergeConfig = ClientJwtConfiguration.merge(ClientJwtConfiguration.parse("https://any.domain.net/openid/jwks-uri"), config, false);
-        assertThat(mergeConfig.getClientJwtCredentials()).isNotNull();
-        assertThat(mergeConfig.getJwksUri()).isNotNull();
-        assertThat(mergeConfig.getJwkSet()).isNull();
+        assertNotNull(mergeConfig.getClientJwtCredentials());
+        assertNotNull(mergeConfig.getJwksUri());
+        assertNull(mergeConfig.getJwkSet());
     }
 
     @Test
-    void addAndDeleteJwtCredentials() {
+    void testAddAndDeleteJwtCredentials() {
         ClientJwtConfiguration config = new ClientJwtConfiguration(ClientJwtCredential.parse("[{\"iss\":\"http://localhost:8080/uaa\",\"sub\":\"client_with_jwks_trust\"}]"));
-        assertThat(config.getClientJwtCredentials()).hasSize(1);
+        assertEquals(1, config.getClientJwtCredentials().size());
         config.addJwtCredentials(ClientJwtCredential.parse("[{\"iss\":\"http://localhost:8080/uaa\",\"sub\":\"client_with_jwks_trust\"}]"));
-        assertThat(config.getClientJwtCredentials()).hasSize(1);
-        assertThat(config.getCleanString()).contains("client_with_jwks_trust");
+        assertEquals(1, config.getClientJwtCredentials().size());
+        assertTrue(config.getCleanString().contains("client_with_jwks_trust"));
         ClientJwtConfiguration mergeConfig = ClientJwtConfiguration.merge(config, config, true);
         mergeConfig = ClientJwtConfiguration.delete(mergeConfig, config);
-        assertThat(ClientJwtConfiguration.delete(mergeConfig, config)).isNull();
+        assertEquals(0, mergeConfig.getClientJwtCredentials().size());
     }
 
     @Test
-    void invalidJwtCredentials() {
-        assertThatThrownBy(() -> new ClientJwtConfiguration(null))
-                .isInstanceOf(InvalidClientDetailsException.class);
+    void testInvalidJwtCredentials() {
+        assertThrows(InvalidClientDetailsException.class, () -> new ClientJwtConfiguration(null));
         ClientJwtConfiguration config = new ClientJwtConfiguration(ClientJwtCredential.parse("[{\"iss\":\"http://localhost:8080/uaa\",\"sub\":\"client_with_jwks_trust\"}]"));
         ClientJwtCredential jwtCredential = new ClientJwtCredential("subject", null, null);
-        assertThatThrownBy(() -> config.addJwtCredentials(List.of(jwtCredential)))
-                .isInstanceOf(InvalidClientDetailsException.class);
-
+        assertThrows(InvalidClientDetailsException.class, () -> config.addJwtCredentials(List.of(jwtCredential)));
         for (int i = 0; i < 9; i++) {
             config.addJwtCredentials(List.of(new ClientJwtCredential("subject" + i, "issuer" + i, "audience")));
         }
-        assertThatThrownBy(() -> config.addJwtCredentials(List.of(new ClientJwtCredential("subject-max", "issuer-max", "audience"))))
-                .isInstanceOf(InvalidClientDetailsException.class);
+        assertThrows(InvalidClientDetailsException.class, () -> config.addJwtCredentials(List.of(new ClientJwtCredential("subject-max" , "issuer-max", "audience"))));
     }
 
     @Test
-    void getCleanConfigInvalid() {
+    void testGetCleanConfigInvalid() {
         JsonWebKeySet<JsonWebKey> mockedKey = mock(JsonWebKeySet.class);
         List<JsonWebKey> keyList = ClientJwtConfiguration.parse(jsonJwkSet).getJwkSet().getKeys();
         when(mockedKey.getKeys()).thenReturn(keyList);
         ClientJwtConfiguration privateKey = new ClientJwtConfiguration(null, mockedKey);
         when(mockedKey.getKeySetMap()).thenThrow(new IllegalStateException("error"));
-        assertThatExceptionOfType(InvalidClientDetailsException.class).isThrownBy(privateKey::getCleanString);
+        assertThrows(InvalidClientDetailsException.class, privateKey::getCleanString);
         ClientJwtConfiguration privateKey2 = new ClientJwtConfiguration("hello", null);
-        assertThat(privateKey2.getCleanString()).isNull();
+        assertNull(privateKey2.getCleanString());
     }
 
     @Test
-    void jwtSetValidate() {
+    void testJwtSetValidate() {
         JsonWebKeySet<JsonWebKey> mockedKey = mock(JsonWebKeySet.class);
         List<JsonWebKey> keyList = ClientJwtConfiguration.parse(jsonJwkSet).getJwkSet().getKeys();
         when(mockedKey.getKeys()).thenReturn(Arrays.asList(keyList.get(0), keyList.get(0)));
-        assertThatExceptionOfType(InvalidClientDetailsException.class).isThrownBy(() -> new ClientJwtConfiguration(null, mockedKey));
+        assertThrows(InvalidClientDetailsException.class, () -> new ClientJwtConfiguration(null, mockedKey));
     }
 
     @Test
-    void configMerge() {
+    void testConfigMerge() {
         ClientJwtConfiguration configuration = ClientJwtConfiguration.parse(jsonJwkSet);
-        assertThat(configuration.getJwkSet().getKeys()).hasSize(1);
+        assertEquals(1, configuration.getJwkSet().getKeys().size());
         ClientJwtConfiguration addKey = ClientJwtConfiguration.parse(jsonWebKey2);
         configuration = ClientJwtConfiguration.merge(configuration, addKey, false);
-        assertThat(configuration.getJwkSet().getKeys()).hasSize(2);
-        assertThat(configuration.getJwkSet().getKeys().get(0).getKeyProperties()).containsEntry("n", nValue);
-        assertThat(configuration.getJwkSet().getKeys().get(1).getKeyProperties()).containsEntry("n", nValue);
+        assertEquals(2, configuration.getJwkSet().getKeys().size());
+        assertEquals(nValue, configuration.getJwkSet().getKeys().get(0).getKeyProperties().get("n"));
+        assertEquals(nValue, configuration.getJwkSet().getKeys().get(1).getKeyProperties().get("n"));
 
         configuration = ClientJwtConfiguration.merge(configuration, addKey, true);
-        assertThat(configuration.getJwkSet().getKeys()).hasSize(2);
+        assertEquals(2, configuration.getJwkSet().getKeys().size());
 
         configuration = ClientJwtConfiguration.parse(jsonJwkSet);
-        assertThat(configuration.getJwkSet().getKeys()).hasSize(1);
-        assertThat(configuration.getJwkSet().getKeys().get(0).getKeyProperties()).containsEntry("n", nValue);
+        assertEquals(1, configuration.getJwkSet().getKeys().size());
+        assertEquals(nValue, configuration.getJwkSet().getKeys().get(0).getKeyProperties().get("n"));
 
         configuration = ClientJwtConfiguration.merge(ClientJwtConfiguration.parse(jsonJwkSet), ClientJwtConfiguration.parse(jsonWebKeyDifferentValue), true);
-        assertThat(configuration.getJwkSet().getKeys()).hasSize(1);
-        assertThat(configuration.getJwkSet().getKeys().get(0).getKeyProperties()).containsEntry("n", "new");
+        assertEquals(1, configuration.getJwkSet().getKeys().size());
+        assertEquals("new", configuration.getJwkSet().getKeys().get(0).getKeyProperties().get("n"));
 
         configuration = ClientJwtConfiguration.merge(ClientJwtConfiguration.parse(jsonJwkSet), ClientJwtConfiguration.parse(jsonWebKeyDifferentValue), false);
-        assertThat(configuration.getJwkSet().getKeys()).hasSize(1);
-        assertThat(configuration.getJwkSet().getKeys().get(0).getKeyProperties()).containsEntry("n", nValue);
+        assertEquals(1, configuration.getJwkSet().getKeys().size());
+        assertEquals(nValue, configuration.getJwkSet().getKeys().get(0).getKeyProperties().get("n"));
     }
 
     @Test
-    void configMergeDifferentType() {
+    void testConfigMergeDifferentType() {
         ClientJwtConfiguration configuration = ClientJwtConfiguration.parse(jsonJwkSet);
-        assertThat(configuration.getJwkSet().getKeys()).hasSize(1);
-        assertThat(configuration.getJwksUri()).isNull();
+        assertEquals(1, configuration.getJwkSet().getKeys().size());
+        assertNull(configuration.getJwksUri());
         configuration = ClientJwtConfiguration.merge(configuration, ClientJwtConfiguration.parse("https://any/jwks-uri"), false);
-        assertThat(configuration.getJwkSet().getKeys()).hasSize(1);
-        assertThat(configuration.getJwksUri()).isNull();
+        assertEquals(1, configuration.getJwkSet().getKeys().size());
+        assertNull(configuration.getJwksUri());
 
         configuration = ClientJwtConfiguration.merge(configuration, ClientJwtConfiguration.parse("https://any/jwks-uri"), true);
-        assertThat(configuration.getJwkSet()).isNull();
-        assertThat(configuration.getJwksUri()).isNotNull();
+        assertNull(configuration.getJwkSet());
+        assertNotNull(configuration.getJwksUri());
 
         configuration = ClientJwtConfiguration.merge(ClientJwtConfiguration.parse("https://any/jwks-uri"), ClientJwtConfiguration.parse("https://new/jwks-uri"), false);
-        assertThat(configuration.getJwkSet()).isNull();
-        assertThat(configuration.getJwksUri()).isEqualTo("https://any/jwks-uri");
+        assertNull(configuration.getJwkSet());
+        assertEquals("https://any/jwks-uri", configuration.getJwksUri());
 
         configuration = ClientJwtConfiguration.merge(ClientJwtConfiguration.parse("https://any/jwks-uri"), ClientJwtConfiguration.parse("https://new/jwks-uri"), true);
-        assertThat(configuration.getJwkSet()).isNull();
-        assertThat(configuration.getJwksUri()).isEqualTo("https://new/jwks-uri");
+        assertNull(configuration.getJwkSet());
+        assertEquals("https://new/jwks-uri", configuration.getJwksUri());
 
         configuration = ClientJwtConfiguration.merge(ClientJwtConfiguration.parse("https://any/jwks-uri"), ClientJwtConfiguration.parse(jsonJwkSet), false);
-        assertThat(configuration.getJwkSet()).isNull();
-        assertThat(configuration.getJwksUri()).isEqualTo("https://any/jwks-uri");
+        assertNull(configuration.getJwkSet());
+        assertEquals("https://any/jwks-uri", configuration.getJwksUri());
 
         configuration = ClientJwtConfiguration.merge(ClientJwtConfiguration.parse("https://any/jwks-uri"), ClientJwtConfiguration.parse(jsonJwkSet), true);
-        assertThat(configuration.getJwksUri()).isNull();
-        assertThat(configuration.getJwkSet().getKeys()).hasSize(1);
-        assertThat(configuration.getJwkSet().getKeys().get(0).getKeyProperties()).containsEntry("n", nValue);
+        assertNull(configuration.getJwksUri());
+        assertEquals(1, configuration.getJwkSet().getKeys().size());
+        assertEquals(nValue, configuration.getJwkSet().getKeys().get(0).getKeyProperties().get("n"));
     }
 
     @Test
-    void configMergeNulls() {
+    void testConfigMergeNulls() {
         ClientJwtConfiguration configuration = ClientJwtConfiguration.parse(jsonJwkSet);
         ClientJwtConfiguration existingKeyConfig = ClientJwtConfiguration.merge(configuration, null, true);
-        assertThat(existingKeyConfig).isEqualTo(configuration);
+        assertTrue(configuration.equals(existingKeyConfig));
+        assertEquals(configuration, existingKeyConfig);
 
         ClientJwtConfiguration newKeyConfig = ClientJwtConfiguration.parse("https://any/jwks-uri");
         configuration = ClientJwtConfiguration.merge(null, newKeyConfig, true);
-        assertThat(newKeyConfig).isEqualTo(configuration);
+        assertTrue(configuration.equals(newKeyConfig));
+        assertTrue(configuration.equals(newKeyConfig));
     }
 
     @Test
-    void configDelete() {
+    void testConfigDelete() {
         ClientJwtConfiguration configuration = ClientJwtConfiguration.parse(jsonJwkSet);
-        assertThat(configuration.getJwkSet().getKeys()).hasSize(1);
-        assertThat(configuration.getJwksUri()).isNull();
+        assertEquals(1, configuration.getJwkSet().getKeys().size());
+        assertNull(configuration.getJwksUri());
         ClientJwtConfiguration addKey = ClientJwtConfiguration.parse(jsonWebKey2);
         configuration = ClientJwtConfiguration.merge(configuration, addKey, false);
-        assertThat(configuration.getJwkSet().getKeys()).hasSize(2);
+        assertEquals(2, configuration.getJwkSet().getKeys().size());
         configuration = ClientJwtConfiguration.delete(configuration, addKey);
-        assertThat(configuration.getJwkSet().getKeys()).hasSize(1);
+        assertEquals(1, configuration.getJwkSet().getKeys().size());
         configuration = ClientJwtConfiguration.delete(configuration, addKey);
         configuration = ClientJwtConfiguration.delete(configuration, addKey);
-        assertThat(configuration.getJwkSet().getKeys()).hasSize(1);
+        assertEquals(1, configuration.getJwkSet().getKeys().size());
         configuration = ClientJwtConfiguration.merge(configuration, addKey, false);
         configuration = ClientJwtConfiguration.delete(configuration, addKey);
-        assertThat(configuration.getJwkSet().getKeys()).hasSize(1);
+        assertEquals(1, configuration.getJwkSet().getKeys().size());
         configuration = ClientJwtConfiguration.merge(configuration, addKey, false);
         configuration = ClientJwtConfiguration.delete(configuration, new ClientJwtConfiguration("key-2", null));
         configuration = ClientJwtConfiguration.delete(configuration, new ClientJwtConfiguration("key-1", null));
-        assertThat(configuration).isNull();
+        assertNull(configuration);
         configuration = ClientJwtConfiguration.delete(ClientJwtConfiguration.parse(jsonJwkSet), ClientJwtConfiguration.parse(jsonWebKey));
-        assertThat(configuration).isNull();
+        assertNull(configuration);
 
         configuration = ClientJwtConfiguration.delete(ClientJwtConfiguration.parse("https://any/jwks-uri"), ClientJwtConfiguration.parse("https://any/jwks-uri"));
-        assertThat(configuration).isNull();
+        assertNull(configuration);
         configuration = ClientJwtConfiguration.delete(ClientJwtConfiguration.parse("https://any/jwks-uri"), ClientJwtConfiguration.parse("https://other/jwks-uri"));
-        assertThat(configuration).isNotNull();
+        assertNotNull(configuration);
     }
 
     @Test
-    void configDeleteNull() {
-        assertThat(ClientJwtConfiguration.delete(null, ClientJwtConfiguration.parse("https://other/jwks-uri"))).isNull();
-        assertThat(ClientJwtConfiguration.delete(ClientJwtConfiguration.parse("https://any/jwks-uri"), null)).isNotNull();
+    void testConfigDeleteNull() {
+        assertNull(ClientJwtConfiguration.delete(null, ClientJwtConfiguration.parse("https://other/jwks-uri")));
+        assertNotNull(ClientJwtConfiguration.delete(ClientJwtConfiguration.parse("https://any/jwks-uri"), null));
     }
 
     @Test
     void testHashCode() {
         ClientJwtConfiguration key1 = ClientJwtConfiguration.parse("http://localhost:8080/uaa");
         ClientJwtConfiguration key2 = ClientJwtConfiguration.parse("http://localhost:8080/uaa");
-        assertThat(key2.hashCode()).isNotEqualTo(key1.hashCode());
-        assertThat(key1).hasSameHashCodeAs(key1);
-        assertThat(key2).hasSameHashCodeAs(key2);
+        assertNotEquals(key1.hashCode(), key2.hashCode());
+        assertEquals(key1.hashCode(), key1.hashCode());
+        assertEquals(key2.hashCode(), key2.hashCode());
     }
 
     @Test
-    void equals() throws CloneNotSupportedException {
+    void testEquals() throws CloneNotSupportedException {
         ClientJwtConfiguration key1 = ClientJwtConfiguration.parse("http://localhost:8080/uaa");
         ClientJwtConfiguration key2 = (ClientJwtConfiguration) key1.clone();
-        assertThat(key2).isEqualTo(key1);
+        assertEquals(key1, key2);
     }
 
     @Test
-    void serializableObjectCalls() throws CloneNotSupportedException {
+    void testSerializableObjectCalls() throws CloneNotSupportedException {
         ClientJwtConfiguration key1 = JsonUtils.readValue(defaultJsonUri, ClientJwtConfiguration.class);
         ClientJwtConfiguration key2 = (ClientJwtConfiguration) key1.clone();
-        assertThat(key2).isEqualTo(key1);
+        assertEquals(key1, key2);
 
         key1 = JsonUtils.readValue(defaultJsonKey, ClientJwtConfiguration.class);
         key2 = (ClientJwtConfiguration) key1.clone();
-        assertThat(key2).isEqualTo(key1);
+        assertEquals(key1, key2);
     }
 
     @Test
-    void configuration() {
+    void testConfiguration() {
         ClientJwtConfiguration configUri = JsonUtils.readValue(defaultJsonUri, ClientJwtConfiguration.class);
         ClientJwtConfiguration configKey = JsonUtils.readValue(defaultJsonKey, ClientJwtConfiguration.class);
         UaaClientDetails uaaClientDetails = new UaaClientDetails();
@@ -265,12 +267,12 @@ class ClientJwtConfigurationTest {
 
         configUri.writeValue(uaaClientDetails);
         ClientJwtConfiguration readUriConfig = ClientJwtConfiguration.readValue(uaaClientDetails);
-        assertThat(readUriConfig).isEqualTo(configUri);
+        assertEquals(configUri, readUriConfig);
 
         ClientJwtConfiguration.resetConfiguration(uaaClientDetails);
-        assertThat(ClientJwtConfiguration.readValue(uaaClientDetails)).isNull();
+        assertNull(ClientJwtConfiguration.readValue(uaaClientDetails));
         configKey.writeValue(uaaClientDetails);
         ClientJwtConfiguration readKeyConfig = ClientJwtConfiguration.readValue(uaaClientDetails);
-        assertThat(readKeyConfig).isEqualTo(configKey);
+        assertEquals(configKey, readKeyConfig);
     }
 }

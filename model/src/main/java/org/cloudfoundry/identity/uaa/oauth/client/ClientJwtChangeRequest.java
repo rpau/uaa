@@ -33,11 +33,11 @@ public class ClientJwtChangeRequest {
     @JsonProperty("client_id")
     private String clientId;
     @JsonProperty(ISS)
-    private String issuer;
+    private String iss;
     @JsonProperty(SUB)
-    private String subject;
+    private String sub;
     @JsonProperty(AUD)
-    private String audience;
+    private String aud;
 
     private ChangeMode changeMode = ADD;
 
@@ -90,28 +90,28 @@ public class ClientJwtChangeRequest {
         this.keyId = keyId;
     }
 
-    public String getIssuer() {
-        return this.issuer;
+    public String getIss() {
+        return this.iss;
     }
 
-    public void setIssuer(final String issuer) {
-        this.issuer = issuer;
+    public void setIss(final String iss) {
+        this.iss = iss;
     }
 
-    public String getSubject() {
-        return this.subject;
+    public String getSub() {
+        return this.sub;
     }
 
-    public void setSubject(final String subject) {
-        this.subject = subject;
+    public void setSub(final String sub) {
+        this.sub = sub;
     }
 
-    public String getAudience() {
-        return this.audience;
+    public String getAud() {
+        return this.aud;
     }
 
-    public void setAudience(final String audience) {
-        this.audience = audience;
+    public void setAud(final String aud) {
+        this.aud = aud;
     }
 
     public String getChangeValue() {
@@ -124,12 +124,12 @@ public class ClientJwtChangeRequest {
 
     @JsonIgnore
     public boolean isFederated() {
-        return ((changeMode == ADD || changeMode == UPDATE) && issuer != null && subject != null) ||
-                (changeMode == DELETE && (issuer != null || subject != null));
+        return ((changeMode == ADD || changeMode == UPDATE) && iss != null && sub != null) ||
+                (changeMode == DELETE && (iss != null || sub != null));
     }
 
     @JsonIgnore
     public ClientJwtCredential getFederation() {
-        return ClientJwtCredential.builder().issuer(issuer).subject(subject).audience(audience).build();
+        return ClientJwtCredential.builder().issuer(iss).subject(sub).audience(aud).build();
     }
 }

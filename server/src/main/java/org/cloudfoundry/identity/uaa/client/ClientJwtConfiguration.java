@@ -383,12 +383,8 @@ public class ClientJwtConfiguration implements Cloneable {
         } else if (existingConfig.clientJwtCredentials != null && tobeDeleted.clientJwtCredentials != null) {
             existingConfig.clientJwtCredentials = existingConfig.clientJwtCredentials.stream()
                     .filter (c -> tobeDeleted.clientJwtCredentials.stream()
-                    .filter(e -> e.getSubject().equals(c.getSubject()) && e.getIssuer().equals(c.getIssuer())).isParallel()).toList();
+                    .filter(e -> e.getSubject().equals(c.getSubject()) && e.getIssuer().equals(e.getIssuer())).isParallel()).toList();
             result = existingConfig;
-            if (ObjectUtils.isEmpty(result.clientJwtCredentials)) {
-                result.clientJwtCredentials = null;
-            }
-            result = ObjectUtils.isEmpty(result.jwkSet) && ObjectUtils.isEmpty(result.jwksUri) ? null : result;
         }
         return result;
     }

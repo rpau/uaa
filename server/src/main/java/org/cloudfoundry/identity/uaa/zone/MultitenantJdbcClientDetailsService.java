@@ -342,7 +342,9 @@ public class MultitenantJdbcClientDetailsService extends MultitenantClientServic
         ClientJwtConfiguration existingConfig = uaaUaaClientDetails != null ? ClientJwtConfiguration.readValue(uaaUaaClientDetails) : null;
         ClientJwtConfiguration clientJwtConfiguration = new ClientJwtConfiguration(List.of(keyConfig));
         ClientJwtConfiguration result = ClientJwtConfiguration.delete(existingConfig, clientJwtConfiguration);
-        updateClientJwtConfig(clientId, result != null ? JsonUtils.writeValueAsString(result) : null, zoneId);
+        if (result != null) {
+            updateClientJwtConfig(clientId, JsonUtils.writeValueAsString(result), zoneId);
+        }
     }
 
     /**

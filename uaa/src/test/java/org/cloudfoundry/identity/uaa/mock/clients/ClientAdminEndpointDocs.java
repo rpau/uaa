@@ -82,9 +82,9 @@ class ClientAdminEndpointDocs extends AdminClientCreator {
             fieldWithPath("client_id").required().description(clientIdDescription),
             fieldWithPath("jwks").constrained("Optional only, if jwks_uri is used. Required otherwise. OIDC standard.").type(STRING).description("A valid JSON string according JSON Web Key Set standard, see [RFC 7517](https://www.rfc-editor.org/rfc/rfc7517), e.g. content of /token_keys endpoint from UAA"),
             fieldWithPath("jwks_uri").constrained("Optional only, if jwks is used. Required otherwise. OIDC standard.").type(STRING).description("A valid URI to token keys endpoint. Must be compliant to jwks_uri from [OpenID Discovery](https://openid.net/specs/openid-connect-discovery-1_0.html)."),
-            fieldWithPath("iss").constrained("Optional only, if OIDC standard is used. Required otherwise. OAuth2 standard.").type(STRING).description("OIDC compliant issuer URI, matching the retrieved OAuth2 compliant JWT (iss claim)."),
-            fieldWithPath("sub").constrained("Optional only, if OIDC standard is used. Required otherwise. OAuth2 standard.").type(STRING).description("A subject string, matching the retrieved OAuth2 compliant JWT (sub claim)."),
-            fieldWithPath("aud").constrained("Optional. Otherwise UAA token endpoint is expected. OAuth2 standard.").type(STRING).description("An audience for the retreived OAuth2 compliant JWT (part of aud claim array)."),
+            fieldWithPath("iss").constrained("Optional only, if OIDC standard is used. Required otherwise. OAuth2 standard.").type(STRING).description("OIDC complaint issuer URI, matching the retreived OAuth2 complaint JWT (iss claim)."),
+            fieldWithPath("sub").constrained("Optional only, if OIDC standard is used. Required otherwise. OAuth2 standard.").type(STRING).description("A subject string, matching the retreived OAuth2 complaint JWT (sub claim)."),
+            fieldWithPath("aud").constrained("Optional. Otherwise UAA token endpoint is expected. OAuth2 standard.").type(STRING).description("An audience for the retreived OAuth2 complaint JWT (part of aud claim array)."),
             fieldWithPath("kid").constrained("Optional only, if a single JWK should be deleted, else ignored. OIDC standard.").type(STRING).description("If change mode is set to `" + ClientJwtChangeRequest.ChangeMode.DELETE + "`, it specifies `the id of the key` that will be deleted. The kid parameter is only applicable when jwks configuration is used."),
             fieldWithPath("changeMode").optional(ClientJwtChangeRequest.ChangeMode.ADD).type(STRING).description("If change mode is set to `" + ClientJwtChangeRequest.ChangeMode.ADD + "`, a new entry of either `JWKS` or `iss/sub/aud` will be added to the existing configuration and if the change mode is set to `" + ClientJwtChangeRequest.ChangeMode.DELETE + "`, the old `JWKS` or `iss/sub/aud` will be deleted. The option `" + ClientJwtChangeRequest.ChangeMode.UPDATE + "` overwrites the existing trust setting and allows switching between `JWKS` and `JWKS_URI`.")
     };
@@ -463,7 +463,9 @@ class ClientAdminEndpointDocs extends AdminClientCreator {
                 )
                 );
 
+
         //DELETE
+
         ResultActions deleteResultActions = mockMvc.perform(post("/oauth/clients/tx/delete")
                 .contentType(APPLICATION_JSON)
                 .content("[{\"client_id\":\"" + createdClientDetails1.getClientId() + "\"},{\"client_id\":\"" + createdClientDetails3.getClientId() + "\"}]")

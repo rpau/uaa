@@ -30,7 +30,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @WithDatabaseContext
-class JdbcUnsuccessfulLoginCountingAuditServiceTests {
+class       JdbcUnsuccessfulLoginCountingAuditServiceTests {
 
     private JdbcUnsuccessfulLoginCountingAuditService auditService;
 
