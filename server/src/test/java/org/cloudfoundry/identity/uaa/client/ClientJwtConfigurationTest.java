@@ -90,8 +90,7 @@ class ClientJwtConfigurationTest {
         assertEquals(1, config.getClientJwtCredentials().size());
         assertTrue(config.getCleanString().contains("client_with_jwks_trust"));
         ClientJwtConfiguration mergeConfig = ClientJwtConfiguration.merge(config, config, true);
-        mergeConfig = ClientJwtConfiguration.delete(mergeConfig, config);
-        assertEquals(0, mergeConfig.getClientJwtCredentials().size());
+        assertNull(ClientJwtConfiguration.delete(mergeConfig, config));
     }
 
     @Test
