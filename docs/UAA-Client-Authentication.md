@@ -29,9 +29,9 @@ a dynamic token key URI. OIDC has defined the parameter jwks_uri for this alread
 UAA provides its own jwks_uri with endpoint /token_keys. The content of this endpoint is [JWKS](https://datatracker.ietf.org/doc/html/rfc7517#section-5).
 
 The content of the JWT (parameter client_assertion) can be different. The difference is defined by the standards. The [OIDC core standard](https://openid.net/specs/openid-connect-core-1_0.html#ClientAuthentication) 
-simplify the structure, so that sub, iss content are the client_id of the authenticated OAuth2 client. The key rotation is supported with
+simplify the structure, so that subject, issuer content are the client_id of the authenticated OAuth2 client. The key rotation is supported with
 jwks_uri, which retrieves the JWK. You can only have one JWKS_URI by the client. For the [RFC 7523 from OAuth2 standard](https://www.rfc-editor.org/info/rfc7523) the
-structure is more complex but with seperated iss and sub there can be more than one entry of federated credential.
+structure is more complex but with seperated issuer and subject there can be more than one entry of federated credential.
 
 The new parameters for JWKS Trust in UAA clients are:
 

@@ -1084,8 +1084,8 @@ class ClientAdminEndpointsTests {
         when(clientDetailsService.retrieve(detail.getClientId(), IdentityZoneHolder.get().getId())).thenReturn(detail);
 
         ClientJwtChangeRequest change = new ClientJwtChangeRequest();
-        change.setIss("https://any.domain.net");
-        change.setSub("domain-client-id");
+        change.setIssuer("https://any.domain.net");
+        change.setSubject("domain-client-id");
         change.setChangeMode(ClientJwtChangeRequest.ChangeMode.ADD);
 
         ActionResult result = endpoints.changeClientJwt(detail.getClientId(), change);
@@ -1093,21 +1093,21 @@ class ClientAdminEndpointsTests {
         verify(clientRegistrationService, times(1)).addClientJwtCredential(detail.getClientId(), new ClientJwtCredential("domain-client-id", "https://any.domain.net", null), IdentityZoneHolder.get().getId(), false);
 
         change.setJsonWebKeyUri(null);
-        change.setSub(null);
-        change.setIss(null);
+        change.setSubject(null);
+        change.setIssuer(null);
         result = endpoints.changeClientJwt(detail.getClientId(), change);
         assertThat(result.getMessage()).isEqualTo("No key added");
 
-        change.setIss("https://any.domain.net");
-        change.setSub("domain-client-id");
+        change.setIssuer("https://any.domain.net");
+        change.setSubject("domain-client-id");
         change.setChangeMode(ClientJwtChangeRequest.ChangeMode.DELETE);
 
         result = endpoints.changeClientJwt(detail.getClientId(), change);
         assertThat(result.getMessage()).isEqualTo("Federated client jwt configuration is deleted");
         verify(clientRegistrationService, times(1)).deleteClientJwtCredential(detail.getClientId(), new ClientJwtCredential("domain-client-id", "https://any.domain.net", null), IdentityZoneHolder.get().getId());
 
-        change.setSub(null);
-        change.setIss(null);
+        change.setSubject(null);
+        change.setIssuer(null);
 
         result = endpoints.changeClientJwt(detail.getClientId(), change);
         assertThat(result.getMessage()).isEqualTo("No key deleted");

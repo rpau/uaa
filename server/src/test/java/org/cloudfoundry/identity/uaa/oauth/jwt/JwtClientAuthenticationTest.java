@@ -485,7 +485,7 @@ class JwtClientAuthenticationTest {
         when(externalOAuthAuthenticationManager.idTokenWasIssuedByTheUaa(issuer)).thenReturn(true);
         // Then
         assertThat(jwtClientAuthentication.validateClientJwt(getMockedRequestParameter(null, clientAssertion),
-                        getMockedClientJwtConfiguration(clientJwtCredential), "own_client_id")).isTrue();
+                getMockedClientJwtConfiguration(clientJwtCredential), "own_client_id")).isTrue();
     }
 
     @Test
@@ -524,7 +524,7 @@ class JwtClientAuthenticationTest {
     }
 
     @Test
-    void clientJwtFederatedCreateAndValidateWrongIdPAndWrongIssuer() throws MalformedURLException, JOSEException, ParseException {
+    void clientJwtFederatedCreateAndValidateWrongIdPAndWrongIssuer() throws MalformedURLException, JOSEException {
         // Given
         IdentityProvider idp = new IdentityProvider();
         SamlIdentityProviderDefinition idpConfig = new SamlIdentityProviderDefinition();
@@ -606,7 +606,7 @@ class JwtClientAuthenticationTest {
         }
     }
 
-    private Map<String, Object> mockJWKMap(String keyId, String privateKey) throws JOSEException {
+    private Map<String, Object> mockJWKMap(String keyId, String privateKey) {
         if (privateKey == null) {
             return new HashMap<>();
         }

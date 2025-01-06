@@ -219,11 +219,11 @@ public class ClientAdminBootstrap implements
                 writeJwtClientConfiguration(keyConfig, client);
             }
 
-            if (map.get(JWT_CREDS) instanceof String jwt_creds) {
+            if (map.get(JWT_CREDS) instanceof String jwtCredential) {
                 if (keyConfig == null) {
                     keyConfig = new ClientJwtConfiguration();
                 }
-                keyConfig.addJwtCredentials(ClientJwtCredential.parse(jwt_creds));
+                keyConfig.addJwtCredentials(ClientJwtCredential.parse(jwtCredential));
                 writeJwtClientConfiguration(keyConfig, client);
             }
 
