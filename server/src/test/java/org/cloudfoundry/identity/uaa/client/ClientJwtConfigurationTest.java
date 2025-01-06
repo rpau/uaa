@@ -1,5 +1,6 @@
 package org.cloudfoundry.identity.uaa.client;
 
+import org.cloudfoundry.identity.uaa.oauth.client.ClientJwtCredential;
 import org.cloudfoundry.identity.uaa.oauth.jwk.JsonWebKey;
 import org.cloudfoundry.identity.uaa.oauth.jwk.JsonWebKeySet;
 import org.cloudfoundry.identity.uaa.util.JsonUtils;
@@ -10,6 +11,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -63,6 +65,45 @@ class ClientJwtConfigurationTest {
     void getCleanConfig() {
         assertThat(ClientJwtConfiguration.parse("https://any.domain.net/openid/jwks-uri").getCleanString()).isNotNull();
         assertThat(ClientJwtConfiguration.parse(jsonWebKey).getCleanString()).isNotNull();
+    }
+
+    @Test
+    void jwtCredentials() {
+        ClientJwtConfiguration config = new ClientJwtConfiguration(ClientJwtCredential.parse("[{\"iss\":\"http://localhost:8080/uaa\",\"sub\":\"client_with_jwks_trust\"}]"));
+        assertThat(config.getClientJwtCredentials()).hasSize(1);
+        assertThat(config.getCleanString()).contains("client_with_jwks_trust");
+        ClientJwtConfiguration mergeConfig = ClientJwtConfiguration.merge(ClientJwtConfiguration.parse("https://any.domain.net/openid/jwks-uri"), config, false);
+        assertThat(mergeConfig.getClientJwtCredentials()).isNotNull();
+        assertThat(mergeConfig.getJwksUri()).isNotNull();
+        assertThat(mergeConfig.getJwkSet()).isNull();
+    }
+
+    @Test
+    void addAndDeleteJwtCredentials() {
+        ClientJwtConfiguration config = new ClientJwtConfiguration(ClientJwtCredential.parse("[{\"iss\":\"http://localhost:8080/uaa\",\"sub\":\"client_with_jwks_trust\"}]"));
+        assertThat(config.getClientJwtCredentials()).hasSize(1);
+        config.addJwtCredentials(ClientJwtCredential.parse("[{\"iss\":\"http://localhost:8080/uaa\",\"sub\":\"client_with_jwks_trust\"}]"));
+        assertThat(config.getClientJwtCredentials()).hasSize(1);
+        assertThat(config.getCleanString()).contains("client_with_jwks_trust");
+        ClientJwtConfiguration mergeConfig = ClientJwtConfiguration.merge(config, config, true);
+        mergeConfig = ClientJwtConfiguration.delete(mergeConfig, config);
+        assertThat(mergeConfig.getClientJwtCredentials()).isEmpty();
+    }
+
+    @Test
+    void invalidJwtCredentials() {
+        assertThatThrownBy(() -> new ClientJwtConfiguration(null))
+                .isInstanceOf(InvalidClientDetailsException.class);
+        ClientJwtConfiguration config = new ClientJwtConfiguration(ClientJwtCredential.parse("[{\"iss\":\"http://localhost:8080/uaa\",\"sub\":\"client_with_jwks_trust\"}]"));
+        ClientJwtCredential jwtCredential = new ClientJwtCredential("subject", null, null);
+        assertThatThrownBy(() -> config.addJwtCredentials(List.of(jwtCredential)))
+                .isInstanceOf(InvalidClientDetailsException.class);
+
+        for (int i = 0; i < 9; i++) {
+            config.addJwtCredentials(List.of(new ClientJwtCredential("subject" + i, "issuer" + i, "audience")));
+        }
+        assertThatThrownBy(() -> config.addJwtCredentials(List.of(new ClientJwtCredential("subject-max" , "issuer-max", "audience"))))
+                .isInstanceOf(InvalidClientDetailsException.class);
     }
 
     @Test
