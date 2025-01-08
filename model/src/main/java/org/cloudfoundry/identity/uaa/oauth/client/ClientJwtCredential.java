@@ -8,6 +8,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Builder;
 import lombok.Data;
 import org.cloudfoundry.identity.uaa.util.JsonUtils;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 
@@ -35,7 +36,7 @@ public class ClientJwtCredential {
 
     @JsonIgnore
     public boolean isValid() {
-        return subject != null && issuer != null && !subject.isEmpty() && !issuer.isEmpty();
+        return StringUtils.hasText(subject) && StringUtils.hasText(issuer);
     }
 
     @JsonIgnore
