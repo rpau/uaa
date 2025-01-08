@@ -39,7 +39,6 @@ public class ClientJwtCredential {
         return StringUtils.hasText(subject) && StringUtils.hasText(issuer);
     }
 
-    @JsonIgnore
     public static List<ClientJwtCredential> parse(String clientJwtCredentials) {
         try {
             return JsonUtils.readValue(clientJwtCredentials, new TypeReference<>() {});
