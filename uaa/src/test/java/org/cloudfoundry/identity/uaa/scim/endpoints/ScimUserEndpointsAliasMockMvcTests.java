@@ -1,7 +1,6 @@
 package org.cloudfoundry.identity.uaa.scim.endpoints;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-
 import org.cloudfoundry.identity.uaa.DefaultTestContext;
 import org.cloudfoundry.identity.uaa.alias.AliasMockMvcTestBase;
 import org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils;
@@ -14,6 +13,7 @@ import org.cloudfoundry.identity.uaa.scim.ScimUser;
 import org.cloudfoundry.identity.uaa.scim.ScimUserAliasHandler;
 import org.cloudfoundry.identity.uaa.scim.jdbc.JdbcScimUserProvisioning;
 import org.cloudfoundry.identity.uaa.scim.services.ScimUserService;
+import org.cloudfoundry.identity.uaa.util.AlphanumericRandomValueStringGenerator;
 import org.cloudfoundry.identity.uaa.util.JsonUtils;
 import org.cloudfoundry.identity.uaa.util.UaaStringUtils;
 import org.cloudfoundry.identity.uaa.zone.IdentityZone;
@@ -26,8 +26,10 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MvcResult;
@@ -52,14 +54,23 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @DefaultTestContext
 public class ScimUserEndpointsAliasMockMvcTests extends AliasMockMvcTestBase {
+
+    // There is a race conditions where multiple users with the same name are created between tests
+    // We ensure that the tests are independent by having a custom username per test, that we clean
+    // up after every test.
+    private String TEST_USERNAME;
+
     private IdentityProviderAliasHandler idpEntityAliasHandler;
     private IdentityProviderEndpoints identityProviderEndpoints;
     private ScimUserAliasHandler scimUserAliasHandler;
     private ScimUserEndpoints scimUserEndpoints;
     private ScimUserService scimUserService;
+    @Autowired
+    JdbcTemplate jdbcTemplate;
 
     @BeforeEach
     void setUp() throws Exception {
+        TEST_USERNAME = new AlphanumericRandomValueStringGenerator(12).generate().toLowerCase();
         setUpTokensAndCustomZone();
 
         idpEntityAliasHandler = requireNonNull(webApplicationContext.getBean(IdentityProviderAliasHandler.class));
@@ -67,6 +78,13 @@ public class ScimUserEndpointsAliasMockMvcTests extends AliasMockMvcTestBase {
         scimUserAliasHandler = requireNonNull(webApplicationContext.getBean(ScimUserAliasHandler.class));
         scimUserEndpoints = requireNonNull(webApplicationContext.getBean(ScimUserEndpoints.class));
         scimUserService = requireNonNull(webApplicationContext.getBean(ScimUserService.class));
+    }
+
+    @AfterEach
+    void tearDown() {
+        // Delete any test user that was created. Not strictly necessary, but it makes
+        // it easier to debug issues by having less users in the database.
+        jdbcTemplate.execute("DELETE FROM users WHERE username = '" + TEST_USERNAME + "'");
     }
 
     @Nested
@@ -117,10 +135,7 @@ public class ScimUserEndpointsAliasMockMvcTests extends AliasMockMvcTestBase {
                 assertThat(createdUserWithAlias.getAliasZid()).isNotBlank().isEqualTo(zone2.getId());
 
                 // read all users in zone 1 and search for created user
-                final List<ScimUser> allUsersInZone1 = readRecentlyCreatedUsersInZone(zone1);
-                final Optional<ScimUser> createdUserOpt = allUsersInZone1.stream()
-                        .filter(user -> user.getUserName().equals(createdUserWithAlias.getUserName()))
-                        .findFirst();
+                final Optional<ScimUser> createdUserOpt = readUserFromZoneByUsername(scimUser.getUserName(), zone1);
                 assertThat(createdUserOpt).isPresent();
 
                 // check if the user has non-empty alias properties
@@ -242,13 +257,7 @@ public class ScimUserEndpointsAliasMockMvcTests extends AliasMockMvcTestBase {
                 final ScimUser createdScimUser = createScimUser(zone1, scimUser);
 
                 // find alias user
-                //TODO this is flaky
-                final List<ScimUser> usersZone2 = readRecentlyCreatedUsersInZone(zone2);
-                final Optional<ScimUser> aliasUserOpt = usersZone2.stream()
-                        .filter(user -> user.getId().equals(createdScimUser.getAliasId()))
-                        .findFirst();
-                assertThat(aliasUserOpt).isPresent();
-
+                final Optional<ScimUser> aliasUserOpt = readUserFromZoneByUsername(scimUser.getUserName(), zone2);
                 assertIsCorrectAliasPair(createdScimUser, aliasUserOpt.get(), zone2);
             }
 
@@ -1588,7 +1597,7 @@ public class ScimUserEndpointsAliasMockMvcTests extends AliasMockMvcTestBase {
         assertThat(originalUser.getSchemas()).isEqualTo(aliasUser.getSchemas());
     }
 
-    private static ScimUser buildScimUser(
+    private ScimUser buildScimUser(
             final String origin,
             final String zoneId,
             final String aliasId,
@@ -1600,9 +1609,9 @@ public class ScimUserEndpointsAliasMockMvcTests extends AliasMockMvcTestBase {
         scimUser.setAliasZid(aliasZid);
         scimUser.setZoneId(zoneId);
 
-        scimUser.setUserName("john.doe");
+        scimUser.setUserName(TEST_USERNAME);
         scimUser.setName(new ScimUser.Name("John", "Doe"));
-        scimUser.setPrimaryEmail("john.doe@example.com");
+        scimUser.setPrimaryEmail(TEST_USERNAME + "@example.com");
         scimUser.setPassword("some-password");
 
         return scimUser;
@@ -1651,21 +1660,21 @@ public class ScimUserEndpointsAliasMockMvcTests extends AliasMockMvcTestBase {
         return createScimUser(zone1, scimUser);
     }
 
-    private List<ScimUser> readRecentlyCreatedUsersInZone(final IdentityZone zone) throws Exception {
+    private Optional<ScimUser> readUserFromZoneByUsername(String username, IdentityZone zone) throws Exception {
         final MockHttpServletRequestBuilder getRequestBuilder = get("/Users")
                 .header(IdentityZoneSwitchingFilter.SUBDOMAIN_HEADER, zone.getSubdomain())
                 .header("Authorization", "Bearer " + getAccessTokenForZone(zone.getId()))
-                // return most recent users in first page to avoid querying for further pages
-                .param("sortBy", "created")
-                .param("sortOrder", "descending");
-        final MvcResult getResult = mockMvc.perform(getRequestBuilder).andExpect(status().isOk()).andReturn();
+                .param("filter", "userName eq \"%s\"".formatted(username));
+        final MvcResult getResult = mockMvc.perform(getRequestBuilder)
+                .andExpect(status().isOk())
+                .andReturn();
         final SearchResults<ScimUser> searchResults = JsonUtils.readValue(
                 getResult.getResponse().getContentAsString(),
                 new TypeReference<>() {
                 }
         );
         assertThat(searchResults).isNotNull();
-        return searchResults.getResources();
+        return searchResults.getResources().stream().findFirst();
     }
 
     private Optional<ScimUser> readUserFromZoneIfExists(final String id, final String zoneId) throws Exception {
