@@ -28,6 +28,7 @@ import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
@@ -35,6 +36,7 @@ import java.util.List;
 import static org.cloudfoundry.identity.uaa.constants.OriginKeys.UAA;
 import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 
+@Service
 public class UaaChangePasswordService implements ChangePasswordService, ApplicationEventPublisherAware {
 
     private final ScimUserProvisioning scimUserProvisioning;
