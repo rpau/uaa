@@ -80,13 +80,28 @@ public class SamlMetadataEntityDescriptorCustomizer implements Consumer<OpenSaml
         SamlConfig samlConfig = identityZoneManager.getCurrentIdentityZone().getConfig().getSamlConfig();
 
         EntityDescriptor entityDescriptor = entityDescriptorParameters.getEntityDescriptor();
-        entityDescriptor.setID(entityDescriptor.getEntityID());
+        String entityID = escapeToNCName(entityDescriptor.getEntityID());
+        entityDescriptor.setID(entityID);
         updateSpSsoDescriptor(entityDescriptor, samlConfig);
 
         // Signature has to be last, as it will sign the whole entity descriptor
         if (signMetaData && signatureAlgorithm != null) {
             signMetadata(entityDescriptorParameters);
         }
+    }
+
+    private String escapeToNCName(String id) {
+        if (id == null || id.isEmpty()) {
+            id = "_";
+        }
+
+        // Ensure the ID starts with a letter or underscore
+        if (!Character.isLetter(id.charAt(0)) && id.charAt(0) != '_') {
+            id = "_" + id;
+        }
+
+        // Replace invalid characters with underscores
+        return id.replaceAll("[^A-Za-z0-9._-]", "_");
     }
 
     private void updateSpSsoDescriptor(EntityDescriptor entityDescriptor, SamlConfig samlConfig) {

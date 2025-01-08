@@ -10,6 +10,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpHeaders;
@@ -23,6 +26,7 @@ import org.xmlunit.assertj.XmlAssert;
 import java.security.Security;
 import java.security.cert.CertificateEncodingException;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.provider.saml.Saml2TestUtils.xmlNamespaces;
@@ -35,6 +39,7 @@ import static org.cloudfoundry.identity.uaa.provider.saml.TestCredentialObjects.
 import static org.cloudfoundry.identity.uaa.provider.saml.TestCredentialObjects.formatCert;
 import static org.cloudfoundry.identity.uaa.provider.saml.TestSaml2X509Credentials.relyingPartySigningCredential;
 import static org.cloudfoundry.identity.uaa.provider.saml.TestSaml2X509Credentials.relyingPartyVerifyingCredential;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static org.opensaml.xmlsec.signature.support.SignatureConstants.ALGO_ID_C14N_EXCL_OMIT_COMMENTS;
@@ -212,5 +217,33 @@ class SamlMetadataEndpointTest {
         XmlAssert xmlAssert = XmlAssert.assertThat(response.getBody()).withNamespaceContext(xmlNamespaces());
         xmlAssert.valueByXPath("/md:EntityDescriptor/ds:Signature/ds:SignedInfo/ds:SignatureMethod/@Algorithm").isEqualTo(ALGO_ID_SIGNATURE_RSA_SHA1);
         xmlAssert.valueByXPath("/md:EntityDescriptor/ds:Signature/ds:SignedInfo/ds:Reference/ds:DigestMethod/@Algorithm").isEqualTo(ALGO_ID_DIGEST_SHA1);
+    }
+
+    static Stream<Arguments> entityIdForNcNameId() {
+        String url = "https://entityId:80/entityId";
+        String ncn = "https___entityId_80_entityId";
+
+        return Stream.of(
+                arguments("when entityId is null", null, "", "_"),
+                arguments("when entityId is empty", "", "", "_"),
+                arguments("when entityId starts with non-alpha", "2", "2", "_2"),
+                arguments("when entityId starts with an underscore", "_", "_", "_"),
+                arguments("when entityId is a url", url, url, ncn)
+        );
+    }
+
+    @ParameterizedTest(name = "{index} - {0}")
+    @MethodSource("entityIdForNcNameId")
+    void hasValidNcNameIdAndEntityId(String ignore, String entityId, String expectedEntityId, String expectedNcNameEntityId) {
+        when(registration.getEntityId()).thenReturn(entityId);
+        when(registration.getAssertionConsumerServiceLocation()).thenReturn(ASSERTION_CONSUMER_SERVICE_1);
+
+        endpoint = spy(new SamlMetadataEndpoint(resolver, identityZoneManager, SignatureAlgorithm.SHA1, true));
+        when(resolver.resolve(request, REGISTRATION_ID)).thenReturn(registration);
+
+        ResponseEntity<String> response = endpoint.metadataEndpoint(request);
+        XmlAssert xmlAssert = XmlAssert.assertThat(response.getBody()).withNamespaceContext(xmlNamespaces());
+        xmlAssert.valueByXPath("/md:EntityDescriptor/@ID").isEqualTo(expectedNcNameEntityId);
+        xmlAssert.valueByXPath("/md:EntityDescriptor/@entityID").isEqualTo(expectedEntityId);
     }
 }
