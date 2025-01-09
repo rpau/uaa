@@ -231,7 +231,7 @@ public class ExternalLoginAuthenticationManager<ExternalAuthenticationDetails> i
             logger.debug("{}[{}] cannot process null principal", this.getClass().getName(), name);
             return null;
         } else {
-            logger.debug("{}[{}] cannot process request of type: {}" , this.getClass().getName(), name, request.getClass().getName());
+            logger.debug("{}[{}] cannot process request of type: {}", this.getClass().getName(), name, request.getClass().getName());
             return null;
         }
 

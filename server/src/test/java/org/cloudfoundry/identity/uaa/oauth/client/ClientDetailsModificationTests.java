@@ -15,17 +15,17 @@
 package org.cloudfoundry.identity.uaa.oauth.client;
 
 import org.cloudfoundry.identity.uaa.util.JsonUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Created by fhanik on 5/5/15.
  */
-public class ClientDetailsModificationTests {
+class ClientDetailsModificationTests {
 
     @Test
-    public void testClientDetailsModificationDeserialize() {
+    void clientDetailsModificationDeserialize() {
         String data = """
                 {"scope":
                         ["bar","foo","oauth.approvals"],
@@ -43,7 +43,7 @@ public class ClientDetailsModificationTests {
                 """;
 
         ClientDetailsModification details = JsonUtils.readValue(data, ClientDetailsModification.class);
-        assertTrue(details.isApprovalsDeleted());
+        assertThat(details.isApprovalsDeleted()).isTrue();
 
     }
 }

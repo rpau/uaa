@@ -14,14 +14,14 @@
 package org.cloudfoundry.identity.uaa.integration.feature;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import org.cloudfoundry.identity.uaa.ServerRunning;
+import org.cloudfoundry.identity.uaa.ServerRunningExtension;
 import org.cloudfoundry.identity.uaa.account.UserInfoResponse;
 import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
 import org.cloudfoundry.identity.uaa.constants.OriginKeys;
 import org.cloudfoundry.identity.uaa.integration.endpoints.SamlLogoutAuthSourceEndpoint;
 import org.cloudfoundry.identity.uaa.integration.pageObjects.Page;
 import org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils;
-import org.cloudfoundry.identity.uaa.integration.util.ScreenshotOnFail;
+import org.cloudfoundry.identity.uaa.integration.util.ScreenshotOnFailExtension;
 import org.cloudfoundry.identity.uaa.oauth.client.test.TestAccounts;
 import org.cloudfoundry.identity.uaa.oauth.common.DefaultOAuth2AccessToken;
 import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
@@ -41,11 +41,11 @@ import org.cloudfoundry.identity.uaa.zone.IdentityZone;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneConfiguration;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneHolder;
 import org.cloudfoundry.identity.uaa.zone.TokenPolicy;
-import org.junit.Rule;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
 import org.openqa.selenium.WebDriver;
@@ -54,8 +54,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
@@ -81,18 +80,15 @@ import static org.cloudfoundry.identity.uaa.oauth.token.ClaimConstants.SUB;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_AUTHORIZATION_CODE;
 import static org.cloudfoundry.identity.uaa.provider.ExternalIdentityProviderDefinition.USER_NAME_ATTRIBUTE_NAME;
 
-@ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = DefaultIntegrationTestConfig.class)
+@SpringJUnitConfig(classes = DefaultIntegrationTestConfig.class)
+@ExtendWith(ScreenshotOnFailExtension.class)
 public class OIDCLoginIT {
 
     private static final String PASSWORD_AUTHN_CTX = "urn:oasis:names:tc:SAML:2.0:ac:classes:Password";
 
     @Autowired
-    @Rule
-    public IntegrationTestRule integrationTestRule;
-
-    @Rule
-    public ScreenshotOnFail screenShootRule = new ScreenshotOnFail();
+    @RegisterExtension
+    private IntegrationTestExtension integrationTestExtension;
 
     @Autowired
     WebDriver webDriver;
@@ -103,7 +99,8 @@ public class OIDCLoginIT {
     @Autowired
     TestAccounts testAccounts;
 
-    private ServerRunning serverRunning = ServerRunning.isRunning();
+    @RegisterExtension
+    private static final ServerRunningExtension serverRunning = ServerRunningExtension.connect();
 
     private IdentityZone zone;
     private String adminToken;
@@ -126,8 +123,6 @@ public class OIDCLoginIT {
     @BeforeEach
     void setUp() throws Exception {
         assertThat(doesSupportZoneDNS()).as("/etc/hosts should contain the host 'oidcloginit.localhost' for this test to work").isTrue();
-
-        screenShootRule.setWebDriver(webDriver);
 
         subdomain = "oidcloginit";
         //identity client token
@@ -283,7 +278,7 @@ public class OIDCLoginIT {
     }
 
     @Test
-    void testLoginWithInactiveProviderDoesNotWork() {
+    void loginWithInactiveProviderDoesNotWork() {
         webDriver.get(zoneUrl + "/logout.do");
         webDriver.get(zoneUrl + "/");
         Cookie beforeLogin = webDriver.manage().getCookieNamed("JSESSIONID");
@@ -309,7 +304,7 @@ public class OIDCLoginIT {
     }
 
     @Test
-    void testLoginWithLoginHintUaa() {
+    void loginWithLoginHintUaa() {
         webDriver.get(zoneUrl + "/logout.do");
         String loginHint = URLEncoder.encode("{\"origin\":\"puppy\"}", StandardCharsets.UTF_8);
 
@@ -376,7 +371,7 @@ public class OIDCLoginIT {
     }
 
     @Test
-    void testShadowUserNameDefaultsToOIDCSubjectClaim() {
+    void shadowUserNameDefaultsToOIDCSubjectClaim() {
         Map<String, Object> attributeMappings = new HashMap<>(identityProvider.getConfig().getAttributeMappings());
         attributeMappings.remove(USER_NAME_ATTRIBUTE_NAME);
         identityProvider.getConfig().setAttributeMappings(attributeMappings);
@@ -393,8 +388,8 @@ public class OIDCLoginIT {
         webDriver.get(baseUrl);
         Cookie cookie = webDriver.manage().getCookieNamed("JSESSIONID");
 
-        serverRunning = ServerRunning.isRunning();
-        serverRunning.setHostName("localhost");
+        ServerRunningExtension localhostServerRunning = ServerRunningExtension.connect();
+        localhostServerRunning.setHostName("localhost");
 
         String clientId = "client" + new RandomValueStringGenerator(5).generate();
         UaaClientDetails client = new UaaClientDetails(clientId, null, "openid", GRANT_TYPE_AUTHORIZATION_CODE, "openid", baseUrl);
@@ -402,7 +397,7 @@ public class OIDCLoginIT {
         client.setAutoApproveScopes(Collections.singletonList("true"));
         IntegrationTestUtils.createClient(adminToken, baseUrl, client);
 
-        Map<String, String> authCodeTokenResponse = IntegrationTestUtils.getAuthorizationCodeTokenMap(serverRunning,
+        Map<String, String> authCodeTokenResponse = IntegrationTestUtils.getAuthorizationCodeTokenMap(localhostServerRunning,
                 clientId,
                 "clientsecret",
                 null,
@@ -459,10 +454,10 @@ public class OIDCLoginIT {
 
             Cookie cookie = webDriver.manage().getCookieNamed("JSESSIONID");
 
-            serverRunning = ServerRunning.isRunning();
-            serverRunning.setHostName(zone.getSubdomain() + ".localhost");
+            ServerRunningExtension zoneServerRunning = ServerRunningExtension.connect();
+            zoneServerRunning.setHostName(zone.getSubdomain() + ".localhost");
 
-            Map<String, String> authCodeTokenResponse = IntegrationTestUtils.getAuthorizationCodeTokenMap(serverRunning,
+            Map<String, String> authCodeTokenResponse = IntegrationTestUtils.getAuthorizationCodeTokenMap(zoneServerRunning,
                     zoneClient.getClientId(),
                     "secret",
                     null,
@@ -496,12 +491,12 @@ public class OIDCLoginIT {
             assertThat(clientIds).isNotNull();
             assertThat(clientIds.get(0)).isEqualTo("identity");
             setRefreshTokenRotate(false);
-            String refreshToken1 = getRefreshTokenResponse(serverRunning, authCodeTokenResponse.get("refresh_token"));
-            String refreshToken2 = getRefreshTokenResponse(serverRunning, refreshToken1);
+            String refreshToken1 = getRefreshTokenResponse(zoneServerRunning, authCodeTokenResponse.get("refresh_token"));
+            String refreshToken2 = getRefreshTokenResponse(zoneServerRunning, refreshToken1);
             assertThat(refreshToken2).as("New refresh token should be equal to the old one.").isEqualTo(refreshToken1);
             setRefreshTokenRotate(true);
-            refreshToken1 = getRefreshTokenResponse(serverRunning, refreshToken2);
-            refreshToken2 = getRefreshTokenResponse(serverRunning, refreshToken1);
+            refreshToken1 = getRefreshTokenResponse(zoneServerRunning, refreshToken2);
+            refreshToken2 = getRefreshTokenResponse(zoneServerRunning, refreshToken1);
             assertThat(refreshToken2).as("New access token should be different from the old one.").isNotEqualTo(refreshToken1);
         } finally {
             IntegrationTestUtils.deleteProvider(clientCredentialsToken, baseUrl, OriginKeys.UAA, samlProvider.getOriginKey());
@@ -509,7 +504,7 @@ public class OIDCLoginIT {
     }
 
     @Test
-    void testResponseTypeRequired() {
+    void responseTypeRequired() {
         UaaClientDetails uaaClient = new UaaClientDetails(new RandomValueStringGenerator().generate(), null, "openid,user_attributes", "authorization_code,client_credentials", "uaa.admin,scim.read,scim.write,uaa.resource", baseUrl);
         uaaClient.setClientSecret("secret");
         uaaClient.setAutoApproveScopes(Collections.singleton("true"));
@@ -550,7 +545,7 @@ public class OIDCLoginIT {
         assertThat(webDriver.getPageSource()).as("Did not land on the external OIDC provider home page (as an authenticated user).").contains("Where to?");
     }
 
-    private String getRefreshTokenResponse(ServerRunning serverRunning, String refreshToken) {
+    private String getRefreshTokenResponse(ServerRunningExtension serverRunning, String refreshToken) {
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("client_id", zoneClient.getClientId());
         formData.add("client_secret", zoneClient.getClientSecret());

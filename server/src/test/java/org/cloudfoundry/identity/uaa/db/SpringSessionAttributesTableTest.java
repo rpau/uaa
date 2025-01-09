@@ -1,7 +1,6 @@
 package org.cloudfoundry.identity.uaa.db;
 
 import org.cloudfoundry.identity.uaa.annotations.WithDatabaseContext;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -12,18 +11,19 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Arrays;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 @WithDatabaseContext
 @Transactional
 class SpringSessionAttributesTableTest {
     @Autowired
     private JdbcTemplate jdbcTemplate;
     private String primaryId;
-    private String sessionId;
 
     @BeforeEach
     void setUp() {
         primaryId = UUID.randomUUID().toString();
-        sessionId = UUID.randomUUID().toString();
+        String sessionId = UUID.randomUUID().toString();
         jdbcTemplate.update(
                 "insert into SPRING_SESSION (PRIMARY_ID, SESSION_ID, CREATION_TIME, LAST_ACCESS_TIME, MAX_INACTIVE_INTERVAL, EXPIRY_TIME) values (?, ?, ?, ?, ?, ?)",
                 primaryId, sessionId, 0, 0, 2000, 6000);
@@ -40,7 +40,7 @@ class SpringSessionAttributesTableTest {
         jdbcTemplate.query(
                 "select ATTRIBUTE_BYTES from SPRING_SESSION_ATTRIBUTES where SESSION_PRIMARY_ID = ?",
                 rs -> {
-                    Assertions.assertEquals(valueSize, rs.getBytes(1).length);
+                    assertThat(rs.getBytes(1)).hasSize(valueSize);
                 },
                 primaryId);
     }

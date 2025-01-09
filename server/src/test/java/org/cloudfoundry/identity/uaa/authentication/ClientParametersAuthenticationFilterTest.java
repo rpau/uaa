@@ -1,19 +1,6 @@
 package org.cloudfoundry.identity.uaa.authentication;
 
-/*******************************************************************************
-* Cloud Foundry
-* Copyright (c) [2009-2016] Pivotal Software, Inc. All Rights Reserved.
-* <p>
-* This product is licensed to you under the Apache License, Version 2.0 (the "License").
-* You may not use this product except in compliance with the License.
-* <p>
-* This product includes a number of subcomponents with
-* separate copyright notices and license terms. Your use of these
-* subcomponents is subject to the terms and conditions of the
-* subcomponent's license, as noted in the LICENSE file.
-*******************************************************************************/
-
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockFilterChain;
@@ -36,10 +23,10 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-public class ClientParametersAuthenticationFilterTest {
+class ClientParametersAuthenticationFilterTest {
 
     @Test
-    public void doesNotContinueWithFilterChain_IfAuthenticationException() throws IOException, ServletException {
+    void doesNotContinueWithFilterChain_IfAuthenticationException() throws IOException, ServletException {
         ClientParametersAuthenticationFilter filter = new ClientParametersAuthenticationFilter();
 
         AuthenticationEntryPoint authenticationEntryPoint = mock(AuthenticationEntryPoint.class);
@@ -63,7 +50,7 @@ public class ClientParametersAuthenticationFilterTest {
     }
 
     @Test
-    public void testStoreClientAuthenticationMethod() throws IOException, ServletException {
+    void storeClientAuthenticationMethod() throws IOException, ServletException {
         ClientParametersAuthenticationFilter filter = new ClientParametersAuthenticationFilter();
 
         AuthenticationEntryPoint authenticationEntryPoint = mock(AuthenticationEntryPoint.class);
@@ -91,7 +78,7 @@ public class ClientParametersAuthenticationFilterTest {
     }
 
     @Test
-    public void testStoreClientAuthenticationMethodNoDetails() throws IOException, ServletException {
+    void storeClientAuthenticationMethodNoDetails() throws IOException, ServletException {
         ClientParametersAuthenticationFilter filter = new ClientParametersAuthenticationFilter();
 
         AuthenticationEntryPoint authenticationEntryPoint = mock(AuthenticationEntryPoint.class);
@@ -116,7 +103,7 @@ public class ClientParametersAuthenticationFilterTest {
     }
 
     @Test
-    public void testStoreClientAuthenticationMethodNoMethod() throws IOException, ServletException {
+    void storeClientAuthenticationMethodNoMethod() throws IOException, ServletException {
         ClientParametersAuthenticationFilter filter = new ClientParametersAuthenticationFilter();
 
         AuthenticationEntryPoint authenticationEntryPoint = mock(AuthenticationEntryPoint.class);

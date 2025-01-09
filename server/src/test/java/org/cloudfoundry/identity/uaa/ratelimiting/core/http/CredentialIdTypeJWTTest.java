@@ -2,9 +2,10 @@ package org.cloudfoundry.identity.uaa.ratelimiting.core.http;
 
 import org.junit.jupiter.api.Test;
 
-import static org.cloudfoundry.identity.uaa.ratelimiting.core.http.CredentialIdTypeJWT.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.cloudfoundry.identity.uaa.ratelimiting.core.http.CredentialIdTypeJWT.AllJWT;
+import static org.cloudfoundry.identity.uaa.ratelimiting.core.http.CredentialIdTypeJWT.SectionJWT;
+import static org.cloudfoundry.identity.uaa.ratelimiting.core.http.CredentialIdTypeJWT.SectionRegexJWT;
 import static org.mockito.Mockito.when;
 
 class CredentialIdTypeJWTTest extends CredentialIdTypeAbstractTestJWT<CredentialIdTypeJWT> {
@@ -16,7 +17,7 @@ class CredentialIdTypeJWTTest extends CredentialIdTypeAbstractTestJWT<Credential
 
     @Test
     void key() {
-        assertEquals("JWT", credentialIdType.key());
+        assertThat(credentialIdType.key()).isEqualTo("JWT");
     }
 
     @Test
@@ -24,18 +25,18 @@ class CredentialIdTypeJWTTest extends CredentialIdTypeAbstractTestJWT<Credential
         checkFlavor(null, AllJWT.class, JWT);
         checkFlavor("", AllJWT.class, JWT);
         checkFlavor(" ", AllJWT.class, JWT);
-        checkFlavor(" 0 ", SectionJWT.class, b64section_HEADER);
-        checkFlavor("header", SectionJWT.class, b64section_HEADER);
-        checkFlavor("HEADERS", SectionJWT.class, b64section_HEADER);
-        checkFlavor("1", SectionJWT.class, b64section_CLAIMS);
-        checkFlavor("Payload", SectionJWT.class, b64section_CLAIMS);
-        checkFlavor("claimS", SectionJWT.class, b64section_CLAIMS);
-        checkFlavor("2", SectionJWT.class, b64section_SIGNATURE);
-        checkFlavor("signaTure", SectionJWT.class, b64section_SIGNATURE);
+        checkFlavor(" 0 ", SectionJWT.class, B64_SECTION_HEADER);
+        checkFlavor("header", SectionJWT.class, B64_SECTION_HEADER);
+        checkFlavor("HEADERS", SectionJWT.class, B64_SECTION_HEADER);
+        checkFlavor("1", SectionJWT.class, B64_SECTION_CLAIMS);
+        checkFlavor("Payload", SectionJWT.class, B64_SECTION_CLAIMS);
+        checkFlavor("claimS", SectionJWT.class, B64_SECTION_CLAIMS);
+        checkFlavor("2", SectionJWT.class, B64_SECTION_SIGNATURE);
+        checkFlavor("signaTure", SectionJWT.class, B64_SECTION_SIGNATURE);
         checkFlavor(EMAIL_FROM_CLAIMS, SectionRegexJWT.class, "|" + EMAIL_DEVIN + "|");
 
         AuthorizationCredentialIdExtractor factory = credentialIdType.factory("claims");
         when(requestInfo.getAuthorizationHeader()).thenReturn(null);
-        assertNull(factory.mapAuthorizationToCredentialsID(requestInfo));
+        assertThat(factory.mapAuthorizationToCredentialsID(requestInfo)).isNull();
     }
 }

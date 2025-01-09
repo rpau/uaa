@@ -1,6 +1,8 @@
 package org.cloudfoundry.identity.uaa.client;
 
 import org.cloudfoundry.identity.uaa.annotations.WithDatabaseContext;
+import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
+import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetails;
 import org.cloudfoundry.identity.uaa.util.beans.BackwardsCompatibleDelegatingPasswordEncoder;
 import org.cloudfoundry.identity.uaa.zone.IdentityZone;
 import org.cloudfoundry.identity.uaa.zone.MultitenantJdbcClientDetailsService;
@@ -12,26 +14,23 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
-import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetails;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @WithDatabaseContext
-public class ClientAdminBootstrapMultipleSecretsUpdateTests {
+class ClientAdminBootstrapMultipleSecretsUpdateTests {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
     @Autowired
     private NamedParameterJdbcTemplate namedJdbcTemplate;
-    private RandomValueStringGenerator randomValueStringGenerator;
     private String autoApproveId;
     private String allowPublicId;
 
@@ -39,7 +38,7 @@ public class ClientAdminBootstrapMultipleSecretsUpdateTests {
 
     @BeforeEach
     void setUpClientAdminTests() {
-        randomValueStringGenerator = new RandomValueStringGenerator();
+        RandomValueStringGenerator randomValueStringGenerator = new RandomValueStringGenerator();
         autoApproveId = "autoapprove-" + randomValueStringGenerator.generate().toLowerCase();
         allowPublicId = "public-" + randomValueStringGenerator.generate().toLowerCase();
         clients = new HashMap<>();
@@ -63,17 +62,19 @@ public class ClientAdminBootstrapMultipleSecretsUpdateTests {
                 Collections.emptySet(),
                 null,
                 Collections.singleton(allowPublicId));
+
         /* setup first a client with 2 secrets */
         Map<String, Object> map = ClientAdminBootstrapTests.createClientMap("foo");
         map.put("secret", Arrays.asList("bar", "bar"));
         ClientDetails created = ClientAdminBootstrapTests.doSimpleTest(map, localAdminBootstrap, localJdbcClientDetailsService, clients);
         ClientAdminBootstrapTests.assertSet((String) map.get("redirect-uri"), null, created.getRegisteredRedirectUri(), String.class);
         ClientDetails details = localJdbcClientDetailsService.loadClientByClientId("foo");
-        assertTrue(details.getClientSecret().contains(" "), "Secret database field expected to have a space, since we have 2 secrets.");
-        assertTrue(encoder.matches("bar", details.getClientSecret().split(" ")[0]), "First secret should match bar");
+        assertThat(details.getClientSecret()).as("Secret database field expected to have a space, since we have 2 secrets.").contains(" ");
+        assertThat(encoder.matches("bar", details.getClientSecret().split(" ")[0])).as("First secret should match bar").isTrue();
+
         /* update now client but provide only one secret to admin bootstrap */
         ClientAdminBootstrapTests.doSimpleTest(ClientAdminBootstrapTests.createClientMap("foo"), localAdminBootstrap, localJdbcClientDetailsService, clients);
-        assertTrue(details.getClientSecret().contains(" "), "Secret database field expected to have a space, since we have 2 secrets.");
-        assertTrue(encoder.matches("bar", details.getClientSecret().split(" ")[0]), "First secret should match bar");
+        assertThat(details.getClientSecret()).as("Secret database field expected to have a space, since we have 2 secrets.").contains(" ");
+        assertThat(encoder.matches("bar", details.getClientSecret().split(" ")[0])).as("First secret should match bar").isTrue();
     }
 }

@@ -11,8 +11,7 @@ import java.sql.ResultSet;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @WithDatabaseContext
 class RevocableTokenTableTest {
@@ -66,32 +65,32 @@ class RevocableTokenTableTest {
                 int actualColumnSize = rs.getInt("COLUMN_SIZE");
                 if (tableName.equalsIgnoreCase(rstableName)) {
                     String actualColumnType = rs.getString("TYPE_NAME");
-                    assertTrue(testColumn(rscolumnName, actualColumnType, actualColumnSize), "Testing column:" + rscolumnName);
+                    assertThat(testColumn(rscolumnName, actualColumnType, actualColumnSize)).as("Testing column:" + rscolumnName).isTrue();
                     foundTable = true;
                     foundColumn++;
                 }
             }
             rs.close();
-            assertTrue(foundTable, "Table " + tableName + " not found!");
-            assertEquals(testColumns.size(), foundColumn, "Table " + tableName + " is missing columns!");
+            assertThat(foundTable).as("Table " + tableName + " not found!").isTrue();
+            assertThat(foundColumn).as("Table " + tableName + " is missing columns!").isEqualTo(testColumns.size());
 
 
             rs = meta.getIndexInfo(connection.getCatalog(), null, tableName, false, false);
             if (!rs.next()) {
                 rs = meta.getIndexInfo(connection.getCatalog(), null, tableName.toUpperCase(), false, false);
-                assertTrue(rs.next());
+                assertThat(rs.next()).isTrue();
             }
             int indexCount = 0;
             do {
                 String indexName = rs.getString("INDEX_NAME");
                 short indexType = rs.getShort("TYPE");
                 if (shouldCompareIndex(indexName)) {
-                    assertTrue(testColumn(testIndex, indexName, "", indexType), "Testing index: " + indexName);
+                    assertThat(testColumn(testIndex, indexName, "", indexType)).as("Testing index: " + indexName).isTrue();
                     indexCount++;
 
                 }
             } while (rs.next());
-            assertEquals(testIndex.size(), indexCount, "One or more indices are missing");
+            assertThat(indexCount).as("One or more indices are missing").isEqualTo(testIndex.size());
         }
     }
 

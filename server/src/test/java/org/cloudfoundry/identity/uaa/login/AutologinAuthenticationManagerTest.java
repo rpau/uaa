@@ -15,8 +15,8 @@ import org.cloudfoundry.identity.uaa.user.UaaUser;
 import org.cloudfoundry.identity.uaa.user.UaaUserDatabase;
 import org.cloudfoundry.identity.uaa.util.AlphanumericRandomValueStringGenerator;
 import org.cloudfoundry.identity.uaa.util.JsonUtils;
-import org.cloudfoundry.identity.uaa.zone.MultitenantClientServices;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneHolder;
+import org.cloudfoundry.identity.uaa.zone.MultitenantClientServices;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,10 +30,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.core.IsInstanceOf.instanceOf;
-import static org.junit.Assert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -100,14 +98,14 @@ class AutologinAuthenticationManagerTest {
 
         Authentication authenticate = manager.authenticate(authenticationToken);
 
-        assertThat(authenticate, is(instanceOf(UaaAuthentication.class)));
+        assertThat(authenticate).isInstanceOf(UaaAuthentication.class);
         UaaAuthentication uaaAuthentication = (UaaAuthentication) authenticate;
-        assertThat(uaaAuthentication.getPrincipal().getId(), is("test-user-id"));
-        assertThat(uaaAuthentication.getPrincipal().getName(), is("test-username"));
-        assertThat(uaaAuthentication.getPrincipal().getOrigin(), is(OriginKeys.UAA));
-        assertThat(uaaAuthentication.getDetails(), is(instanceOf(UaaAuthenticationDetails.class)));
+        assertThat(uaaAuthentication.getPrincipal().getId()).isEqualTo("test-user-id");
+        assertThat(uaaAuthentication.getPrincipal().getName()).isEqualTo("test-username");
+        assertThat(uaaAuthentication.getPrincipal().getOrigin()).isEqualTo(OriginKeys.UAA);
+        assertThat(uaaAuthentication.getDetails()).isInstanceOf(UaaAuthenticationDetails.class);
         UaaAuthenticationDetails uaaAuthDetails = (UaaAuthenticationDetails) uaaAuthentication.getDetails();
-        assertThat(uaaAuthDetails.getClientId(), is(clientId));
+        assertThat(uaaAuthDetails.getClientId()).isEqualTo(clientId);
     }
 
     @Test
@@ -120,7 +118,7 @@ class AutologinAuthenticationManagerTest {
         codeData.put("action", ExpiringCodeType.AUTOLOGIN.name());
         when(codeStore.retrieveCode("the_secret_code", IdentityZoneHolder.get().getId())).thenReturn(new ExpiringCode("the_secret_code", new Timestamp(123), JsonUtils.writeValueAsString(codeData), null));
 
-        assertThrows(BadCredentialsException.class, () -> manager.authenticate(authenticationToken));
+        assertThatExceptionOfType(BadCredentialsException.class).isThrownBy(() -> manager.authenticate(authenticationToken));
     }
 
     @Test
@@ -132,13 +130,13 @@ class AutologinAuthenticationManagerTest {
         codeData.put("action", ExpiringCodeType.AUTOLOGIN.name());
         when(codeStore.retrieveCode("the_secret_code", IdentityZoneHolder.get().getId())).thenReturn(new ExpiringCode("the_secret_code", new Timestamp(123), JsonUtils.writeValueAsString(codeData), null));
 
-        assertThrows(BadCredentialsException.class, () -> manager.authenticate(authenticationToken));
+        assertThatExceptionOfType(BadCredentialsException.class).isThrownBy(() -> manager.authenticate(authenticationToken));
     }
 
     @Test
     void authentication_fails_withExpiredCode() {
         when(codeStore.retrieveCode("the_secret_code", IdentityZoneHolder.get().getId())).thenReturn(null);
-        assertThrows(InvalidCodeException.class, () -> manager.authenticate(authenticationToken));
+        assertThatExceptionOfType(InvalidCodeException.class).isThrownBy(() -> manager.authenticate(authenticationToken));
     }
 
     @Test
@@ -150,7 +148,7 @@ class AutologinAuthenticationManagerTest {
         codeData.put(OriginKeys.ORIGIN, OriginKeys.UAA);
         when(codeStore.retrieveCode("the_secret_code", IdentityZoneHolder.get().getId())).thenReturn(new ExpiringCode("the_secret_code", new Timestamp(123), JsonUtils.writeValueAsString(codeData), null));
 
-        assertThrows(InvalidCodeException.class, () -> manager.authenticate(authenticationToken));
+        assertThatExceptionOfType(InvalidCodeException.class).isThrownBy(() -> manager.authenticate(authenticationToken));
     }
 
     @Test
@@ -159,8 +157,6 @@ class AutologinAuthenticationManagerTest {
         codeData.put("action", "someotheraction");
         when(codeStore.retrieveCode("the_secret_code", IdentityZoneHolder.get().getId())).thenReturn(new ExpiringCode("the_secret_code", new Timestamp(123), JsonUtils.writeValueAsString(codeData), null));
 
-        assertThrows(InvalidCodeException.class, () -> manager.authenticate(authenticationToken));
+        assertThatExceptionOfType(InvalidCodeException.class).isThrownBy(() -> manager.authenticate(authenticationToken));
     }
-
-
 }

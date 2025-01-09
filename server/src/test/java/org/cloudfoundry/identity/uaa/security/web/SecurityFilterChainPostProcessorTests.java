@@ -1,8 +1,8 @@
 package org.cloudfoundry.identity.uaa.security.web;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.security.web.SecurityFilterChain;
 
 import javax.servlet.Filter;
@@ -19,15 +19,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class SecurityFilterChainPostProcessorTests {
+class SecurityFilterChainPostProcessorTests {
 
     private final SecurityFilterChainPostProcessor processor = new SecurityFilterChainPostProcessor();
     private SecurityFilterChain fc;
     private final Map<SecurityFilterChainPostProcessor.FilterPosition, Filter> additionalFilters = new HashMap<>();
     private int count;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         List<Filter> filters = new LinkedList<>();
         filters.add(new TestFilter1());
         filters.add(new TestFilter2());
@@ -37,8 +37,8 @@ public class SecurityFilterChainPostProcessorTests {
         count = filters.size() + 1;
     }
 
-    @After
-    public void tearDown() {
+    @AfterEach
+    void tearDown() {
 
     }
 
@@ -52,17 +52,17 @@ public class SecurityFilterChainPostProcessorTests {
     }
 
     @Test
-    public void testPosition0Filter() {
+    void position0Filter() {
         testPositionFilter(0);
     }
 
     @Test
-    public void testPosition1Filter() {
+    void position1Filter() {
         testPositionFilter(1);
     }
 
     @Test
-    public void testPositionLastFilter() {
+    void positionLastFilter() {
         testPositionFilter(Integer.MAX_VALUE);
     }
 
@@ -74,49 +74,49 @@ public class SecurityFilterChainPostProcessorTests {
     }
 
     @Test
-    public void testBeforePlacement1() {
+    void beforePlacement1() {
         additionalFilters.put(SecurityFilterChainPostProcessor.FilterPosition.before(TestFilter1.class), new BeforeFilter());
         testClassPlacementFilter(BeforeFilter.class, 1);
     }
 
     @Test
-    public void testBeforePlacement2() {
+    void beforePlacement2() {
         additionalFilters.put(SecurityFilterChainPostProcessor.FilterPosition.before(TestFilter2.class), new BeforeFilter());
         testClassPlacementFilter(BeforeFilter.class, 2);
     }
 
     @Test
-    public void testBeforePlacement3() {
+    void beforePlacement3() {
         additionalFilters.put(SecurityFilterChainPostProcessor.FilterPosition.before(TestFilter3.class), new BeforeFilter());
         testClassPlacementFilter(BeforeFilter.class, 3);
     }
 
     @Test
-    public void testBeforePlacementWhenMissing() {
+    void beforePlacementWhenMissing() {
         additionalFilters.put(SecurityFilterChainPostProcessor.FilterPosition.before(PositionFilter.class), new BeforeFilter());
         testClassPlacementFilter(BeforeFilter.class, count);
     }
 
     @Test
-    public void testAfterPlacement1() {
+    void afterPlacement1() {
         additionalFilters.put(SecurityFilterChainPostProcessor.FilterPosition.after(TestFilter1.class), new AfterFilter());
         testClassPlacementFilter(AfterFilter.class, 2);
     }
 
     @Test
-    public void testAfterPlacement2() {
+    void afterPlacement2() {
         additionalFilters.put(SecurityFilterChainPostProcessor.FilterPosition.after(TestFilter2.class), new AfterFilter());
         testClassPlacementFilter(AfterFilter.class, 3);
     }
 
     @Test
-    public void testAfterPlacement3() {
+    void afterPlacement3() {
         additionalFilters.put(SecurityFilterChainPostProcessor.FilterPosition.after(TestFilter3.class), new AfterFilter());
         testClassPlacementFilter(AfterFilter.class, 4);
     }
 
     @Test
-    public void testAfterPlacementWhenMissing() {
+    void afterPlacementWhenMissing() {
         additionalFilters.put(SecurityFilterChainPostProcessor.FilterPosition.after(PositionFilter.class), new AfterFilter());
         testClassPlacementFilter(AfterFilter.class, count);
     }

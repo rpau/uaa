@@ -14,7 +14,6 @@
 
 package org.cloudfoundry.identity.uaa.mock.token;
 
-
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.cloudfoundry.identity.uaa.constants.OriginKeys;
 import org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils;
@@ -35,9 +34,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import static java.util.Collections.emptyList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils.getClientCredentialsOAuthAccessToken;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -100,7 +98,6 @@ class ListUserTokenMockMvcTests extends AbstractTokenMockMvcTests {
                 null,
                 null,
                 true);
-
     }
 
     @Test
@@ -116,7 +113,7 @@ class ListUserTokenMockMvcTests extends AbstractTokenMockMvcTests {
 
     void validateTokens(List<String> actual, List<String> expected) {
         for (String t : expected) {
-            assertTrue("Expecting token:" + t + " to be present in list.", actual.contains(t));
+            assertThat(actual).as("Expecting token:" + t + " to be present in list.").contains(t);
         }
     }
 
@@ -215,7 +212,7 @@ class ListUserTokenMockMvcTests extends AbstractTokenMockMvcTests {
             String response = result.getResponse().getContentAsString();
             List<RevocableToken> tokenList = JsonUtils.readValue(response, new TypeReference<List<RevocableToken>>() {
             });
-            tokenList.forEach(t -> assertNull(t.getValue()));
+            tokenList.forEach(t -> assertThat(t.getValue()).isNull());
             return tokenList;
         } else {
             return emptyList();

@@ -4,9 +4,8 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.test.ModelTestUtils.getResourceAsString;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class UaaConfigurationTokenKeyTest {
 
@@ -23,23 +22,24 @@ class UaaConfigurationTokenKeyTest {
     }
 
     @Test
-    void testTokenKeyStructure() {
+    void tokenKeyStructure() {
         UaaConfiguration uaaConfiguration = createValidator(tokenKeyYaml);
-        assertNotNull(uaaConfiguration);
+        assertThat(uaaConfiguration).isNotNull();
         Map<String, Object> uaa = uaaConfiguration.uaa;
-        assertNotNull(uaa);
+        assertThat(uaa).isNotNull();
         Map<String, Object> jwt = (Map<String, Object>) uaa.get("jwt");
-        assertNotNull(jwt);
+        assertThat(jwt).isNotNull();
         Map<String, Object> token = (Map<String, Object>) jwt.get("token");
-        assertNotNull(token);
+        assertThat(token).isNotNull();
         Map<String, Object> policy = (Map<String, Object>) token.get("policy");
-        assertNotNull(policy);
+        assertThat(policy).isNotNull();
         Map<String, Object> keys = (Map<String, Object>) policy.get("keys");
-        assertNotNull(keys);
+        assertThat(keys).isNotNull();
         Map<String, Object> keyId1 = (Map<String, Object>) keys.get("key-id-1");
-        assertNotNull(keyId1);
-        assertEquals("cert", keyId1.get("signingCert"));
-        assertEquals("key", keyId1.get("signingKey"));
-        assertEquals("PS256", keyId1.get("signingAlg"));
+        assertThat(keyId1)
+                .isNotNull()
+                .containsEntry("signingCert", "cert")
+                .containsEntry("signingKey", "key")
+                .containsEntry("signingAlg", "PS256");
     }
 }

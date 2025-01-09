@@ -446,7 +446,6 @@ class IdentityZoneEndpointDocs extends EndpointDocs {
                 fieldWithPath("[].config.branding.banner.textColor").optional().description(BRANDING_BANNER_TEXT_COLOR_DESC).attributes(key("constraints").value("Optional")),
                 fieldWithPath("[].config.branding.banner.backgroundColor").optional().description(BRANDING_BANNER_BACKGROUND_COLOR_DESC).attributes(key("constraints").value("Optional")),
 
-
                 fieldWithPath("[].config.corsPolicy.xhrConfiguration.allowedOrigins").optional().description(CORS_XHR_ORIGINS_DESC).attributes(key("constraints").value("Optional")),
                 fieldWithPath("[].config.corsPolicy.xhrConfiguration.allowedOriginPatterns").optional().description(CORS_XHR_ORIGIN_PATTERNS_DESC).attributes(key("constraints").value("Optional")),
                 fieldWithPath("[].config.corsPolicy.xhrConfiguration.allowedUris").optional().description(CORS_XHR_URI_DESC).attributes(key("constraints").value("Optional")),
@@ -696,7 +695,6 @@ class IdentityZoneEndpointDocs extends EndpointDocs {
 
         IdentityZoneConfiguration brandingConfig = setBranding(identityZone.getConfig());
         identityZone.setConfig(brandingConfig);
-
 
         mockMvc.perform(
                 post("/identity-zones")

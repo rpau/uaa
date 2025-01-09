@@ -11,9 +11,7 @@
  *      subcomponent's license, as noted in the LICENSE file.
  * *****************************************************************************
  */
-
 package org.cloudfoundry.identity.uaa.mock.approvals;
-
 
 import org.cloudfoundry.identity.uaa.authentication.UaaAuthentication;
 import org.cloudfoundry.identity.uaa.authentication.UaaPrincipal;
@@ -26,7 +24,6 @@ import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetails;
 import org.cloudfoundry.identity.uaa.scim.ScimUser;
 import org.cloudfoundry.identity.uaa.zone.IdentityZone;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneHolder;
-import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpSession;
@@ -37,6 +34,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils.CookieCsrfPostProcessor.cookieCsrf;
 import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.CLIENT_ID;
 import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.RESPONSE_TYPE;
@@ -44,8 +42,6 @@ import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.STATE;
 import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.USER_OAUTH_APPROVAL;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_AUTHORIZATION_CODE;
 import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -61,15 +57,15 @@ public class ApprovalsMockMvcTests extends AbstractTokenMockMvcTests {
     private ClientDetails client1;
 
     @BeforeEach
-    public void createData() {
+    void createData() {
         String scopes = "test.scope1,test.scope2,test.scope3";
         user1 = syncGroups(setUpUser(jdbcScimUserProvisioning, jdbcScimGroupMembershipManager, jdbcScimGroupProvisioning, generator.generate(), scopes, OriginKeys.UAA, IdentityZone.getUaaZoneId()));
         client1 = setUpClients(generator.generate(), null, scopes, GRANT_TYPE_AUTHORIZATION_CODE, false);
     }
 
     @Test
-    public void revoke() throws Exception {
-        test_oauth_authorize_without_csrf();
+    void revoke() throws Exception {
+        oauth_authorize_without_csrf();
         MockHttpSession session = getAuthenticatedSession(user1);
         mockMvc.perform(post("/profile")
                         .with(cookieCsrf())
@@ -81,8 +77,8 @@ public class ApprovalsMockMvcTests extends AbstractTokenMockMvcTests {
     }
 
     @Test
-    public void revoke_invalid_client() throws Exception {
-        test_oauth_authorize_without_csrf();
+    void revoke_invalid_client() throws Exception {
+        oauth_authorize_without_csrf();
         MockHttpSession session = getAuthenticatedSession(user1);
         mockMvc.perform(post("/profile")
                         .with(cookieCsrf())
@@ -94,7 +90,7 @@ public class ApprovalsMockMvcTests extends AbstractTokenMockMvcTests {
     }
 
     @Test
-    public void test_oauth_authorize_without_csrf() throws Exception {
+    void oauth_authorize_without_csrf() throws Exception {
         String state = generator.generate();
 
         MockHttpSession session = getAuthenticatedSession(user1);
@@ -105,8 +101,8 @@ public class ApprovalsMockMvcTests extends AbstractTokenMockMvcTests {
                         .param(CLIENT_ID, client1.getClientId()))
                 .andExpect(status().isOk()); //200 means the approvals page
 
-        assertNotNull(session.getAttribute(UaaAuthorizationEndpoint.AUTHORIZATION_REQUEST));
-        assertNotNull(session.getAttribute(UaaAuthorizationEndpoint.ORIGINAL_AUTHORIZATION_REQUEST));
+        assertThat(session.getAttribute(UaaAuthorizationEndpoint.AUTHORIZATION_REQUEST)).isNotNull();
+        assertThat(session.getAttribute(UaaAuthorizationEndpoint.ORIGINAL_AUTHORIZATION_REQUEST)).isNotNull();
 
         //no token
         mockMvc.perform(post("/oauth/authorize")
@@ -123,8 +119,8 @@ public class ApprovalsMockMvcTests extends AbstractTokenMockMvcTests {
                         .param("scope.0", "scope.test.scope1"))
                 .andExpect(status().is4xxClientError());
 
-        assertNotNull(session.getAttribute(UaaAuthorizationEndpoint.AUTHORIZATION_REQUEST));
-        assertNotNull(session.getAttribute(UaaAuthorizationEndpoint.ORIGINAL_AUTHORIZATION_REQUEST));
+        assertThat(session.getAttribute(UaaAuthorizationEndpoint.AUTHORIZATION_REQUEST)).isNotNull();
+        assertThat(session.getAttribute(UaaAuthorizationEndpoint.ORIGINAL_AUTHORIZATION_REQUEST)).isNotNull();
 
         //valid token
         mockMvc.perform(post("/oauth/authorize")
@@ -136,8 +132,8 @@ public class ApprovalsMockMvcTests extends AbstractTokenMockMvcTests {
                 .andExpect(status().isFound())
                 .andExpect(redirectedUrlPattern("**/*code=*"));
 
-        assertNull(session.getAttribute(UaaAuthorizationEndpoint.AUTHORIZATION_REQUEST));
-        assertNull(session.getAttribute(UaaAuthorizationEndpoint.ORIGINAL_AUTHORIZATION_REQUEST));
+        assertThat(session.getAttribute(UaaAuthorizationEndpoint.AUTHORIZATION_REQUEST)).isNull();
+        assertThat(session.getAttribute(UaaAuthorizationEndpoint.ORIGINAL_AUTHORIZATION_REQUEST)).isNull();
 
         mockMvc.perform(get("/oauth/authorize")
                         .session(session)
@@ -148,7 +144,7 @@ public class ApprovalsMockMvcTests extends AbstractTokenMockMvcTests {
     }
 
     @Test
-    public void test_oauth_authorize_modified_scope() throws Exception {
+    void oauth_authorize_modified_scope() throws Exception {
         String state = generator.generate();
 
         MockHttpSession session = getAuthenticatedSession(user1);
@@ -159,8 +155,8 @@ public class ApprovalsMockMvcTests extends AbstractTokenMockMvcTests {
                         .param(CLIENT_ID, client1.getClientId()))
                 .andExpect(status().isOk()); //200 means the approvals page
 
-        assertNotNull(session.getAttribute(UaaAuthorizationEndpoint.AUTHORIZATION_REQUEST));
-        assertNotNull(session.getAttribute(UaaAuthorizationEndpoint.ORIGINAL_AUTHORIZATION_REQUEST));
+        assertThat(session.getAttribute(UaaAuthorizationEndpoint.AUTHORIZATION_REQUEST)).isNotNull();
+        assertThat(session.getAttribute(UaaAuthorizationEndpoint.ORIGINAL_AUTHORIZATION_REQUEST)).isNotNull();
 
         mockMvc.perform(post("/oauth/authorize")
                         .with(cookieCsrf())
@@ -172,13 +168,13 @@ public class ApprovalsMockMvcTests extends AbstractTokenMockMvcTests {
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrlPattern("http://test.example.org/redirect?error=invalid_scope&error_description=The%20requested%20scopes%20are%20invalid.%20Please%20use%20valid%20scope%20names%20in%20the%20request*"));
 
-        assertNull(session.getAttribute(UaaAuthorizationEndpoint.AUTHORIZATION_REQUEST));
-        assertNull(session.getAttribute(UaaAuthorizationEndpoint.ORIGINAL_AUTHORIZATION_REQUEST));
+        assertThat(session.getAttribute(UaaAuthorizationEndpoint.AUTHORIZATION_REQUEST)).isNull();
+        assertThat(session.getAttribute(UaaAuthorizationEndpoint.ORIGINAL_AUTHORIZATION_REQUEST)).isNull();
     }
 
     @Test
-    public void test_get_approvals() throws Exception {
-        test_oauth_authorize_without_csrf();
+    void get_approvals() throws Exception {
+        oauth_authorize_without_csrf();
         MockHttpSession session = getAuthenticatedSession(user1);
         mockMvc.perform(get("/profile")
                         .session(session))
@@ -187,8 +183,8 @@ public class ApprovalsMockMvcTests extends AbstractTokenMockMvcTests {
     }
 
     @Test
-    public void test_post_approval_csrf() throws Exception {
-        test_get_approvals();
+    void post_approval_csrf() throws Exception {
+        get_approvals();
         MockHttpSession session = getAuthenticatedSession(user1);
         MockHttpServletRequestBuilder post = post("/profile")
                 .session(session)
@@ -209,7 +205,7 @@ public class ApprovalsMockMvcTests extends AbstractTokenMockMvcTests {
         List<SimpleGrantedAuthority> authorities = user.getGroups().stream().map(g -> new SimpleGrantedAuthority(g.getValue())).toList();
         UaaPrincipal p = new UaaPrincipal(user.getId(), user.getUserName(), user.getPrimaryEmail(), OriginKeys.UAA, "", IdentityZoneHolder.get().getId());
         UaaAuthentication auth = new UaaAuthentication(p, authorities, null);
-        Assert.assertTrue(auth.isAuthenticated());
+        assertThat(auth.isAuthenticated()).isTrue();
         SecurityContextHolder.getContext().setAuthentication(auth);
         MockHttpSession session = new MockHttpSession();
         session.setAttribute(

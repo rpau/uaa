@@ -7,13 +7,13 @@ import org.cloudfoundry.identity.uaa.oauth.provider.token.AccessTokenConverter;
 import org.cloudfoundry.identity.uaa.oauth.provider.token.ResourceServerTokenServices;
 import org.cloudfoundry.identity.uaa.oauth.token.Claims;
 import org.cloudfoundry.identity.uaa.util.TimeServiceImpl;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 import java.util.HashMap;
 
-import static org.junit.Assert.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -22,11 +22,11 @@ import static org.mockito.Mockito.when;
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-public class CheckTokenEndpointTest {
+class CheckTokenEndpointTest {
     private CheckTokenEndpoint checkTokenEndpoint;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         ResourceServerTokenServices resourceServerTokenServices = mock(ResourceServerTokenServices.class);
         OAuth2AccessToken accessToken = mock(OAuth2AccessToken.class);
         OAuth2Authentication authentication = mock(OAuth2Authentication.class);
@@ -42,10 +42,10 @@ public class CheckTokenEndpointTest {
 
     // gh-1070
     @Test
-    public void checkTokenWhenTokenValidThenReturnActiveAttribute() throws Exception {
+    void checkTokenWhenTokenValidThenReturnActiveAttribute() throws Exception {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setParameter("token", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c");
         Claims claims = this.checkTokenEndpoint.checkToken(request);
-        assertNotNull(claims);
+        assertThat(claims).isNotNull();
     }
 }

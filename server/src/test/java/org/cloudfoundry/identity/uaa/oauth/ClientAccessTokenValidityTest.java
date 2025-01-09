@@ -19,10 +19,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.junit.Assert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -58,7 +56,7 @@ class ClientAccessTokenValidityTest {
             when(mockMultitenantClientServices.loadClientByClientId("clientId", currentIdentityZoneId)).thenReturn(mockClientDetails);
             when(mockClientDetails.getAccessTokenValiditySeconds()).thenReturn(9999);
 
-            assertThat(clientAccessTokenValidity.getValiditySeconds("clientId"), is(9999));
+            assertThat(clientAccessTokenValidity.getValiditySeconds("clientId")).isEqualTo(9999);
         }
 
         @Test
@@ -66,7 +64,7 @@ class ClientAccessTokenValidityTest {
             when(mockMultitenantClientServices.loadClientByClientId("clientId", currentIdentityZoneId)).thenReturn(mockClientDetails);
             when(mockClientDetails.getAccessTokenValiditySeconds()).thenReturn(null);
 
-            assertThat(clientAccessTokenValidity.getValiditySeconds("clientId"), is(nullValue()));
+            assertThat(clientAccessTokenValidity.getValiditySeconds("clientId")).isNull();
         }
 
         @Test
@@ -74,7 +72,7 @@ class ClientAccessTokenValidityTest {
             when(mockMultitenantClientServices.loadClientByClientId("notExistingClientId", currentIdentityZoneId))
                     .thenThrow(ClientRegistrationException.class);
 
-            assertThat(clientAccessTokenValidity.getValiditySeconds("notExistingClientId"), is(nullValue()));
+            assertThat(clientAccessTokenValidity.getValiditySeconds("notExistingClientId")).isNull();
         }
 
         @Test
@@ -82,8 +80,7 @@ class ClientAccessTokenValidityTest {
             when(mockMultitenantClientServices.loadClientByClientId("clientId", currentIdentityZoneId))
                     .thenThrow(RuntimeException.class);
 
-            assertThrows(RuntimeException.class,
-                    () -> clientAccessTokenValidity.getValiditySeconds("clientId"));
+            assertThatExceptionOfType(RuntimeException.class).isThrownBy(() -> clientAccessTokenValidity.getValiditySeconds("clientId"));
         }
     }
 
@@ -113,7 +110,7 @@ class ClientAccessTokenValidityTest {
             when(mockIdentityZoneConfiguration.getTokenPolicy()).thenReturn(mockTokenPolicy);
             when(mockTokenPolicy.getAccessTokenValidity()).thenReturn(zoneValiditySeconds);
 
-            assertThat(clientAccessTokenValidity.getZoneValiditySeconds(), is(zoneValiditySeconds));
+            assertThat(clientAccessTokenValidity.getZoneValiditySeconds()).isEqualTo(zoneValiditySeconds);
         }
     }
 }

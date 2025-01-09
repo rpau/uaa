@@ -1,6 +1,7 @@
 package org.cloudfoundry.identity.uaa.oauth;
 
 import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
+import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
 import org.cloudfoundry.identity.uaa.oauth.provider.AuthorizationRequest;
 import org.cloudfoundry.identity.uaa.oauth.provider.token.AuthorizationServerTokenServices;
 import org.cloudfoundry.identity.uaa.user.UaaUserApprovalHandler;
@@ -11,14 +12,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.AuthorityUtils;
-import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
 
 import java.util.Collections;
 
 import static java.util.Collections.singleton;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_AUTHORIZATION_CODE;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -53,24 +52,24 @@ class UaaUserApprovalHandlerTests {
 
     @Test
     void notAutoApprove() {
-        assertFalse(handler.isApproved(authorizationRequest, userAuthentication));
+        assertThat(handler.isApproved(authorizationRequest, userAuthentication)).isFalse();
     }
 
     @Test
     void autoApproveAll() {
         client.setAutoApproveScopes(singleton("true"));
-        assertTrue(handler.isApproved(authorizationRequest, userAuthentication));
+        assertThat(handler.isApproved(authorizationRequest, userAuthentication)).isTrue();
     }
 
     @Test
     void autoApproveByScopeRead() {
         client.setAutoApproveScopes(singleton("read"));
-        assertTrue(handler.isApproved(authorizationRequest, userAuthentication));
+        assertThat(handler.isApproved(authorizationRequest, userAuthentication)).isTrue();
     }
 
     @Test
     void autoApproveByScopeWrite() {
         client.setAutoApproveScopes(singleton("write"));
-        assertFalse(handler.isApproved(authorizationRequest, userAuthentication));
+        assertThat(handler.isApproved(authorizationRequest, userAuthentication)).isFalse();
     }
 }

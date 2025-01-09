@@ -114,25 +114,26 @@ public class SamlConfigProps implements EnvironmentAware {
     private String serviceProviderCertificate;
 
     /**
-     * Deprecated but sill working: login.serviceProviderKey
+     * @deprecated but sill working: login.serviceProviderKey
      */
     @Deprecated(since = "77.20.0", forRemoval = true)
     private String legacyServiceProviderKey;
 
     /**
-     * Deprecated but sill working: login.serviceProviderKeyPassword
+     * @deprecated but sill working: login.serviceProviderKeyPassword
      */
     @Deprecated(since = "77.20.0", forRemoval = true)
     private String legacyServiceProviderKeyPassword;
 
     /**
-     * Deprecated but sill working: login.serviceProviderCertificate
+     * @deprecated but sill working: login.serviceProviderCertificate
      */
     @Deprecated(since = "77.20.0", forRemoval = true)
     private String legacyServiceProviderCertificate;
 
     /**
      * Get the active key
+     *
      * @return the active SamlKey, if available or null
      */
     @Nullable
@@ -151,7 +152,7 @@ public class SamlConfigProps implements EnvironmentAware {
     public void setEnvironment(Environment environment) {
         var nestedMap = Optional.ofNullable(((ConfigurableEnvironment) environment).getPropertySources().get("servletConfigYaml")).orElse((PropertySource) new NestedMapPropertySource("servletConfigYaml", Map.of()));
         if (nestedMap.getProperty("login.saml.providers") instanceof LinkedHashMap<?, ?> linkedHashMap) {
-            this.environmentProviders = new LinkedHashMap<>((Map<String, Map<String, Object>>)linkedHashMap);
+            this.environmentProviders = new LinkedHashMap<>((Map<String, Map<String, Object>>) linkedHashMap);
         }
         this.legacyServiceProviderKey = getNestedStringValue(nestedMap, "login.serviceProviderKey");
         this.legacyServiceProviderKeyPassword = getNestedStringValue(nestedMap, "login.serviceProviderKeyPassword");
@@ -159,6 +160,6 @@ public class SamlConfigProps implements EnvironmentAware {
     }
 
     private static String getNestedStringValue(PropertySource<?> nestedMapPropertySource, String key) {
-        return (nestedMapPropertySource.getProperty(key) instanceof String valueString) ? valueString : null;
+        return nestedMapPropertySource.getProperty(key) instanceof String valueString ? valueString : null;
     }
 }

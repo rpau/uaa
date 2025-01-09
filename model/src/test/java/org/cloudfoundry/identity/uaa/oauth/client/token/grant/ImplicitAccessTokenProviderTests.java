@@ -8,9 +8,7 @@ import org.cloudfoundry.identity.uaa.oauth.common.DefaultOAuth2RefreshToken;
 import org.cloudfoundry.identity.uaa.oauth.common.OAuth2AccessToken;
 import org.cloudfoundry.identity.uaa.oauth.token.AccessTokenRequest;
 import org.cloudfoundry.identity.uaa.oauth.token.DefaultAccessTokenRequest;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.mock.http.client.MockClientHttpResponse;
 import org.springframework.util.LinkedMultiValueMap;
@@ -21,27 +19,21 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-public class ImplicitAccessTokenProviderTests {
-
-    @Rule
-    public ExpectedException expected = ExpectedException.none();
+class ImplicitAccessTokenProviderTests {
 
     private final MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
 
     private final ImplicitAccessTokenProvider provider = new ImplicitAccessTokenProvider() {
         @Override
         protected OAuth2AccessToken retrieveToken(AccessTokenRequest request, OAuth2ProtectedResourceDetails resource,
-                MultiValueMap<String, String> form, HttpHeaders headers) {
+                                                  MultiValueMap<String, String> form, HttpHeaders headers) {
             params.putAll(form);
             return new DefaultOAuth2AccessToken("FOO");
         }
@@ -49,61 +41,62 @@ public class ImplicitAccessTokenProviderTests {
 
     private final ImplicitResourceDetails resource = new ImplicitResourceDetails();
 
-    @Test(expected = IllegalStateException.class)
-    public void testRedirectNotSpecified() throws Exception {
+    @Test
+    void redirectNotSpecified() {
         AccessTokenRequest request = new DefaultAccessTokenRequest();
-        provider.obtainAccessToken(resource, request);
+        assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() ->
+                provider.obtainAccessToken(resource, request));
     }
 
     @Test
-    public void supportsResource() {
-        assertTrue(provider.supportsResource(new ImplicitResourceDetails()));
+    void supportsResource() {
+        assertThat(provider.supportsResource(new ImplicitResourceDetails())).isTrue();
     }
 
     @Test
-    public void supportsRefresh() {
-        assertFalse(provider.supportsRefresh(new ImplicitResourceDetails()));
+    void supportsRefresh() {
+        assertThat(provider.supportsRefresh(new ImplicitResourceDetails())).isFalse();
     }
 
     @Test
-    public void refreshAccessToken() {
-        assertNull(provider.refreshAccessToken(new ImplicitResourceDetails(), new DefaultOAuth2RefreshToken(""), new DefaultAccessTokenRequest(
-                Collections.emptyMap())));
+    void refreshAccessToken() {
+        assertThat(provider.refreshAccessToken(new ImplicitResourceDetails(), new DefaultOAuth2RefreshToken(""), new DefaultAccessTokenRequest(
+                Collections.emptyMap()))).isNull();
     }
 
     @Test
-    public void testImplicitResponseExtractor() throws IOException {
-        assertNull(provider.getResponseExtractor().extractData(new MockClientHttpResponse(new byte[0], 200)));
+    void implicitResponseExtractor() throws IOException {
+        assertThat(provider.getResponseExtractor().extractData(new MockClientHttpResponse(new byte[0], 200))).isNull();
     }
 
     @Test
-    public void obtainAccessToken() {
+    void obtainAccessToken() {
         ImplicitResourceDetails details = new ImplicitResourceDetails();
         details.setScope(Set.of("openid").stream().toList());
-        assertFalse(details.isClientOnly());
-        assertNotNull(provider.obtainAccessToken(details, new DefaultAccessTokenRequest(Map.of("scope", new String[]{"x"}, "redirect_uri",
-                new String[]{"x"}, "client_id", new String[]{"x"}))));
+        assertThat(details.isClientOnly()).isFalse();
+        assertThat(provider.obtainAccessToken(details, new DefaultAccessTokenRequest(Map.of("scope", new String[]{"x"}, "redirect_uri",
+                new String[]{"x"}, "client_id", new String[]{"x"})))).isNotNull();
     }
 
     @Test
-    public void obtainAccessTokenNoRecdirect() {
+    void obtainAccessTokenNoRecdirect() {
         ImplicitResourceDetails details = new ImplicitResourceDetails();
         details.setScope(Set.of("openid").stream().toList());
-        assertFalse(details.isClientOnly());
-        expected.expect(IllegalStateException.class);
-        assertNotNull(provider.obtainAccessToken(details, new DefaultAccessTokenRequest(Map.of("scope", new String[]{"x"}, "client_id", new String[]{"x"}))));
+        assertThat(details.isClientOnly()).isFalse();
+        assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() ->
+                assertThat(provider.obtainAccessToken(details, new DefaultAccessTokenRequest(Map.of("scope", new String[]{"x"}, "client_id", new String[]{"x"})))).isNotNull());
     }
 
     @Test
-    public void testGetAccessTokenRequest() throws Exception {
+    void getAccessTokenRequest() {
         AccessTokenRequest request = new DefaultAccessTokenRequest();
         resource.setClientId("foo");
         resource.setAccessTokenUri("http://localhost/oauth/authorize");
         resource.setPreEstablishedRedirectUri("https://anywhere.com");
-        assertEquals("FOO", provider.obtainAccessToken(resource, request).getValue());
-        assertEquals("foo", params.getFirst("client_id"));
-        assertEquals("token", params.getFirst("response_type"));
-        assertEquals("https://anywhere.com", params.getFirst("redirect_uri"));
+        assertThat(provider.obtainAccessToken(resource, request).getValue()).isEqualTo("FOO");
+        assertThat(params.getFirst("client_id")).isEqualTo("foo");
+        assertThat(params.getFirst("response_type")).isEqualTo("token");
+        assertThat(params.getFirst("redirect_uri")).isEqualTo("https://anywhere.com");
     }
 
 }

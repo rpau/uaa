@@ -1,6 +1,7 @@
 package org.cloudfoundry.identity.uaa.db;
 
 import org.cloudfoundry.identity.uaa.DefaultTestContext;
+import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
 import org.cloudfoundry.identity.uaa.scim.ScimGroup;
 import org.cloudfoundry.identity.uaa.scim.ScimGroupMember;
 import org.cloudfoundry.identity.uaa.scim.ScimUser;
@@ -17,14 +18,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
 import org.springframework.validation.AbstractBindingResult;
 import org.springframework.web.context.WebApplicationContext;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @DefaultTestContext
 public class TestZonifyGroupSchema_V2_4_1 {
@@ -92,11 +95,10 @@ public class TestZonifyGroupSchema_V2_4_1 {
     }
 
     @Test
-    void test_Ensure_That_New_Fields_NotNull() throws Exception {
+    void ensure_that_new_fields_not_null() throws Exception {
         JdbcTemplate jdbcTemplate = webApplicationContext.getBean(JdbcTemplate.class);
         DbUtils dbUtils = webApplicationContext.getBean(DbUtils.class);
-        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM external_group_mapping WHERE origin IS NULL", Integer.class), is(0));
-        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM "+ dbUtils.getQuotedIdentifier("groups", jdbcTemplate) +" WHERE identity_zone_id IS NULL", Integer.class), is(0));
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM external_group_mapping WHERE origin IS NULL", Integer.class)).isZero();
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM " + dbUtils.getQuotedIdentifier("groups", jdbcTemplate) + " WHERE identity_zone_id IS NULL", Integer.class)).isZero();
     }
-
 }

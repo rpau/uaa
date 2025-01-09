@@ -1,14 +1,14 @@
 package org.cloudfoundry.identity.uaa.oauth.provider.config.xml;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.xml.ParserContext;
 import org.springframework.beans.factory.xml.XmlReaderContext;
 import org.w3c.dom.Element;
 
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -16,15 +16,15 @@ import static org.mockito.Mockito.when;
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-public class ProviderBeanDefinitionParserTest {
+class ProviderBeanDefinitionParserTest {
 
     private ProviderBeanDefinitionParser parser;
     private Element element;
     private ParserContext parserContext;
     private XmlReaderContext xmlReaderContext;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         element = mock(Element.class);
         parserContext = mock(ParserContext.class);
         xmlReaderContext = mock(XmlReaderContext.class);
@@ -33,21 +33,21 @@ public class ProviderBeanDefinitionParserTest {
         parser = new ProviderBeanDefinitionParser() {
             @Override
             protected AbstractBeanDefinition parseEndpointAndReturnFilter(Element element, ParserContext parserContext, String tokenServicesRef,
-                    String serializerRef) {
+                                                                          String serializerRef) {
                 return mock(AbstractBeanDefinition.class);
             }
         };
     }
 
     @Test
-    public void parseInternal() {
-        assertNotNull(parser.parseInternal(element, parserContext));
+    void parseInternal() {
+        assertThat(parser.parseInternal(element, parserContext)).isNotNull();
         when(element.getAttribute("token-services-ref")).thenReturn("token-services-ref");
-        assertNotNull(parser.parseInternal(element, parserContext));
+        assertThat(parser.parseInternal(element, parserContext)).isNotNull();
     }
 
     @Test
-    public void parseEndpointAndReturnFilter() {
-        assertNotNull(parser.parseEndpointAndReturnFilter(element, parserContext, "tokenServicesRef", "serializerRef"));
+    void parseEndpointAndReturnFilter() {
+        assertThat(parser.parseEndpointAndReturnFilter(element, parserContext, "tokenServicesRef", "serializerRef")).isNotNull();
     }
 }

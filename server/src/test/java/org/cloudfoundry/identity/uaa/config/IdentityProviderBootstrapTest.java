@@ -504,8 +504,6 @@ class IdentityProviderBootstrapTest {
         assertThat(samlProvider.getConfig().getMetaDataLocation()).isEqualTo("http://location");
         assertThat(samlProvider2).isNotNull();
         assertThat(samlProvider2.getConfig().getMetaDataLocation()).isEqualTo("http://location2");
-
-
     }
 
     @Test

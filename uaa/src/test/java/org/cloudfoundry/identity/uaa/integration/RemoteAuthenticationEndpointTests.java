@@ -15,13 +15,14 @@
 package org.cloudfoundry.identity.uaa.integration;
 
 import org.apache.commons.codec.binary.Base64;
-import org.cloudfoundry.identity.uaa.ServerRunning;
+import org.cloudfoundry.identity.uaa.ServerRunningExtension;
 import org.cloudfoundry.identity.uaa.constants.OriginKeys;
 import org.cloudfoundry.identity.uaa.oauth.UaaOauth2ErrorHandler;
 import org.cloudfoundry.identity.uaa.oauth.client.OAuth2RestTemplate;
+import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
 import org.cloudfoundry.identity.uaa.test.UaaTestAccounts;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -29,40 +30,39 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
-import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.constants.OriginKeys.LDAP;
-import static org.hamcrest.Matchers.greaterThan;
-import static org.hamcrest.Matchers.hasKey;
-import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.*;
 
 /**
  * @author Luke Taylor
  */
-public class RemoteAuthenticationEndpointTests {
-    @Rule
-    public ServerRunning serverRunning = ServerRunning.isRunning();
+class RemoteAuthenticationEndpointTests {
+    @RegisterExtension
+    private static final ServerRunningExtension serverRunning = ServerRunningExtension.connect();
 
     private final UaaTestAccounts testAccounts = UaaTestAccounts.standard(serverRunning);
 
     @Test
-    public void remoteAuthenticationSucceedsWithCorrectCredentials() {
+    void remoteAuthenticationSucceedsWithCorrectCredentials() {
         @SuppressWarnings("rawtypes")
         ResponseEntity<Map> response = authenticate(testAccounts.getUserName(), testAccounts.getPassword(), null);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(testAccounts.getUserName(), response.getBody().get("username"));
-        assertEquals(testAccounts.getEmail(), response.getBody().get("email"));
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).containsEntry("username", testAccounts.getUserName())
+                .containsEntry("email", testAccounts.getEmail());
     }
 
     @Test
-    public void remoteAuthenticationSucceedsAndCreatesUser() throws Exception {
+    void remoteAuthenticationSucceedsAndCreatesUser() {
         String username = new RandomValueStringGenerator().generate();
         String origin = OriginKeys.LOGIN_SERVER;
         Map<String, Object> info = new HashMap<>();
@@ -71,21 +71,21 @@ public class RemoteAuthenticationEndpointTests {
         info.put(OriginKeys.ORIGIN, origin);
         @SuppressWarnings("rawtypes")
         ResponseEntity<Map> response = authenticate(username, null, info);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(username, response.getBody().get("username"));
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).containsEntry("username", username);
         validateOrigin(username, null, origin, info);
     }
 
     @Test
-    public void remoteAuthenticationFailsWithIncorrectCredentials() {
+    void remoteAuthenticationFailsWithIncorrectCredentials() {
         @SuppressWarnings("rawtypes")
         ResponseEntity<Map> response = authenticate(testAccounts.getUserName(), "wrong", null);
-        assertNotSame(HttpStatus.OK, response.getStatusCode());
-        assertNotEquals(testAccounts.getUserName(), response.getBody().get("username"));
+        assertThat(response.getStatusCode()).isNotSameAs(HttpStatus.OK);
+        assertThat(response.getBody()).doesNotContainEntry("username", testAccounts.getUserName());
     }
 
     @Test
-    public void validateLdapOrKeystoneOrigin() throws Exception {
+    void validateLdapOrKeystoneOrigin() throws Exception {
         String profiles = System.getProperty("spring.profiles.active");
         if (profiles != null && profiles.contains(LDAP)) {
             validateOrigin("marissa3", "ldap3", LDAP, null);
@@ -98,29 +98,30 @@ public class RemoteAuthenticationEndpointTests {
 
     public void validateOrigin(String username, String password, String origin, Map<String, Object> info) {
         ResponseEntity<Map> authResp = authenticate(username, password, info);
-        assertEquals(HttpStatus.OK, authResp.getStatusCode());
+        assertThat(authResp.getStatusCode()).isEqualTo(HttpStatus.OK);
 
         HttpHeaders headers = new HttpHeaders();
         headers.add("Authorization", "Bearer " + getScimReadBearerToken());
         ResponseEntity<Map> response = serverRunning.getForObject("/Users" + "?filter=userName eq \"" + username + "\"&attributes=id,userName,origin", Map.class, headers);
         Map<String, Object> results = response.getBody();
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 
-        assertThat(((Integer) results.get("totalResults")), greaterThan(0));
+        assertThat(((Integer) results.get("totalResults"))).isPositive();
         List<Map<String, Object>> list = (List<Map<String, Object>>) results.get("resources");
         boolean found = false;
         for (Map<String, Object> user : list) {
-            assertThat(user, hasKey("id"));
-            assertThat(user, hasKey("userName"));
-            assertThat(user, hasKey(OriginKeys.ORIGIN));
-            assertThat(user, not(hasKey("name")));
-            assertThat(user, not(hasKey("emails")));
+            assertThat(user)
+                    .containsKey("id")
+                    .containsKey("userName")
+                    .containsKey(OriginKeys.ORIGIN)
+                    .doesNotContainKey("name")
+                    .doesNotContainKey("emails");
             if (user.get("userName").equals(username)) {
                 found = true;
-                assertEquals(origin, user.get(OriginKeys.ORIGIN));
+                assertThat(user).containsEntry(OriginKeys.ORIGIN, origin);
             }
         }
-        assertTrue(found);
+        assertThat(found).isTrue();
     }
 
     private String getScimReadBearerToken() {

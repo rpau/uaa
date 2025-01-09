@@ -1,23 +1,24 @@
 package org.cloudfoundry.identity.uaa.ratelimiting.core.config;
 
-import java.util.List;
-
 import org.cloudfoundry.identity.uaa.ratelimiting.core.config.exception.RateLimitingConfigException;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 class PathSelectorTest {
     private static final String NAME = "login";
 
     @Test
     void pathMatchType() {
-        assertNull(PathSelector.pathMatchType(""), "empty");
-        assertNull(PathSelector.pathMatchType("FRED"), "FRED");
+        assertThat(PathSelector.pathMatchType("")).as("empty").isNull();
+        assertThat(PathSelector.pathMatchType("FRED")).as("FRED").isNull();
         for (PathMatchType value : PathMatchType.values()) {
-            assertEquals(value, PathSelector.pathMatchType(value.toString()), "unchanged Case " + value);
-            assertEquals(value, PathSelector.pathMatchType(value.toString().toLowerCase()), "lower Case " + value);
-            assertEquals(value, PathSelector.pathMatchType(value.toString().toUpperCase()), "upper Case " + value);
+            assertThat(PathSelector.pathMatchType(value.toString())).as("unchanged Case " + value).isEqualTo(value);
+            assertThat(PathSelector.pathMatchType(value.toString().toLowerCase())).as("lower Case " + value).isEqualTo(value);
+            assertThat(PathSelector.pathMatchType(value.toString().toUpperCase())).as("upper Case " + value).isEqualTo(value);
         }
     }
 
@@ -59,8 +60,7 @@ class PathSelectorTest {
         PathSelector ps;
         try {
             ps = check(offsetIndex, selectorStr);
-        }
-        catch (RateLimitingConfigException e) {
+        } catch (RateLimitingConfigException e) {
             String msg = e.getMessage();
             String startsWithFragment = NAME + "'s PathSelector[" + offsetIndex + "]";
             String containsFragment = " in '" + selectorStr.trim() + "'";
@@ -71,20 +71,20 @@ class PathSelectorTest {
             }
             return;
         }
-        assertNotNull(ps, "null from '" + selectorStr + "'");
+        assertThat(ps).as("null from '" + selectorStr + "'").isNotNull();
         fail("from '" + selectorStr + "' did NOT expect: '" + ps + "'");
     }
 
     private void checkNull(String selectorStr) {
         PathSelector ps = check(0, selectorStr);
-        assertNull(ps, "expected null from '" + selectorStr + "', but got: " + ps);
+        assertThat(ps).as("expected null from '" + selectorStr + "', but got: " + ps).isNull();
     }
 
     private void checkOK(String selectorStr, PathMatchType pathMatchType, String path) {
         PathSelector ps = check(0, selectorStr);
-        assertNotNull(ps, "null from '" + selectorStr + "'");
-        assertEquals(pathMatchType, ps.getType(), "type from '" + selectorStr + "'");
-        assertEquals(path, ps.getPath(), "path from '" + selectorStr + "'");
+        assertThat(ps).as("null from '" + selectorStr + "'").isNotNull();
+        assertThat(ps.getType()).as("type from '" + selectorStr + "'").isEqualTo(pathMatchType);
+        assertThat(ps.getPath()).as("path from '" + selectorStr + "'").isEqualTo(path);
     }
 
     @Test
@@ -99,7 +99,7 @@ class PathSelectorTest {
                 "Contains:/login",
                 "Other",
                 "All"));
-        assertEquals(5, ps.size());
+        assertThat(ps).hasSize(5);
         checkOK(ps, 0, PathMatchType.Equals, "/login");
         checkOK(ps, 1, PathMatchType.StartsWith, "/login");
         checkOK(ps, 2, PathMatchType.Contains, "/login");
@@ -109,17 +109,16 @@ class PathSelectorTest {
 
     private void checkOK(List<PathSelector> selectors, int offsetIndex, PathMatchType type, String path) {
         PathSelector ps = selectors.get(offsetIndex);
-        assertNotNull(ps, "null from offsetIndex: " + offsetIndex);
-        assertEquals(type, ps.getType(), "type from offsetIndex: " + offsetIndex);
-        assertEquals(path, ps.getPath(), "path from offsetIndex: " + offsetIndex);
+        assertThat(ps).as("null from offsetIndex: " + offsetIndex).isNotNull();
+        assertThat(ps.getType()).as("type from offsetIndex: " + offsetIndex).isEqualTo(type);
+        assertThat(ps.getPath()).as("path from offsetIndex: " + offsetIndex).isEqualTo(path);
     }
 
     private void checkException(List<String> pathSelectors) {
         List<PathSelector> ps;
         try {
             ps = PathSelector.listFrom(NAME, pathSelectors);
-        }
-        catch (RateLimitingConfigException e) {
+        } catch (RateLimitingConfigException e) {
             String msg = e.getMessage();
             String startsWithFragment = "No pathSelectors";
             if (!msg.startsWith(startsWithFragment)) {
@@ -128,7 +127,7 @@ class PathSelectorTest {
             }
             return;
         }
-        assertNotNull(ps, "null from: " + pathSelectors);
+        assertThat(ps).as("null from: " + pathSelectors).isNotNull();
         fail("from '" + pathSelectors + "' did NOT expect: '" + ps + "'");
     }
 }

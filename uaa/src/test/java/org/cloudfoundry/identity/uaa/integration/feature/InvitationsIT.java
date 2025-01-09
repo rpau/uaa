@@ -14,24 +14,23 @@
 package org.cloudfoundry.identity.uaa.integration.feature;
 
 import com.google.common.collect.Lists;
-import org.cloudfoundry.identity.uaa.ServerRunning;
+import org.cloudfoundry.identity.uaa.ServerRunningExtension;
 import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
 import org.cloudfoundry.identity.uaa.codestore.ExpiringCode;
 import org.cloudfoundry.identity.uaa.constants.OriginKeys;
 import org.cloudfoundry.identity.uaa.extensions.PollutionPreventionExtension;
 import org.cloudfoundry.identity.uaa.integration.endpoints.SamlLogoutAuthSourceEndpoint;
 import org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils;
-import org.cloudfoundry.identity.uaa.integration.util.ScreenshotOnFail;
+import org.cloudfoundry.identity.uaa.integration.util.ScreenshotOnFailExtension;
 import org.cloudfoundry.identity.uaa.invitations.InvitationsRequest;
 import org.cloudfoundry.identity.uaa.invitations.InvitationsResponse;
 import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
 import org.cloudfoundry.identity.uaa.scim.ScimUser;
-import org.cloudfoundry.identity.uaa.util.RetryRule;
-import org.junit.Rule;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,8 +39,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
 
@@ -57,18 +55,15 @@ import static org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtil
 import static org.springframework.http.HttpMethod.POST;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
-@ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = DefaultIntegrationTestConfig.class)
+@SpringJUnitConfig(classes = DefaultIntegrationTestConfig.class)
 @ExtendWith(PollutionPreventionExtension.class)
+@ExtendWith(ScreenshotOnFailExtension.class)
 public class InvitationsIT {
 
     @Autowired
-    @Rule
-    public IntegrationTestRule integrationTestRule;
-    @Rule
-    public ScreenshotOnFail screenShootRule = new ScreenshotOnFail();
-    @Rule
-    public RetryRule retryRule = new RetryRule(3);
+    @RegisterExtension
+    private IntegrationTestExtension integrationTestExtension;
+
     @Autowired
     WebDriver webDriver;
 
@@ -81,7 +76,8 @@ public class InvitationsIT {
     @Value("${integration.test.app_url}")
     String appUrl;
 
-    ServerRunning serverRunning = ServerRunning.isRunning();
+    @RegisterExtension
+    private static final ServerRunningExtension serverRunning = ServerRunningExtension.connect();
 
     private String scimToken;
     private String loginToken;
@@ -129,10 +125,9 @@ public class InvitationsIT {
     }
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         scimToken = testClient.getOAuthAccessToken("admin", "adminsecret", "client_credentials", "scim.read,scim.write,clients.admin");
         loginToken = testClient.getOAuthAccessToken("login", "loginsecret", "client_credentials", "oauth.login");
-        screenShootRule.setWebDriver(webDriver);
 
         testInviteEmail = "testinvite@test.org";
 
@@ -157,7 +152,7 @@ public class InvitationsIT {
 
     @BeforeEach
     @AfterEach
-    public void logout_and_clear_cookies() {
+    void logout_and_clear_cookies() {
         try {
             webDriver.get(baseUrl + "/logout.do");
         } catch (org.openqa.selenium.TimeoutException x) {
@@ -189,7 +184,7 @@ public class InvitationsIT {
     }
 
     @Test
-    void testInviteUserWithClientRedirect() {
+    void inviteUserWithClientRedirect() {
         String userEmail = "user-" + new RandomValueStringGenerator().generate() + "@example.com";
         //user doesn't exist
         performInviteUser(userEmail, false);
@@ -274,7 +269,7 @@ public class InvitationsIT {
     }
 
     @Test
-    void testInsecurePasswordDisplaysErrorMessage() {
+    void insecurePasswordDisplaysErrorMessage() {
         String code = createInvitation();
         webDriver.get(baseUrl + "/invitations/accept?code=" + code);
         assertThat(webDriver.findElement(By.tagName("h1")).getText()).isEqualTo("Create your account");

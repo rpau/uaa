@@ -7,7 +7,7 @@ import org.hamcrest.Matcher;
 
 import java.util.Map;
 
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class OAuth2AccessTokenMatchers extends AbstractOAuth2AccessTokenMatchers<OAuth2AccessToken> {
 
@@ -81,19 +81,19 @@ public class OAuth2AccessTokenMatchers extends AbstractOAuth2AccessTokenMatchers
         return new OAuth2AccessTokenMatchers(ClaimConstants.USER_NAME, username);
     }
 
-    public static <T> Matcher<OAuth2AccessToken> zoneId(Matcher<Object> zoneId) {
+    public static Matcher<OAuth2AccessToken> zoneId(Matcher<Object> zoneId) {
         return new OAuth2AccessTokenMatchers(ClaimConstants.ZONE_ID, zoneId);
     }
 
-    public static <T> Matcher<OAuth2AccessToken> origin(Matcher<Object> origin) {
+    public static Matcher<OAuth2AccessToken> origin(Matcher<Object> origin) {
         return new OAuth2AccessTokenMatchers(ClaimConstants.ORIGIN, origin);
     }
 
-    public static <T> Matcher<OAuth2AccessToken> revocationSignature(Matcher<Object> signature) {
+    public static Matcher<OAuth2AccessToken> revocationSignature(Matcher<Object> signature) {
         return new OAuth2AccessTokenMatchers(ClaimConstants.REVOCATION_SIGNATURE, signature);
     }
 
-    public static <T> Matcher<OAuth2AccessToken> email(Matcher<Object> email) {
+    public static Matcher<OAuth2AccessToken> email(Matcher<Object> email) {
         return new OAuth2AccessTokenMatchers(ClaimConstants.EMAIL, email);
     }
 
@@ -103,8 +103,8 @@ public class OAuth2AccessTokenMatchers extends AbstractOAuth2AccessTokenMatchers
             @Override
             protected boolean matchesSafely(OAuth2AccessToken token) {
                 Map<String, Object> claims = getClaims(token);
-                assertTrue(((Integer) claims.get(ClaimConstants.IAT)) > 0);
-                assertTrue(((Integer) claims.get(ClaimConstants.EXPIRY_IN_SECONDS)) > 0);
+                assertThat(((Integer) claims.get(ClaimConstants.IAT))).isPositive();
+                assertThat(((Integer) claims.get(ClaimConstants.EXPIRY_IN_SECONDS))).isPositive();
                 return value.matches(((Integer) claims.get(ClaimConstants.EXPIRY_IN_SECONDS)) - ((Integer) claims.get(ClaimConstants.IAT)));
             }
 

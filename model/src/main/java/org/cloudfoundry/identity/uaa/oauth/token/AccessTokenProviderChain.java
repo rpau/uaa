@@ -7,12 +7,12 @@ import org.cloudfoundry.identity.uaa.oauth.client.resource.UserRedirectRequiredE
 import org.cloudfoundry.identity.uaa.oauth.common.DefaultOAuth2AccessToken;
 import org.cloudfoundry.identity.uaa.oauth.common.OAuth2AccessToken;
 import org.cloudfoundry.identity.uaa.oauth.common.OAuth2RefreshToken;
+import org.cloudfoundry.identity.uaa.oauth.common.exceptions.OAuth2Exception;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.cloudfoundry.identity.uaa.oauth.common.exceptions.OAuth2Exception;
 
 import java.util.Calendar;
 import java.util.Collections;
@@ -32,13 +32,13 @@ public class AccessTokenProviderChain extends OAuth2AccessTokenSupport
     private final List<AccessTokenProvider> chain;
 
     /**
-     *  Token services for long-term persistence of access tokens.
+     * Token services for long-term persistence of access tokens.
      */
     @Setter
     private ClientTokenServices clientTokenServices;
 
     // clockSkew is set via reflection in tests, so suppress local and static
-    @SuppressWarnings({"FieldCanBeLocal","java:S1170"})
+    @SuppressWarnings({"FieldCanBeLocal", "java:S1170"})
     private final int clockSkew = 30; // NO SONAR
 
     public AccessTokenProviderChain(List<? extends AccessTokenProvider> chain) {
@@ -65,7 +65,7 @@ public class AccessTokenProviderChain extends OAuth2AccessTokenSupport
     }
 
     public OAuth2AccessToken obtainAccessToken(OAuth2ProtectedResourceDetails resource,
-            AccessTokenRequest request)
+                                               AccessTokenRequest request)
             throws UserRedirectRequiredException, AccessDeniedException {
 
         OAuth2AccessToken accessToken = null;
@@ -143,12 +143,12 @@ public class AccessTokenProviderChain extends OAuth2AccessTokenSupport
     /**
      * Obtain a new access token for the specified resource using the refresh token.
      *
-     * @param resource The resource.
+     * @param resource     The resource.
      * @param refreshToken The refresh token.
      * @return The access token, or null if failed.
      */
     public OAuth2AccessToken refreshAccessToken(OAuth2ProtectedResourceDetails resource,
-            OAuth2RefreshToken refreshToken, AccessTokenRequest request)
+                                                OAuth2RefreshToken refreshToken, AccessTokenRequest request)
             throws UserRedirectRequiredException {
         for (AccessTokenProvider tokenProvider : chain) {
             if (tokenProvider.supportsRefresh(resource)) {
@@ -172,7 +172,7 @@ public class AccessTokenProviderChain extends OAuth2AccessTokenSupport
      * Checks if the given {@link OAuth2AccessToken access token} should be considered to have expired based on the
      * token's expiration time and the clock skew.
      *
-     * @param token        the token to be checked
+     * @param token the token to be checked
      * @return <code>true</code> if the token should be considered expired, <code>false</code> otherwise
      */
     private boolean hasTokenExpired(OAuth2AccessToken token) {

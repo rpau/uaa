@@ -10,8 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.core.io.support.ResourcePropertySource;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -27,9 +26,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
-@ExtendWith(SpringExtension.class)
 @ExtendWith(PollutionPreventionExtension.class)
-@ContextConfiguration(classes = {ThymeleafAdditional.class, ThymeleafConfig.class})
+@SpringJUnitConfig(classes = {ThymeleafAdditional.class, ThymeleafConfig.class})
 class ForcePasswordChangeControllerTest extends TestClassNullifier {
 
     private MockMvc mockMvc;
@@ -73,10 +71,10 @@ class ForcePasswordChangeControllerTest extends TestClassNullifier {
     @Test
     void handleForcePasswordChange() throws Exception {
         mockMvc.perform(
-                post("/uaa/force_password_change")
-                        .param("password", "pwd")
-                        .param("password_confirmation", "pwd")
-                        .contextPath("/uaa"))
+                        post("/uaa/force_password_change")
+                                .param("password", "pwd")
+                                .param("password_confirmation", "pwd")
+                                .contextPath("/uaa"))
                 .andExpect(status().isFound())
                 .andExpect(redirectedUrl("/uaa/force_password_change_completed"));
         verify(mockUaaAuthentication, times(1)).setAuthenticatedTime(anyLong());
@@ -85,9 +83,9 @@ class ForcePasswordChangeControllerTest extends TestClassNullifier {
     @Test
     void handleForcePasswordChangeWithRedirect() throws Exception {
         mockMvc.perform(
-                post("/force_password_change")
-                        .param("password", "pwd")
-                        .param("password_confirmation", "pwd"))
+                        post("/force_password_change")
+                                .param("password", "pwd")
+                                .param("password_confirmation", "pwd"))
                 .andExpect(status().isFound())
                 .andExpect(redirectedUrl("/force_password_change_completed"));
     }
@@ -96,9 +94,9 @@ class ForcePasswordChangeControllerTest extends TestClassNullifier {
     void passwordAndConfirmAreDifferent() throws Exception {
         when(mockResourcePropertySource.getProperty("force_password_change.form_error")).thenReturn("Passwords must match and not be empty.");
         mockMvc.perform(
-                post("/force_password_change")
-                        .param("password", "pwd")
-                        .param("password_confirmation", "nopwd"))
+                        post("/force_password_change")
+                                .param("password", "pwd")
+                                .param("password_confirmation", "nopwd"))
                 .andExpect(status().isUnprocessableEntity());
     }
 }

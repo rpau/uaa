@@ -2,11 +2,12 @@ package org.cloudfoundry.identity.uaa.authentication;
 
 import org.cloudfoundry.identity.uaa.account.UaaUserDetails;
 import org.cloudfoundry.identity.uaa.annotations.WithDatabaseContext;
-import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
 import org.cloudfoundry.identity.uaa.client.UaaClient;
+import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
 import org.cloudfoundry.identity.uaa.client.UaaClientDetailsUserDetailsService;
 import org.cloudfoundry.identity.uaa.oauth.client.ClientConstants;
 import org.cloudfoundry.identity.uaa.oauth.jwt.JwtClientAuthentication;
+import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetails;
 import org.cloudfoundry.identity.uaa.user.UaaUser;
 import org.cloudfoundry.identity.uaa.util.AlphanumericRandomValueStringGenerator;
 import org.cloudfoundry.identity.uaa.zone.IdentityZone;
@@ -24,18 +25,16 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetails;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.cloudfoundry.identity.uaa.oauth.client.ClientDetailsModification.SECRET;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -43,7 +42,7 @@ import static org.mockito.Mockito.when;
 @WithDatabaseContext
 class UaaClientAuthenticationProviderTest {
 
-    private AlphanumericRandomValueStringGenerator generator = new AlphanumericRandomValueStringGenerator();
+    private final AlphanumericRandomValueStringGenerator generator = new AlphanumericRandomValueStringGenerator();
     private MultitenantJdbcClientDetailsService jdbcClientDetailsService;
     private ClientDetails client;
     private ClientDetailsAuthenticationProvider authenticationProvider;
@@ -87,8 +86,8 @@ class UaaClientAuthenticationProviderTest {
 
     private void testClientAuthentication(Authentication a) {
         Authentication authentication = authenticationProvider.authenticate(a);
-        assertNotNull(authentication);
-        assertTrue(authentication.isAuthenticated());
+        assertThat(authentication).isNotNull();
+        assertThat(authentication.isAuthenticated()).isTrue();
     }
 
     private UsernamePasswordAuthenticationToken getAuthenticationToken(String grant_type) {
@@ -101,14 +100,14 @@ class UaaClientAuthenticationProviderTest {
         return getAuthenticationToken(request);
     }
 
-    private UsernamePasswordAuthenticationToken getAuthenticationTokenClientJwt(String grant_type) {
+    private UsernamePasswordAuthenticationToken getAuthenticationTokenClientJwt(String grantType) {
         MockHttpServletRequest request = new MockHttpServletRequest("POST", "/oauth/token");
         request.addParameter("code_verifier", "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM");
         request.addParameter("code", "1234567890");
         request.addParameter("client_assertion", "id");
         request.addParameter("client_assertion_type", "id");
         request.addParameter("redirect_uri", "http://localhost:8080/uaa");
-        request.addParameter("grant_type", grant_type);
+        request.addParameter("grant_type", grantType);
         return getAuthenticationToken(request);
     }
 
@@ -130,7 +129,7 @@ class UaaClientAuthenticationProviderTest {
         client = createClient(ClientConstants.ALLOW_PUBLIC, "true");
         UsernamePasswordAuthenticationToken a = getAuthenticationToken("authorization_code");
         authenticationProvider.additionalAuthenticationChecks(new UaaClient("client", "secret", Collections.emptyList(), client.getAdditionalInformation(), null), a);
-        assertNotNull(a);
+        assertThat(a).isNotNull();
     }
 
     @Test
@@ -143,7 +142,7 @@ class UaaClientAuthenticationProviderTest {
         UsernamePasswordAuthenticationToken a = getAuthenticationToken("password");
         when(a.getCredentials()).thenReturn("");
         authenticationProvider.additionalAuthenticationChecks(new UaaClient("cf", passwordEncoder.encode(""), Collections.emptyList(), client.getAdditionalInformation(), null), a);
-        assertNotNull(a);
+        assertThat(a).isNotNull();
     }
 
     @Test
@@ -155,7 +154,7 @@ class UaaClientAuthenticationProviderTest {
         request.addParameter("grant_type", "refresh_token");
         UsernamePasswordAuthenticationToken a = getAuthenticationToken(request);
         authenticationProvider.additionalAuthenticationChecks(new UaaClient("client", "secret", Collections.emptyList(), client.getAdditionalInformation(), null), a);
-        assertNotNull(a);
+        assertThat(a).isNotNull();
     }
 
     @Test
@@ -167,7 +166,7 @@ class UaaClientAuthenticationProviderTest {
         request.addParameter("refresh_token", "1234567890");
         request.addParameter("grant_type", "refresh_token");
         UsernamePasswordAuthenticationToken a = getAuthenticationToken(request);
-        assertThrows(BadCredentialsException.class, () -> authenticationProvider.additionalAuthenticationChecks(new UaaClient("client", "secret", Collections.emptyList(), client.getAdditionalInformation(), null), a));
+        assertThatExceptionOfType(BadCredentialsException.class).isThrownBy(() -> authenticationProvider.additionalAuthenticationChecks(new UaaClient("client", "secret", Collections.emptyList(), client.getAdditionalInformation(), null), a));
     }
 
     @Test
@@ -178,7 +177,7 @@ class UaaClientAuthenticationProviderTest {
         request.addParameter("refresh_token", "1234567890");
         request.addParameter("grant_type", "refresh_token");
         UsernamePasswordAuthenticationToken a = getAuthenticationToken(request);
-        assertThrows(BadCredentialsException.class, () -> authenticationProvider.additionalAuthenticationChecks(new UaaClient("client", "secret", Collections.emptyList(), client.getAdditionalInformation(), null), a));
+        assertThatExceptionOfType(BadCredentialsException.class).isThrownBy(() -> authenticationProvider.additionalAuthenticationChecks(new UaaClient("client", "secret", Collections.emptyList(), client.getAdditionalInformation(), null), a));
     }
 
     @Test
@@ -186,14 +185,14 @@ class UaaClientAuthenticationProviderTest {
         client = createClient(ClientConstants.ALLOW_PUBLIC, true);
         UsernamePasswordAuthenticationToken a = getAuthenticationToken("authorization_code");
         authenticationProvider.additionalAuthenticationChecks(new UaaClient("client", "secret", Collections.emptyList(), client.getAdditionalInformation(), null), a);
-        assertNotNull(a);
+        assertThat(a).isNotNull();
     }
 
     @Test
     void provider_authenticate_client_without_password_public_wrong_grant_type() {
         client = createClient(ClientConstants.ALLOW_PUBLIC, true);
         UsernamePasswordAuthenticationToken a = getAuthenticationToken("client_credentials");
-        assertThrows(BadCredentialsException.class, () -> authenticationProvider.additionalAuthenticationChecks(new UaaClient("client", "secret secret2", Collections.emptyList(), client.getAdditionalInformation(), null), a));
+        assertThatExceptionOfType(BadCredentialsException.class).isThrownBy(() -> authenticationProvider.additionalAuthenticationChecks(new UaaClient("client", "secret secret2", Collections.emptyList(), client.getAdditionalInformation(), null), a));
     }
 
     @Test
@@ -201,7 +200,7 @@ class UaaClientAuthenticationProviderTest {
         client = createClient(ClientConstants.ALLOW_PUBLIC, true);
         UsernamePasswordAuthenticationToken a = getAuthenticationToken("authorization_code");
         UserDetails userDetails = new UaaUserDetails(new UaaUser("client", "secret", "mail@user", "", ""));
-        assertThrows(BadCredentialsException.class, () -> authenticationProvider.additionalAuthenticationChecks(userDetails, a));
+        assertThatExceptionOfType(BadCredentialsException.class).isThrownBy(() -> authenticationProvider.additionalAuthenticationChecks(userDetails, a));
     }
 
     @Test
@@ -209,7 +208,7 @@ class UaaClientAuthenticationProviderTest {
         client = createClient(ClientConstants.ALLOW_PUBLIC, true);
         UsernamePasswordAuthenticationToken a = getAuthenticationToken("authorization_code");
         when(a.getDetails()).thenReturn(null);
-        assertThrows(BadCredentialsException.class, () -> authenticationProvider.additionalAuthenticationChecks(new UaaClient("client", "secret secret2", Collections.emptyList(), client.getAdditionalInformation(), null), a));
+        assertThatExceptionOfType(BadCredentialsException.class).isThrownBy(() -> authenticationProvider.additionalAuthenticationChecks(new UaaClient("client", "secret secret2", Collections.emptyList(), client.getAdditionalInformation(), null), a));
     }
 
     @Test
@@ -220,7 +219,7 @@ class UaaClientAuthenticationProviderTest {
         when(a.getDetails()).thenReturn(uaaAuthenticationDetails);
         Map<String, String[]> requestParameters = new HashMap<>();
         when(uaaAuthenticationDetails.getParameterMap()).thenReturn(requestParameters);
-        assertThrows(BadCredentialsException.class, () -> authenticationProvider.additionalAuthenticationChecks(new UaaClient("client", "secret", Collections.emptyList(), client.getAdditionalInformation(), null), a));
+        assertThatExceptionOfType(BadCredentialsException.class).isThrownBy(() -> authenticationProvider.additionalAuthenticationChecks(new UaaClient("client", "secret", Collections.emptyList(), client.getAdditionalInformation(), null), a));
     }
 
     @Test
@@ -232,8 +231,10 @@ class UaaClientAuthenticationProviderTest {
         when(a.getDetails()).thenReturn(uaaAuthenticationDetails);
         Map<String, String[]> requestParameters = new HashMap<>();
         when(uaaAuthenticationDetails.getParameterMap()).thenReturn(requestParameters);
-        Exception e = assertThrows(BadCredentialsException.class, () -> authenticationProvider.additionalAuthenticationChecks(new UaaClient("client", null, Collections.emptyList(), client.getAdditionalInformation(), null), a));
-        assertEquals("Missing credentials", e.getMessage());
+        UaaClient uaaClient = new UaaClient("client", null, Collections.emptyList(), client.getAdditionalInformation(), null);
+        assertThatThrownBy(() -> authenticationProvider.additionalAuthenticationChecks(uaaClient, a))
+                .isInstanceOf(BadCredentialsException.class)
+                .hasMessage("Missing credentials");
     }
 
     @Test
@@ -242,7 +243,7 @@ class UaaClientAuthenticationProviderTest {
         UsernamePasswordAuthenticationToken a = mock(UsernamePasswordAuthenticationToken.class);
         UaaAuthenticationDetails uaaAuthenticationDetails = mock(UaaAuthenticationDetails.class);
         when(a.getDetails()).thenReturn(uaaAuthenticationDetails);
-        assertThrows(BadCredentialsException.class, () -> testClientAuthentication(a));
+        assertThatExceptionOfType(BadCredentialsException.class).isThrownBy(() -> testClientAuthentication(a));
     }
 
     @Test
@@ -260,13 +261,13 @@ class UaaClientAuthenticationProviderTest {
     @Test
     void provider_authenticate_client_with_two_passwords_test_3() {
         jdbcClientDetailsService.addClientSecret(client.getClientId(), "secret2", IdentityZoneHolder.get().getId());
-        assertThrows(AuthenticationException.class, () -> testClientAuthentication(getToken(client.getClientId(), "secret3")));
+        assertThatExceptionOfType(AuthenticationException.class).isThrownBy(() -> testClientAuthentication(getToken(client.getClientId(), "secret3")));
     }
 
     @Test
     void clientJwt_authenticate_client_without_config() {
         UsernamePasswordAuthenticationToken a = getAuthenticationTokenClientJwt("authorization_code");
-        assertThrows(BadCredentialsException.class, () -> authenticationProvider.additionalAuthenticationChecks(
+        assertThatExceptionOfType(BadCredentialsException.class).isThrownBy(() -> authenticationProvider.additionalAuthenticationChecks(
                 new UaaClient("client", "secret", Collections.emptyList(), client.getAdditionalInformation(), null), a));
     }
 
@@ -276,6 +277,6 @@ class UaaClientAuthenticationProviderTest {
         UsernamePasswordAuthenticationToken a = getAuthenticationTokenClientJwt("authorization_code");
         authenticationProvider.additionalAuthenticationChecks(
                 new UaaClient("client", "secret", Collections.emptyList(), client.getAdditionalInformation(), null), a);
-        assertNotNull(a);
+        assertThat(a).isNotNull();
     }
 }

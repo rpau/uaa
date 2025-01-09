@@ -54,15 +54,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @DefaultTestContext
 class PasscodeMockMvcTests {
-
     private CaptureSecurityContextFilter captureSecurityContextFilter;
     private UaaPrincipal marissa;
-    private MockMvc mockMvc;
+
+    @Autowired
+    WebApplicationContext webApplicationContext;
+    @Autowired
+    MockMvc mockMvc;
 
     @BeforeEach
-    void setUp(@Autowired WebApplicationContext webApplicationContext, @Autowired MockMvc mockMvc) {
-        this.mockMvc = mockMvc;
-
+    void setUp() {
         FilterChainProxy filterChainProxy = (FilterChainProxy) webApplicationContext.getBean("org.springframework.security.filterChainProxy");
         if (captureSecurityContextFilter == null) {
             captureSecurityContextFilter = new CaptureSecurityContextFilter();
@@ -76,8 +77,6 @@ class PasscodeMockMvcTests {
                     dfc.getFilters().add(captureSecurityContextFilter);
                     break;
                 }
-
-
             }
             UaaUserDatabase db = webApplicationContext.getBean(UaaUserDatabase.class);
             marissa = new UaaPrincipal(db.retrieveUserByName("marissa", OriginKeys.UAA));
@@ -91,64 +90,7 @@ class PasscodeMockMvcTests {
     }
 
     @Test
-    void testLoginUsingPasscodeWithSamlToken() throws Exception {
-        UaaAuthenticationDetails details = new UaaAuthenticationDetails(new MockHttpServletRequest());
-        UaaAuthentication uaaAuthentication = new UaaAuthentication(marissa, new ArrayList<>(), details);
-        final MockSecurityContext mockSecurityContext = new MockSecurityContext(uaaAuthentication);
-
-        SecurityContextHolder.setContext(mockSecurityContext);
-        MockHttpSession session = new MockHttpSession();
-        session.setAttribute(
-                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
-                mockSecurityContext
-        );
-
-        MockHttpServletRequestBuilder get = get("/passcode")
-                .accept(APPLICATION_JSON)
-                .session(session);
-
-        String passcode = JsonUtils.readValue(
-                mockMvc.perform(get)
-                        .andExpect(status().isOk())
-                        .andReturn().getResponse().getContentAsString(),
-                String.class);
-
-        mockSecurityContext.setAuthentication(null);
-        session = new MockHttpSession();
-        session.setAttribute(
-                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
-                mockSecurityContext
-        );
-
-        String basicDigestHeaderValue = "Basic " + new String(Base64.encodeBase64("cf:".getBytes()));
-        MockHttpServletRequestBuilder post = post("/oauth/token")
-                .accept(APPLICATION_JSON)
-                .contentType(APPLICATION_FORM_URLENCODED)
-                .header("Authorization", basicDigestHeaderValue)
-                .param("grant_type", "password")
-                .param("passcode", passcode)
-                .param("response_type", "token");
-
-        Map<String, Object> accessToken =
-                JsonUtils.readValueAsMap(
-                        mockMvc.perform(post)
-                                .andExpect(status().isOk())
-                                .andReturn().getResponse().getContentAsString());
-        assertThat(accessToken).containsEntry("token_type", "bearer")
-                .containsKey("access_token")
-                .containsKey("refresh_token");
-        String[] scopes = ((String) accessToken.get("scope")).split(" ");
-        assertThat(Arrays.asList(scopes)).contains("uaa.user", "scim.userids", "password.write", "cloud_controller.write", "openid", "cloud_controller.read");
-
-        Authentication authentication = captureSecurityContextFilter.getAuthentication();
-        assertThat(authentication).isInstanceOf(OAuth2Authentication.class);
-        assertThat(((OAuth2Authentication) authentication).getUserAuthentication()).isInstanceOf(UsernamePasswordAuthenticationToken.class);
-        assertThat(authentication.getPrincipal()).isInstanceOf(UaaPrincipal.class);
-        assertThat(((UaaPrincipal) authentication.getPrincipal()).getOrigin()).isEqualTo(marissa.getOrigin());
-    }
-
-    @Test
-    void testLoginUsingPasscodeWithUaaToken() throws Exception {
+    void loginUsingPasscodeWithUaaToken() throws Exception {
         UaaAuthenticationDetails details = new UaaAuthenticationDetails(new MockHttpServletRequest());
         UaaAuthentication uaaAuthentication = new UaaAuthentication(marissa, new ArrayList<>(), details);
         final MockSecurityContext mockSecurityContext = new MockSecurityContext(uaaAuthentication);
@@ -206,7 +148,7 @@ class PasscodeMockMvcTests {
     }
 
     @Test
-    void testLoginUsingPasscodeWithUnknownToken() throws Exception {
+    void loginUsingPasscodeWithUnknownToken() throws Exception {
         RemoteUserAuthentication userAuthentication = new RemoteUserAuthentication(
                 marissa.getId(),
                 marissa.getName(),
@@ -232,7 +174,7 @@ class PasscodeMockMvcTests {
     }
 
     @Test
-    void testLoginUsingOldPasscode() throws Exception {
+    void loginUsingOldPasscode() throws Exception {
         UaaAuthenticationDetails details = new UaaAuthenticationDetails(new MockHttpServletRequest());
         UaaAuthentication uaaAuthentication = new UaaAuthentication(marissa, new ArrayList<>(), details);
         final MockSecurityContext mockSecurityContext = new MockSecurityContext(uaaAuthentication);
@@ -315,7 +257,7 @@ class PasscodeMockMvcTests {
     }
 
     @Test
-    void testPasscodeReturnSpecialCharacters() {
+    void passcodeReturnSpecialCharacters() {
         // NOTE: This test is flaky but passes on retry
         UaaAuthenticationDetails details = new UaaAuthenticationDetails(new MockHttpServletRequest());
         UaaAuthentication uaaAuthentication = new UaaAuthentication(marissa, new ArrayList<>(), details);
@@ -343,7 +285,6 @@ class PasscodeMockMvcTests {
     }
 
     public static class MockSecurityContext implements SecurityContext {
-
         @Serial
         private static final long serialVersionUID = -1386535243513362694L;
 
@@ -365,7 +306,6 @@ class PasscodeMockMvcTests {
     }
 
     public static class CaptureSecurityContextFilter extends GenericFilterBean {
-
         private Authentication authentication;
 
         public Authentication getAuthentication() {

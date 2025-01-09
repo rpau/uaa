@@ -1,28 +1,29 @@
 package org.cloudfoundry.identity.uaa.integration;
 
-import org.cloudfoundry.identity.uaa.ServerRunning;
-import org.cloudfoundry.identity.uaa.oauth.client.ClientConstants;
+import org.cloudfoundry.identity.uaa.ServerRunningExtension;
+import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
 import org.cloudfoundry.identity.uaa.constants.OriginKeys;
 import org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils;
+import org.cloudfoundry.identity.uaa.oauth.client.ClientConstants;
 import org.cloudfoundry.identity.uaa.oauth.client.OAuth2RestTemplate;
 import org.cloudfoundry.identity.uaa.oauth.client.http.OAuth2ErrorHandler;
 import org.cloudfoundry.identity.uaa.oauth.client.resource.ClientCredentialsResourceDetails;
 import org.cloudfoundry.identity.uaa.oauth.client.test.OAuth2ContextConfiguration;
-import org.cloudfoundry.identity.uaa.oauth.client.test.OAuth2ContextSetup;
+import org.cloudfoundry.identity.uaa.oauth.client.test.OAuth2ContextExtension;
+import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
+import org.cloudfoundry.identity.uaa.provider.IdentityProvider;
+import org.cloudfoundry.identity.uaa.provider.UaaIdentityProviderDefinition;
 import org.cloudfoundry.identity.uaa.scim.ScimGroup;
 import org.cloudfoundry.identity.uaa.scim.ScimUser;
-import org.cloudfoundry.identity.uaa.test.TestAccountSetup;
+import org.cloudfoundry.identity.uaa.test.TestAccountExtension;
 import org.cloudfoundry.identity.uaa.test.UaaTestAccounts;
 import org.cloudfoundry.identity.uaa.util.ObjectUtils;
-import org.cloudfoundry.identity.uaa.provider.IdentityProvider;
 import org.cloudfoundry.identity.uaa.zone.IdentityZone;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneSwitchingFilter;
-import org.cloudfoundry.identity.uaa.provider.UaaIdentityProviderDefinition;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -31,8 +32,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.ClientHttpResponse;
-import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
-import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Collections;
@@ -40,31 +39,27 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_AUTHORIZATION_CODE;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
 
 @OAuth2ContextConfiguration(IdentityZoneEndpointsIntegrationTests.IdentityClient.class)
-public class IdentityZoneEndpointsIntegrationTests {
-    @Rule
-    public ServerRunning serverRunning = ServerRunning.isRunning();
+class IdentityZoneEndpointsIntegrationTests {
+    @RegisterExtension
+    private static final ServerRunningExtension serverRunning = ServerRunningExtension.connect();
 
-    private UaaTestAccounts testAccounts = UaaTestAccounts.standard(serverRunning);
+    private static final UaaTestAccounts testAccounts = UaaTestAccounts.standard(serverRunning);
 
-    @Rule
-    public TestAccountSetup testAccountSetup = TestAccountSetup.standard(serverRunning, testAccounts);
+    @RegisterExtension
+    private static final TestAccountExtension testAccountExtension = TestAccountExtension.standard(serverRunning, testAccounts);
 
-    @Rule
-    public OAuth2ContextSetup context = OAuth2ContextSetup.withTestAccounts(serverRunning, testAccountSetup);
+    @RegisterExtension
+    private static final OAuth2ContextExtension context = OAuth2ContextExtension.withTestAccounts(serverRunning, testAccountExtension);
 
     private RestTemplate client;
     private String zoneId;
 
-    @Before
-    public void createRestTemplate() {
+    @BeforeEach
+    void createRestTemplate() {
         client = (OAuth2RestTemplate) serverRunning.getRestTemplate();
         client.setErrorHandler(new OAuth2ErrorHandler(context.getResource()) {
             // Pass errors through in response entity for status code analysis
@@ -75,12 +70,13 @@ public class IdentityZoneEndpointsIntegrationTests {
 
             @Override
             public void handleError(ClientHttpResponse response) {
+                // pass through
             }
         });
     }
 
-    @After
-    public void cleanup() {
+    @AfterEach
+    void cleanup() {
         String clientCredentialsToken = IntegrationTestUtils.getClientCredentialsToken(serverRunning, "admin", "adminsecret");
         RestTemplate client = IntegrationTestUtils.getClientCredentialsTemplate(
                 IntegrationTestUtils.getClientCredentialsResource(serverRunning.getBaseUrl(), new String[0], "admin", "adminsecret")
@@ -92,7 +88,7 @@ public class IdentityZoneEndpointsIntegrationTests {
     }
 
     @Test
-    public void testCreateZone() {
+    void createZone() {
         zoneId = UUID.randomUUID().toString();
         String requestBody = "{\"id\":\"" + zoneId + "\", \"subdomain\":\"" + zoneId + "\", \"name\":\"testCreateZone() " + zoneId + "\"}";
 
@@ -104,10 +100,10 @@ public class IdentityZoneEndpointsIntegrationTests {
                 serverRunning.getUrl("/identity-zones"),
                 HttpMethod.POST,
                 new HttpEntity<>(requestBody, headers),
-                new ParameterizedTypeReference<Void>() {
+                new ParameterizedTypeReference<>() {
                 });
 
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 
         RestTemplate adminClient = IntegrationTestUtils.getClientCredentialsTemplate(
                 IntegrationTestUtils.getClientCredentialsResource(serverRunning.getBaseUrl(), new String[0], "admin", "adminsecret")
@@ -134,20 +130,20 @@ public class IdentityZoneEndpointsIntegrationTests {
                 serverRunning.getUrl("/identity-providers"),
                 HttpMethod.GET,
                 new HttpEntity<>(null, headers),
-                new ParameterizedTypeReference<List<IdentityProvider>>() {
+                new ParameterizedTypeReference<>() {
                 });
 
         IdentityProvider identityProvider = idpList.getBody().get(0);
-        assertThat(identityProvider.getIdentityZoneId(), is(zoneId));
-        assertThat(identityProvider.getOriginKey(), is(OriginKeys.UAA));
+        assertThat(identityProvider.getIdentityZoneId()).isEqualTo(zoneId);
+        assertThat(identityProvider.getOriginKey()).isEqualTo(OriginKeys.UAA);
 
         //the default created zone does have a definition, but no policy
-        assertNotNull(identityProvider.getConfig());
-        assertNull(ObjectUtils.castInstance(identityProvider.getConfig(), UaaIdentityProviderDefinition.class).getPasswordPolicy());
+        assertThat(identityProvider.getConfig()).isNotNull();
+        assertThat(ObjectUtils.castInstance(identityProvider.getConfig(), UaaIdentityProviderDefinition.class).getPasswordPolicy()).isNull();
     }
 
     @Test
-    public void testUpdateZoneAllowedGroups() {
+    void updateZoneAllowedGroups() {
         IdentityZone idZone = new IdentityZone();
         String id = UUID.randomUUID().toString();
         idZone.setId(id);
@@ -157,10 +153,10 @@ public class IdentityZoneEndpointsIntegrationTests {
                 serverRunning.getUrl("/identity-zones"),
                 HttpMethod.POST,
                 new HttpEntity<>(idZone),
-                new ParameterizedTypeReference<String>() {
+                new ParameterizedTypeReference<>() {
                 },
                 id);
-        assertEquals(response.getBody(), HttpStatus.CREATED, response.getStatusCode());
+        assertThat(response.getStatusCode()).as(response.getBody()).isEqualTo(HttpStatus.CREATED);
 
         List<String> existingGroups = List.of("sps.write", "sps.read", "idps.write", "idps.read", "clients.admin", "clients.write", "clients.read",
                 "clients.secret", "scim.write", "scim.read", "scim.create", "scim.userids", "scim.zones", "groups.update", "password.write", "oauth.login", "uaa.admin");
@@ -169,10 +165,10 @@ public class IdentityZoneEndpointsIntegrationTests {
                 serverRunning.getUrl("/identity-zones/" + id),
                 HttpMethod.PUT,
                 new HttpEntity<>(idZone),
-                new ParameterizedTypeReference<String>() {
+                new ParameterizedTypeReference<>() {
                 },
                 id);
-        assertEquals(response.getBody(), HttpStatus.OK, response.getStatusCode());
+        assertThat(response.getStatusCode()).as(response.getBody()).isEqualTo(HttpStatus.OK);
 
         List<String> notAllExistingGroups = List.of("clients.admin", "clients.write", "clients.read", "clients.secret");
         idZone.getConfig().getUserConfig().setAllowedGroups(notAllExistingGroups);
@@ -180,14 +176,14 @@ public class IdentityZoneEndpointsIntegrationTests {
                 serverRunning.getUrl("/identity-zones/" + id),
                 HttpMethod.PUT,
                 new HttpEntity<>(idZone),
-                new ParameterizedTypeReference<String>() {
+                new ParameterizedTypeReference<>() {
                 },
                 id);
-        assertEquals(response.getBody(), HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
+        assertThat(response.getStatusCode()).as(response.getBody()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
     }
 
     @Test
-    public void testCreateZoneWithClient() {
+    void createZoneWithClient() {
         IdentityZone idZone = new IdentityZone();
         String id = UUID.randomUUID().toString();
         idZone.setId(id);
@@ -197,10 +193,10 @@ public class IdentityZoneEndpointsIntegrationTests {
                 serverRunning.getUrl("/identity-zones"),
                 HttpMethod.POST,
                 new HttpEntity<>(idZone),
-                new ParameterizedTypeReference<Void>() {
+                new ParameterizedTypeReference<>() {
                 },
                 id);
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 
         UaaClientDetails clientDetails = new UaaClientDetails("test123", null, "openid", GRANT_TYPE_AUTHORIZATION_CODE, "uaa.resource");
         clientDetails.setClientSecret("testSecret");
@@ -210,26 +206,25 @@ public class IdentityZoneEndpointsIntegrationTests {
                 serverRunning.getUrl("/identity-zones/" + id + "/clients"),
                 HttpMethod.POST,
                 new HttpEntity<>(clientDetails),
-                new ParameterizedTypeReference<Void>() {
+                new ParameterizedTypeReference<>() {
                 },
                 id);
 
-        assertEquals(HttpStatus.CREATED, clientCreateResponse.getStatusCode());
+        assertThat(clientCreateResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 
         ResponseEntity<Void> clientDeleteResponse = client.exchange(
                 serverRunning.getUrl("/identity-zones/" + id + "/clients/" + clientDetails.getClientId()),
                 HttpMethod.DELETE,
                 null,
-                new ParameterizedTypeReference<Void>() {
+                new ParameterizedTypeReference<>() {
                 },
                 id);
 
-        assertEquals(HttpStatus.OK, clientDeleteResponse.getStatusCode());
+        assertThat(clientDeleteResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 
-
     @Test
-    public void testCreateZoneWithNonUniqueSubdomain() {
+    void createZoneWithNonUniqueSubdomain() {
         IdentityZone idZone1 = new IdentityZone();
         String id1 = UUID.randomUUID().toString();
         idZone1.setId(id1);
@@ -239,10 +234,10 @@ public class IdentityZoneEndpointsIntegrationTests {
                 serverRunning.getUrl("/identity-zones"),
                 HttpMethod.POST,
                 new HttpEntity<>(idZone1),
-                new ParameterizedTypeReference<Void>() {
+                new ParameterizedTypeReference<>() {
                 },
                 id1);
-        assertEquals(HttpStatus.CREATED, response1.getStatusCode());
+        assertThat(response1.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 
         IdentityZone idZone2 = new IdentityZone();
         String id2 = UUID.randomUUID().toString();
@@ -253,11 +248,11 @@ public class IdentityZoneEndpointsIntegrationTests {
                 serverRunning.getUrl("/identity-zones"),
                 HttpMethod.POST,
                 new HttpEntity<>(idZone2),
-                new ParameterizedTypeReference<Map<String, String>>() {
+                new ParameterizedTypeReference<>() {
                 },
                 id2);
-        assertEquals(HttpStatus.CONFLICT, response2.getStatusCode());
-        Assert.assertTrue(response2.getBody().get("error_description").toLowerCase().contains("subdomain"));
+        assertThat(response2.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(response2.getBody().get("error_description").toLowerCase()).contains("subdomain");
     }
 
     static class IdentityClient extends ClientCredentialsResourceDetails {
@@ -271,5 +266,4 @@ public class IdentityZoneEndpointsIntegrationTests {
             setAccessTokenUri(test.serverRunning.getAccessTokenUri());
         }
     }
-
 }

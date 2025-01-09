@@ -14,7 +14,7 @@
 package org.cloudfoundry.identity.uaa.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.cloudfoundry.identity.uaa.ServerRunning;
+import org.cloudfoundry.identity.uaa.ServerRunningExtension;
 import org.cloudfoundry.identity.uaa.approval.Approval;
 import org.cloudfoundry.identity.uaa.client.InvalidClientDetailsException;
 import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
@@ -30,17 +30,17 @@ import org.cloudfoundry.identity.uaa.oauth.common.exceptions.InvalidClientExcept
 import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
 import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetails;
 import org.cloudfoundry.identity.uaa.resources.SearchResults;
-import org.cloudfoundry.identity.uaa.test.TestAccountSetup;
+import org.cloudfoundry.identity.uaa.test.TestAccountExtension;
 import org.cloudfoundry.identity.uaa.test.UaaTestAccounts;
 import org.cloudfoundry.identity.uaa.util.UaaStringUtils;
 import org.cloudfoundry.identity.uaa.zone.ClientSecretPolicy;
 import org.cloudfoundry.identity.uaa.zone.IdentityZone;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneConfiguration;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneSwitchingFilter;
-import org.junit.Rule;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -77,26 +77,26 @@ public class ClientAdminEndpointsIntegrationTests {
             "dsfasdfdsagfdsao43o4p43adfsfasdvcdasfmdsafzxcvaddsaaddfsafdsafdsfdsdfsfdsfdsasdfadfsadfsasadfsdfadfs";
     private static final Base64.Encoder ENCODER = Base64.getEncoder();
 
-    @Rule
-    public ServerRunning serverRunning = ServerRunning.isRunning();
+    @RegisterExtension
+    private static final ServerRunningExtension serverRunning = ServerRunningExtension.connect();
 
-    private final UaaTestAccounts testAccounts = UaaTestAccounts.standard(serverRunning);
+    private static final UaaTestAccounts testAccounts = UaaTestAccounts.standard(serverRunning);
 
-    @Rule
-    public TestAccountSetup testAccountSetup = TestAccountSetup.standard(serverRunning, testAccounts);
+    @RegisterExtension
+    private static final TestAccountExtension testAccountExtension = TestAccountExtension.standard(serverRunning, testAccounts);
 
     private OAuth2AccessToken token;
     private HttpHeaders headers;
     private List<ClientDetailsModification> clientDetailsModifications;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         token = getClientCredentialsAccessToken("clients.read,clients.write,clients.admin");
         headers = getAuthenticatedHeaders(token);
     }
 
     @Test
-    void testGetClient() {
+    void getClient() {
         HttpHeaders myHeaders = getAuthenticatedHeaders(getClientCredentialsAccessToken("clients.read"));
         ResponseEntity<String> result = serverRunning.getForString("/oauth/clients/cf", myHeaders);
         assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -104,7 +104,7 @@ public class ClientAdminEndpointsIntegrationTests {
     }
 
     @Test
-    void testListClients() {
+    void listClients() {
         HttpHeaders myHeaders = getAuthenticatedHeaders(getClientCredentialsAccessToken("clients.read"));
         ResponseEntity<String> result = serverRunning.getForString("/oauth/clients", myHeaders);
         assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -128,7 +128,7 @@ public class ClientAdminEndpointsIntegrationTests {
     }
 
     @Test
-    void testListClientsWithExtremePagination_defaultsTo500() throws Exception {
+    void listClientsWithExtremePaginationDefaultsTo500() throws Exception {
         for (int i = 0; i < 502; i++) {
             clientDetailsModifications.add(createClient("client_credentials"));
         }
@@ -180,12 +180,12 @@ public class ClientAdminEndpointsIntegrationTests {
     }
 
     @Test
-    void testCreateClients() {
+    void createClients() {
         doCreateClients();
     }
 
     @Test
-    void testCreateClientWithValidLongRedirectUris() {
+    void createClientWithValidLongRedirectUris() {
         // redirectUri shorter than the database column size
         HashSet<String> uris = new HashSet<>();
         for (int i = 0; i < 666; ++i) {
@@ -370,7 +370,7 @@ public class ClientAdminEndpointsIntegrationTests {
     }
 
     @Test
-    void testClientSecretExpiryCannotBeSet() {
+    void clientSecretExpiryCannotBeSet() {
         assertThat(doesSupportZoneDNS()).as("Expected testzone1.localhost and testzone2.localhost to resolve to 127.0.0.1").isTrue();
         String testZoneId = "testzone1";
 
@@ -498,7 +498,7 @@ public class ClientAdminEndpointsIntegrationTests {
     }
 
     @Test
-    void testUpdateClient() {
+    void updateClient() {
         UaaClientDetails client = createClient("client_credentials");
 
         client.setResourceIds(Collections.singleton("foo"));
@@ -526,7 +526,7 @@ public class ClientAdminEndpointsIntegrationTests {
     }
 
     @Test
-    void testUpdateClients() {
+    void updateClients() {
         UaaClientDetails[] clients = doCreateClients();
         headers = getAuthenticatedHeaders(getClientCredentialsAccessToken("clients.admin,clients.read,clients.write,clients.secret"));
         headers.add("Accept", "application/json");
@@ -552,7 +552,7 @@ public class ClientAdminEndpointsIntegrationTests {
     }
 
     @Test
-    void testDeleteClients() {
+    void deleteClients() {
         UaaClientDetails[] clients = doCreateClients();
         headers = getAuthenticatedHeaders(getClientCredentialsAccessToken("clients.admin,clients.read,clients.write,clients.secret,clients.admin"));
         headers.add("Accept", "application/json");
@@ -571,7 +571,7 @@ public class ClientAdminEndpointsIntegrationTests {
     }
 
     @Test
-    void testDeleteClientsMissingId() {
+    void deleteClientsMissingId() {
         UaaClientDetails[] clients = doCreateClients();
         headers = getAuthenticatedHeaders(getClientCredentialsAccessToken("clients.admin,clients.read,clients.write,clients.secret,clients.admin"));
         headers.add("Accept", "application/json");
@@ -592,7 +592,7 @@ public class ClientAdminEndpointsIntegrationTests {
     }
 
     @Test
-    void testChangeSecret() {
+    void changeSecret() {
         headers = getAuthenticatedHeaders(getClientCredentialsAccessToken("clients.read,clients.write,clients.secret,uaa.admin"));
         UaaClientDetails client = createClient("client_credentials");
 
@@ -609,7 +609,7 @@ public class ClientAdminEndpointsIntegrationTests {
     }
 
     @Test
-    void testChangeJwtConfig() {
+    void changeJwtConfig() {
         headers = getAuthenticatedHeaders(getClientCredentialsAccessToken("clients.read,clients.write,clients.trust,uaa.admin"));
         UaaClientDetails client = createClient("client_credentials");
 
@@ -627,7 +627,7 @@ public class ClientAdminEndpointsIntegrationTests {
     }
 
     @Test
-    void testChangeJwtConfigNoAuthorization() {
+    void changeJwtConfigNoAuthorization() {
         headers = getAuthenticatedHeaders(getClientCredentialsAccessToken("clients.read,clients.write,clients.trust,uaa.admin"));
         UaaClientDetails client = createClient("client_credentials");
         headers = getAuthenticatedHeaders(getClientCredentialsAccessToken("clients.read,clients.write"));
@@ -646,7 +646,7 @@ public class ClientAdminEndpointsIntegrationTests {
     }
 
     @Test
-    void testChangeJwtConfigInvalidTokenKey() {
+    void changeJwtConfigInvalidTokenKey() {
         headers = getAuthenticatedHeaders(getClientCredentialsAccessToken("clients.read,clients.write,clients.secret,uaa.admin"));
         UaaClientDetails client = createClient("client_credentials");
 
@@ -664,7 +664,7 @@ public class ClientAdminEndpointsIntegrationTests {
     }
 
     @Test
-    void testCreateClientsWithStrictSecretPolicy() {
+    void createClientsWithStrictSecretPolicy() {
         headers = getAuthenticatedHeaders(getClientCredentialsAccessToken("clients.read,clients.write,clients.secret,uaa.admin"));
         UaaClientDetails client = createClient("client_credentials");
 
@@ -681,7 +681,7 @@ public class ClientAdminEndpointsIntegrationTests {
     }
 
     @Test
-    void testDeleteClient() {
+    void deleteClient() {
         UaaClientDetails client = createClient("client_credentials");
 
         client.setResourceIds(Collections.singleton("foo"));
@@ -694,7 +694,7 @@ public class ClientAdminEndpointsIntegrationTests {
     }
 
     @Test
-    void testAddUpdateAndDeleteTx() {
+    void addUpdateAndDeleteTx() {
         ClientDetailsModification[] clients = doCreateClients();
         for (int i = 1; i < clients.length; i++) {
             clients[i] = new ClientDetailsModification(clients[i]);
@@ -733,8 +733,8 @@ public class ClientAdminEndpointsIntegrationTests {
     }
 
     @Test
-    // CFID-372
-    void testCreateExistingClientFails() {
+        // CFID-372
+    void createExistingClientFails() {
         UaaClientDetails client = createClient("client_credentials");
 
         @SuppressWarnings("rawtypes")
@@ -747,7 +747,7 @@ public class ClientAdminEndpointsIntegrationTests {
     }
 
     @Test
-    void testClientApprovalsDeleted() {
+    void clientApprovalsDeleted() {
         //create client
         UaaClientDetails client = createClient("client_credentials", "password");
         assertThat(getClient(client.getClientId())).isNotNull();
@@ -776,7 +776,7 @@ public class ClientAdminEndpointsIntegrationTests {
     }
 
     @Test
-    void testClientTxApprovalsDeleted() {
+    void clientTxApprovalsDeleted() {
         //create client
         UaaClientDetails client = createClient("client_credentials", "password");
         assertThat(getClient(client.getClientId())).isNotNull();
@@ -804,7 +804,7 @@ public class ClientAdminEndpointsIntegrationTests {
     }
 
     @Test
-    void testClientTxModifyApprovalsDeleted() {
+    void clientTxModifyApprovalsDeleted() {
         //create client
         ClientDetailsModification client = createClient("client_credentials", "password");
         assertThat(getClient(client.getClientId())).isNotNull();

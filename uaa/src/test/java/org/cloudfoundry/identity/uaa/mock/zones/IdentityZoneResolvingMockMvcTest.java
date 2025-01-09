@@ -57,13 +57,13 @@ class IdentityZoneResolvingMockMvcTest {
     }
 
     @Test
-    void testSwitchingZones() throws Exception {
+    void switchingZones() throws Exception {
         // Authenticate with new Client in new Zone
         mockMvc.perform(
-                get("/login")
-                        .header("Host", "testsomeother.ip.com")
-        )
-        .andExpect(status().isOk());
+                        get("/login")
+                                .header("Host", "testsomeother.ip.com")
+                )
+                .andExpect(status().isOk());
     }
 
     @Nested
@@ -81,10 +81,10 @@ class IdentityZoneResolvingMockMvcTest {
         void isFound(String hostname) throws Exception {
             // Authenticate with new Client in new Zone
             mockMvc.perform(
-                    get("/login")
-                            .header("Host", hostname)
-            )
-            .andExpect(status().isOk());
+                            get("/login")
+                                    .header("Host", hostname)
+                    )
+                    .andExpect(status().isOk());
 
         }
 
@@ -92,10 +92,10 @@ class IdentityZoneResolvingMockMvcTest {
         @ValueSource(strings = {"notlocalhost", "testsomeother2.ip.com"})
         void isNotFound(String hostname) throws Exception {
             mockMvc.perform(
-                    get("/login")
-                            .header("Host", hostname)
-            )
-            .andExpect(status().isNotFound());
+                            get("/login")
+                                    .header("Host", hostname)
+                    )
+                    .andExpect(status().isNotFound());
         }
     }
 }

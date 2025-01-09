@@ -3,21 +3,21 @@ package org.cloudfoundry.identity.uaa.mock.token;
 import org.apache.commons.codec.binary.Base64;
 import org.cloudfoundry.identity.uaa.DefaultTestContext;
 import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
+import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
 import org.cloudfoundry.identity.uaa.oauth.token.VerificationKeyResponse;
 import org.cloudfoundry.identity.uaa.util.JsonUtils;
 import org.cloudfoundry.identity.uaa.util.MapCollector;
 import org.cloudfoundry.identity.uaa.util.SetServerNameRequestPostProcessor;
-import org.cloudfoundry.identity.uaa.zone.MultitenantClientServices;
 import org.cloudfoundry.identity.uaa.zone.IdentityZone;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneConfiguration;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneProvisioning;
+import org.cloudfoundry.identity.uaa.zone.MultitenantClientServices;
 import org.cloudfoundry.identity.uaa.zone.MultitenantJdbcClientDetailsService;
 import org.cloudfoundry.identity.uaa.zone.TokenPolicy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.web.context.WebApplicationContext;
@@ -26,15 +26,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.any;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.collection.IsMapContaining.hasKey;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -42,7 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DefaultTestContext
 class TokenKeyEndpointMockMvcTests {
 
-    private static final String signKey = """
+    private static final String SIGN_KEY = """
             -----BEGIN RSA PRIVATE KEY-----
             MIIEpQIBAAKCAQEA5JgjYNjLOeWC1Xf/NFcremS9peiQd3esa64KZ0BJue74bEtp
             N8CLmbeTD9NHvKzCg833cF81gkrkP/pkra7WZF+zNlHBDnO68D/tBkEAzPJYlFLL
@@ -71,7 +64,7 @@ class TokenKeyEndpointMockMvcTests {
             Iankyv8txnxsgwWDx3CBaWhFSxzqTNiLDs23aKwzCNiFGqG/H/HlSpw=
             -----END RSA PRIVATE KEY-----
             """;
-    private static final String verifyKey = """
+    private static final String VERIFY_KEY = """
             -----BEGIN PUBLIC KEY-----
             MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA5JgjYNjLOeWC1Xf/NFcr
             emS9peiQd3esa64KZ0BJue74bEtpN8CLmbeTD9NHvKzCg833cF81gkrkP/pkra7W
@@ -81,6 +74,7 @@ class TokenKeyEndpointMockMvcTests {
             FYEQjpphGyQmtsqsOndL9zBvfQCp5oT4hukBc3yIR6GVXDi0UURVjKtlYMMD4O+f
             qwIDAQAB
             -----END PUBLIC KEY-----""";
+
     private UaaClientDetails defaultClient;
     private IdentityZone testZone;
     @Autowired
@@ -90,7 +84,7 @@ class TokenKeyEndpointMockMvcTests {
 
     @BeforeEach
     void setSigningKeyAndDefaultClient() {
-        setSigningKeyAndDefaultClient(signKey);
+        setSigningKeyAndDefaultClient(SIGN_KEY);
     }
 
     @Test
@@ -112,9 +106,9 @@ class TokenKeyEndpointMockMvcTests {
     @Test
     void checkTokenKeyReturnETag() throws Exception {
         mockMvc.perform(
-                get("/token_key")
-                        .with(new SetServerNameRequestPostProcessor(testZone.getSubdomain() + ".localhost"))
-                        .accept(MediaType.APPLICATION_JSON))
+                        get("/token_key")
+                                .with(new SetServerNameRequestPostProcessor(testZone.getSubdomain() + ".localhost"))
+                                .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(header().string("ETag", any(String.class)))
                 .andReturn();
@@ -123,9 +117,9 @@ class TokenKeyEndpointMockMvcTests {
     @Test
     void checkTokenKeyReturns304IfResourceUnchanged() throws Exception {
         mockMvc.perform(
-                get("/token_key")
-                        .with(new SetServerNameRequestPostProcessor(testZone.getSubdomain() + ".localhost"))
-                        .header("If-None-Match", testZone.getLastModified().getTime()))
+                        get("/token_key")
+                                .with(new SetServerNameRequestPostProcessor(testZone.getSubdomain() + ".localhost"))
+                                .header("If-None-Match", testZone.getLastModified().getTime()))
                 .andExpect(status().isNotModified())
                 .andReturn();
     }
@@ -156,7 +150,7 @@ class TokenKeyEndpointMockMvcTests {
         Map<String, Object> defaultKey = JsonUtils.readValue(defaultZoneResponse.getResponse().getContentAsString(), Map.class);
         VerificationKeyResponse defaultKeyResponse = new VerificationKeyResponse(defaultKey);
 
-        assertNotEquals(nonDefaultKeyResponse.getValue(), defaultKeyResponse.getValue());
+        assertThat(defaultKeyResponse.getValue()).isNotEqualTo(nonDefaultKeyResponse.getValue());
     }
 
     @Test
@@ -170,10 +164,10 @@ class TokenKeyEndpointMockMvcTests {
         webApplicationContext.getBean(MultitenantClientServices.class).addClientDetails(client, testZone.getSubdomain());
 
         MvcResult result = mockMvc.perform(
-                get("/token_key")
-                        .with(new SetServerNameRequestPostProcessor(testZone.getSubdomain() + ".localhost"))
-                        .accept(MediaType.APPLICATION_JSON)
-                        .header("Authorization", getBasicAuth(client)))
+                        get("/token_key")
+                                .with(new SetServerNameRequestPostProcessor(testZone.getSubdomain() + ".localhost"))
+                                .accept(MediaType.APPLICATION_JSON)
+                                .header("Authorization", getBasicAuth(client)))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -237,9 +231,9 @@ class TokenKeyEndpointMockMvcTests {
     @Test
     void checkTokenKeysReturnETag() throws Exception {
         mockMvc.perform(
-                get("/token_keys")
-                        .with(new SetServerNameRequestPostProcessor(testZone.getSubdomain() + ".localhost"))
-                        .accept(MediaType.APPLICATION_JSON))
+                        get("/token_keys")
+                                .with(new SetServerNameRequestPostProcessor(testZone.getSubdomain() + ".localhost"))
+                                .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(header().string("ETag", any(String.class)))
                 .andReturn();
@@ -248,9 +242,9 @@ class TokenKeyEndpointMockMvcTests {
     @Test
     void checkTokenKeysReturns304IfResourceUnchanged() throws Exception {
         mockMvc.perform(
-                get("/token_keys")
-                        .with(new SetServerNameRequestPostProcessor(testZone.getSubdomain() + ".localhost"))
-                        .header("If-None-Match", testZone.getLastModified().getTime()))
+                        get("/token_keys")
+                                .with(new SetServerNameRequestPostProcessor(testZone.getSubdomain() + ".localhost"))
+                                .header("If-None-Match", testZone.getLastModified().getTime()))
                 .andExpect(status().isNotModified())
                 .andReturn();
     }
@@ -295,86 +289,80 @@ class TokenKeyEndpointMockMvcTests {
 
     private void validateKey(Map<String, Object> key) {
         Object kty = key.get("kty");
-        assertNotNull(kty);
-        assertTrue(kty instanceof String);
-        assertEquals("RSA", kty);
+        assertThat(kty)
+                .isInstanceOf(String.class)
+                .isEqualTo("RSA");
 
         Object use = key.get("use"); //optional
         //values for use are
         //1. sig - key used to verify the signature
         //2. enc - key used to
-        assertNotNull(use);
-        assertTrue(use instanceof String);
-        assertEquals("sig", use);
-
+        assertThat(use)
+                .isInstanceOf(String.class)
+                .isEqualTo("sig");
 
         Object keyOps = key.get("key_ops");
         //an String[] containing values like
         //sign, verify, encrypt, decrypt, wrapKey, unwrapKey, deriveKey, deriveBits
         //should not be used together with 'use' (mutually exclusive)
-        assertNull(keyOps);
+        assertThat(keyOps).isNull();
 
         Object alg = key.get("alg");
         //optional - algorithm of key
-        assertNotNull(alg);
-        assertTrue(alg instanceof String);
-        assertEquals("RS256", alg);
+        assertThat(alg)
+                .isInstanceOf(String.class)
+                .isEqualTo("RS256");
 
         Object kid = key.get("kid");
         //optional - indicates the id for a certain key
         //single key doesn't need one
-        assertEquals("testKey", kid);
+        assertThat(kid).isEqualTo("testKey");
 
         Object x5u = key.get("x5u");
         //optional - URL that points to a X.509 key or certificate
-        assertNull(x5u);
+        assertThat(x5u).isNull();
 
         Object x5c = key.get("x5c");
         //optional - contains a chain of one or more
         //PKIX certificate
-        assertNull(x5c);
+        assertThat(x5c).isNull();
 
         Object x5t = key.get("x5t");
         //optional - x509 certificate SHA-1
-        assertNull(x5t);
+        assertThat(x5t).isNull();
 
         Object x5tHashS256 = key.get("x5t#S256");
         //optional
-        assertNull(x5tHashS256);
+        assertThat(x5tHashS256).isNull();
 
         Object actual = key.get("value");
-        assertNotNull(actual);
-        assertTrue(actual instanceof String);
-        assertEquals(verifyKey, actual);
-
+        assertThat(actual).isInstanceOf(String.class)
+                .isEqualTo(VERIFY_KEY);
 
         Object e = key.get("e");
-        assertNotNull(e);
-        assertTrue(e instanceof String);
-        assertEquals("AQAB", e);
+        assertThat(e).isInstanceOf(String.class)
+                .isEqualTo("AQAB");
         isUrlSafeBase64((String) e);
 
         Object n = key.get("n");
-        assertNotNull(n);
-        assertTrue(n instanceof String);
+        assertThat(n).isInstanceOf(String.class);
         isUrlSafeBase64((String) n);
 
     }
 
     private void validateKeys(Map<String, Object> response) {
         List<Map<String, Object>> keys = (List<Map<String, Object>>) response.get("keys");
-        assertNotNull(keys);
+        assertThat(keys).isNotNull();
 
         Map<String, ? extends Map<String, Object>> keysMap = keys.stream().collect(new MapCollector<>(k -> (String) k.get("kid"), k -> k));
 
-        assertThat(keysMap, hasKey(is("testKey")));
+        assertThat(keysMap).containsKey("testKey");
         validateKey(keysMap.get("testKey"));
     }
 
     private void isUrlSafeBase64(String base64) {
         java.util.Base64.Encoder encoder = java.util.Base64.getUrlEncoder().withoutPadding();
         java.util.Base64.Decoder decoder = java.util.Base64.getUrlDecoder();
-        assertEquals(base64, encoder.encodeToString(decoder.decode(base64)));
+        assertThat(encoder.encodeToString(decoder.decode(base64))).isEqualTo(base64);
     }
-
 }

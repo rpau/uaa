@@ -1,22 +1,20 @@
 package org.cloudfoundry.identity.uaa.alias;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
-import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
-import static org.cloudfoundry.identity.uaa.alias.EntityAliasHandlerValidationTest.NoExistingAliasBase.ExistingEntityArgument.ENTITY_WITH_EMPTY_ALIAS_PROPS;
-import static org.junit.Assert.assertFalse;
-
-import java.util.UUID;
-import java.util.stream.Stream;
-
 import org.cloudfoundry.identity.uaa.EntityWithAlias;
 import org.cloudfoundry.identity.uaa.zone.IdentityZone;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
+
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
+import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
+import static org.cloudfoundry.identity.uaa.alias.EntityAliasHandlerValidationTest.NoExistingAliasBase.ExistingEntityArgument.ENTITY_WITH_EMPTY_ALIAS_PROPS;
 
 public abstract class EntityAliasHandlerValidationTest<T extends EntityWithAlias> {
     private static final String CUSTOM_ZONE_ID = UUID.randomUUID().toString();
@@ -51,7 +49,7 @@ public abstract class EntityAliasHandlerValidationTest<T extends EntityWithAlias
 
     protected abstract class NoExistingAliasBase extends Base {
         @ParameterizedTest
-        @MethodSource("existingEntityArgNoAlias")
+        @EnumSource
         final void shouldReturnFalse_AliasIdSetInReqBody(final ExistingEntityArgument existingEntityArg) {
             final T requestBody = buildEntityWithAliasProps(IdentityZone.getUaaZoneId(), UUID.randomUUID().toString(), null);
             final T existingEntity = resolveExistingEntityArgument(existingEntityArg);
@@ -59,7 +57,7 @@ public abstract class EntityAliasHandlerValidationTest<T extends EntityWithAlias
         }
 
         @ParameterizedTest
-        @MethodSource("existingEntityArgNoAlias")
+        @EnumSource
         final void shouldReturnTrue_BothAliasPropsEmptyInReqBody(final ExistingEntityArgument existingEntityArg) {
             final T requestBody = buildEntityWithAliasProps(IdentityZone.getUaaZoneId(), null, null);
             final T existingEntity = resolveExistingEntityArgument(existingEntityArg);
@@ -72,7 +70,7 @@ public abstract class EntityAliasHandlerValidationTest<T extends EntityWithAlias
          * the one resolved from the token.
          */
         @ParameterizedTest
-        @MethodSource("existingEntityArgNoAlias")
+        @EnumSource
         final void shouldThrowIllegalArgumentException_ZoneIdEmptyInReqBody(final ExistingEntityArgument existingEntityArg) {
             // alias property values are not important here, the zoneId is checked before them
             final T requestBody = buildEntityWithAliasProps(IdentityZone.getUaaZoneId(), null, null);
@@ -84,14 +82,6 @@ public abstract class EntityAliasHandlerValidationTest<T extends EntityWithAlias
             ).withMessage("The zone ID of the request body must not be empty.");
         }
 
-        /**
-         * Provider for the 'existingEntity' argument for cases where no alias should exist, i.e., either an original
-         * entity with empty alias properties or no existing entity.
-         */
-        protected static Stream<ExistingEntityArgument> existingEntityArgNoAlias() {
-            return Stream.of(ExistingEntityArgument.values());
-        }
-
         protected final T resolveExistingEntityArgument(@NonNull final ExistingEntityArgument existingEntityArgument) {
             if (existingEntityArgument == ENTITY_WITH_EMPTY_ALIAS_PROPS) {
                 return buildEntityWithAliasProps(IdentityZone.getUaaZoneId(), null, null);
@@ -99,6 +89,10 @@ public abstract class EntityAliasHandlerValidationTest<T extends EntityWithAlias
             return null;
         }
 
+        /**
+         * Provider for the 'existingEntity' argument for cases where no alias should exist, i.e., either an original
+         * entity with empty alias properties or no existing entity.
+         */
         protected enum ExistingEntityArgument {
             NULL,
             ENTITY_WITH_EMPTY_ALIAS_PROPS
@@ -158,7 +152,7 @@ public abstract class EntityAliasHandlerValidationTest<T extends EntityWithAlias
         @Test
         final void shouldReturnFalse_DefaultSetting() {
             AliasEntitiesConfig aliasEntitiesConfig = new AliasEntitiesConfig();
-            assertFalse(aliasEntitiesConfig.aliasEntitiesEnabled(false));
+            assertThat(aliasEntitiesConfig.aliasEntitiesEnabled(false)).isFalse();
         }
     }
 
@@ -246,7 +240,7 @@ public abstract class EntityAliasHandlerValidationTest<T extends EntityWithAlias
         }
 
         @ParameterizedTest
-        @MethodSource("existingEntityArgNoAlias")
+        @EnumSource
         final void shouldReturnFalse_AliasZoneDoesNotExist(final ExistingEntityArgument existingEntityArg) {
             final String aliasZid = UUID.randomUUID().toString();
             arrangeZoneDoesNotExist(aliasZid);
@@ -258,7 +252,7 @@ public abstract class EntityAliasHandlerValidationTest<T extends EntityWithAlias
         }
 
         @ParameterizedTest
-        @MethodSource("existingEntityArgNoAlias")
+        @EnumSource
         final void shouldReturnFalse_ZidAndAliasZidAreEqual(final ExistingEntityArgument existingEntityArg) {
             final String aliasZid = UUID.randomUUID().toString();
             arrangeZoneExists(aliasZid);
@@ -271,7 +265,7 @@ public abstract class EntityAliasHandlerValidationTest<T extends EntityWithAlias
         }
 
         @ParameterizedTest
-        @MethodSource("existingEntityArgNoAlias")
+        @EnumSource
         final void shouldReturnFalse_NeitherOfZidAndAliasZidIsUaa(final ExistingEntityArgument existingEntityArg) {
             final String aliasZid = UUID.randomUUID().toString();
             arrangeZoneExists(aliasZid);

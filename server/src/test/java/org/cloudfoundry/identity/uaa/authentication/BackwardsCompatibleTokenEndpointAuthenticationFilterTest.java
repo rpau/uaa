@@ -88,7 +88,7 @@ class BackwardsCompatibleTokenEndpointAuthenticationFilterTest {
     private TokenTestSupport support;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         filter = spy(
                 new BackwardsCompatibleTokenEndpointAuthenticationFilter(
                         passwordAuthManager,
@@ -104,7 +104,7 @@ class BackwardsCompatibleTokenEndpointAuthenticationFilterTest {
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         SecurityContextHolder.clearContext();
         IdentityZoneHolder.clear();
         ofNullable(support).ifPresent(TokenTestSupport::clear);

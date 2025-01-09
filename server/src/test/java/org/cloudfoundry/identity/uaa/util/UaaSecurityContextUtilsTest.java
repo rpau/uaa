@@ -10,9 +10,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.CLIENT_AUTH_NONE;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -31,18 +30,18 @@ class UaaSecurityContextUtilsTest {
 
     @Test
     void getNoClientAuthenticationMethod() {
-        assertNull(UaaSecurityContextUtils.getClientAuthenticationMethod());
+        assertThat(UaaSecurityContextUtils.getClientAuthenticationMethod()).isNull();
     }
 
     @Test
     void getNullClientAuthenticationMethod() {
         SecurityContextHolder.getContext().setAuthentication(null);
-        assertNull(UaaSecurityContextUtils.getClientAuthenticationMethod());
+        assertThat(UaaSecurityContextUtils.getClientAuthenticationMethod()).isNull();
     }
 
     @Test
     void getClientAuthenticationMethod() {
         when(auth2Request.getExtensions()).thenReturn(Map.of(ClaimConstants.CLIENT_AUTH_METHOD, CLIENT_AUTH_NONE));
-        assertEquals(CLIENT_AUTH_NONE, UaaSecurityContextUtils.getClientAuthenticationMethod());
+        assertThat(UaaSecurityContextUtils.getClientAuthenticationMethod()).isEqualTo(CLIENT_AUTH_NONE);
     }
 }

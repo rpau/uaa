@@ -16,17 +16,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import org.springframework.web.context.WebApplicationContext;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -35,10 +31,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @DefaultTestContext
 class ScimUserLookupMockMvcTests {
+    private final AlphanumericRandomValueStringGenerator generator = new AlphanumericRandomValueStringGenerator();
+    private final String clientId = generator.generate().toLowerCase();
+    private final String clientSecret = generator.generate().toLowerCase();
 
-    private AlphanumericRandomValueStringGenerator generator = new AlphanumericRandomValueStringGenerator();
-    private String clientId = generator.generate().toLowerCase();
-    private String clientSecret = generator.generate().toLowerCase();
+    @Autowired
+    private TestClient testClient;
+    @Autowired
+    private MockMvc mockMvc;
 
     private String scimLookupIdUserToken;
     private String adminToken;
@@ -47,19 +47,8 @@ class ScimUserLookupMockMvcTests {
 
     private ScimUser user;
 
-    private WebApplicationContext webApplicationContext;
-    private MockMvc mockMvc;
-    private TestClient testClient;
-
     @BeforeEach
-    void setUp(
-            @Autowired WebApplicationContext webApplicationContext,
-            @Autowired TestClient testClient,
-            @Autowired MockMvc mockMvc) throws Exception {
-        this.webApplicationContext = webApplicationContext;
-        this.mockMvc = mockMvc;
-        this.testClient = testClient;
-
+    void setUp() throws Exception {
         adminToken = testClient.getClientCredentialsOAuthAccessToken("admin", "adminsecret", "clients.read clients.write clients.secret scim.read scim.write clients.admin");
 
         user = new ScimUser(null, new AlphanumericRandomValueStringGenerator().generate() + "@test.org", "PasswordResetUserFirst", "PasswordResetUserLast");
@@ -117,8 +106,8 @@ class ScimUserLookupMockMvcTests {
                 .andReturn().getResponse();
         Map<String, Object> map = JsonUtils.readValue(response.getContentAsString(), Map.class);
         List<Map<String, Object>> resources = (List<Map<String, Object>>) map.get("resources");
-        assertEquals(resources.size(), 1);
-        assertNotEquals(resources.get(0).get("origin"), "test-origin");
+        assertThat(resources).hasSize(1);
+        assertThat(resources.get(0)).doesNotContainEntry("origin", "test-origin");
     }
 
     @Test
@@ -137,7 +126,7 @@ class ScimUserLookupMockMvcTests {
                 .andReturn().getResponse();
         Map<String, Object> map = JsonUtils.readValue(response.getContentAsString(), Map.class);
         List<Map<String, Object>> resources = (List<Map<String, Object>>) map.get("resources");
-        assertEquals(resources.size(), 2);
+        assertThat(resources).hasSize(2);
     }
 
     @Test
@@ -211,9 +200,7 @@ class ScimUserLookupMockMvcTests {
         String[] usernames = new String[25];
         int index = 0;
         for (String[] entry : testUsers) {
-            // TODO: do this more elegantly please. Maybe use a join?
-            builder.append("userName eq \"" + entry[1] + "\"");
-            builder.append(" or ");
+            builder.append("userName eq \"%s\" or ".formatted(entry[1]));
             usernames[index++] = entry[1];
         }
         String filter = builder.substring(0, builder.length() - 4);
@@ -228,7 +215,6 @@ class ScimUserLookupMockMvcTests {
                     .andReturn().getResponse().getContentAsString();
             validateLookupResults(expectedUsername, body);
         }
-
     }
 
     private MockHttpServletRequestBuilder getIdLookupRequest(String token, String username, String operator) {
@@ -255,16 +241,16 @@ class ScimUserLookupMockMvcTests {
 
     private void validateLookupResults(String[] usernames, String body) {
         Map<String, Object> map = JsonUtils.readValue(body, Map.class);
-        assertNotNull("Response should contain 'resources' object", map.get("resources"));
-        assertNotNull("Response should contain 'startIndex' object", map.get("startIndex"));
-        assertNotNull("Response should contain 'itemsPerPage' object", map.get("itemsPerPage"));
-        assertNotNull("Response should contain 'totalResults' object", map.get("totalResults"));
+        assertThat(map).as("Response should contain 'resources' object").containsKey("resources")
+                .as("Response should contain 'startIndex' object").containsKey("startIndex")
+                .as("Response should contain 'itemsPerPage' object").containsKey("itemsPerPage")
+                .as("Response should contain 'totalResults' object").containsKey("totalResults");
         List<Map<String, Object>> resources = (List<Map<String, Object>>) map.get("resources");
-        assertEquals(usernames.length, resources.size());
+        assertThat(resources).hasSameSizeAs(usernames);
         for (Map<String, Object> user : resources) {
-            assertNotNull("Response should contain 'origin' object", user.get(OriginKeys.ORIGIN));
-            assertNotNull("Response should contain 'id' object", user.get("id"));
-            assertNotNull("Response should contain 'userName' object", user.get("userName"));
+            assertThat(user).as("Response should contain 'origin' object").containsKey(OriginKeys.ORIGIN)
+                    .as("Response should contain 'id' object").containsKey("id")
+                    .as("Response should contain 'userName' object").containsKey("userName");
             String userName = (String) user.get("userName");
             boolean found = false;
             for (String s : usernames) {
@@ -273,7 +259,7 @@ class ScimUserLookupMockMvcTests {
                     break;
                 }
             }
-            assertTrue("Received non requested user in result set '" + userName + "'", found);
+            assertThat(found).as("Received non requested user in result set '" + userName + "'").isTrue();
         }
         for (String s : usernames) {
             boolean found = false;
@@ -284,7 +270,7 @@ class ScimUserLookupMockMvcTests {
                     break;
                 }
             }
-            assertTrue("Missing user in result '" + s + "'", found);
+            assertThat(found).as("Missing user in result '" + s + "'").isTrue();
         }
     }
 

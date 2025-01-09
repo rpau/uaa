@@ -1,6 +1,5 @@
 package org.cloudfoundry.identity.uaa.mock.ldap;
 
-import org.assertj.core.api.Assertions;
 import org.cloudfoundry.identity.uaa.DefaultTestContext;
 import org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils;
 import org.cloudfoundry.identity.uaa.provider.IdentityProvider;
@@ -19,6 +18,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 
 import java.io.File;
 
+import static org.assertj.core.api.Assertions.fail;
 import static org.cloudfoundry.identity.uaa.constants.OriginKeys.LDAP;
 import static org.cloudfoundry.identity.uaa.provider.LdapIdentityProviderDefinition.LDAP_TLS_NONE;
 import static org.hamcrest.Matchers.containsString;
@@ -302,7 +302,7 @@ class LdapSearchAndBindTest extends AbstractLdapMockMvcTest {
                         .andExpect(status().isBadRequest())
                         .andExpect(content().string(containsString("Caused by:")));
             } catch (Exception ignored) {
-                Assertions.fail("should not be able to connect to LDAP server");
+                fail("should not be able to connect to LDAP server");
             }
         }
     }

@@ -1,8 +1,10 @@
 package org.cloudfoundry.identity.uaa.oauth.token;
 
 import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
+import org.cloudfoundry.identity.uaa.oauth.common.exceptions.InvalidGrantException;
 import org.cloudfoundry.identity.uaa.oauth.pkce.PkceValidationException;
 import org.cloudfoundry.identity.uaa.oauth.pkce.PkceValidationService;
+import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetails;
 import org.cloudfoundry.identity.uaa.oauth.provider.OAuth2Authentication;
 import org.cloudfoundry.identity.uaa.oauth.provider.OAuth2Request;
 import org.cloudfoundry.identity.uaa.oauth.provider.OAuth2RequestFactory;
@@ -13,18 +15,16 @@ import org.cloudfoundry.identity.uaa.zone.MultitenantClientServices;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.cloudfoundry.identity.uaa.oauth.common.exceptions.InvalidGrantException;
-import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetails;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.cloudfoundry.identity.uaa.oauth.TokenTestSupport.GRANT_TYPE;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.CLIENT_AUTH_NONE;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_AUTHORIZATION_CODE;
 import static org.cloudfoundry.identity.uaa.util.JwtTokenSignedByThisUAATest.CLIENT_ID;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -49,7 +49,7 @@ class PkceEnhancedAuthorizationCodeTokenGranterTest {
     private PkceValidationService pkceValidationService;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         tokenServices = mock(AuthorizationServerTokenServices.class);
         authorizationCodeServices = mock(AuthorizationCodeServices.class);
         clientDetailsService = mock(MultitenantClientServices.class);
@@ -88,7 +88,7 @@ class PkceEnhancedAuthorizationCodeTokenGranterTest {
     @Test
     void getOAuth2Authentication() throws PkceValidationException {
         when(pkceValidationService.checkAndValidate(any(), any(), any())).thenReturn(false);
-        assertThrows(InvalidGrantException.class, () -> granter.getOAuth2Authentication((ClientDetails) requestingClient, tokenRequest));
+        assertThatExceptionOfType(InvalidGrantException.class).isThrownBy(() -> granter.getOAuth2Authentication((ClientDetails) requestingClient, tokenRequest));
     }
 
     @Test
@@ -98,7 +98,7 @@ class PkceEnhancedAuthorizationCodeTokenGranterTest {
         when(pkceValidationService.checkAndValidate(any(), any(), any())).thenReturn(true);
         when(oAuth2Request.getExtensions()).thenReturn(authMap);
         when(oAuth2Request.createOAuth2Request(any())).thenReturn(oAuth2Request);
-        assertNotNull(granter.getOAuth2Authentication((ClientDetails) requestingClient, tokenRequest));
+        assertThat(granter.getOAuth2Authentication((ClientDetails) requestingClient, tokenRequest)).isNotNull();
         verify(oAuth2Request, times(2)).getExtensions();
     }
 
@@ -109,7 +109,7 @@ class PkceEnhancedAuthorizationCodeTokenGranterTest {
         when(pkceValidationService.checkAndValidate(any(), any(), any())).thenReturn(true);
         when(oAuth2Request.getExtensions()).thenReturn(authMap);
         when(oAuth2Request.createOAuth2Request(any())).thenReturn(oAuth2Request);
-        assertNotNull(granter.getOAuth2Authentication((ClientDetails) requestingClient, tokenRequest));
+        assertThat(granter.getOAuth2Authentication((ClientDetails) requestingClient, tokenRequest)).isNotNull();
         verify(oAuth2Request, atMost(1)).getExtensions();
     }
 }

@@ -7,7 +7,7 @@ import org.cloudfoundry.identity.uaa.ratelimiting.core.http.RequestInfo;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -25,34 +25,34 @@ class CallerIdSupplierByTypeFactoryFactoryTest {
     }
 
     private void checkNoCredentialIdExtractor(CallerIdSupplierByTypeFactory factory) {
-        assertEquals("FactoryNoCredentialIdExtractor", factory.getClass().getSimpleName());
+        assertThat(factory.getClass().getSimpleName()).isEqualTo("FactoryNoCredentialIdExtractor");
         CallerIdSupplierByType callerIdSupplier = checkRequestInfoPaths(factory);
-        assertEquals("NoCredentialIdExtractor", callerIdSupplier.getClass().getSimpleName());
+        assertThat(callerIdSupplier.getClass().getSimpleName()).isEqualTo("NoCredentialIdExtractor");
 
-        assertNull(callerIdSupplier.getCallerCredentialsID());
+        assertThat(callerIdSupplier.getCallerCredentialsID()).isNull();
     }
 
     private void checkWithCredentialIdExtractor(CallerIdSupplierByTypeFactory factory) {
         when(mockExtractor.mapAuthorizationToCredentialsID(any())).thenReturn(FAKE_JWT);
 
-        assertEquals("FactoryWithCredentialIdExtractor", factory.getClass().getSimpleName());
+        assertThat(factory.getClass().getSimpleName()).isEqualTo("FactoryWithCredentialIdExtractor");
         CallerIdSupplierByType callerIdSupplier = checkRequestInfoPaths(factory);
-        assertEquals("WithCredentialIdExtractor", callerIdSupplier.getClass().getSimpleName());
+        assertThat(callerIdSupplier.getClass().getSimpleName()).isEqualTo("WithCredentialIdExtractor");
 
-        assertEquals(FAKE_JWT, callerIdSupplier.getCallerCredentialsID());
+        assertThat(callerIdSupplier.getCallerCredentialsID()).isEqualTo(FAKE_JWT);
     }
 
     private CallerIdSupplierByType checkRequestInfoPaths(CallerIdSupplierByTypeFactory factory) {
         CallerIdSupplierByType callerIdSupplier = factory.from(null);
-        assertSame(CallerIdSupplierByTypeFactory.NULL_REQUEST_INFO, callerIdSupplier);
-        assertNull(callerIdSupplier.getCallerCredentialsID());
-        assertNull(callerIdSupplier.getCallerRemoteAddressID());
+        assertThat(callerIdSupplier).isSameAs(CallerIdSupplierByTypeFactory.NULL_REQUEST_INFO);
+        assertThat(callerIdSupplier.getCallerCredentialsID()).isNull();
+        assertThat(callerIdSupplier.getCallerRemoteAddressID()).isNull();
 
         callerIdSupplier = factory.from(mockRequestInfo);
         when(mockRequestInfo.getAuthorizationHeader()).thenReturn("Bearer " + FAKE_JWT);
         when(mockRequestInfo.getClientIP()).thenReturn(FAKE_CLIENT_IP);
 
-        assertEquals(FAKE_CLIENT_IP, callerIdSupplier.getCallerRemoteAddressID());
+        assertThat(callerIdSupplier.getCallerRemoteAddressID()).isEqualTo(FAKE_CLIENT_IP);
 
         return callerIdSupplier;
     }

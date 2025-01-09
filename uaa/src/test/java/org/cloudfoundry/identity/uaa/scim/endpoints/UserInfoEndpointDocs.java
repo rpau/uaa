@@ -48,7 +48,7 @@ class UserInfoEndpointDocs extends EndpointDocs {
     }
 
     @Test
-    void test_Get_UserInfo() throws Exception {
+    void get_user_info() throws Exception {
         String userInfoToken = testClient.getUserOAuthAccessToken(
                 clientId,
                 clientSecret,
@@ -79,7 +79,7 @@ class UserInfoEndpointDocs extends EndpointDocs {
         );
 
         mockMvc.perform(get("/userinfo")
-                .header("Authorization", "Bearer " + userInfoToken))
+                        .header("Authorization", "Bearer " + userInfoToken))
                 .andExpect(status().isOk())
                 .andDo(document("{ClassName}/{methodName}",
                         preprocessResponse(prettyPrint()),

@@ -67,7 +67,7 @@ public class BootstrapSamlIdentityProviderDataTests {
               ~      subcomponent's license, as noted in the LICENSE file.
               ~ ******************************************************************************
               -->
-
+            
             <md:EntityDescriptor xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata" entityID="http://www.okta.com/k2lvtem0VAJDMINKEYJX"><md:IDPSSODescriptor WantAuthnRequestsSigned="true" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol"><md:KeyDescriptor use="signing"><ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><ds:X509Data><ds:X509Certificate>MIICmTCCAgKgAwIBAgIGAUPATqmEMA0GCSqGSIb3DQEBBQUAMIGPMQswCQYDVQQGEwJVUzETMBEG
               A1UECAwKQ2FsaWZvcm5pYTEWMBQGA1UEBwwNU2FuIEZyYW5jaXNjbzENMAsGA1UECgwET2t0YTEU
               MBIGA1UECwwLU1NPUHJvdmlkZXIxEDAOBgNVBAMMB1Bpdm90YWwxHDAaBgkqhkiG9w0BCQEWDWlu
@@ -183,13 +183,13 @@ public class BootstrapSamlIdentityProviderDataTests {
     private final Map<String, Map<String, Object>> sampleData = parseYaml(sampleYaml);
 
     @Test
-    void testCloneIdentityProviderDefinition() {
+    void cloneIdentityProviderDefinition() {
         SamlIdentityProviderDefinition clone = singleAdd.clone();
         assertThat(clone).isEqualTo(singleAdd).isNotSameAs(singleAdd);
     }
 
     @Test
-    void testAddProviderDefinition() {
+    void addProviderDefinition() {
         bootstrap.setIdentityProviders(sampleData);
         bootstrap.afterPropertiesSet();
         testGetIdentityProviderDefinitions(4, false);
@@ -197,7 +197,7 @@ public class BootstrapSamlIdentityProviderDataTests {
     }
 
     @Test
-    void test_override() {
+    void override() {
         sampleData.get("okta-local").put("override", false);
         bootstrap.setIdentityProviders(sampleData);
         bootstrap.afterPropertiesSet();
@@ -212,7 +212,7 @@ public class BootstrapSamlIdentityProviderDataTests {
     }
 
     @Test
-    void testGetIdentityProviderDefinitions() {
+    void getIdentityProviderDefinitions() {
         testGetIdentityProviderDefinitions(4);
     }
 
@@ -293,7 +293,7 @@ public class BootstrapSamlIdentityProviderDataTests {
     }
 
     @Test
-    void testGetIdentityProvidersWithLegacy_Valid_Provider() {
+    void getIdentityProvidersWithLegacyValidProvider() {
         bootstrap.setLegacyIdpMetaData(TEST_XML_FILE_DATA_2);
         bootstrap.setLegacyIdpIdentityAlias("okta-local-3");
         bootstrap.setLegacyShowSamlLink(true);
@@ -302,12 +302,12 @@ public class BootstrapSamlIdentityProviderDataTests {
     }
 
     @Test
-    void testGetIdentityProviders() {
+    void getIdentityProviders() {
         testGetIdentityProviderDefinitions(4);
     }
 
     @Test
-    void testCanParseASimpleSamlConfig() {
+    void canParseASimpleSamlConfig() {
         String yaml = """
                   providers:
                     my-okta:
@@ -331,7 +331,7 @@ public class BootstrapSamlIdentityProviderDataTests {
     }
 
     @Test
-    void testSetAddShadowUserOnLoginFromYaml() {
+    void setAddShadowUserOnLoginFromYaml() {
         String yaml = """
                   providers:
                     provider-without-shadow-user-definition:

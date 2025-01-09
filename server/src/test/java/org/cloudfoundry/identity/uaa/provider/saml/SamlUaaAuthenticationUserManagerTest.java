@@ -40,7 +40,6 @@ class SamlUaaAuthenticationUserManagerTest {
         assertThat(SamlUaaAuthenticationUserManager.haveUserAttributesChanged(existing, modified)).as("email modified").isTrue();
     }
 
-
     @Test
     void haveAttributesChangedReturnsTrueForChangedPhone() {
         UaaUser modified = new UaaUser(new UaaUserPrototype(existing).withPhoneNumber("other-phone"));

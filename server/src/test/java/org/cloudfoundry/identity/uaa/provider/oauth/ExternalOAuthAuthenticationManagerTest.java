@@ -102,7 +102,7 @@ class ExternalOAuthAuthenticationManagerTest {
     private IdentityProviderProvisioning identityProviderProvisioning;
 
     @BeforeEach
-    public void beforeEach() throws Exception {
+    void beforeEach() throws Exception {
         origin = "google-oidc";
         zoneId = "zoneId";
         IdentityZone identityZone = new IdentityZone();
@@ -135,7 +135,7 @@ class ExternalOAuthAuthenticationManagerTest {
     }
 
     @AfterEach
-    public void afterEach() {
+    void afterEach() {
         IdentityZoneHolder.clear();
     }
 

@@ -15,7 +15,7 @@
 package org.cloudfoundry.identity.api.web;
 
 import org.cloudfoundry.identity.uaa.test.UaaTestAccounts;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -29,13 +29,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Dave Syer
  */
-public class ApiControllerTests {
+class ApiControllerTests {
 
     private final ApiController controller = new ApiController();
     UaaTestAccounts testAccounts = UaaTestAccounts.standard(null);
 
     @Test
-    public void testNoUser() throws Exception {
+    void noUser() throws Exception {
         controller.setInfo(new ClassPathResource("info.tmpl"));
         HashMap<String, Object> model = new HashMap<>();
         View view = controller.info(model, null);
@@ -46,7 +46,7 @@ public class ApiControllerTests {
     }
 
     @Test
-    public void testWithUser() throws Exception {
+    void withUser() throws Exception {
         controller.setInfo(new ClassPathResource("info.tmpl"));
         HashMap<String, Object> model = new HashMap<>();
         View view = controller.info(model, new UsernamePasswordAuthenticationToken(testAccounts.getUserName(), "<NONE>"));
@@ -55,5 +55,4 @@ public class ApiControllerTests {
         String content = response.getContentAsString();
         assertThat(content).as("Wrong content: " + content).contains("\n  \"user\": \"" + testAccounts.getUserName() + "\"");
     }
-
 }

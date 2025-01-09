@@ -1,22 +1,12 @@
 package org.cloudfoundry.identity.uaa.zone;
 
-import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-
-public class BannerValidatorTest {
-
-    @Before
-    public void setup() {
-
-    }
-
+class BannerValidatorTest {
     @Test
-    public void validatesUrls() throws InvalidIdentityZoneConfigurationException {
+    void validatesUrls() throws InvalidIdentityZoneConfigurationException {
         String[] validUrls = {
                 "https://example.com",
                 "https://example.com/",
@@ -59,19 +49,16 @@ public class BannerValidatorTest {
         }
 
         for (String url : invalidUrls) {
-            try {
-                BrandingInformation.Banner testBanner = new BrandingInformation.Banner();
-                testBanner.setLink(url);
-                BannerValidator.validate(testBanner);
-                fail("Didn't throw error on " + url);
-            } catch (InvalidIdentityZoneConfigurationException e) {
-                assertThat(e.getMessage(), Matchers.containsString("Invalid banner link: " + url + ". Must be a properly formatted URI beginning with http:// or https://"));
-            }
+            BrandingInformation.Banner testBanner = new BrandingInformation.Banner();
+            testBanner.setLink(url);
+            assertThatThrownBy(() -> BannerValidator.validate(testBanner))
+                    .isInstanceOf(InvalidIdentityZoneConfigurationException.class)
+                    .hasMessageContaining("Invalid banner link: " + url + ". Must be a properly formatted URI beginning with http:// or https://");
         }
     }
 
     @Test
-    public void testValidateColor() throws InvalidIdentityZoneConfigurationException {
+    void validateColor() throws InvalidIdentityZoneConfigurationException {
         String[] validColors = {
                 "#123456",
                 "#000",
@@ -95,29 +82,26 @@ public class BannerValidatorTest {
         }
 
         for (String color : invalidColors) {
-            try {
-                BrandingInformation.Banner testBanner = new BrandingInformation.Banner();
-                testBanner.setTextColor(color);
-                BannerValidator.validate(testBanner);
-                fail("Didn't throw error on " + color);
-            } catch (InvalidIdentityZoneConfigurationException e) {
-                assertThat(e.getMessage(), Matchers.containsString("Invalid banner text color: " + color + ". Must be a properly formatted hexadecimal color code."));
-            }
+            BrandingInformation.Banner testBanner = new BrandingInformation.Banner();
+            testBanner.setTextColor(color);
+
+            assertThatThrownBy(() -> BannerValidator.validate(testBanner))
+                    .isInstanceOf(InvalidIdentityZoneConfigurationException.class)
+                    .hasMessageContaining("Invalid banner text color: " + color + ". Must be a properly formatted hexadecimal color code.");
         }
+
         for (String color : invalidColors) {
-            try {
-                BrandingInformation.Banner testBanner = new BrandingInformation.Banner();
-                testBanner.setBackgroundColor(color);
-                BannerValidator.validate(testBanner);
-                fail("Didn't throw error on " + color);
-            } catch (InvalidIdentityZoneConfigurationException e) {
-                assertThat(e.getMessage(), Matchers.containsString("Invalid banner background color: " + color + ". Must be a properly formatted hexadecimal color code."));
-            }
+            BrandingInformation.Banner testBanner = new BrandingInformation.Banner();
+            testBanner.setBackgroundColor(color);
+
+            assertThatThrownBy(() -> BannerValidator.validate(testBanner))
+                    .isInstanceOf(InvalidIdentityZoneConfigurationException.class)
+                    .hasMessageContaining("Invalid banner background color: " + color + ". Must be a properly formatted hexadecimal color code.");
         }
     }
 
     @Test
-    public void testBase64Logo() throws InvalidIdentityZoneConfigurationException {
+    void base64Logo() throws InvalidIdentityZoneConfigurationException {
         String[] validBase64 = {
                 "BIPUQGEWGPIUB64",
                 ""
@@ -134,15 +118,11 @@ public class BannerValidatorTest {
         }
 
         for (String base64 : invalidBase64) {
-            try {
-                BrandingInformation.Banner testBanner = new BrandingInformation.Banner();
-                testBanner.setLogo(base64);
-                BannerValidator.validate(testBanner);
-                fail("Didn't throw error on " + base64);
-            } catch (InvalidIdentityZoneConfigurationException e) {
-                assertThat(e.getMessage(), Matchers.containsString("Invalid banner logo. Must be in BASE64 format."));
-            }
+            BrandingInformation.Banner testBanner = new BrandingInformation.Banner();
+            testBanner.setLogo(base64);
+            assertThatThrownBy(() -> BannerValidator.validate(testBanner))
+                    .isInstanceOf(InvalidIdentityZoneConfigurationException.class)
+                    .hasMessageContaining("Invalid banner logo. Must be in BASE64 format.");
         }
     }
-
 }

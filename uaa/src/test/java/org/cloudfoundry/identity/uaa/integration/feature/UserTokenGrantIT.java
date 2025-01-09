@@ -2,10 +2,9 @@ package org.cloudfoundry.identity.uaa.integration.feature;
 
 import org.cloudfoundry.identity.uaa.oauth.client.test.TestAccounts;
 import org.cloudfoundry.identity.uaa.test.UaaTestAccounts;
-import org.junit.After;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.openqa.selenium.WebDriver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,8 +14,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestOperations;
@@ -24,17 +22,13 @@ import org.springframework.web.client.RestOperations;
 import java.util.Collections;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = DefaultIntegrationTestConfig.class)
-public class UserTokenGrantIT {
-
+@SpringJUnitConfig(classes = DefaultIntegrationTestConfig.class)
+class UserTokenGrantIT {
     @Autowired
-    @Rule
-    public IntegrationTestRule integrationTestRule;
+    @RegisterExtension
+    private IntegrationTestExtension integrationTestExtension;
 
     @Autowired
     WebDriver webDriver;
@@ -54,13 +48,13 @@ public class UserTokenGrantIT {
     @Autowired
     TestAccounts testAccounts;
 
-    final String user_token_id = "oauth_showcase_user_token";
-    final String user_token_secret = "secret";
-    final String user_token_public_id = "oauth_showcase_user_token_public";
-    final String empty_string = "";
+    private static final String USER_TOKEN_ID = "oauth_showcase_user_token";
+    private static final String USER_TOKEN_SECRET = "secret";
+    private static final String USER_TOKEN_PUBLIC_ID = "oauth_showcase_user_token_public";
+    private static final String EMPTY_STRING = "";
 
-    @After
-    public void logout_and_clear_cookies() {
+    @AfterEach
+    void logout_and_clear_cookies() {
         try {
             webDriver.get(baseUrl + "/logout.do");
         } catch (org.openqa.selenium.TimeoutException x) {
@@ -72,58 +66,58 @@ public class UserTokenGrantIT {
     }
 
     @Test
-    public void testExchangeFromConfidentialClientWithCfClientWithEmptySecret() {
+    void exchangeFromConfidentialClientWithCfClientWithEmptySecret() {
         // Given Create password token from confidential client
-        String token = getPasswordGrantToken(user_token_id, user_token_secret);
+        String token = getPasswordGrantToken(USER_TOKEN_ID, USER_TOKEN_SECRET);
 
         // When do user_token grant flow using public cf client (public, because of empty secret)
         String newToken = doUserTokenGrant("cf", token, HttpStatus.OK);
 
         // Then validation expected result
-        assertNotNull(newToken);
+        assertThat(newToken).isNotNull();
         checkRefreshToken(newToken);
     }
 
     @Test
-    public void testExchangeFromConfidentialClientWithConfidentialClient() {
+    void exchangeFromConfidentialClientWithConfidentialClient() {
         // Given Create password token from confidential client
-        String token = getPasswordGrantToken(user_token_id, user_token_secret);
+        String token = getPasswordGrantToken(USER_TOKEN_ID, USER_TOKEN_SECRET);
 
         // When do user_token grant flow using confidential oauth_showcase_user_token client
-        String newToken = doUserTokenGrant(user_token_id, token, HttpStatus.OK);
+        String newToken = doUserTokenGrant(USER_TOKEN_ID, token, HttpStatus.OK);
 
         // Then validation expected result
         checkRefreshToken(newToken);
     }
 
     @Test
-    public void testExchangeFromPublicClientWithPublicClient() {
+    void exchangeFromPublicClientWithPublicClient() {
         // Given Create password token from public client
-        String token = getPasswordGrantToken(user_token_public_id, empty_string);
+        String token = getPasswordGrantToken(USER_TOKEN_PUBLIC_ID, EMPTY_STRING);
 
         // When do user_token grant flow using public client
-        String newToken = doUserTokenGrant(user_token_public_id, token, HttpStatus.OK);
+        String newToken = doUserTokenGrant(USER_TOKEN_PUBLIC_ID, token, HttpStatus.OK);
 
         // Then validation expected result
         checkRefreshToken(newToken);
     }
 
     @Test
-    public void testExchangeFromPublicClientWithConfidentialClient() {
+    void exchangeFromPublicClientWithConfidentialClient() {
         // Given Create password token from public client
-        String token = getPasswordGrantToken(user_token_public_id, empty_string);
+        String token = getPasswordGrantToken(USER_TOKEN_PUBLIC_ID, EMPTY_STRING);
 
         // When do user_token grant flow using confidential oauth_showcase_user_token client
-        String newToken = doUserTokenGrant(user_token_id, token, HttpStatus.OK);
+        String newToken = doUserTokenGrant(USER_TOKEN_ID, token, HttpStatus.OK);
 
         // Then validation expected result
         checkRefreshToken(newToken);
     }
 
     @Test
-    public void testExchangeFromConfidentialClientWithAdminClientExpectUnauthorized() {
+    void exchangeFromConfidentialClientWithAdminClientExpectUnauthorized() {
         // Given Create password token from public client
-        String token = getPasswordGrantToken(user_token_id, user_token_secret);
+        String token = getPasswordGrantToken(USER_TOKEN_ID, USER_TOKEN_SECRET);
 
         // When do user_token grant flow using admin client
         doUserTokenGrant("admin", token, HttpStatus.UNAUTHORIZED);
@@ -142,7 +136,7 @@ public class UserTokenGrantIT {
         ResponseEntity<Map> responseEntity = restOperations.exchange(baseUrl + "/oauth/token", HttpMethod.POST, new HttpEntity<>(postBody, headers),
                 Map.class);
 
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
         return (String) responseEntity.getBody().get("access_token");
     }
 
@@ -166,7 +160,7 @@ public class UserTokenGrantIT {
         } catch (HttpClientErrorException clientErrorException) {
             responseStatus = clientErrorException.getStatusCode();
         }
-        assertEquals(expectedStatus, responseStatus);
+        assertThat(responseStatus).isEqualTo(expectedStatus);
 
         if (expectedStatus == HttpStatus.OK) {
             Map<String, Object> params = responseEntity.getBody();
@@ -177,8 +171,8 @@ public class UserTokenGrantIT {
     }
 
     private void checkRefreshToken(String token) {
-        assertNotNull(token);
-        assertEquals(34, token.length());
-        assertTrue(token.endsWith("-r"));
+        assertThat(token).isNotNull()
+                .hasSize(34)
+                .endsWith("-r");
     }
 }

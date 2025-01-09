@@ -1,8 +1,8 @@
 package org.cloudfoundry.identity.uaa.oauth.provider.config.xml;
 
 import org.cloudfoundry.identity.uaa.client.InMemoryClientDetailsService;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.xml.ParserContext;
@@ -10,7 +10,7 @@ import org.springframework.beans.factory.xml.XmlReaderContext;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -23,7 +23,7 @@ import static org.mockito.Mockito.when;
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-public class ClientDetailsServiceBeanDefinitionParserTest {
+class ClientDetailsServiceBeanDefinitionParserTest {
 
     private ClientDetailsServiceBeanDefinitionParser parser;
     private Element element;
@@ -33,8 +33,8 @@ public class ClientDetailsServiceBeanDefinitionParserTest {
     NodeList nodeList;
     private XmlReaderContext xmlReaderContext;
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         parser = new ClientDetailsServiceBeanDefinitionParser();
         element = mock(Element.class);
         clientElement = mock(Element.class);
@@ -48,19 +48,19 @@ public class ClientDetailsServiceBeanDefinitionParserTest {
     }
 
     @Test
-    public void getBeanClass() {
-        assertEquals(InMemoryClientDetailsService.class, parser.getBeanClass(element));
+    void getBeanClass() {
+        assertThat(parser.getBeanClass(element)).isEqualTo(InMemoryClientDetailsService.class);
     }
 
     @Test
-    public void doParseNothing() {
+    void doParseNothing() {
         when(nodeList.getLength()).thenReturn(0);
         parser.doParse(element, parserContext, builder);
         verify(builder, times(1)).addPropertyValue(anyString(), any(Object.class));
     }
 
     @Test
-    public void doParseNoClientId() {
+    void doParseNoClientId() {
         when(nodeList.getLength()).thenReturn(1);
         when(nodeList.item(0)).thenReturn(clientElement);
         when(clientElement.getNodeName()).thenReturn("client");
@@ -71,7 +71,7 @@ public class ClientDetailsServiceBeanDefinitionParserTest {
     }
 
     @Test
-    public void doParseClientAttributes() {
+    void doParseClientAttributes() {
         when(nodeList.getLength()).thenReturn(1);
         when(nodeList.item(0)).thenReturn(clientElement);
         when(clientElement.getNodeName()).thenReturn("client");

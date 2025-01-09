@@ -1,6 +1,5 @@
 package org.cloudfoundry.identity.uaa.extensions.profiles;
 
-
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.lang.annotation.ElementType;
@@ -46,5 +45,4 @@ import java.lang.annotation.Target;
 public @interface EnabledIfProfile {
 
     String[] value() default {};
-
 }

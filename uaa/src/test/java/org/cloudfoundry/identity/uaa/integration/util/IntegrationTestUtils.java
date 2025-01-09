@@ -3,14 +3,12 @@ package org.cloudfoundry.identity.uaa.integration.util;
 import com.dumbster.smtp.SimpleSmtpServer;
 import com.dumbster.smtp.SmtpMessage;
 import com.fasterxml.jackson.core.type.TypeReference;
-import org.apache.commons.io.FileUtils;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.cookie.BasicClientCookie;
-import org.assertj.core.api.Assertions;
-import org.cloudfoundry.identity.uaa.ServerRunning;
+import org.cloudfoundry.identity.uaa.ServerRunningExtension;
 import org.cloudfoundry.identity.uaa.account.UserAccountStatus;
 import org.cloudfoundry.identity.uaa.account.UserInfoResponse;
 import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
@@ -46,8 +44,6 @@ import org.hamcrest.Description;
 import org.hamcrest.TypeSafeMatcher;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
-import org.openqa.selenium.OutputType;
-import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
@@ -69,8 +65,6 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestOperations;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.File;
-import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -78,11 +72,9 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -147,7 +139,6 @@ public class IntegrationTestUtils {
     public static final String OIDC_ACCEPTANCE_URL = "https://oidc10.uaa-acceptance.cf-app.com/";
     private static final Base64.Encoder BASE_64_ENCODER = Base64.getEncoder();
 
-
     private static final DefaultResponseErrorHandler fiveHundredErrorHandler = new DefaultResponseErrorHandler() {
         @Override
         protected boolean hasError(HttpStatus statusCode) {
@@ -171,7 +162,7 @@ public class IntegrationTestUtils {
         assertStatusCode(response, HttpStatus.OK);
     }
 
-    public static ScimUser createUnapprovedUser(ServerRunning serverRunning) {
+    public static ScimUser createUnapprovedUser(ServerRunningExtension serverRunning) {
         String userName = "bob-" + new RandomValueStringGenerator().generate();
         String userEmail = userName + "@example.com";
 
@@ -185,7 +176,7 @@ public class IntegrationTestUtils {
         user.setVerified(true);
 
         ResponseEntity<ScimUser> result = restTemplate.postForEntity(serverRunning.getUrl("/Users"), user, ScimUser.class);
-        Assertions.assertThat(result.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 
         return user;
     }
@@ -259,9 +250,9 @@ public class IntegrationTestUtils {
     }
 
     public static ClientCredentialsResourceDetails getClientCredentialsResource(String url,
-            String[] scope,
-            String clientId,
-            String clientSecret) {
+                                                                                String[] scope,
+                                                                                String clientId,
+                                                                                String clientSecret) {
         ClientCredentialsResourceDetails resource = new ClientCredentialsResourceDetails();
         resource.setClientId(clientId);
         resource.setClientSecret(clientSecret);
@@ -293,23 +284,23 @@ public class IntegrationTestUtils {
     }
 
     public static ScimUser createUser(RestTemplate client,
-            String url,
-            String username,
-            String firstName,
-            String lastName,
-            String email,
-            boolean verified) {
+                                      String url,
+                                      String username,
+                                      String firstName,
+                                      String lastName,
+                                      String email,
+                                      boolean verified) {
         return createUserWithPhone(client, url, username, firstName, lastName, email, verified, null);
     }
 
     public static ScimUser createUserWithPhone(RestTemplate client,
-            String url,
-            String username,
-            String firstName,
-            String lastName,
-            String email,
-            boolean verified,
-            String phoneNumber) {
+                                               String url,
+                                               String username,
+                                               String firstName,
+                                               String lastName,
+                                               String email,
+                                               boolean verified,
+                                               String phoneNumber) {
         ScimUser user = new ScimUser();
         user.setUserName(username);
         user.setName(new ScimUser.Name(firstName, lastName));
@@ -480,7 +471,7 @@ public class IntegrationTestUtils {
 
     @SuppressWarnings("rawtypes")
     private static Map findAllGroups(RestTemplate client,
-            String url) {
+                                     String url) {
         ResponseEntity<Map> response = client.getForEntity(url + "/Groups", Map.class);
 
         @SuppressWarnings("rawtypes")
@@ -491,8 +482,8 @@ public class IntegrationTestUtils {
     }
 
     public static String findGroupId(RestTemplate client,
-            String url,
-            String groupName) {
+                                     String url,
+                                     String groupName) {
         Map map = findAllGroups(client, url);
         for (Map group : (List<Map>) map.get("resources")) {
             assertThat(group).containsKey("displayName")
@@ -522,9 +513,9 @@ public class IntegrationTestUtils {
      * @return the group or {@code null} if it does not exist
      */
     public static ScimGroup getGroup(String token,
-            String zoneId,
-            String url,
-            String displayName) {
+                                     String zoneId,
+                                     String url,
+                                     String displayName) {
         RestTemplate template = new RestTemplate();
         MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
         headers.add("Accept", APPLICATION_JSON_VALUE);
@@ -577,9 +568,9 @@ public class IntegrationTestUtils {
     }
 
     private static ScimGroup updateGroup(String token,
-            String zoneId,
-            String url,
-            ScimGroup group) {
+                                         String zoneId,
+                                         String url,
+                                         ScimGroup group) {
         RestTemplate template = new RestTemplate();
         MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
         headers.add("Accept", APPLICATION_JSON_VALUE);
@@ -601,9 +592,9 @@ public class IntegrationTestUtils {
     }
 
     public static ScimGroup createOrUpdateGroup(String token,
-            String zoneId,
-            String url,
-            ScimGroup scimGroup) {
+                                                String zoneId,
+                                                String url,
+                                                ScimGroup scimGroup) {
 
         ScimGroup existing = getGroup(token, zoneId, url, scimGroup.getDisplayName());
         if (existing == null) {
@@ -616,9 +607,9 @@ public class IntegrationTestUtils {
     }
 
     public static ScimGroupExternalMember mapExternalGroup(String token,
-            String zoneId,
-            String url,
-            ScimGroupExternalMember scimGroup) {
+                                                           String zoneId,
+                                                           String url,
+                                                           ScimGroupExternalMember scimGroup) {
 
         RestTemplate template = new RestTemplate();
         MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
@@ -643,9 +634,9 @@ public class IntegrationTestUtils {
     }
 
     public static void deleteGroup(String token,
-            String zoneId,
-            String url,
-            String groupId
+                                   String zoneId,
+                                   String url,
+                                   String groupId
     ) {
         RestTemplate template = new RestTemplate();
         template.setErrorHandler(fiveHundredErrorHandler);
@@ -661,11 +652,11 @@ public class IntegrationTestUtils {
     }
 
     private static IdentityZone createZoneOrUpdateSubdomain(RestTemplate client,
-            String url,
-            String id,
-            String subdomain,
-            IdentityZoneConfiguration config,
-            boolean active) {
+                                                            String url,
+                                                            String id,
+                                                            String subdomain,
+                                                            IdentityZoneConfiguration config,
+                                                            boolean active) {
 
         ResponseEntity<String> zoneGet = client.getForEntity(url + "/identity-zones/{id}", String.class, id);
 
@@ -704,17 +695,17 @@ public class IntegrationTestUtils {
     }
 
     public static IdentityZone createZoneOrUpdateSubdomain(RestTemplate client,
-            String url,
-            String id,
-            String subdomain,
-            IdentityZoneConfiguration config) {
+                                                           String url,
+                                                           String id,
+                                                           String subdomain,
+                                                           IdentityZoneConfiguration config) {
         return createZoneOrUpdateSubdomain(client, url, id, subdomain, config, true);
     }
 
     public static void addMemberToGroup(RestTemplate client,
-            String url,
-            String userId,
-            String groupId
+                                        String url,
+                                        String userId,
+                                        String groupId
     ) {
         ScimGroupMember groupMember = new ScimGroupMember(userId);
         ResponseEntity<String> response = client.postForEntity(url + "/Groups/{groupId}/members", groupMember, String.class, groupId);
@@ -722,8 +713,8 @@ public class IntegrationTestUtils {
     }
 
     public static UaaClientDetails getClient(String token,
-            String url,
-            String clientId) {
+                                             String url,
+                                             String clientId) {
         RestTemplate template = new RestTemplate();
         MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
         headers.add("Accept", APPLICATION_JSON_VALUE);
@@ -759,9 +750,9 @@ public class IntegrationTestUtils {
     }
 
     public static UaaClientDetails createClientAsZoneAdmin(String zoneAdminToken,
-            String url,
-            String zoneId,
-            UaaClientDetails client) {
+                                                           String url,
+                                                           String zoneId,
+                                                           UaaClientDetails client) {
 
         RestTemplate template = new RestTemplate();
         MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
@@ -783,15 +774,15 @@ public class IntegrationTestUtils {
     }
 
     public static UaaClientDetails createClient(String adminToken,
-            String url,
-            UaaClientDetails client) {
+                                                String url,
+                                                UaaClientDetails client) {
         return createOrUpdateClient(adminToken, url, null, client);
     }
 
     public static UaaClientDetails createOrUpdateClient(String adminToken,
-            String url,
-            String switchToZoneId,
-            UaaClientDetails client) {
+                                                        String url,
+                                                        String switchToZoneId,
+                                                        UaaClientDetails client) {
 
         RestTemplate template = new RestTemplate();
         template.setErrorHandler(new DefaultResponseErrorHandler() {
@@ -834,8 +825,8 @@ public class IntegrationTestUtils {
     }
 
     public static void updateClient(String url,
-            String token,
-            UaaClientDetails client) {
+                                    String token,
+                                    UaaClientDetails client) {
 
         RestTemplate template = new RestTemplate();
         MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
@@ -856,9 +847,9 @@ public class IntegrationTestUtils {
     }
 
     public static IdentityProvider<? extends AbstractIdentityProviderDefinition> getProvider(String zoneAdminToken,
-            String url,
-            String zoneId,
-            String originKey) {
+                                                                                             String url,
+                                                                                             String zoneId,
+                                                                                             String originKey) {
         List<IdentityProvider<? extends AbstractIdentityProviderDefinition>> providers = getProviders(zoneAdminToken, url, zoneId);
         if (providers != null) {
             for (IdentityProvider<? extends AbstractIdentityProviderDefinition> p : providers) {
@@ -874,8 +865,8 @@ public class IntegrationTestUtils {
      * @return the list of identity providers or {@code null} if the request was not successful
      */
     private static List<IdentityProvider<? extends AbstractIdentityProviderDefinition>> getProviders(String zoneAdminToken,
-            String url,
-            String zoneId) {
+                                                                                                     String url,
+                                                                                                     String zoneId) {
         RestTemplate client = new RestTemplate();
         MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
         headers.add("Accept", APPLICATION_JSON_VALUE);
@@ -897,9 +888,9 @@ public class IntegrationTestUtils {
     }
 
     public static void deleteProvider(String zoneAdminToken,
-            String url,
-            String zoneId,
-            String originKey) {
+                                      String url,
+                                      String zoneId,
+                                      String originKey) {
         IdentityProvider<? extends AbstractIdentityProviderDefinition> provider = getProvider(zoneAdminToken, url, zoneId, originKey);
         if (provider == null) {
             return;
@@ -923,7 +914,7 @@ public class IntegrationTestUtils {
      * @param addShadowUserOnLogin Specifies whether UAA should automatically create shadow users upon successful SAML authentication.
      * @return An object representation of an identity provider.
      */
-    public static IdentityProvider<SamlIdentityProviderDefinition> createIdentityProvider(String originKey, boolean addShadowUserOnLogin, String baseUrl, ServerRunning serverRunning) {
+    public static IdentityProvider<SamlIdentityProviderDefinition> createIdentityProvider(String originKey, boolean addShadowUserOnLogin, String baseUrl, ServerRunningExtension serverRunning) {
         getZoneAdminToken(baseUrl, serverRunning);
         SamlIdentityProviderDefinition samlIdentityProviderDefinition = createSimplePHPSamlIDP(originKey, OriginKeys.UAA);
         return createIdentityProvider("simplesamlphp for uaa", addShadowUserOnLogin, baseUrl, serverRunning, samlIdentityProviderDefinition);
@@ -934,7 +925,7 @@ public class IntegrationTestUtils {
      * @return An object representation of an identity provider.
      */
     public static IdentityProvider<SamlIdentityProviderDefinition> createIdentityProvider(
-            String name, boolean addShadowUserOnLogin, String baseUrl, ServerRunning serverRunning,
+            String name, boolean addShadowUserOnLogin, String baseUrl, ServerRunningExtension serverRunning,
             SamlIdentityProviderDefinition samlIdentityProviderDefinition) {
         String zoneAdminToken = getZoneAdminToken(baseUrl, serverRunning);
 
@@ -974,18 +965,18 @@ public class IntegrationTestUtils {
         IntegrationTestUtils.createOrUpdateProvider(clientCredentialsToken, baseUrl, identityProvider);
     }
 
-    public static String getZoneAdminToken(String baseUrl, ServerRunning serverRunning) {
+    public static String getZoneAdminToken(String baseUrl, ServerRunningExtension serverRunning) {
         return getZoneAdminToken(baseUrl, serverRunning, OriginKeys.UAA);
     }
 
-    public static String getZoneAdminToken(String baseUrl, ServerRunning serverRunning, String zoneId) {
+    public static String getZoneAdminToken(String baseUrl, ServerRunningExtension serverRunning, String zoneId) {
         RestTemplate adminClient = IntegrationTestUtils.getClientCredentialsTemplate(
                 IntegrationTestUtils.getClientCredentialsResource(baseUrl, new String[0], "admin", "adminsecret")
         );
         String email = new RandomValueStringGenerator().generate() + "@samltesting.org";
         ScimUser user = IntegrationTestUtils.createUser(adminClient, baseUrl, email, "firstname", "lastname", email, true);
 
-        String groupName = "zones." + zoneId + ".admin";
+        String groupName = "zones.%s.admin".formatted(zoneId);
         ensureGroupExists(getClientCredentialsToken(baseUrl, "admin", "adminsecret"), "", baseUrl, groupName);
         String groupId = IntegrationTestUtils.findGroupId(adminClient, baseUrl, groupName);
         assertThat(groupId).as("Couldn't find group : " + groupId).isNotNull();
@@ -1009,7 +1000,7 @@ public class IntegrationTestUtils {
     }
 
     public static void updateIdentityProvider(
-            String baseUrl, ServerRunning serverRunning, IdentityProvider<? extends AbstractIdentityProviderDefinition> provider) {
+            String baseUrl, ServerRunningExtension serverRunning, IdentityProvider<? extends AbstractIdentityProviderDefinition> provider) {
         RestTemplate adminClient = IntegrationTestUtils.getClientCredentialsTemplate(
                 IntegrationTestUtils.getClientCredentialsResource(baseUrl, new String[0], "admin", "adminsecret")
         );
@@ -1051,8 +1042,8 @@ public class IntegrationTestUtils {
     }
 
     public static <T extends AbstractIdentityProviderDefinition> IdentityProvider<T> createOrUpdateProvider(String accessToken,
-            String url,
-            IdentityProvider<T> provider) {
+                                                                                                            String url,
+                                                                                                            IdentityProvider<T> provider) {
 
         RestTemplate client = new RestTemplate();
         MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
@@ -1095,8 +1086,8 @@ public class IntegrationTestUtils {
     }
 
     public static String getClientCredentialsToken(String baseUrl,
-            String clientId,
-            String clientSecret) {
+                                                   String clientId,
+                                                   String clientSecret) {
         RestTemplate template = new RestTemplate();
         template.setRequestFactory(new StatelessRequestFactory());
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
@@ -1124,11 +1115,11 @@ public class IntegrationTestUtils {
     }
 
     public static Map getPasswordToken(String baseUrl,
-            String clientId,
-            String clientSecret,
-            String username,
-            String password,
-            String scopes) {
+                                       String clientId,
+                                       String clientSecret,
+                                       String username,
+                                       String password,
+                                       String scopes) {
         RestTemplate template = new RestTemplate();
         template.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
         template.setRequestFactory(new StatelessRequestFactory());
@@ -1157,9 +1148,9 @@ public class IntegrationTestUtils {
         return response.getBody();
     }
 
-    public static String getClientCredentialsToken(ServerRunning serverRunning,
-            String clientId,
-            String clientSecret) {
+    public static String getClientCredentialsToken(ServerRunningExtension serverRunning,
+                                                   String clientId,
+                                                   String clientSecret) {
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("grant_type", "client_credentials");
         formData.add("client_id", clientId);
@@ -1179,23 +1170,23 @@ public class IntegrationTestUtils {
         return accessToken.getValue();
     }
 
-    public static String getAccessTokenByAuthCode(ServerRunning serverRunning,
-            UaaTestAccounts testAccounts,
-            String clientId,
-            String clientSecret,
-            String username,
-            String password) {
+    public static String getAccessTokenByAuthCode(ServerRunningExtension serverRunning,
+                                                  UaaTestAccounts testAccounts,
+                                                  String clientId,
+                                                  String clientSecret,
+                                                  String username,
+                                                  String password) {
 
         return getAuthorizationCodeTokenMap(serverRunning, testAccounts, clientId, clientSecret, username, password)
                 .get("access_token");
     }
 
-    public static Map<String, String> getAuthorizationCodeTokenMap(ServerRunning serverRunning,
-            UaaTestAccounts testAccounts,
-            String clientId,
-            String clientSecret,
-            String username,
-            String password) {
+    public static Map<String, String> getAuthorizationCodeTokenMap(ServerRunningExtension serverRunning,
+                                                                   UaaTestAccounts testAccounts,
+                                                                   String clientId,
+                                                                   String clientSecret,
+                                                                   String username,
+                                                                   String password) {
         AuthorizationCodeResourceDetails resource = testAccounts.getDefaultAuthorizationCodeResource();
         resource.setClientId(clientId);
         resource.setClientSecret(clientSecret);
@@ -1223,16 +1214,16 @@ public class IntegrationTestUtils {
         return headers;
     }
 
-    public static String getAuthorizationResponse(ServerRunning serverRunning,
-            String clientId,
-            String username,
-            String password,
-            String redirectUri,
-            String codeChallenge,
-            String codeChallengeMethod) throws Exception {
+    public static String getAuthorizationResponse(ServerRunningExtension serverRunning,
+                                                  String clientId,
+                                                  String username,
+                                                  String password,
+                                                  String redirectUri,
+                                                  String codeChallenge,
+                                                  String codeChallengeMethod) throws Exception {
         BasicCookieStore cookies = new BasicCookieStore();
         String mystateid = "mystateid";
-        ServerRunning.UriBuilder builder = serverRunning.buildUri("/oauth/authorize")
+        ServerRunningExtension.UriBuilder builder = serverRunning.buildUri("/oauth/authorize")
                 .queryParam("response_type", "code")
                 .queryParam("state", mystateid)
                 .queryParam("client_id", clientId);
@@ -1255,19 +1246,10 @@ public class IntegrationTestUtils {
                 );
         assertThat(result.getStatusCode()).isEqualTo(HttpStatus.FOUND);
         String location = result.getHeaders().getLocation().toString();
-        if (result.getHeaders().containsKey("Set-Cookie")) {
-            for (String header : result.getHeaders().get("Set-Cookie")) {
-                int nameLength = header.indexOf('=');
-                cookies.addCookie(new BasicClientCookie(header.substring(0, nameLength), header.substring(nameLength + 1)));
-            }
-        }
+        extractCookies(result, cookies);
+
         ResponseEntity<String> response = serverRunning.getForString(location, getHeaders(cookies));
-        if (response.getHeaders().containsKey("Set-Cookie")) {
-            for (String cookie : response.getHeaders().get("Set-Cookie")) {
-                int nameLength = cookie.indexOf('=');
-                cookies.addCookie(new BasicClientCookie(cookie.substring(0, nameLength), cookie.substring(nameLength + 1)));
-            }
-        }
+        extractCookies(response, cookies);
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         assertThat(response.getBody()).contains("/login.do")
                 .contains("username")
@@ -1280,21 +1262,12 @@ public class IntegrationTestUtils {
         result = serverRunning.postForResponse("/login.do", getHeaders(cookies), formData);
         assertThat(result.getStatusCode()).isEqualTo(HttpStatus.FOUND);
         cookies.clear();
-        if (result.getHeaders().containsKey("Set-Cookie")) {
-            for (String cookie : result.getHeaders().get("Set-Cookie")) {
-                int nameLength = cookie.indexOf('=');
-                cookies.addCookie(new BasicClientCookie(cookie.substring(0, nameLength), cookie.substring(nameLength + 1)));
-            }
-        }
+        extractCookies(result, cookies);
+
         response = serverRunning.createRestTemplate().exchange(
                 result.getHeaders().getLocation().toString(), HttpMethod.GET, new HttpEntity<>(null, getHeaders(cookies)),
                 String.class);
-        if (response.getHeaders().containsKey("Set-Cookie")) {
-            for (String cookie : response.getHeaders().get("Set-Cookie")) {
-                int nameLength = cookie.indexOf('=');
-                cookies.addCookie(new BasicClientCookie(cookie.substring(0, nameLength), cookie.substring(nameLength + 1)));
-            }
-        }
+        extractCookies(response, cookies);
         if (response.getStatusCode() == HttpStatus.OK) {
             // The grant access page should be returned
             assertThat(response.getBody()).contains("<h1>Application Authorization</h1>");
@@ -1314,12 +1287,12 @@ public class IntegrationTestUtils {
         return location;
     }
 
-    public static ResponseEntity<Map> getTokens(ServerRunning serverRunning,
-            String clientId,
-            String clientSecret,
-            String redirectUri,
-            String codeVerifier,
-            String authorizationCode) throws Exception {
+    public static ResponseEntity<Map> getTokens(ServerRunningExtension serverRunning,
+                                                String clientId,
+                                                String clientSecret,
+                                                String redirectUri,
+                                                String codeVerifier,
+                                                String authorizationCode) {
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.clear();
         formData.add("client_id", clientId);
@@ -1336,10 +1309,10 @@ public class IntegrationTestUtils {
         return serverRunning.postForMap("/oauth/token", formData, tokenHeaders);
     }
 
-    public static void callCheckToken(ServerRunning serverRunning,
-            String accessToken,
-            String clientId,
-            String clientSecret) {
+    public static void callCheckToken(ServerRunningExtension serverRunning,
+                                      String accessToken,
+                                      String clientId,
+                                      String clientSecret) {
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", UaaTestAccounts.getAuthorizationHeader(clientId, clientSecret));
@@ -1352,7 +1325,7 @@ public class IntegrationTestUtils {
     }
 
     public static String getAuthorizationCodeToken(
-            ServerRunning serverRunning,
+            ServerRunningExtension serverRunning,
             String clientId,
             String clientAssertion,
             String username,
@@ -1366,7 +1339,7 @@ public class IntegrationTestUtils {
     }
 
     public static Map<String, String> getAuthorizationCodeTokenMap(
-            ServerRunning serverRunning,
+            ServerRunningExtension serverRunning,
             String clientId,
             String clientSecret,
             String username,
@@ -1380,24 +1353,24 @@ public class IntegrationTestUtils {
                 tokenResponseType, jSessionId, redirectUri, loginHint, callCheckToken);
     }
 
-    public static Map<String, String> getAuthorizationCodeTokenMap(ServerRunning serverRunning,
-            String clientId,
-            String clientSecret,
-            String clientAssertion,
-            String username,
-            String password,
-            String tokenResponseType,
-            String jSessionId,
-            String redirectUri,
-            String loginHint,
-            boolean callCheckToken) {
+    public static Map<String, String> getAuthorizationCodeTokenMap(ServerRunningExtension serverRunning,
+                                                                   String clientId,
+                                                                   String clientSecret,
+                                                                   String clientAssertion,
+                                                                   String username,
+                                                                   String password,
+                                                                   String tokenResponseType,
+                                                                   String jSessionId,
+                                                                   String redirectUri,
+                                                                   String loginHint,
+                                                                   boolean callCheckToken) {
         BasicCookieStore cookies = new BasicCookieStore();
         if (hasText(jSessionId)) {
             cookies.addCookie(new BasicClientCookie("JSESSIONID", jSessionId));
         }
 
         String mystateid = "mystateid";
-        ServerRunning.UriBuilder builder = serverRunning.buildUri("/oauth/authorize")
+        ServerRunningExtension.UriBuilder builder = serverRunning.buildUri("/oauth/authorize")
                 .queryParam("response_type", "code")
                 .queryParam("state", mystateid)
                 .queryParam("client_id", clientId);
@@ -1419,22 +1392,10 @@ public class IntegrationTestUtils {
 
         assertThat(result.getStatusCode()).isEqualTo(HttpStatus.FOUND);
         String location = result.getHeaders().getLocation().toString();
-
-        if (result.getHeaders().containsKey("Set-Cookie")) {
-            for (String header : result.getHeaders().get("Set-Cookie")) {
-                int nameLength = header.indexOf('=');
-                cookies.addCookie(new BasicClientCookie(header.substring(0, nameLength), header.substring(nameLength + 1)));
-            }
-        }
+        extractCookies(result, cookies);
 
         ResponseEntity<String> response = serverRunning.getForString(location, getHeaders(cookies));
-
-        if (response.getHeaders().containsKey("Set-Cookie")) {
-            for (String cookie : response.getHeaders().get("Set-Cookie")) {
-                int nameLength = cookie.indexOf('=');
-                cookies.addCookie(new BasicClientCookie(cookie.substring(0, nameLength), cookie.substring(nameLength + 1)));
-            }
-        }
+        extractCookies(response, cookies);
 
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         if (!hasText(jSessionId)) {
@@ -1453,24 +1414,14 @@ public class IntegrationTestUtils {
             assertThat(result.getStatusCode()).isEqualTo(HttpStatus.FOUND);
 
             cookies.clear();
-            if (result.getHeaders().containsKey("Set-Cookie")) {
-                for (String cookie : result.getHeaders().get("Set-Cookie")) {
-                    int nameLength = cookie.indexOf('=');
-                    cookies.addCookie(new BasicClientCookie(cookie.substring(0, nameLength), cookie.substring(nameLength + 1)));
-                }
-            }
+            extractCookies(result, cookies);
         }
 
         response = serverRunning.createRestTemplate().exchange(
                 result.getHeaders().getLocation().toString(), HttpMethod.GET, new HttpEntity<>(null, getHeaders(cookies)),
                 String.class);
+        extractCookies(response, cookies);
 
-        if (response.getHeaders().containsKey("Set-Cookie")) {
-            for (String cookie : response.getHeaders().get("Set-Cookie")) {
-                int nameLength = cookie.indexOf('=');
-                cookies.addCookie(new BasicClientCookie(cookie.substring(0, nameLength), cookie.substring(nameLength + 1)));
-            }
-        }
         if (response.getStatusCode() == HttpStatus.OK) {
             // The grant access page should be returned
             assertThat(response.getBody()).contains("<h1>Application Authorization</h1>");
@@ -1533,6 +1484,23 @@ public class IntegrationTestUtils {
         return body;
     }
 
+    public static void extractCookies(ResponseEntity<?> response, BasicCookieStore cookies) {
+        if (response.getHeaders().containsKey("Set-Cookie")) {
+            for (String cookie : response.getHeaders().get("Set-Cookie")) {
+                int nameLength = cookie.indexOf('=');
+                cookies.addCookie(new BasicClientCookie(cookie.substring(0, nameLength), cookie.substring(nameLength + 1)));
+            }
+        }
+    }
+
+    public static void copyCookies(ResponseEntity<?> response, HttpHeaders headers) {
+        if (response.getHeaders().containsKey("Set-Cookie")) {
+            for (String cookie : response.getHeaders().get("Set-Cookie")) {
+                headers.add("Cookie", cookie);
+            }
+        }
+    }
+
     public static String extractCookieCsrf(String body) {
         String pattern = "\\<input type=\\\"hidden\\\" name=\\\"X-Uaa-Csrf\\\" value=\\\"(.*?)\\\"";
 
@@ -1542,21 +1510,6 @@ public class IntegrationTestUtils {
             return matcher.group(1);
         }
         return null;
-    }
-
-    public static void takeScreenShot(WebDriver webDriver) {
-        takeScreenShot("testscreenshot-", webDriver);
-    }
-
-    public static void takeScreenShot(String prefix, WebDriver webDriver) {
-        File scrFile = ((TakesScreenshot) webDriver).getScreenshotAs(OutputType.FILE);
-        try {
-            SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd-HHmmss.SSS");
-            String now = format.format(new Date(System.currentTimeMillis()));
-            FileUtils.copyFile(scrFile, new File("build/reports/", prefix + now + ".png"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     public static void validateAccountChooserCookie(String baseUrl, WebDriver webDriver, IdentityZone identityZone) {
@@ -1666,5 +1619,4 @@ public class IntegrationTestUtils {
             super(true, true);
         }
     }
-
 }

@@ -1,8 +1,9 @@
 package org.cloudfoundry.identity.uaa.integration.feature;
 
-import org.cloudfoundry.identity.uaa.ServerRunning;
+import org.cloudfoundry.identity.uaa.ServerRunningExtension;
 import org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils;
-import org.cloudfoundry.identity.uaa.integration.util.ScreenshotOnFail;
+import org.cloudfoundry.identity.uaa.integration.util.ScreenshotOnFailExtension;
+import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
 import org.cloudfoundry.identity.uaa.provider.IdentityProvider;
 import org.cloudfoundry.identity.uaa.provider.LdapIdentityProviderDefinition;
 import org.cloudfoundry.identity.uaa.scim.ScimGroup;
@@ -11,18 +12,20 @@ import org.cloudfoundry.identity.uaa.test.InMemoryLdapServer;
 import org.cloudfoundry.identity.uaa.test.UaaTestAccounts;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneConfiguration;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneHolder;
-import org.hamcrest.Matchers;
-import org.junit.*;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.web.client.RestOperations;
 import org.springframework.web.client.RestTemplate;
 
@@ -30,24 +33,20 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.constants.OriginKeys.LDAP;
 import static org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils.doesSupportZoneDNS;
 import static org.cloudfoundry.identity.uaa.provider.LdapIdentityProviderDefinition.LDAP_TLS_NONE;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpMethod.POST;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = DefaultIntegrationTestConfig.class)
-public class LdapLoginIT {
+@SpringJUnitConfig(classes = DefaultIntegrationTestConfig.class)
+@ExtendWith(ScreenshotOnFailExtension.class)
+class LdapLoginIT {
 
     @Autowired
-    @Rule
-    public IntegrationTestRule integrationTestRule;
-
-    @Rule
-    public ScreenshotOnFail screenShootRule = new ScreenshotOnFail();
+    @RegisterExtension
+    private IntegrationTestExtension integrationTestExtension;
 
     @Autowired
     RestOperations restOperations;
@@ -61,27 +60,28 @@ public class LdapLoginIT {
     @Autowired
     TestClient testClient;
 
-    private ServerRunning serverRunning = ServerRunning.isRunning();
+    @RegisterExtension
+    private static final ServerRunningExtension serverRunning = ServerRunningExtension.connect();
+
     private String zoneAdminToken;
     private static InMemoryLdapServer server;
     private Optional<String> alertError = Optional.empty();
 
-    @BeforeClass
-    public static void startLocalLdap() {
+    @BeforeAll
+    static void startLocalLdap() {
         server = InMemoryLdapServer.startLdap();
     }
 
-    @AfterClass
-    public static void stopLocalLdap() {
+    @AfterAll
+    static void stopLocalLdap() {
         server.stop();
     }
 
-    @Before
-    public void clearWebDriverOfCookies() {
+    @BeforeEach
+    void clearWebDriverOfCookies() {
         //ensure we are able to resolve DNS for hostname testzone2.localhost
-        assertTrue("Expected testzone1/2/3/4.localhost to resolve to 127.0.0.1", doesSupportZoneDNS());
+        assertThat(doesSupportZoneDNS()).as("Expected testzone1/2/3/4.localhost to resolve to 127.0.0.1").isTrue();
 
-        screenShootRule.setWebDriver(webDriver);
         for (String domain : Arrays.asList("localhost", "testzone1.localhost", "testzone2.localhost", "testzone3.localhost", "testzone4.localhost")) {
             webDriver.get(baseUrl.replace("localhost", domain) + "/logout.do");
             webDriver.manage().deleteAllCookies();
@@ -93,8 +93,8 @@ public class LdapLoginIT {
         IntegrationTestUtils.createGroup(token, "", baseUrl, group);
     }
 
-    @After
-    public void cleanup() {
+    @AfterEach
+    void cleanup() {
         String token = IntegrationTestUtils.getClientCredentialsToken(baseUrl, "admin", "adminsecret");
         String groupId = IntegrationTestUtils.getGroup(token, "", baseUrl, "zones.testzone2.admin").getId();
         IntegrationTestUtils.deleteGroup(token, "", baseUrl, groupId);
@@ -105,24 +105,24 @@ public class LdapLoginIT {
     }
 
     @Test
-    public void ldapLogin_with_StartTLS() throws Exception {
+    void ldapLogin_with_StartTLS() {
         Long beforeTest = System.currentTimeMillis();
         performLdapLogin("testzone2", server.getUrl(), "marissa4", "ldap4");
         Long afterTest = System.currentTimeMillis();
-        assertThat(webDriver.findElement(By.cssSelector("h1")).getText(), Matchers.containsString("Where to?"));
+        assertThat(webDriver.findElement(By.cssSelector("h1")).getText()).contains("Where to?");
         ScimUser user = IntegrationTestUtils.getUserByZone(zoneAdminToken, baseUrl, "testzone2", "marissa4");
         IntegrationTestUtils.validateUserLastLogon(user, beforeTest, afterTest);
         IntegrationTestUtils.validateAccountChooserCookie(baseUrl.replace("localhost", "testzone2.localhost"), webDriver, IdentityZoneHolder.get());
     }
 
     @Test
-    public void ldap_login_using_utf8_characters() throws Exception {
+    void ldap_login_using_utf8_characters() {
         performLdapLogin("testzone2", server.getUrl(), "\u7433\u8D3A", "koala");
-        assertThat(webDriver.findElement(By.cssSelector("h1")).getText(), Matchers.containsString("Where to?"));
+        assertThat(webDriver.findElement(By.cssSelector("h1")).getText()).contains("Where to?");
     }
 
     private void performLdapLogin(String subdomain, String ldapUrl, String username, String password) {
-        //ensure that certs have been added to truststore via gradle
+        //ensure that certs have been added to truststore via Gradle
         String zoneUrl = baseUrl.replace("localhost", subdomain + ".localhost");
 
         //identity client token

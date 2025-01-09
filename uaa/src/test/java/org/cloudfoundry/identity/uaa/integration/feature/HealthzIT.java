@@ -13,26 +13,24 @@
  *******************************************************************************/
 package org.cloudfoundry.identity.uaa.integration.feature;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = DefaultIntegrationTestConfig.class)
-public class HealthzIT {
+import static org.assertj.core.api.Assertions.assertThat;
+
+@SpringJUnitConfig(classes = DefaultIntegrationTestConfig.class)
+class HealthzIT {
 
     @Autowired
-    @Rule
-    public IntegrationTestRule integrationTestRule;
+    @RegisterExtension
+    private IntegrationTestExtension integrationTestExtension;
 
     @Autowired
     WebDriver webDriver;
@@ -40,9 +38,9 @@ public class HealthzIT {
     @Value("${integration.test.base_url}")
     String baseUrl;
 
-    @Before
-    @After
-    public void logout_and_clear_cookies() {
+    @BeforeEach
+    @AfterEach
+    void logout_and_clear_cookies() {
         try {
             webDriver.get(baseUrl + "/logout.do");
         } catch (org.openqa.selenium.TimeoutException x) {
@@ -53,8 +51,8 @@ public class HealthzIT {
     }
 
     @Test
-    public void testHealthz() {
+    void healthz() {
         webDriver.get(baseUrl + "/healthz");
-        Assert.assertEquals("ok", webDriver.findElement(By.tagName("body")).getText());
+        assertThat(webDriver.findElement(By.tagName("body")).getText()).isEqualTo("ok");
     }
 }

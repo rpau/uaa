@@ -94,7 +94,6 @@ subprojects {
         testImplementation(libraries.junit5JupiterApi)
         testImplementation(libraries.junit5JupiterParams)
         testRuntimeOnly(libraries.junit5JupiterEngine)
-        testRuntimeOnly(libraries.junitVintageEngine)
         testImplementation(libraries.unboundIdLdapSdk)
         testRuntimeOnly(libraries.jacocoAgent)
 

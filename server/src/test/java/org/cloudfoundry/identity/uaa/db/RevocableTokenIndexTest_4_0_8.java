@@ -9,7 +9,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.util.Arrays;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @WithDatabaseContext
 class RevocableTokenIndexTest_4_0_8 {
@@ -31,7 +31,7 @@ class RevocableTokenIndexTest_4_0_8 {
             try (
                     Connection connection = dataSource.getConnection();
                     ResultSet rs = connection.getMetaData().getIndexInfo(connection.getCatalog(), null, tableName, unique, true)
-                    ) {
+            ) {
                 while (!found && rs.next()) {
                     found = indexName.equalsIgnoreCase(rs.getString("INDEX_NAME"));
                 }
@@ -41,7 +41,7 @@ class RevocableTokenIndexTest_4_0_8 {
             }
         }
 
-        assertTrue(found, "Expected to find index %s.%s".formatted(tableName, indexName));
+        assertThat(found).as("Expected to find index %s.%s".formatted(tableName, indexName)).isTrue();
     }
 
 }

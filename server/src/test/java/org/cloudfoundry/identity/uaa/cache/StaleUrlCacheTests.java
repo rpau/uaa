@@ -203,7 +203,7 @@ class StaleUrlCacheTests {
     }
 
     @Test
-    void test_equal() {
+    void equal() {
         StaleUrlCache.UriRequest uriRequest = new StaleUrlCache.UriRequest(URL, mockRestTemplate, HttpMethod.GET, responseEntity);
         assertThat(uriRequest)
                 .isEqualTo(uriRequest)

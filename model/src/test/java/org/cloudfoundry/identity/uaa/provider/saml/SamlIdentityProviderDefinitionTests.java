@@ -1,15 +1,14 @@
 package org.cloudfoundry.identity.uaa.provider.saml;
 
+import org.cloudfoundry.identity.uaa.provider.SamlIdentityProviderDefinition;
+import org.cloudfoundry.identity.uaa.util.JsonUtils;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.util.ReflectionUtils;
+
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.Collections;
-
-import org.cloudfoundry.identity.uaa.provider.SamlIdentityProviderDefinition;
-import org.cloudfoundry.identity.uaa.util.JsonUtils;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.springframework.util.ReflectionUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.provider.SamlIdentityProviderDefinition.MetadataLocation.DATA;
@@ -20,8 +19,8 @@ public class SamlIdentityProviderDefinitionTests {
 
     SamlIdentityProviderDefinition definition;
 
-    @Before
-    public void createDefinition() {
+    @BeforeEach
+    void createDefinition() {
         definition = buildSamlIdentityProviderDefinition();
     }
 
@@ -38,7 +37,7 @@ public class SamlIdentityProviderDefinitionTests {
     }
 
     @Test
-    public void testEquals() {
+    void equals() {
         definition.setAddShadowUserOnLogin(true);
 
         SamlIdentityProviderDefinition definition2 = buildSamlIdentityProviderDefinition();
@@ -51,7 +50,7 @@ public class SamlIdentityProviderDefinitionTests {
     }
 
     @Test
-    public void test_serialize_custom_attributes_field() {
+    void serialize_custom_attributes_field() {
         definition.setStoreCustomAttributes(true);
         SamlIdentityProviderDefinition def = JsonUtils.readValue(JsonUtils.writeValueAsString(definition), SamlIdentityProviderDefinition.class);
         assertThat(def).isNotNull();
@@ -59,7 +58,7 @@ public class SamlIdentityProviderDefinitionTests {
     }
 
     @Test
-    public void testGetType() throws Exception {
+    void getType() throws Exception {
         SamlIdentityProviderDefinition def = new SamlIdentityProviderDefinition();
         def.setMetaDataLocation("<?xml>");
         assertThat(def.getType()).isEqualTo(SamlIdentityProviderDefinition.MetadataLocation.UNKNOWN);
@@ -82,13 +81,13 @@ public class SamlIdentityProviderDefinitionTests {
     }
 
     @Test
-    public void test_XML_with_DOCTYPE_Fails() {
+    void xml_with_doctype_fails() {
         definition.setMetaDataLocation(IDP_METADATA.replace("<?xml version=\"1.0\"?>\n", "<?xml version=\"1.0\"?>\n<!DOCTYPE>"));
         assertThat(definition.getType()).isEqualTo(UNKNOWN);
     }
 
     @Test
-    public void test_clone() {
+    void test_clone() {
         definition.setMetaDataLocation("http://dadas.dadas.dadas/sdada");
         definition.setSkipSslValidation(true);
         definition.setStoreCustomAttributes(true);
@@ -104,30 +103,28 @@ public class SamlIdentityProviderDefinitionTests {
                         assertThat(actualValue).as(f.getName()).isEqualTo(expectedValue);
                     }
                 });
-
-
     }
 
     @Test
-    public void test_Get_FileType_Fails_and_is_No_Longer_Supported() {
+    void get_file_type_fails_and_is_no_longer_supported() {
         definition.setMetaDataLocation(System.getProperty("user.home"));
         assertThat(definition.getType()).isEqualTo(UNKNOWN);
     }
 
     @Test
-    public void test_Get_URL_Type_Must_Be_Valid_URL() {
+    void get_url_type_must_be_valid_url() {
         definition.setMetaDataLocation("http");
         assertThat(definition.getType()).isEqualTo(UNKNOWN);
     }
 
     @Test
-    public void test_Get_URL_When_Valid() {
+    void get_url_when_valid() {
         definition.setMetaDataLocation("http://uaa.com/saml/metadata");
         assertThat(definition.getType()).isEqualTo(URL);
     }
 
     @Test
-    public void test_Get_Data_Type_Must_Be_Valid_Data() {
+    void get_data_type_must_be_valid_data() {
         definition.setMetaDataLocation("<?xml");
         assertThat(definition.getType()).isEqualTo(UNKNOWN);
 
@@ -139,7 +136,7 @@ public class SamlIdentityProviderDefinitionTests {
     }
 
     @Test
-    public void test_Get_Data_Type_When_Valid() {
+    void get_data_type_when_valid() {
         definition.setMetaDataLocation(IDP_METADATA);
         assertThat(definition.getType()).isEqualTo(DATA);
     }
@@ -178,41 +175,41 @@ public class SamlIdentityProviderDefinitionTests {
             "</md:EntityDescriptor>";
 
     @Test
-    public void testSetIdpEntityAlias() {
+    void setIdpEntityAlias() {
         SamlIdentityProviderDefinition def = new SamlIdentityProviderDefinition();
         def.setIdpEntityAlias("testalias");
         assertThat(def.getIdpEntityAlias()).isEqualTo("testalias");
     }
 
     @Test
-    public void testSetIdpEntityId() {
+    void setIdpEntityId() {
         SamlIdentityProviderDefinition def = new SamlIdentityProviderDefinition();
         def.setIdpEntityId("testalias");
         assertThat(def.getIdpEntityId()).isEqualTo("testalias");
     }
 
     @Test
-    public void testSetEmailDomain() {
+    void setEmailDomain() {
         SamlIdentityProviderDefinition def = new SamlIdentityProviderDefinition();
         def.setEmailDomain(Collections.singletonList("test.com"));
         assertThat(def.getEmailDomain().get(0)).isEqualTo("test.com");
     }
 
     @Test
-    public void testDefaultAuthnContext() {
+    void defaultAuthnContext() {
         SamlIdentityProviderDefinition def = new SamlIdentityProviderDefinition();
         assertThat(def.getAuthnContext()).isNull();
     }
 
     @Test
-    public void testSetAuthnContext() {
+    void setAuthnContext() {
         SamlIdentityProviderDefinition def = new SamlIdentityProviderDefinition();
         def.setAuthnContext(Collections.singletonList("a-custom-context"));
         assertThat(def.getAuthnContext().get(0)).isEqualTo("a-custom-context");
     }
 
     @Test
-    public void testGetSocketFactoryClassName() {
+    void getSocketFactoryClassName() {
         SamlIdentityProviderDefinition def = new SamlIdentityProviderDefinition();
         def.setMetaDataLocation("https://dadas.dadas.dadas/sdada");
         assertThat(def.getSocketFactoryClassName()).isNull();

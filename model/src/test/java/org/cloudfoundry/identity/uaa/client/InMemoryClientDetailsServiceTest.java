@@ -8,7 +8,8 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 
 /**
  * Test for InMemoryClientDetailsService
@@ -27,33 +28,33 @@ class InMemoryClientDetailsServiceTest {
     @Test
     void loadClientByClientId() {
         UaaClientDetails uaaClientDetails = inMemoryClientDetailsService.loadClientByClientId("admin");
-        assertEquals("admin", uaaClientDetails.getClientId());
-        assertEquals("uaa", uaaClientDetails.getResourceIds().iterator().next());
-        assertEquals("client_credentials", uaaClientDetails.getAuthorizedGrantTypes().iterator().next());
-        assertEquals("none", uaaClientDetails.getAuthorities().iterator().next().getAuthority());
-        assertEquals("http://localhost:8080/uaa", uaaClientDetails.getRegisteredRedirectUri().iterator().next());
-        assertEquals("uaa.none", uaaClientDetails.getScope().iterator().next());
+        assertThat(uaaClientDetails.getClientId()).isEqualTo("admin");
+        assertThat(uaaClientDetails.getResourceIds().iterator().next()).isEqualTo("uaa");
+        assertThat(uaaClientDetails.getAuthorizedGrantTypes().iterator().next()).isEqualTo("client_credentials");
+        assertThat(uaaClientDetails.getAuthorities().iterator().next().getAuthority()).isEqualTo("none");
+        assertThat(uaaClientDetails.getRegisteredRedirectUri().iterator().next()).isEqualTo("http://localhost:8080/uaa");
+        assertThat(uaaClientDetails.getScope().iterator().next()).isEqualTo("uaa.none");
     }
 
     @Test
     void addClientDetails() {
         inMemoryClientDetailsService.addClientDetails(new UaaClientDetails("user", null, null, null, null));
         UaaClientDetails uaaClientDetails = inMemoryClientDetailsService.loadClientByClientId("user");
-        assertEquals("user", uaaClientDetails.getClientId());
+        assertThat(uaaClientDetails.getClientId()).isEqualTo("user");
     }
 
     @Test
     void addClientDetailsNull() {
-        assertThrows(ClientRegistrationException.class, () -> inMemoryClientDetailsService.addClientDetails(null));
+        assertThatExceptionOfType(ClientRegistrationException.class).isThrownBy(() -> inMemoryClientDetailsService.addClientDetails(null));
     }
 
     @Test
     void addClientDetailsButExistsAlready() {
-        assertThrows(ClientAlreadyExistsException.class, () -> inMemoryClientDetailsService.addClientDetails(new UaaClientDetails("admin", null, null, null, null)));
+        assertThatExceptionOfType(ClientAlreadyExistsException.class).isThrownBy(() -> inMemoryClientDetailsService.addClientDetails(new UaaClientDetails("admin", null, null, null, null)));
     }
 
     @Test
     void addClientDetailsButDoesNotExist() {
-        assertThrows(NoSuchClientException.class, () -> inMemoryClientDetailsService.loadClientByClientId("user"));
+        assertThatExceptionOfType(NoSuchClientException.class).isThrownBy(() -> inMemoryClientDetailsService.loadClientByClientId("user"));
     }
 }

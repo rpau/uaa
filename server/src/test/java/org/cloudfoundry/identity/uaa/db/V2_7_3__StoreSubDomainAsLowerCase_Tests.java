@@ -1,6 +1,7 @@
 package org.cloudfoundry.identity.uaa.db;
 
 import org.cloudfoundry.identity.uaa.annotations.WithDatabaseContext;
+import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
 import org.cloudfoundry.identity.uaa.zone.IdentityZone;
 import org.cloudfoundry.identity.uaa.zone.IdentityZoneProvisioning;
 import org.cloudfoundry.identity.uaa.zone.JdbcIdentityZoneProvisioning;
@@ -12,7 +13,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -21,8 +21,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -45,8 +44,10 @@ class V2_7_3__StoreSubDomainAsLowerCase_Tests {
         try {
             connection.close();
         } catch (Exception ignore) {
+            // ignore
         }
     }
+
     @BeforeEach
     void setUpDuplicateZones() throws SQLException {
         provisioning = new JdbcIdentityZoneProvisioning(jdbcTemplate);
@@ -69,9 +70,9 @@ class V2_7_3__StoreSubDomainAsLowerCase_Tests {
         for (String subdomain : subdomains) {
             IdentityZone zone = MultitenancyFixture.identityZone(subdomain, subdomain);
             IdentityZone created = provisioning.create(zone);
-            assertEquals(subdomain.toLowerCase(), created.getSubdomain());
+            assertThat(created.getSubdomain()).isEqualTo(subdomain.toLowerCase());
             jdbcTemplate.update("UPDATE identity_zone SET subdomain = ? WHERE id = ?", subdomain, subdomain);
-            assertEquals(subdomain, jdbcTemplate.queryForObject("SELECT subdomain FROM identity_zone where id = ?", String.class, subdomain));
+            assertThat(jdbcTemplate.queryForObject("SELECT subdomain FROM identity_zone where id = ?", String.class, subdomain)).isEqualTo(subdomain);
         }
 
         migration.migrate(context);
@@ -83,9 +84,9 @@ class V2_7_3__StoreSubDomainAsLowerCase_Tests {
                             provisioning.retrieveBySubdomain(subdomain)
                     )
             ) {
-                assertNotNull(zone);
-                assertEquals(subdomain, zone.getId());
-                assertEquals(subdomain.toLowerCase(), zone.getSubdomain());
+                assertThat(zone).isNotNull();
+                assertThat(zone.getId()).isEqualTo(subdomain);
+                assertThat(zone.getSubdomain()).isEqualTo(subdomain.toLowerCase());
             }
         }
     }
@@ -114,16 +115,15 @@ class V2_7_3__StoreSubDomainAsLowerCase_Tests {
         }
         IdentityZone lowercase = provisioning.retrieveBySubdomain("domain1");
         IdentityZone mixedcase = provisioning.retrieveBySubdomain("Domain1");
-        assertEquals(lowercase.getId(), mixedcase.getId());
+        assertThat(mixedcase.getId()).isEqualTo(lowercase.getId());
 
         migration.migrate(context);
 
         for (IdentityZone zone : provisioning.retrieveAll()) {
             //ensure we converted to lower case
-            assertEquals(zone.getSubdomain().toLowerCase(), zone.getSubdomain());
+            assertThat(zone.getSubdomain()).isEqualTo(zone.getSubdomain().toLowerCase());
         }
     }
-
 
     public void checkDbIsCaseSensitive() {
         String usubdomain = "TEST_UPPER_" + generator.generate();

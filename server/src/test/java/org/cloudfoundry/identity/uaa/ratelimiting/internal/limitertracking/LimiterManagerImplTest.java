@@ -1,10 +1,5 @@
 package org.cloudfoundry.identity.uaa.ratelimiting.internal.limitertracking;
 
-import java.time.Instant;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.cloudfoundry.identity.uaa.ratelimiting.core.CompoundKey;
 import org.cloudfoundry.identity.uaa.ratelimiting.core.LoggingOption;
 import org.cloudfoundry.identity.uaa.ratelimiting.core.config.LimiterMapping;
@@ -17,8 +12,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import java.time.Instant;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class LimiterManagerImplTest {
 
@@ -40,7 +39,7 @@ class LimiterManagerImplTest {
     // if the non-All (which is called first) doesn't limit, the "All" InternalLimiter is not directly shown below.
     // The "All" InternalLimiter is reflected in the results below starting at time '6.750' secs for "F2" and "K1"!
     private void allAndPathBasedCheckResults() {
-        assertEquals(6, instanceTracking.size()); // 5 plus the GBs
+        assertThat(instanceTracking).hasSize(6); // 5 plus the GBs
         // . .  0...1...2...3...4...5...6...7...8 seconds with calls every 250ms
         check("NFLLNFLLNFLLNFLLNFLLNFLLNFLLnLLL", "F1", "K1");
         check("NFLLNFLLNFLLNFLLNFLLNFLLNFLLnLLL", "F1", "K2");
@@ -59,14 +58,14 @@ class LimiterManagerImplTest {
     };
 
     @Test
-    void testInitialState() {
+    void initialState() {
         servletPath = "/info";
-        assertFalse(lm.getLimiter(requestInfo).shouldLimit());
-        assertEquals(String.join("\n", INITIAL_STATUS).replace('\'', '"'), lm.rateLimitingStatus());
+        assertThat(lm.getLimiter(requestInfo).shouldLimit()).isFalse();
+        assertThat(lm.rateLimitingStatus()).isEqualTo(String.join("\n", INITIAL_STATUS).replace('\'', '"'));
     }
 
     @Test
-    void testInteractionOfAllAndPathBasedLimiter() {
+    void interactionOfAllAndPathBasedLimiter() {
         runSet(allAndPathBasedLimiterMappings,
                 this::allAndPathBasedCalls,
                 this::allAndPathBasedCheckResults);
@@ -87,14 +86,14 @@ class LimiterManagerImplTest {
     // if the non-All (which is called first) doesn't limit, the "All" InternalLimiter is not directly shown below.
     // The "All" InternalLimiter is NOT reflected in the results below as its limit is never reached!
     private void interactionOfMultiPathBasedCheckResults() {
-        assertEquals(3, instanceTracking.size()); // 2 plus the GBs
+        assertThat(instanceTracking).hasSize(3); // 2 plus the GBs
         // . .  0 . . . 1 . . . 2 . . . 3 . . . 4 . . . 5 . . . 6 . . . 7 . . . 8 seconds with TWO calls every 250ms
         check("NFFFLLLLNFFFLLLLNFFFLLLLNFFFLLLLNFFFLLLLNFFFLLLLNFFFLLLLNFFFLLLL", "FF", "K1");
         check("NFFFLLLLNFFFLLLLNFFFLLLLNFFFLLLLNFFFLLLLNFFFLLLLNFFFLLLLNFFFLLLL", "FF", "K2");
     }
 
     @Test
-    void testInteractionOfMultiPathSelectorLimiter() {
+    void interactionOfMultiPathSelectorLimiter() {
         runSet(interactionOfMultiPathBasedLimiterMappings,
                 this::interactionOfMultiPathBasedCalls,
                 this::interactionOfMultiPathBasedCheckResults);
@@ -102,7 +101,7 @@ class LimiterManagerImplTest {
 
     void runSet(List<LimiterMapping> limiterMappings, Runnable calls, Runnable checkResults) {
         lm.update(RateLimitingFactoriesSupplierWithStatus.builder()
-                .supplier(new InternalLimiterFactoriesSupplierImpl( credentialIdExtractor, null, limiterMappings ))
+                .supplier(new InternalLimiterFactoriesSupplierImpl(credentialIdExtractor, null, limiterMappings))
                 .build());
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 4; j++) {
@@ -114,7 +113,7 @@ class LimiterManagerImplTest {
         checkResults.run();
     }
 
-    NanoTimeSupplier.Mock mTS = new NanoTimeSupplier.Mock( Instant.parse("2000-01-01T00:00:00Z") );
+    NanoTimeSupplier.Mock mTS = new NanoTimeSupplier.Mock(Instant.parse("2000-01-01T00:00:00Z"));
 
     LimiterManagerImpl lm = new LimiterManagerImpl(mTS);
 
@@ -168,11 +167,11 @@ class LimiterManagerImplTest {
     private void check(String expectedResult, String limiterName, String callerID) {
         String instanceKey = resultsKey(limiterName, callerID);
         String actualResult = compress(results.get(instanceKey));
-        assertEquals(expectedResult, actualResult, instanceKey);
+        assertThat(actualResult).as(instanceKey).isEqualTo(expectedResult);
     }
 
     private static String compress(List<Character> chars) {
-        StringBuilder sb = new StringBuilder( chars.size() );
+        StringBuilder sb = new StringBuilder(chars.size());
         for (Character chr : chars) {
             sb.append(chr);
         }

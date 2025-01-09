@@ -29,6 +29,10 @@ import java.util.Map;
 public class JsonUtils {
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
+    private JsonUtils() {
+        throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
+    }
+
     public static String writeValueAsString(Object object) throws JsonUtilException {
         try {
             return objectMapper.writeValueAsString(object);

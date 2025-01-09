@@ -25,17 +25,17 @@ public class TestClassNullifier {
     private static volatile Class<?> clazz;
 
     @BeforeEach
-    public void trackClass() {
+    void trackClass() {
         clazz = this.getClass();
     }
 
     @AfterEach
-    public void nullifyInstanceFields() throws Exception {
+    void nullifyInstanceFields() throws Exception {
         NullifyFields.nullifyFields(this.getClass(), this, false);
     }
 
     @AfterAll
-    public static void nullifyClassFields() throws Exception {
+    static void nullifyClassFields() throws Exception {
         NullifyFields.nullifyFields(clazz, null, true);
         clazz = null;
         System.gc();

@@ -29,10 +29,13 @@ import org.cloudfoundry.identity.uaa.user.JdbcUaaUserDatabase;
 import org.cloudfoundry.identity.uaa.user.UaaUser;
 import org.cloudfoundry.identity.uaa.util.TimeService;
 import org.cloudfoundry.identity.uaa.util.UaaTokenUtils;
-import org.cloudfoundry.identity.uaa.provider.NoSuchClientException;
 import org.cloudfoundry.identity.uaa.zone.MultitenantClientServices;
 import org.joda.time.DateTime;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -43,7 +46,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
 
-import java.time.*;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.Month;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -54,6 +62,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.cloudfoundry.identity.uaa.oauth.TokenTestSupport.GRANT_TYPE;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.CLIENT_AUTH_NONE;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_AUTHORIZATION_CODE;
@@ -61,17 +71,6 @@ import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYP
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_IMPLICIT;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_PASSWORD;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_REFRESH_TOKEN;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.greaterThan;
-import static org.hamcrest.Matchers.hasEntry;
-import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.hasKey;
-import static org.junit.Assert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -84,8 +83,7 @@ class UaaTokenServicesTests {
     private UaaTokenServices tokenServices;
 
     private String clientId = "jku_test";
-    private String clientSecret = "secret";
-    private String clientScopes = "openid,oauth.approvals,user_attributes";
+    private static final String CLIENT_SCOPES = "openid,oauth.approvals,user_attributes";
 
     @Autowired
     private JdbcUaaUserDatabase jdbcUaaUserDatabase;
@@ -115,7 +113,7 @@ class UaaTokenServicesTests {
             CompositeToken accessToken = (CompositeToken) tokenServices.createAccessToken(auth2Authentication);
 
             Jwt jwtToken = JwtHelper.decode(accessToken.getIdTokenValue());
-            assertThat(jwtToken.getHeader().getJku(), is("https://uaa.some.test.domain.com:555/uaa/token_keys"));
+            assertThat(jwtToken.getHeader().getJku()).isEqualTo("https://uaa.some.test.domain.com:555/uaa/token_keys");
         }
 
         @DisplayName("ensureIdToken Returned when Client Has OpenId Scope and Scope=OpenId withGrantType")
@@ -128,7 +126,7 @@ class UaaTokenServicesTests {
 
             CompositeToken accessToken = (CompositeToken) tokenServices.createAccessToken(auth2Authentication);
 
-            assertThat(accessToken.getIdTokenValue(), is(not(nullValue())));
+            assertThat(accessToken.getIdTokenValue()).isNotNull();
             JwtHelper.decode(accessToken.getIdTokenValue());
         }
 
@@ -176,10 +174,9 @@ class UaaTokenServicesTests {
                 OAuth2Authentication auth2Authentication = constructUserAuthenticationFromAuthzRequest(authorizationRequest, "admin", "uaa");
 
                 CompositeToken accessToken = (CompositeToken) tokenServices.createAccessToken(auth2Authentication);
-                assertAll("id token is not returned, and a useful log message is printed",
-                        () -> assertThat(accessToken.getIdTokenValue(), is(nullValue())),
-                        () -> assertThat("Useful log message", logEvents, hasItem("an ID token was requested but 'openid' is missing from the requested scopes"))
-                );
+                // id token is not returned, and a useful log message is printed
+                assertThat(accessToken.getIdTokenValue()).isNull();
+                assertThat(logEvents).as("Useful log message").contains("an ID token was requested but 'openid' is missing from the requested scopes");
             }
         }
 
@@ -214,7 +211,7 @@ class UaaTokenServicesTests {
                 OAuth2Authentication auth2Authentication = constructUserAuthenticationFromAuthzRequest(authorizationRequest, "admin", "uaa");
 
                 CompositeToken accessToken = (CompositeToken) tokenServices.createAccessToken(auth2Authentication);
-                assertThat(accessToken.getIdTokenValue(), is(nullValue()));
+                assertThat(accessToken.getIdTokenValue()).isNull();
             }
 
             @DisplayName("id token should returned when grant type is password")
@@ -225,21 +222,21 @@ class UaaTokenServicesTests {
                 OAuth2Authentication auth2Authentication = constructUserAuthenticationFromAuthzRequest(authorizationRequest, "admin", "uaa");
 
                 CompositeToken accessToken = (CompositeToken) tokenServices.createAccessToken(auth2Authentication);
-                assertThat(accessToken.getIdTokenValue(), is(not(nullValue())));
+                assertThat(accessToken.getIdTokenValue()).isNotNull();
             }
         }
     }
 
     @Test
     void ensureJKUHeaderIsSetWhenBuildingAnAccessToken() {
-        AuthorizationRequest authorizationRequest = constructAuthorizationRequest(clientId, GRANT_TYPE_CLIENT_CREDENTIALS, clientScopes.split(","));
+        AuthorizationRequest authorizationRequest = constructAuthorizationRequest(clientId, GRANT_TYPE_CLIENT_CREDENTIALS, CLIENT_SCOPES.split(","));
 
         OAuth2Authentication authentication = new OAuth2Authentication(authorizationRequest.createOAuth2Request(), null);
 
         OAuth2AccessToken accessToken = tokenServices.createAccessToken(authentication);
 
         Jwt decode = JwtHelper.decode(accessToken.getValue());
-        assertThat(decode.getHeader().getJku(), is("https://uaa.some.test.domain.com:555/uaa/token_keys"));
+        assertThat(decode.getHeader().getJku()).isEqualTo("https://uaa.some.test.domain.com:555/uaa/token_keys");
     }
 
     @Test
@@ -251,7 +248,7 @@ class UaaTokenServicesTests {
         CompositeToken accessToken = (CompositeToken) tokenServices.createAccessToken(auth2Authentication);
 
         Jwt jwtToken = JwtHelper.decode(accessToken.getRefreshToken().getValue());
-        assertThat(jwtToken.getHeader().getJku(), is("https://uaa.some.test.domain.com:555/uaa/token_keys"));
+        assertThat(jwtToken.getHeader().getJku()).isEqualTo("https://uaa.some.test.domain.com:555/uaa/token_keys");
     }
 
     @Nested
@@ -287,7 +284,7 @@ class UaaTokenServicesTests {
             );
             UaaUser uaaUser = jdbcUaaUserDatabase.retrieveUserByName("admin", "uaa");
             refreshToken = refreshTokenCreator.createRefreshToken(uaaUser, refreshTokenRequestData, null);
-            assertThat(refreshToken, is(notNullValue()));
+            assertThat(refreshToken).isNotNull();
             OAuth2Authentication authentication = mock(OAuth2Authentication.class);
             SecurityContextHolder.getContext().setAuthentication(authentication);
             OAuth2Request auth2Request = mock(OAuth2Request.class);
@@ -295,9 +292,9 @@ class UaaTokenServicesTests {
             when(auth2Request.getExtensions()).thenReturn(Map.of(ClaimConstants.CLIENT_AUTH_METHOD, CLIENT_AUTH_NONE));
             OAuth2AccessToken refreshedToken = tokenServices.refreshAccessToken(this.refreshToken.getValue(), new TokenRequest(new HashMap<>(), "jku_test", Lists.newArrayList("openid", "user_attributes"), GRANT_TYPE_REFRESH_TOKEN));
 
-            assertThat(refreshedToken, is(notNullValue()));
+            assertThat(refreshedToken).isNotNull();
             Map<String, Object> claims = UaaTokenUtils.getClaims(refreshedToken.getValue(), Map.class);
-            assertThat(claims, hasEntry(ClaimConstants.CLIENT_AUTH_METHOD, CLIENT_AUTH_NONE));
+            assertThat(claims).containsEntry(ClaimConstants.CLIENT_AUTH_METHOD, CLIENT_AUTH_NONE);
         }
 
         @MethodSource("org.cloudfoundry.identity.uaa.oauth.UaaTokenServicesTests#dates")
@@ -318,10 +315,10 @@ class UaaTokenServicesTests {
             );
             UaaUser uaaUser = jdbcUaaUserDatabase.retrieveUserByName("admin", "uaa");
             refreshToken = refreshTokenCreator.createRefreshToken(uaaUser, refreshTokenRequestData, null);
-            assertThat(refreshToken, is(notNullValue()));
+            assertThat(refreshToken).isNotNull();
             OAuth2AccessToken refreshedToken = tokenServices.refreshAccessToken(this.refreshToken.getValue(), new TokenRequest(new HashMap<>(), "jku_test", Lists.newArrayList("openid", "user_attributes"), GRANT_TYPE_REFRESH_TOKEN));
 
-            assertThat(refreshedToken, is(notNullValue()));
+            assertThat(refreshedToken).isNotNull();
         }
 
         @Nested
@@ -345,7 +342,7 @@ class UaaTokenServicesTests {
                 );
                 UaaUser uaaUser = jdbcUaaUserDatabase.retrieveUserByName("admin", "uaa");
                 refreshToken = refreshTokenCreator.createRefreshToken(uaaUser, refreshTokenRequestData, null);
-                assertThat(refreshToken, is(notNullValue()));
+                assertThat(refreshToken).isNotNull();
             }
 
             @ParameterizedTest
@@ -361,16 +358,15 @@ class UaaTokenServicesTests {
                         )
                 );
 
-                assertThat(refreshedToken, is(notNullValue()));
+                assertThat(refreshedToken).isNotNull();
 
                 Map<String, Object> claims = UaaTokenUtils.getClaims(refreshedToken.getIdTokenValue(), Map.class);
-                assertThat(claims.size(), greaterThan(0));
-                assertThat(claims, hasKey(ClaimConstants.ACR));
-                assertThat(claims.get(ClaimConstants.ACR), notNullValue());
-                assertThat((Map<String, Object>) claims.get(ClaimConstants.ACR), hasKey("values"));
+                assertThat(claims).isNotEmpty()
+                        .containsKey(ClaimConstants.ACR)
+                        .containsKey(ClaimConstants.ACR);
+                assertThat((Map<String, Object>) claims.get(ClaimConstants.ACR)).containsKey("values");
                 List<String> values = (List<String>) ((Map<String, Object>) claims.get(ClaimConstants.ACR)).get("values");
-                assertThat(values, notNullValue());
-                assertThat(values, containsInAnyOrder(acrs.toArray()));
+                assertThat(values).containsExactlyInAnyOrderElementsOf(acrs);
             }
         }
 
@@ -395,7 +391,7 @@ class UaaTokenServicesTests {
                         )
                 );
 
-                assertThat(refreshedToken.getIdTokenValue(), is(nullValue()));
+                assertThat(refreshedToken.getIdTokenValue()).isNull();
             }
         }
 
@@ -413,7 +409,7 @@ class UaaTokenServicesTests {
                 AuthorizationRequest authorizationRequest = constructAuthorizationRequest("client_without_openid", grantType, nonOpenIdScope);
                 OAuth2Authentication auth2Authentication = constructUserAuthenticationFromAuthzRequest(authorizationRequest, "admin", "uaa");
                 CompositeToken compositeToken = (CompositeToken) tokenServices.createAccessToken(auth2Authentication);
-                assertThat(compositeToken.getIdTokenValue(), is(nullValue()));
+                assertThat(compositeToken.getIdTokenValue()).isNull();
 
                 CompositeToken refreshedToken = (CompositeToken) tokenServices.refreshAccessToken(
                         compositeToken.getRefreshToken().getValue(),
@@ -422,7 +418,7 @@ class UaaTokenServicesTests {
                         )
                 );
 
-                assertThat(refreshedToken.getIdTokenValue(), is(nullValue()));
+                assertThat(refreshedToken.getIdTokenValue()).isNull();
             }
         }
 
@@ -438,7 +434,7 @@ class UaaTokenServicesTests {
                 AuthorizationRequest authorizationRequest = constructAuthorizationRequest("jku_test", grantType, "openid", "user_attributes");
                 OAuth2Authentication auth2Authentication = constructUserAuthenticationFromAuthzRequest(authorizationRequest, "admin", "uaa");
                 CompositeToken compositeToken = (CompositeToken) tokenServices.createAccessToken(auth2Authentication);
-                assertThat(compositeToken.getIdTokenValue(), is(not(nullValue())));
+                assertThat(compositeToken.getIdTokenValue()).isNotNull();
 
                 CompositeToken refreshedToken = (CompositeToken) tokenServices.refreshAccessToken(
                         compositeToken.getRefreshToken().getValue(),
@@ -447,7 +443,7 @@ class UaaTokenServicesTests {
                         )
                 );
 
-                assertThat(refreshedToken.getIdTokenValue(), is(nullValue()));
+                assertThat(refreshedToken.getIdTokenValue()).isNull();
             }
         }
 
@@ -472,7 +468,7 @@ class UaaTokenServicesTests {
                 );
                 UaaUser uaaUser = jdbcUaaUserDatabase.retrieveUserByName("admin", "uaa");
                 refreshToken = refreshTokenCreator.createRefreshToken(uaaUser, refreshTokenRequestData, null);
-                assertThat(refreshToken, is(notNullValue()));
+                assertThat(refreshToken).isNotNull();
             }
 
             @DisplayName("an ID token is returned with AMR claim")
@@ -483,19 +479,16 @@ class UaaTokenServicesTests {
                 assumeTrue(waitForClient("jku_test", 5), "Test client needs to be setup for this test");
                 CompositeToken refreshedToken = (CompositeToken) tokenServices.refreshAccessToken(
                         refreshToken.getValue(),
-                        new TokenRequest(
-                                Maps.newHashMap(), "jku_test", Lists.newArrayList("openid", "user_attributes"), GRANT_TYPE_REFRESH_TOKEN
-                        )
+                        new TokenRequest(Maps.newHashMap(), "jku_test", Lists.newArrayList("openid", "user_attributes"), GRANT_TYPE_REFRESH_TOKEN)
                 );
-
-                assertThat(refreshedToken, is(notNullValue()));
+                assertThat(refreshedToken).isNotNull();
 
                 Map<String, Object> claims = UaaTokenUtils.getClaims(refreshedToken.getIdTokenValue(), Map.class);
-                assertThat(claims.size(), greaterThan(0));
-                assertThat(claims, hasKey(ClaimConstants.AMR));
-                assertThat(claims.get(ClaimConstants.AMR), notNullValue());
+                assertThat(claims).isNotEmpty()
+                        .containsKey(ClaimConstants.AMR)
+                        .containsKey(ClaimConstants.AMR);
                 List<String> actualAmrs = (List<String>) claims.get(ClaimConstants.AMR);
-                assertThat(actualAmrs, containsInAnyOrder(amrs.toArray()));
+                assertThat(actualAmrs).containsExactlyInAnyOrderElementsOf(amrs);
             }
         }
     }
@@ -547,11 +540,11 @@ class UaaTokenServicesTests {
             CompositeExpiringOAuth2RefreshToken refreshToken =
                     refreshTokenCreator.createRefreshToken(uaaUser,
                             refreshTokenRequestData, null);
-            Assertions.assertNotNull(refreshToken);
+            assertThat(refreshToken).isNotNull();
 
             OAuth2AccessToken accessToken = tokenServices.refreshAccessToken(
                     refreshToken.getValue(), tokenRequest);
-            Assertions.assertNotNull(accessToken);
+            assertThat(accessToken).isNotNull();
         }
 
         @ParameterizedTest
@@ -562,12 +555,12 @@ class UaaTokenServicesTests {
             CompositeExpiringOAuth2RefreshToken refreshToken =
                     refreshTokenCreator.createRefreshToken(uaaUser,
                             refreshTokenRequestData, null);
-            Assertions.assertNotNull(refreshToken);
+            assertThat(refreshToken).isNotNull();
 
             // Verifying with generic Exception instead of specific type because
             // refreshAccessToken() throws an Exception of which type is
             // different from the one that is declared in its method signature
-            Assertions.assertThrows(Exception.class, () ->
+            assertThatExceptionOfType(Exception.class).isThrownBy(() ->
                     tokenServices.refreshAccessToken(refreshToken.getValue(),
                             tokenRequest));
         }
@@ -591,9 +584,9 @@ class UaaTokenServicesTests {
     }
 
     private OAuth2Authentication constructUserAuthenticationFromAuthzRequest(AuthorizationRequest authzRequest,
-            String userId,
-            String userOrigin,
-            GrantedAuthority... authorities
+                                                                             String userId,
+                                                                             String userOrigin,
+                                                                             GrantedAuthority... authorities
     ) {
         UaaUser uaaUser = jdbcUaaUserDatabase.retrieveUserByName(userId, userOrigin);
         UaaPrincipal principal = new UaaPrincipal(uaaUser);
@@ -609,13 +602,7 @@ class UaaTokenServicesTests {
         List<String> validAcrsWithNull = Lists.newArrayList("val1", null, "val2");
         List<String> intAcrs = Lists.newArrayList("2");
 
-        return Stream.of(
-                validAcrs,
-                nullAcrs,
-                validAcrsWithNull,
-                intAcrs
-        );
-
+        return Stream.of(validAcrs, nullAcrs, validAcrsWithNull, intAcrs);
     }
 
     private AuthorizationRequest constructAuthorizationRequest(String clientId, String grantType, String... scopes) {

@@ -1,8 +1,5 @@
 package org.cloudfoundry.identity.uaa.ratelimiting.config;
 
-import java.util.List;
-import java.util.function.Function;
-
 import org.cloudfoundry.identity.uaa.ratelimiting.AbstractExceptionTestSupport;
 import org.cloudfoundry.identity.uaa.ratelimiting.core.LoggingOption;
 import org.cloudfoundry.identity.uaa.ratelimiting.core.http.CredentialIdType;
@@ -12,9 +9,20 @@ import org.cloudfoundry.identity.uaa.ratelimiting.internal.common.InternalLimite
 import org.cloudfoundry.identity.uaa.ratelimiting.util.NanoTimeSupplier;
 import org.junit.jupiter.api.Test;
 
-import static org.cloudfoundry.identity.uaa.ratelimiting.config.RateLimitingConfigMapperImpl.*;
-import static org.cloudfoundry.identity.uaa.ratelimiting.config.YamlConfigFileDTO.*;
-import static org.junit.jupiter.api.Assertions.*;
+import java.util.List;
+import java.util.function.Function;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
+import static org.cloudfoundry.identity.uaa.ratelimiting.config.RateLimitingConfigMapperImpl.CREDENTIAL_ID_NOT_FOUND_PREFIX;
+import static org.cloudfoundry.identity.uaa.ratelimiting.config.RateLimitingConfigMapperImpl.DUPLICATE_NAME_PREFIX;
+import static org.cloudfoundry.identity.uaa.ratelimiting.config.RateLimitingConfigMapperImpl.DUPLICATE_PATH_SELECTOR_PREFIX;
+import static org.cloudfoundry.identity.uaa.ratelimiting.config.RateLimitingConfigMapperImpl.ERROR_IN_LIMITER_MAPPINGS_PREFIX;
+import static org.cloudfoundry.identity.uaa.ratelimiting.config.RateLimitingConfigMapperImpl.LOGGING_OPTION_NOT_FOUND_PREFIX;
+import static org.cloudfoundry.identity.uaa.ratelimiting.config.RateLimitingConfigMapperImpl.NO_NAME_PROVIDED_PREFIX;
+import static org.cloudfoundry.identity.uaa.ratelimiting.config.YamlConfigFileDTO.LimiterMap;
+import static org.cloudfoundry.identity.uaa.ratelimiting.config.YamlConfigFileDTO.YamlConfigFileDTOBuilder;
+import static org.cloudfoundry.identity.uaa.ratelimiting.config.YamlConfigFileDTO.builder;
 
 class RateLimitingConfigMapperImplTest extends AbstractExceptionTestSupport {
     public static final LimiterMap LIMITER_MAP_All_all = LimiterMap.builder().name("All").global("1r/s").pathSelectors(List.of("all")).build();
@@ -27,30 +35,30 @@ class RateLimitingConfigMapperImplTest extends AbstractExceptionTestSupport {
     NanoTimeSupplier currentTimeSupplier = new NanoTimeSupplier.Mock();
 
     private RateLimitingConfigMapperImpl createMapper(CredentialIdType... credentialIdTypes) {
-        return new RateLimitingConfigMapperImpl( currentTimeSupplier, credentialIdTypes );
+        return new RateLimitingConfigMapperImpl(currentTimeSupplier, credentialIdTypes);
     }
 
     @Test
     void checkForCredentialIdTypes() {
-        assertEquals(0, new RateLimitingConfigMapperImpl().getCredentialIdTypeCount());
-        assertEquals(1, new RateLimitingConfigMapperImpl( new CredentialIdTypeJWT( null ) ).getCredentialIdTypeCount());
-        assertEquals(2, new RateLimitingConfigMapperImpl( new CredentialIdTypeJWT( null ), new CredentialIdTypeJWTjsonField( null ) ).getCredentialIdTypeCount());
+        assertThat(new RateLimitingConfigMapperImpl().getCredentialIdTypeCount()).isZero();
+        assertThat(new RateLimitingConfigMapperImpl(new CredentialIdTypeJWT(null)).getCredentialIdTypeCount()).isOne();
+        assertThat(new RateLimitingConfigMapperImpl(new CredentialIdTypeJWT(null), new CredentialIdTypeJWTjsonField(null)).getCredentialIdTypeCount()).isEqualTo(2);
     }
 
     @Test
     void check_map_and_checkNoChange() {
         RateLimitingConfigMapperImpl mapper = createMapper();
-        assertNull(mapper.dtoPrevious);
-        assertTrue(mapper.checkNoChange(null));
-        assertNull(mapper.dtoPrevious);
-        assertFalse(mapper.checkNoChange(EMPTY_DTO));
-        assertEquals(EMPTY_DTO, mapper.dtoPrevious); // cache Updated!
-        assertTrue(mapper.checkNoChange(EMPTY_DTO));
-        assertEquals(EMPTY_DTO, mapper.dtoPrevious);
+        assertThat(mapper.dtoPrevious).isNull();
+        assertThat(mapper.checkNoChange(null)).isTrue();
+        assertThat(mapper.dtoPrevious).isNull();
+        assertThat(mapper.checkNoChange(EMPTY_DTO)).isFalse();
+        assertThat(mapper.dtoPrevious).isEqualTo(EMPTY_DTO); // cache Updated!
+        assertThat(mapper.checkNoChange(EMPTY_DTO)).isTrue();
+        assertThat(mapper.dtoPrevious).isEqualTo(EMPTY_DTO);
 
-        assertNull(mapper.map(null, "test", null));
-        assertNull(mapper.map(null, "test", EMPTY_DTO));
-        assertNotNull(mapper.map(null, "test", MINIMAL_DTO));
+        assertThat(mapper.map(null, "test", null)).isNull();
+        assertThat(mapper.map(null, "test", EMPTY_DTO)).isNull();
+        assertThat(mapper.map(null, "test", MINIMAL_DTO)).isNotNull();
     }
 
     @Test
@@ -58,14 +66,13 @@ class RateLimitingConfigMapperImplTest extends AbstractExceptionTestSupport {
         RateLimitingConfigMapperImpl mapper = createMapper();
 
         InternalLimiterFactoriesSupplier supplier = mapper.createSupplier(MINIMAL_DTO);
-        assertNotNull(supplier);
+        assertThat(supplier).isNotNull();
         assertEquivalent(supplier, null, mapper.createErrorSupplierPair(MINIMAL_DTO));
 
         try {
             supplier = mapper.createSupplier(EMPTY_DTO);
             fail("Expected Exception, but got supplier: " + supplier);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             assertEquivalent(InternalLimiterFactoriesSupplier.NOOP, e, mapper.createErrorSupplierPair(EMPTY_DTO));
         }
     }
@@ -84,14 +91,14 @@ class RateLimitingConfigMapperImplTest extends AbstractExceptionTestSupport {
             } else { // Neither 'null'
                 String expectedStr = toString.apply(expected);
                 String actualStr = toString.apply(actual);
-                assertEquals(expectedStr, actualStr, what + "s");
+                assertThat(actualStr).as(what + "s").isEqualTo(expectedStr);
             }
         }
     }
 
     @Test
     void checkForHappyCases() {
-        RateLimitingConfigMapperImpl mapper = createMapper(new CredentialIdTypeJWT( null ));
+        RateLimitingConfigMapperImpl mapper = createMapper(new CredentialIdTypeJWT(null));
         assertSupplier(false, LoggingOption.DEFAULT, 1, mapper, MINIMAL_DTO);
         assertSupplier(false, LoggingOption.AllCalls, 1, mapper,
                 builder().limiterMappings(MINIMAL_LIMITER_MAPPINGS).loggingOption("AllCalls").build());
@@ -102,22 +109,22 @@ class RateLimitingConfigMapperImplTest extends AbstractExceptionTestSupport {
     }
 
     private void assertSupplier(boolean hasCallerCredentialsIdSupplierDescription, LoggingOption loggingOption, int mappings,
-            RateLimitingConfigMapperImpl mapper, YamlConfigFileDTO dto) {
+                                RateLimitingConfigMapperImpl mapper, YamlConfigFileDTO dto) {
         InternalLimiterFactoriesSupplier supplier = mapper.createSupplier(dto);
-        assertEquals(mappings, supplier.getLimiterMappings(), dto::toString);
-        assertEquals(loggingOption, supplier.getLoggingOption(), dto::toString);
+        assertThat(supplier.getLimiterMappings()).as(dto::toString).isEqualTo(mappings);
+        assertThat(supplier.getLoggingOption()).as(dto::toString).isEqualTo(loggingOption);
         String description = supplier.getCallerCredentialsIdSupplierDescription();
         if (hasCallerCredentialsIdSupplierDescription) {
-            assertNotNull(description, dto::toString);
+            assertThat(description).as(dto::toString).isNotNull();
         } else {
-            assertEquals("None", description, dto::toString);
+            assertThat(description).as(dto::toString).isEqualTo("None");
         }
     }
 
     @Test
     void validateErrorCases() {
         // Bad Credentials
-        RateLimitingConfigMapperImpl mapper = createMapper(new CredentialIdTypeJWT( null ));
+        RateLimitingConfigMapperImpl mapper = createMapper(new CredentialIdTypeJWT(null));
         assertPairError(mapper, builder().limiterMappings(MINIMAL_LIMITER_MAPPINGS).credentialID("JWTspecial:claims"),
                 CREDENTIAL_ID_NOT_FOUND_PREFIX);
         mapper = createMapper(); // No CredentialIdTypes
@@ -138,16 +145,16 @@ class RateLimitingConfigMapperImplTest extends AbstractExceptionTestSupport {
     }
 
     private void assertPairError(RateLimitingConfigMapperImpl mapper, YamlConfigFileDTOBuilder dtoBuilder,
-            String expectedErrorStartsWithFragment, String... expectedErrorContainsFragments) {
+                                 String expectedErrorStartsWithFragment, String... expectedErrorContainsFragments) {
         YamlConfigFileDTO dto = dtoBuilder.build();
         ErrorSupplierPair pair = mapper.createErrorSupplierPair(dto);
-        assertNotNull(dto.toString());
-        assertNotNull(mapper.toString());
-        assertTrue(pair.hasError(), dto::toString);
-        assertTrue(pair.getSupplier().isSupplierNOOP(), dto::toString);
-        assertNotNull(pair.getError(), dto::toString);
+        assertThat(dto.toString()).isNotNull();
+        assertThat(mapper.toString()).isNotNull();
+        assertThat(pair.hasError()).as(dto::toString).isTrue();
+        assertThat(pair.getSupplier().isSupplierNOOP()).as(dto::toString).isTrue();
+        assertThat(pair.getError()).as(dto::toString).isNotNull();
         String msg = pair.getErrorMsg();
-        assertNotNull(msg, dto::toString);
+        assertThat(msg).as(dto::toString).isNotNull();
         if (!msg.startsWith(expectedErrorStartsWithFragment)) {
             fail("Expected \"" + msg + "\" to start with \"" + expectedErrorStartsWithFragment + "\", from: " + dto);
         }

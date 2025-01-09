@@ -13,39 +13,39 @@
  *******************************************************************************/
 package org.cloudfoundry.identity.uaa.integration;
 
-import org.cloudfoundry.identity.uaa.ServerRunning;
+import org.cloudfoundry.identity.uaa.ServerRunningExtension;
 import org.cloudfoundry.identity.uaa.oauth.client.http.OAuth2ErrorHandler;
 import org.cloudfoundry.identity.uaa.oauth.client.test.OAuth2ContextConfiguration;
+import org.cloudfoundry.identity.uaa.oauth.client.test.OAuth2ContextExtension;
+import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
 import org.cloudfoundry.identity.uaa.scim.ScimUser;
-import org.cloudfoundry.identity.uaa.test.TestAccountSetup;
+import org.cloudfoundry.identity.uaa.test.TestAccountExtension;
 import org.cloudfoundry.identity.uaa.test.UaaTestAccounts;
-import org.cloudfoundry.identity.uaa.oauth.client.test.OAuth2ContextSetup;
 import org.cloudfoundry.identity.uaa.util.JsonUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.ClientHttpResponse;
-import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThan;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @OAuth2ContextConfiguration(OAuth2ContextConfiguration.ClientCredentials.class)
-public class ScimUserEndpointsIntegrationTests {
+class ScimUserEndpointsIntegrationTests {
 
     private final String JOEL = "joel_" + new RandomValueStringGenerator().generate().toLowerCase();
 
@@ -59,23 +59,22 @@ public class ScimUserEndpointsIntegrationTests {
 
     private static final int NUM_DEFAULT_GROUPS_ON_STARTUP = 14;
 
-    @Rule
-    public ServerRunning serverRunning = ServerRunning.isRunning();
+    @RegisterExtension
+    private static final ServerRunningExtension serverRunning = ServerRunningExtension.connect();
 
-    private UaaTestAccounts testAccounts = UaaTestAccounts.standard(serverRunning);
+    private static final UaaTestAccounts testAccounts = UaaTestAccounts.standard(serverRunning);
 
+    @RegisterExtension
+    private static final TestAccountExtension testAccountExtension = TestAccountExtension.standard(serverRunning, testAccounts);
 
-    @Rule
-    public TestAccountSetup testAccountSetup = TestAccountSetup.standard(serverRunning, testAccounts);
-
-    @Rule
-    public OAuth2ContextSetup context = OAuth2ContextSetup.withTestAccounts(serverRunning, testAccountSetup);
+    @RegisterExtension
+    private static final OAuth2ContextExtension context = OAuth2ContextExtension.withTestAccounts(serverRunning, testAccountExtension);
 
     private RestTemplate client;
     private List<ScimUser> scimUsers;
 
-    @Before
-    public void createRestTemplate() {
+    @BeforeEach
+    void createRestTemplate() {
         client = (RestTemplate) serverRunning.getRestTemplate();
         client.setErrorHandler(new OAuth2ErrorHandler(context.getResource()) {
             // Pass errors through in response entity for status code analysis
@@ -86,6 +85,7 @@ public class ScimUserEndpointsIntegrationTests {
 
             @Override
             public void handleError(ClientHttpResponse response) {
+                // pass through
             }
         });
     }
@@ -109,7 +109,7 @@ public class ScimUserEndpointsIntegrationTests {
     }
 
     private ResponseEntity<ScimUser> createUser(String username, String firstName, String lastName,
-            String email, boolean verified) {
+                                                String email, boolean verified) {
         ScimUser user = new ScimUser();
         user.setPassword("password");
         user.setUserName(username);
@@ -125,16 +125,16 @@ public class ScimUserEndpointsIntegrationTests {
     // "{\"userName\":\"joe\",\"schemas\":[\"urn:scim:schemas:core:1.0\"]}"
     // http://localhost:8080/uaa/User
     @Test
-    public void createUserSucceeds() {
+    void createUserSucceeds() {
         ResponseEntity<ScimUser> response = createUser(JOE, "Joe", "User", "joe@blah.com");
         ScimUser joe1 = response.getBody();
-        assertEquals(JOE, joe1.getUserName());
+        assertThat(joe1.getUserName()).isEqualTo(JOE);
 
         // Check we can GET the user
         ScimUser joe2 = client.getForObject(serverRunning.getUrl(userEndpoint + "/{id}"), ScimUser.class, joe1.getId());
 
-        assertEquals(joe1.getId(), joe2.getId());
-        assertTrue(joe2.isVerified());
+        assertThat(joe2.getId()).isEqualTo(joe1.getId());
+        assertThat(joe2.isVerified()).isTrue();
     }
 
     // curl -v -H "Content-Type: application/json" -H "Accept: application/json"
@@ -142,16 +142,16 @@ public class ScimUserEndpointsIntegrationTests {
     // "{\"userName\":\"joe\",\"schemas\":[\"urn:scim:schemas:core:1.0\"]}"
     // http://localhost:8080/uaa/User
     @Test
-    public void createUserSucceedsWithVerifiedIsFalse() {
+    void createUserSucceedsWithVerifiedIsFalse() {
         ResponseEntity<ScimUser> response = createUser(JOE, "Joe", "User", "joe@blah.com", false);
         ScimUser joe1 = response.getBody();
-        assertEquals(JOE, joe1.getUserName());
+        assertThat(joe1.getUserName()).isEqualTo(JOE);
 
         // Check we can GET the user
         ScimUser joe2 = client.getForObject(serverRunning.getUrl(userEndpoint + "/{id}"), ScimUser.class, joe1.getId());
 
-        assertEquals(joe1.getId(), joe2.getId());
-        assertFalse(joe2.isVerified());
+        assertThat(joe2.getId()).isEqualTo(joe1.getId());
+        assertThat(joe2.isVerified()).isFalse();
     }
 
     // curl -v -H "Content-Type: application/json" -H "Accept: application/json"
@@ -159,19 +159,19 @@ public class ScimUserEndpointsIntegrationTests {
     // "{\"userName\":\"joe\",\"schemas\":[\"urn:scim:schemas:core:1.0\"]}"
     // http://localhost:8080/uaa/User
     @Test
-    public void verifyUser() {
+    void verifyUser() {
         ResponseEntity<ScimUser> response = createUser(JOE, "Joe", "User", "joe@blah.com", false);
         ScimUser joe1 = response.getBody();
-        assertEquals(JOE, joe1.getUserName());
+        assertThat(joe1.getUserName()).isEqualTo(JOE);
         // Check we can GET the user
         ScimUser joe2 = client.getForObject(serverRunning.getUrl(userEndpoint + "/{id}"), ScimUser.class, joe1.getId());
-        assertEquals(joe1.getId(), joe2.getId());
-        assertFalse(joe2.isVerified());
+        assertThat(joe2.getId()).isEqualTo(joe1.getId());
+        assertThat(joe2.isVerified()).isFalse();
         ScimUser joe3 = client.getForObject(serverRunning.getUrl(userEndpoint + "/{id}/verify"), ScimUser.class,
                 joe1.getId());
-        assertTrue(joe3.isVerified());
+        assertThat(joe3.isVerified()).isTrue();
         ScimUser joe4 = client.getForObject(serverRunning.getUrl(userEndpoint + "/{id}"), ScimUser.class, joe1.getId());
-        assertTrue(joe4.isVerified());
+        assertThat(joe4.isVerified()).isTrue();
     }
 
     // curl -v -H "Content-Type: application/json" -H "Accept: application/json"
@@ -179,7 +179,7 @@ public class ScimUserEndpointsIntegrationTests {
     // "{\"userName\":\"joe\",\"schemas\":[\"urn:scim:schemas:core:1.0\"]}"
     // http://localhost:8080/uaa/User
     @Test
-    public void verifyUserNotFound() {
+    void verifyUserNotFound() {
         HttpHeaders headers = new HttpHeaders();
         ResponseEntity<Map> response = client.exchange(serverRunning.getUrl(userEndpoint + "/{id}/verify"),
                 HttpMethod.GET,
@@ -189,12 +189,13 @@ public class ScimUserEndpointsIntegrationTests {
 
         @SuppressWarnings("unchecked")
         Map<String, String> error = response.getBody();
-        assertEquals("scim_resource_not_found", error.get("error"));
-        assertEquals("User this-user-id-doesnt-exist does not exist", error.get("message"));
+        assertThat(error)
+                .containsEntry("error", "scim_resource_not_found")
+                .containsEntry("message", "User this-user-id-doesnt-exist does not exist");
     }
 
     @Test
-    public void createUserWithNoEmailFails() {
+    void createUserWithNoEmailFails() {
         ScimUser user = new ScimUser();
         user.setPassword("password");
         user.setUserName("dave");
@@ -205,21 +206,20 @@ public class ScimUserEndpointsIntegrationTests {
         @SuppressWarnings("unchecked")
         Map<String, String> error = response.getBody();
 
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("invalid_scim_resource", error.get("error"));
-
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(error).containsEntry("error", "invalid_scim_resource");
     }
 
     @Test
-    public void getUserHasEtag() {
+    void getUserHasEtag() {
         ResponseEntity<ScimUser> response = createUser(JOE, "Joe", "User", "joe@blah.com");
         ScimUser joe = response.getBody();
-        assertEquals(JOE, joe.getUserName());
+        assertThat(joe.getUserName()).isEqualTo(JOE);
 
         // Check we can GET the user
         ResponseEntity<ScimUser> result = client.getForEntity(serverRunning.getUrl(userEndpoint + "/{id}"),
                 ScimUser.class, joe.getId());
-        assertEquals("\"" + joe.getVersion() + "\"", result.getHeaders().getFirst("ETag"));
+        assertThat(result.getHeaders().getFirst("ETag")).isEqualTo("\"" + joe.getVersion() + "\"");
     }
 
     // curl -v -H "Content-Type: application/json" -X PUT -H
@@ -227,10 +227,10 @@ public class ScimUserEndpointsIntegrationTests {
     // "{\"userName\":\"joe\",\"schemas\":[\"urn:scim:schemas:core:1.0\"]}"
     // http://localhost:8080/uaa/User
     @Test
-    public void updateUserSucceeds() {
+    void updateUserSucceeds() {
         ResponseEntity<ScimUser> response = createUser(JOE, "Joe", "User", "joe@blah.com");
         ScimUser joe = response.getBody();
-        assertEquals(JOE, joe.getUserName());
+        assertThat(joe.getUserName()).isEqualTo(JOE);
 
         joe.setName(new ScimUser.Name("Joe", "Bloggs"));
 
@@ -239,17 +239,16 @@ public class ScimUserEndpointsIntegrationTests {
         response = client.exchange(serverRunning.getUrl(userEndpoint) + "/{id}", HttpMethod.PUT,
                 new HttpEntity<ScimUser>(joe, headers), ScimUser.class, joe.getId());
         ScimUser joe1 = response.getBody();
-        assertEquals(JOE, joe1.getUserName());
+        assertThat(joe1.getUserName()).isEqualTo(JOE);
 
-        assertEquals(joe.getId(), joe1.getId());
-
+        assertThat(joe1.getId()).isEqualTo(joe.getId());
     }
 
     @Test
-    public void updateUserNameSucceeds() {
+    void updateUserNameSucceeds() {
         ResponseEntity<ScimUser> response = createUser(JOE, "Joe", "User", "joe@blah.com");
         ScimUser joe = response.getBody();
-        assertEquals(JOE, joe.getUserName());
+        assertThat(joe.getUserName()).isEqualTo(JOE);
 
         joe.setUserName(JOE + "new");
 
@@ -258,15 +257,14 @@ public class ScimUserEndpointsIntegrationTests {
         response = client.exchange(serverRunning.getUrl(userEndpoint) + "/{id}", HttpMethod.PUT,
                 new HttpEntity<ScimUser>(joe, headers), ScimUser.class, joe.getId());
         ScimUser joe1 = response.getBody();
-        assertEquals(JOE + "new", joe1.getUserName());
+        assertThat(joe1.getUserName()).isEqualTo(JOE + "new");
 
-        assertEquals(joe.getId(), joe1.getId());
-
+        assertThat(joe1.getId()).isEqualTo(joe.getId());
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Test
-    public void updateUserWithBadAttributeFails() {
+    void updateUserWithBadAttributeFails() {
 
         ResponseEntity<ScimUser> created = createUser(JOE, "Joe", "User", "joe@blah.com");
         ScimUser joe = created.getBody();
@@ -278,14 +276,12 @@ public class ScimUserEndpointsIntegrationTests {
         ResponseEntity<Map> response = client.exchange(serverRunning.getUrl(userEndpoint) + "/{id}", HttpMethod.PUT,
                 new HttpEntity<Map>(map, headers), Map.class, joe.getId());
         Map<String, Object> joe1 = response.getBody();
-        assertTrue("Wrong message: " + joe1, ((String) joe1.get("message")).toLowerCase()
-                .contains("unrecognized field"));
-
+        assertThat(((String) joe1.get("message")).toLowerCase()).as("Wrong message: " + joe1).contains("unrecognized field");
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Test
-    public void testJsonCaseInsensitivity() {
+    void jsonCaseInsensitivity() {
 
         ResponseEntity<ScimUser> created = createUser(JOE, "Joe", "User", "joe@blah.com");
         ScimUser joe = created.getBody();
@@ -299,14 +295,14 @@ public class ScimUserEndpointsIntegrationTests {
                 HttpMethod.PUT,
                 new HttpEntity<Map>(map, headers), ScimUser.class, joe.getId());
         ScimUser joe1 = response.getBody();
-        assertEquals(JOE + "0", joe1.getUserName());
+        assertThat(joe1.getUserName()).isEqualTo(JOE + "0");
     }
 
     @Test
-    public void updateUserWithNewAuthoritiesSucceeds() {
+    void updateUserWithNewAuthoritiesSucceeds() {
         ResponseEntity<ScimUser> response = createUser(JOE, "Joe", "User", "joe@blah.com");
         ScimUser joe = response.getBody();
-        assertEquals(JOE, joe.getUserName());
+        assertThat(joe.getUserName()).isEqualTo(JOE);
 
         joe.setUserType("admin");
 
@@ -315,20 +311,18 @@ public class ScimUserEndpointsIntegrationTests {
         response = client.exchange(serverRunning.getUrl(userEndpoint) + "/{id}", HttpMethod.PUT,
                 new HttpEntity<ScimUser>(joe, headers), ScimUser.class, joe.getId());
         ScimUser joe1 = response.getBody();
-        assertEquals(JOE, joe1.getUserName());
+        assertThat(joe1.getUserName()).isEqualTo(JOE);
 
-        assertEquals(joe.getId(), joe1.getId());
-        assertNull(joe1.getUserType()); // check that authorities was not
-        // updated
-
+        assertThat(joe1.getId()).isEqualTo(joe.getId());
+        assertThat(joe1.getUserType()).isNull(); // check that authorities was not updated
     }
 
     @Test
-    public void updateUserGroupsDoesNothing() {
+    void updateUserGroupsDoesNothing() {
         ResponseEntity<ScimUser> response = createUser(JOE, "Joe", "User", "joe@blah.com");
         ScimUser joe = response.getBody();
-        assertEquals(JOE, joe.getUserName());
-        assertEquals(NUM_DEFAULT_GROUPS_ON_STARTUP, joe.getGroups().size());
+        assertThat(joe.getUserName()).isEqualTo(JOE);
+        assertThat(joe.getGroups()).hasSize(NUM_DEFAULT_GROUPS_ON_STARTUP);
 
         joe.setGroups(Collections.singletonList(new ScimUser.Group(UUID.randomUUID().toString(), "uaa.admin")));
 
@@ -337,10 +331,10 @@ public class ScimUserEndpointsIntegrationTests {
         response = client.exchange(serverRunning.getUrl(userEndpoint) + "/{id}", HttpMethod.PUT,
                 new HttpEntity<ScimUser>(joe, headers), ScimUser.class, joe.getId());
         ScimUser joe1 = response.getBody();
-        assertEquals(JOE, joe1.getUserName());
+        assertThat(joe1.getUserName()).isEqualTo(JOE);
 
-        assertEquals(joe.getId(), joe1.getId());
-        assertEquals(NUM_DEFAULT_GROUPS_ON_STARTUP, joe1.getGroups().size());
+        assertThat(joe1.getId()).isEqualTo(joe.getId());
+        assertThat(joe1.getGroups()).hasSize(NUM_DEFAULT_GROUPS_ON_STARTUP);
     }
 
     // curl -v -H "Content-Type: application/json" -H "Accept: application/json"
@@ -348,7 +342,7 @@ public class ScimUserEndpointsIntegrationTests {
     // "{\"userName\":\"joe\",\"schemas\":[\"urn:scim:schemas:core:1.0\"]}"
     // http://localhost:8080/uaa/User
     @Test
-    public void createUserTwiceFails() {
+    void createUserTwiceFails() {
         ScimUser user = new ScimUser();
         user.setPassword("password");
         user.setUserName(JOEL);
@@ -359,18 +353,17 @@ public class ScimUserEndpointsIntegrationTests {
         ResponseEntity<Map> response = client.postForEntity(serverRunning.getUrl(userEndpoint), user, Map.class);
         @SuppressWarnings("unchecked")
         Map<String, String> joel = response.getBody();
-        assertEquals(JOEL, joel.get("userName"));
+        assertThat(joel).containsEntry("userName", JOEL);
 
         response = client.postForEntity(serverRunning.getUrl(userEndpoint), user, Map.class);
         @SuppressWarnings("unchecked")
         Map<String, String> error = response.getBody();
 
-        assertEquals("scim_resource_already_exists", error.get("error"));
-
+        assertThat(error).containsEntry("error", "scim_resource_already_exists");
     }
 
     @Test
-    public void createUserWithJustACaseChangeFails() {
+    void createUserWithJustACaseChangeFails() {
         String userName = JOEL;
         String userNameDifferenceCase = userName.toUpperCase();
 
@@ -384,7 +377,7 @@ public class ScimUserEndpointsIntegrationTests {
         ResponseEntity<Map> response = client.postForEntity(serverRunning.getUrl(userEndpoint), user, Map.class);
         @SuppressWarnings("unchecked")
         Map<String, String> joel = response.getBody();
-        assertEquals(JOEL, joel.get("userName"));
+        assertThat(joel).containsEntry("userName", JOEL);
 
         ScimUser userDifferentCase = new ScimUser();
         userDifferentCase.setPassword("password");
@@ -396,120 +389,120 @@ public class ScimUserEndpointsIntegrationTests {
         @SuppressWarnings("unchecked")
         Map<String, String> error = response.getBody();
 
-        assertEquals("scim_resource_already_exists", error.get("error"));
-
+        assertThat(error).containsEntry("error", "scim_resource_already_exists");
     }
 
     // curl -v -H "Content-Type: application/json" -H "Accept: application/json"
     // -X DELETE
     // -H "If-Match: 0" http://localhost:8080/uaa/User/joel
     @Test
-    public void deleteUserWithWrongIdFails() {
+    void deleteUserWithWrongIdFails() {
         @SuppressWarnings("rawtypes")
         ResponseEntity<Map> response = deleteUser("9999", 0);
         @SuppressWarnings("unchecked")
         Map<String, String> error = response.getBody();
-        assertEquals("scim_resource_not_found", error.get("error"));
-        assertEquals("User 9999 does not exist", error.get("message"));
-
+        assertThat(error)
+                .containsEntry("error", "scim_resource_not_found")
+                .containsEntry("message", "User 9999 does not exist");
     }
 
     // curl -v -H "Content-Type: application/json" -H "Accept: application/json"
     // -X DELETE
     // http://localhost:8080/uaa/User/joel
     @Test
-    public void deleteUserWithNoEtagSucceeds() {
+    void deleteUserWithNoEtagSucceeds() {
         ScimUser deleteMe = createUser(DELETE_ME, "Delete", "Me", "deleteme@blah.com").getBody();
 
         @SuppressWarnings("rawtypes")
         ResponseEntity<Map> response = client.exchange(serverRunning.getUrl(userEndpoint + "/{id}"), HttpMethod.DELETE,
                 new HttpEntity<Void>((Void) null), Map.class, deleteMe.getId());
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 
     @Test
-    public void getReturnsNotFoundForNonExistentUser() {
+    void getReturnsNotFoundForNonExistentUser() {
         @SuppressWarnings("rawtypes")
         ResponseEntity<Map> response = client.exchange(serverRunning.getUrl(userEndpoint + "/{id}"), HttpMethod.GET,
                 new HttpEntity<Void>((Void) null), Map.class, "9999");
         @SuppressWarnings("unchecked")
         Map<String, String> error = response.getBody();
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertEquals("scim_resource_not_found", error.get("error"));
-        assertEquals("User 9999 does not exist", error.get("message"));
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(error)
+                .containsEntry("error", "scim_resource_not_found")
+                .containsEntry("message", "User 9999 does not exist");
     }
 
     @Test
-    public void findUsers() {
+    void findUsers() {
         @SuppressWarnings("rawtypes")
         ResponseEntity<Map> response = serverRunning.getForObject(usersEndpoint, Map.class);
 
         @SuppressWarnings("rawtypes")
         Map results = response.getBody();
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertTrue("There should be more than zero users", (Integer) results.get("totalResults") > 0);
-        assertTrue("There should be some resources", !((Collection<?>) results.get("resources")).isEmpty());
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat((Integer) results.get("totalResults")).as("There should be more than zero users").isPositive();
+        assertThat(((Collection<?>) results.get("resources"))).as("There should be some resources").isNotEmpty();
         @SuppressWarnings("rawtypes")
         Map firstUser = (Map) ((List) results.get("resources")).get(0);
         // [cfid-111] All attributes should be returned if no attributes
         // supplied in query
-        assertTrue(firstUser.containsKey("id"));
-        assertTrue(firstUser.containsKey("userName"));
-        assertTrue(firstUser.containsKey("name"));
-        assertTrue(firstUser.containsKey("emails"));
-        assertTrue(firstUser.containsKey("groups"));
+        assertThat(firstUser).containsKey("id")
+                .containsKey("userName")
+                .containsKey("name")
+                .containsKey("emails")
+                .containsKey("groups");
     }
 
     @Test
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public void findUsersWithAttributes() {
+    void findUsersWithAttributes() {
         ResponseEntity<Map> response = serverRunning.getForObject(usersEndpoint + "?attributes=id,userName", Map.class);
         Map<String, Object> results = response.getBody();
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertTrue("There should be more than zero users", (Integer) results.get("totalResults") > 0);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat((Integer) results.get("totalResults")).as("There should be more than zero users").isPositive();
         Map firstUser = (Map) ((List) results.get("resources")).get(0);
         // All attributes should be returned if no attributes supplied in query
-        assertTrue(firstUser.containsKey("id"));
-        assertTrue(firstUser.containsKey("userName"));
-        assertFalse(firstUser.containsKey("name"));
-        assertFalse(firstUser.containsKey("emails"));
+        assertThat(firstUser).containsKey("id")
+                .containsKey("userName")
+                .doesNotContainKey("name")
+                .doesNotContainKey("emails");
     }
 
     @Test
-    public void findUsersWithSortBy() {
+    void findUsersWithSortBy() {
         @SuppressWarnings("rawtypes")
         ResponseEntity<Map> response = serverRunning.getForObject(usersEndpoint + "?sortBy=emails.value", Map.class);
         @SuppressWarnings("unchecked")
         Map<String, Object> results = response.getBody();
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertTrue("There should be more than zero users", (Integer) results.get("totalResults") > 0);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat((Integer) results.get("totalResults")).as("There should be more than zero users").isPositive();
     }
 
     @Test
-    public void findUsersWithPagination() {
+    void findUsersWithPagination() {
         @SuppressWarnings("rawtypes")
         ResponseEntity<Map> response = serverRunning.getForObject(usersEndpoint + "?startIndex=2&count=3", Map.class);
         @SuppressWarnings("unchecked")
         Map<String, Object> results = response.getBody();
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertTrue("There should be more than zero users", (Integer) results.get("totalResults") > 0);
-        assertEquals(2, results.get("startIndex"));
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat((Integer) results.get("totalResults")).as("There should be more than zero users").isPositive();
+        assertThat(results).containsEntry("startIndex", 2);
     }
 
-    @Before
-    public void setupScimUsers() {
+    @BeforeEach
+    void setupScimUsers() {
         scimUsers = new ArrayList<>();
     }
 
-    @After
-    public void teardownScimUsers() {
+    @AfterEach
+    void teardownScimUsers() {
         for (ScimUser scimUser : scimUsers) {
             deleteUser(scimUser.getId(), scimUser.getVersion());
         }
     }
 
     @Test
-    public void findUsersWithExtremePagination() {
+    void findUsersWithExtremePagination() {
         for (int i = 0; i < 501; i++) {
             ResponseEntity<ScimUser> scimUserResponseEntity = createUser(
                     new RandomValueStringGenerator().generate().toLowerCase(),
@@ -525,9 +518,10 @@ public class ScimUserEndpointsIntegrationTests {
                 .getForObject(usersEndpoint + "?startIndex=0&count=501", Map.class);
         @SuppressWarnings("unchecked")
         Map<String, Object> results = response.getBody();
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertThat((Integer) results.get("totalResults"), greaterThan(500));
-        assertThat(results.get("itemsPerPage"), is(500));
-        assertThat(results.get("startIndex"), is(1));
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat((Integer) results.get("totalResults")).isGreaterThan(500);
+        assertThat(results)
+                .containsEntry("itemsPerPage", 500)
+                .containsEntry("startIndex", 1);
     }
 }

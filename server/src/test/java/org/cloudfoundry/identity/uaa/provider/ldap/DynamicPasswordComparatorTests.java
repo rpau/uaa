@@ -15,12 +15,12 @@
 
 package org.cloudfoundry.identity.uaa.provider.ldap;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.util.AssertionErrors.fail;
 
-public class DynamicPasswordComparatorTests {
+class DynamicPasswordComparatorTests {
     private final DynamicPasswordComparator comparator = new DynamicPasswordComparator();
     private static final String[] passwords = {
             "test", //plaintext
@@ -42,11 +42,11 @@ public class DynamicPasswordComparatorTests {
     }
 
     @Test
-    public void testComparePasswords() {
+    void comparePasswords() {
         byte[] test = getBytes("test");
         for (String s : passwords) {
             try {
-                assertTrue("Password[" + s + "] should match 'test'", comparator.comparePasswords(test, getBytes(s)));
+                assertThat(comparator.comparePasswords(test, getBytes(s))).as("Password[" + s + "] should match 'test'").isTrue();
             } catch (Exception e) {
                 e.printStackTrace();
                 fail("Unsuccessful on password [" + s + "]");
@@ -55,7 +55,7 @@ public class DynamicPasswordComparatorTests {
     }
 
     @Test
-    public void testEncodePassword() {
+    void encodePassword() {
         try {
             comparator.encode("test");
             fail("Method and test not implemented yet.");
@@ -64,7 +64,7 @@ public class DynamicPasswordComparatorTests {
     }
 
     @Test
-    public void testIsPasswordValid() {
+    void isPasswordValid() {
         try {
             comparator.matches("test", "test");
             fail("Method and test not implemented yet.");

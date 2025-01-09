@@ -20,7 +20,6 @@ import org.cloudfoundry.identity.uaa.oauth.KeyInfoService;
 import org.cloudfoundry.identity.uaa.oauth.jwt.JwtClientAuthentication;
 import org.cloudfoundry.identity.uaa.provider.OIDCIdentityProviderDefinition;
 import org.cloudfoundry.identity.uaa.util.JsonUtils;
-import org.junit.Assert;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -38,13 +37,15 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 public class TestClient {
 
     private final RestTemplate restTemplate;
     private final String baseUrl;
 
     public TestClient(final RestTemplate restTemplate,
-            final String baseUrl) {
+                      final String baseUrl) {
         this.restTemplate = restTemplate;
         this.baseUrl = baseUrl;
     }
@@ -143,7 +144,7 @@ public class TestClient {
 
         HttpEntity<String> requestEntity = new HttpEntity<>(json, headers);
         ResponseEntity<Void> exchange = restTemplate.exchange(url, HttpMethod.POST, requestEntity, Void.class);
-        Assert.assertEquals(HttpStatus.CREATED, exchange.getStatusCode());
+        assertThat(exchange.getStatusCode()).isEqualTo(HttpStatus.CREATED);
     }
 
     public String extractLink(String messageBody) {

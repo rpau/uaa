@@ -2,9 +2,8 @@ package org.cloudfoundry.identity.uaa.ratelimiting.core.http;
 
 import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.ratelimiting.core.http.CredentialIdTypeJWTjsonField.SectionFieldJWT;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.when;
 
 class CredentialIdTypeJWTjsonFieldTest extends CredentialIdTypeAbstractTestJWT<CredentialIdTypeJWTjsonField> {
@@ -16,7 +15,7 @@ class CredentialIdTypeJWTjsonFieldTest extends CredentialIdTypeAbstractTestJWT<C
 
     @Test
     void key() {
-        assertEquals("JWTjsonField", credentialIdType.key());
+        assertThat(credentialIdType.key()).isEqualTo("JWTjsonField");
     }
 
     @Test
@@ -25,6 +24,6 @@ class CredentialIdTypeJWTjsonFieldTest extends CredentialIdTypeAbstractTestJWT<C
 
         AuthorizationCredentialIdExtractor factory = credentialIdType.factory(EMAIL_FROM_CLAIMS);
         when(requestInfo.getAuthorizationHeader()).thenReturn(null);
-        assertNull(factory.mapAuthorizationToCredentialsID(requestInfo));
+        assertThat(factory.mapAuthorizationToCredentialsID(requestInfo)).isNull();
     }
 }

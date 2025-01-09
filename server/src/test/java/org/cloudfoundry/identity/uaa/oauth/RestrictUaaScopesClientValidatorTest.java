@@ -19,7 +19,7 @@ import org.cloudfoundry.identity.uaa.client.InvalidClientDetailsException;
 import org.cloudfoundry.identity.uaa.client.RestrictUaaScopesClientValidator;
 import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
 import org.cloudfoundry.identity.uaa.client.UaaScopes;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.util.Arrays;
@@ -27,20 +27,20 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.fail;
 import static org.cloudfoundry.identity.uaa.client.ClientDetailsValidator.Mode.CREATE;
 import static org.cloudfoundry.identity.uaa.client.ClientDetailsValidator.Mode.DELETE;
 import static org.cloudfoundry.identity.uaa.client.ClientDetailsValidator.Mode.MODIFY;
-import static org.junit.Assert.fail;
 
 
-public class RestrictUaaScopesClientValidatorTest {
+class RestrictUaaScopesClientValidatorTest {
 
     List<String> goodScopes = Arrays.asList("openid", "uaa.resource", "uaa.none");
     List<String> badScopes = new UaaScopes().getUaaScopes();
     RestrictUaaScopesClientValidator validator = new RestrictUaaScopesClientValidator(new UaaScopes());
 
     @Test
-    public void testValidate() {
+    void validate() {
         List<ClientDetailsValidator.Mode> restrictModes = Arrays.asList(CREATE, MODIFY);
         List<ClientDetailsValidator.Mode> nonRestrictModes = Collections.singletonList(DELETE);
         UaaClientDetails client = new UaaClientDetails("clientId", "", "", "client_credentials,password", "");
@@ -83,7 +83,5 @@ public class RestrictUaaScopesClientValidatorTest {
                 fail("Scope:" + s + " should be valid during " + m + " mode.");
             }
         }
-    }
-
-
+  }
 }

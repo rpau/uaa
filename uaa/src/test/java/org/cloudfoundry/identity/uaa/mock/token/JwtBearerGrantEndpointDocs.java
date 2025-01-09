@@ -15,7 +15,6 @@
 
 package org.cloudfoundry.identity.uaa.mock.token;
 
-
 import org.cloudfoundry.identity.uaa.test.JUnitRestDocumentationExtension;
 import org.cloudfoundry.identity.uaa.test.TestClient;
 import org.cloudfoundry.identity.uaa.zone.IdentityZone;

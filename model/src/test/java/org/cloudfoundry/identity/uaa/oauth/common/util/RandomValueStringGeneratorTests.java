@@ -1,76 +1,72 @@
 package org.cloudfoundry.identity.uaa.oauth.common.util;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.security.SecureRandom;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-public class RandomValueStringGeneratorTests {
+class RandomValueStringGeneratorTests {
 
     private RandomValueStringGenerator generator;
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         generator = new RandomValueStringGenerator();
     }
 
     @Test
-    public void generate() {
+    void generate() {
         String value = generator.generate();
-        assertNotNull(value);
-        assertEquals("Authorization code is not correct size", 6, value.length());
+        assertThat(value).as("Authorization code is not correct size").hasSize(6);
     }
 
     @Test
-    public void generate_LargeLengthOnConstructor() {
+    void generate_LargeLengthOnConstructor() {
         generator = new RandomValueStringGenerator(1024);
         String value = generator.generate();
-        assertNotNull(value);
-        assertEquals("Authorization code is not correct size", 1024, value.length());
+        assertThat(value).as("Authorization code is not correct size").hasSize(1024);
     }
 
     @Test
-    public void getAuthorizationCodeString() {
+    void getAuthorizationCodeString() {
         byte[] bytes = new byte[10];
         new SecureRandom().nextBytes(bytes);
         String value = generator.getAuthorizationCodeString(bytes);
-        assertNotNull(value);
-        assertEquals("Authorization code is not correct size", 10, value.length());
+        assertThat(value).as("Authorization code is not correct size").hasSize(10);
     }
 
     @Test
-    public void setLength() {
+    void setLength() {
         generator.setLength(12);
         String value = generator.generate();
-        assertEquals("Authorization code is not correct size", 12, value.length());
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void setLength_NonPositiveNumber() {
-        generator.setLength(-1);
-        generator.generate();
+        assertThat(value).as("Authorization code is not correct size").hasSize(12);
     }
 
     @Test
-    public void setRandom() {
+    void setLength_NonPositiveNumber() {
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() ->
+                generator.setLength(-1));
+    }
+
+    @Test
+    void setRandom() {
         generator.setRandom(new SecureRandom());
         generator.setLength(12);
         String value = generator.generate();
-        assertEquals("Authorization code is not correct size", 12, value.length());
+        assertThat(value).as("Authorization code is not correct size").hasSize(12);
     }
 
     @Test
-    public void setCodec() {
+    void setCodec() {
         generator = new RandomValueStringGenerator("0123456789".toCharArray());
         String value = generator.generate();
-        assertFalse(value.contains("A"));
+        assertThat(value).doesNotContain("A");
     }
 }

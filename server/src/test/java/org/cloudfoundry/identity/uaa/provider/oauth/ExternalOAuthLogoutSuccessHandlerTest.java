@@ -59,7 +59,7 @@ class ExternalOAuthLogoutSuccessHandlerTest {
     private IdentityZoneManager identityZoneManager;
 
     @BeforeEach
-    public void setUp() throws MalformedURLException {
+    void setUp() throws MalformedURLException {
         IdentityZone uaaZone = IdentityZone.getUaa();
         original = IdentityZone.getUaa().getConfig();
         configuration.getLinks().getLogout()
@@ -89,7 +89,7 @@ class ExternalOAuthLogoutSuccessHandlerTest {
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         IdentityZoneHolder.clear();
         IdentityZone.getUaa().setConfig(original);
         SecurityContextHolder.clearContext();

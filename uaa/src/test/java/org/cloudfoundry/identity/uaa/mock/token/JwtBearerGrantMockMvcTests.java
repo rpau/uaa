@@ -21,6 +21,8 @@ import org.cloudfoundry.identity.uaa.constants.OriginKeys;
 import org.cloudfoundry.identity.uaa.mock.util.JwtTokenUtils;
 import org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils;
 import org.cloudfoundry.identity.uaa.oauth.KeyInfoService;
+import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
+import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetails;
 import org.cloudfoundry.identity.uaa.oauth.token.TokenConstants;
 import org.cloudfoundry.identity.uaa.provider.IdentityProvider;
 import org.cloudfoundry.identity.uaa.provider.JdbcIdentityProviderProvisioning;
@@ -37,8 +39,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
-import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetails;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
@@ -46,9 +46,9 @@ import java.net.URL;
 import java.util.List;
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.oauth.TokenTestSupport.GRANT_TYPE;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_JWT_BEARER;
-import static org.junit.Assert.assertEquals;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_REFRESH_TOKEN;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -65,7 +65,7 @@ public class JwtBearerGrantMockMvcTests extends AbstractTokenMockMvcTests {
     ScimUser originUser;
 
     @BeforeEach
-    public void setupJwtBearerTests() throws Exception {
+    void setupJwtBearerTests() throws Exception {
         originClient = new UaaClientDetails(generator.generate(), "", "openid", "password", null);
         originClient.setClientSecret(SECRET);
         String subdomain = generator.generate().toLowerCase();
@@ -74,7 +74,7 @@ public class JwtBearerGrantMockMvcTests extends AbstractTokenMockMvcTests {
     }
 
     @AfterEach
-    public void clearZoneHolder() {
+    void clearZoneHolder() {
         IdentityZoneHolder.clear();
     }
 
@@ -109,8 +109,8 @@ public class JwtBearerGrantMockMvcTests extends AbstractTokenMockMvcTests {
 
         //Verify JWT Bearer did not change values of internal User
         ScimUser targetUserAfterGrant = getScimUser(targetZoneUser.getUserName(), OriginKeys.UAA, targetZone.getId());
-        assertEquals(targetZoneUser.getUserName(), targetUserAfterGrant.getUserName());
-        assertEquals(targetZoneUser.getExternalId(), targetUserAfterGrant.getExternalId());
+        assertThat(targetUserAfterGrant.getUserName()).isEqualTo(targetZoneUser.getUserName());
+        assertThat(targetUserAfterGrant.getExternalId()).isEqualTo(targetZoneUser.getExternalId());
 
         //Check for user of registered IdP
         String originZoneIdToken = getUaaIdToken(originZone.getIdentityZone(), originClient, originUser);
@@ -119,16 +119,16 @@ public class JwtBearerGrantMockMvcTests extends AbstractTokenMockMvcTests {
 
         //Verify values for new shadow user set
         ScimUser shadowUser = getScimUser(originUser.getEmails().get(0).getValue(), originZoneOriginKey, targetZone.getId());
-        assertEquals(shadowUser.getUserName(), originUserClaims.get("user_name"));
-        assertEquals(shadowUser.getExternalId(), originUser.getId());
+        assertThat(originUserClaims).containsEntry("user_name", shadowUser.getUserName());
+        assertThat(originUser.getId()).isEqualTo(shadowUser.getExternalId());
 
         //JWT Bearer with token from target Zone and external User
         performJWTBearerGrantForJWT(targetZone, accessTokenForOriginZoneUser);
 
         //Verify username and External ID not changed after this internal grant
         ScimUser shadowUserAfterExchange = getScimUser(originUser.getEmails().get(0).getValue(), originZoneOriginKey, targetZone.getId());
-        assertEquals(shadowUser.getUserName(), shadowUserAfterExchange.getUserName());
-        assertEquals(shadowUser.getExternalId(), shadowUserAfterExchange.getExternalId());
+        assertThat(shadowUserAfterExchange.getUserName()).isEqualTo(shadowUser.getUserName());
+        assertThat(shadowUserAfterExchange.getExternalId()).isEqualTo(shadowUser.getExternalId());
     }
 
     @Test
@@ -156,16 +156,17 @@ public class JwtBearerGrantMockMvcTests extends AbstractTokenMockMvcTests {
 
         //Verify shadow user of same-zone Idp created
         ScimUser originShadowUser = getScimUser(targetZoneUser.getEmails().get(0).getValue(), originZoneOriginKey, targetZone.getId());
-        assertEquals(originShadowUser.getUserName(), targetUserClaims.get("user_name"));
-        assertEquals(originShadowUser.getExternalId(), targetZoneUser.getId());
+        assertThat(targetUserClaims).containsEntry("user_name", originShadowUser.getUserName());
+        assertThat(targetZoneUser.getId()).isEqualTo(originShadowUser.getExternalId());
 
         //JWT Bearer with token from target Zone and shadow user of registered IdP (with same issuer)
         performJWTBearerGrantForJWT(targetZone, accessTokenForTargetZoneUser);
 
         //Verify username and External ID changed after this internal grant (as they are updated values of registered issuer)
         ScimUser originShadowUserAfterExchange = getScimUser(targetZoneUser.getEmails().get(0).getValue(), originZoneOriginKey, targetZone.getId());
-        assertEquals(originShadowUserAfterExchange.getUserName(), targetUserClaims.get("user_name"));
-        assertEquals(originShadowUserAfterExchange.getExternalId(), targetUserClaims.get("sub"));
+        assertThat(targetUserClaims)
+                .containsEntry("user_name", originShadowUserAfterExchange.getUserName())
+                .containsEntry("sub", originShadowUserAfterExchange.getExternalId());
     }
 
     @Test
@@ -329,7 +330,7 @@ public class JwtBearerGrantMockMvcTests extends AbstractTokenMockMvcTests {
         ScimUserProvisioning scimUserProvisioning = webApplicationContext.getBean(ScimUserProvisioning.class);
 
         List<ScimUser> scimUsers = scimUserProvisioning.retrieveByUsernameAndOriginAndZone(username, origin, zoneId);
-        assertEquals(1, scimUsers.size());
+        assertThat(scimUsers).hasSize(1);
         return scimUsers.get(0);
     }
 

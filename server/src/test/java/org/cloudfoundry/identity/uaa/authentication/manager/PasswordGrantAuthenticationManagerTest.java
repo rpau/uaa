@@ -66,10 +66,19 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import static org.hamcrest.Matchers.startsWith;
-import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.fail;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 @ExtendWith(PollutionPreventionExtension.class)
@@ -141,7 +150,7 @@ class PasswordGrantAuthenticationManagerTest {
     }
 
     @Test
-    void testPasswordGrantNoLoginHint() {
+    void passwordGrantNoLoginHint() {
         Authentication auth = mock(Authentication.class);
 
         instance.authenticate(auth);
@@ -152,7 +161,7 @@ class PasswordGrantAuthenticationManagerTest {
     }
 
     @Test
-    void testUaaPasswordGrant() {
+    void uaaPasswordGrant() {
         UaaLoginHint loginHint = mock(UaaLoginHint.class);
         when(loginHint.getOrigin()).thenReturn("uaa");
         Authentication auth = mock(Authentication.class);
@@ -164,7 +173,7 @@ class PasswordGrantAuthenticationManagerTest {
     }
 
     @Test
-    void testOIDCPasswordGrant() {
+    void oidcPasswordGrant() {
         UaaLoginHint loginHint = mock(UaaLoginHint.class);
         when(loginHint.getOrigin()).thenReturn("oidcprovider");
         Authentication auth = mock(Authentication.class);
@@ -183,7 +192,7 @@ class PasswordGrantAuthenticationManagerTest {
         instance.authenticate(auth);
 
         ArgumentCaptor<HttpEntity> httpEntityArgumentCaptor = ArgumentCaptor.forClass(HttpEntity.class);
-        verify(rt, times(1)).exchange(eq("http://localhost:8080/uaa/oauth/token"), eq(HttpMethod.POST), httpEntityArgumentCaptor.capture(), eq(new ParameterizedTypeReference<Map<String, String>>(){
+        verify(rt, times(1)).exchange(eq("http://localhost:8080/uaa/oauth/token"), eq(HttpMethod.POST), httpEntityArgumentCaptor.capture(), eq(new ParameterizedTypeReference<Map<String, String>>() {
         }));
         ArgumentCaptor<ExternalOAuthCodeToken> tokenArgumentCaptor = ArgumentCaptor.forClass(ExternalOAuthCodeToken.class);
         verify(externalOAuthAuthenticationManager, times(1)).authenticate(tokenArgumentCaptor.capture());
@@ -192,29 +201,29 @@ class PasswordGrantAuthenticationManagerTest {
         verify(identityProviderProvisioning, times(0)).retrieveActive(any());
 
         HttpEntity httpEntity = httpEntityArgumentCaptor.getValue();
-        assertNotNull(httpEntity);
-        assertTrue(httpEntity.hasBody());
-        assertTrue(httpEntity.getBody() instanceof MultiValueMap);
+        assertThat(httpEntity).isNotNull();
+        assertThat(httpEntity.hasBody()).isTrue();
+        assertThat(httpEntity.getBody()).isInstanceOf(MultiValueMap.class);
         MultiValueMap<String, String> body = (MultiValueMap<String, String>) httpEntity.getBody();
-        assertEquals(4, body.size());
-        assertEquals(Collections.singletonList("password"), body.get("grant_type"));
-        assertEquals(Collections.singletonList("id_token"), body.get("response_type"));
-        assertEquals(Collections.singletonList("marissa"), body.get("username"));
-        assertEquals(Collections.singletonList("koala"), body.get("password"));
+        assertThat(body).hasSize(4)
+                .containsEntry("grant_type", Collections.singletonList("password"))
+                .containsEntry("response_type", Collections.singletonList("id_token"))
+                .containsEntry("username", Collections.singletonList("marissa"))
+                .containsEntry("password", Collections.singletonList("koala"));
 
         HttpHeaders headers = httpEntity.getHeaders();
-        assertEquals(Collections.singletonList(APPLICATION_JSON), headers.getAccept());
-        assertEquals(MediaType.APPLICATION_FORM_URLENCODED, headers.getContentType());
-        assertNotNull(headers.get("Authorization"));
-        assertEquals(1, headers.get("Authorization").size());
-        assertThat(headers.get("Authorization").get(0), startsWith("Basic "));
-        assertNull(headers.get("X-Forwarded-For"));
+        assertThat(headers.getAccept()).isEqualTo(Collections.singletonList(APPLICATION_JSON));
+        assertThat(headers.getContentType()).isEqualTo(MediaType.APPLICATION_FORM_URLENCODED);
+        assertThat(headers).containsKey("Authorization");
+        assertThat(headers.get("Authorization")).hasSize(1);
+        assertThat(headers.get("Authorization").get(0)).startsWith("Basic ");
+        assertThat(headers).doesNotContainKey("X-Forwarded-For");
 
-        assertEquals("mytoken", tokenArgumentCaptor.getValue().getIdToken());
+        assertThat(tokenArgumentCaptor.getValue().getIdToken()).isEqualTo("mytoken");
     }
 
     @Test
-    void testOIDCPasswordGrantWithForwardHeader() {
+    void oidcPasswordGrantWithForwardHeader() {
         UaaLoginHint loginHint = mock(UaaLoginHint.class);
         when(loginHint.getOrigin()).thenReturn("oidcprovider");
         Authentication auth = mock(Authentication.class);
@@ -238,7 +247,7 @@ class PasswordGrantAuthenticationManagerTest {
         instance.authenticate(auth);
 
         ArgumentCaptor<HttpEntity> httpEntityArgumentCaptor = ArgumentCaptor.forClass(HttpEntity.class);
-        verify(rt, times(1)).exchange(eq("http://localhost:8080/uaa/oauth/token"), eq(HttpMethod.POST), httpEntityArgumentCaptor.capture(), eq(new ParameterizedTypeReference<Map<String, String>>(){
+        verify(rt, times(1)).exchange(eq("http://localhost:8080/uaa/oauth/token"), eq(HttpMethod.POST), httpEntityArgumentCaptor.capture(), eq(new ParameterizedTypeReference<Map<String, String>>() {
         }));
         ArgumentCaptor<ExternalOAuthCodeToken> tokenArgumentCaptor = ArgumentCaptor.forClass(ExternalOAuthCodeToken.class);
         verify(externalOAuthAuthenticationManager, times(1)).authenticate(tokenArgumentCaptor.capture());
@@ -247,31 +256,31 @@ class PasswordGrantAuthenticationManagerTest {
         verify(identityProviderProvisioning, times(0)).retrieveActive(any());
 
         HttpEntity httpEntity = httpEntityArgumentCaptor.getValue();
-        assertNotNull(httpEntity);
-        assertTrue(httpEntity.hasBody());
-        assertTrue(httpEntity.getBody() instanceof MultiValueMap);
+        assertThat(httpEntity).isNotNull();
+        assertThat(httpEntity.hasBody()).isTrue();
+        assertThat(httpEntity.getBody()).isInstanceOf(MultiValueMap.class);
         MultiValueMap<String, String> body = (MultiValueMap<String, String>) httpEntity.getBody();
-        assertEquals(4, body.size());
-        assertEquals(Collections.singletonList("password"), body.get("grant_type"));
-        assertEquals(Collections.singletonList("id_token"), body.get("response_type"));
-        assertEquals(Collections.singletonList("marissa"), body.get("username"));
-        assertEquals(Collections.singletonList("koala"), body.get("password"));
+        assertThat(body).hasSize(4)
+                .containsEntry("grant_type", Collections.singletonList("password"))
+                .containsEntry("response_type", Collections.singletonList("id_token"))
+                .containsEntry("username", Collections.singletonList("marissa"))
+                .containsEntry("password", Collections.singletonList("koala"));
 
         HttpHeaders headers = httpEntity.getHeaders();
-        assertEquals(Collections.singletonList(APPLICATION_JSON), headers.getAccept());
-        assertEquals(MediaType.APPLICATION_FORM_URLENCODED, headers.getContentType());
-        assertNotNull(headers.get("Authorization"));
-        assertEquals(1, headers.get("Authorization").size());
-        assertThat(headers.get("Authorization").get(0), startsWith("Basic "));
-        assertNotNull(headers.get("X-Forwarded-For"));
-        assertEquals(1, headers.get("X-Forwarded-For").size());
-        assertEquals("203.0.113.1", headers.get("X-Forwarded-For").get(0));
+        assertThat(headers.getAccept()).isEqualTo(Collections.singletonList(APPLICATION_JSON));
+        assertThat(headers.getContentType()).isEqualTo(MediaType.APPLICATION_FORM_URLENCODED);
+        assertThat(headers).containsKey("Authorization");
+        assertThat(headers.get("Authorization")).hasSize(1);
+        assertThat(headers.get("Authorization").get(0)).startsWith("Basic ");
+        assertThat(headers).containsKey("X-Forwarded-For");
+        assertThat(headers.get("X-Forwarded-For")).hasSize(1);
+        assertThat(headers.get("X-Forwarded-For").get(0)).isEqualTo("203.0.113.1");
 
-        assertEquals("mytoken", tokenArgumentCaptor.getValue().getIdToken());
+        assertThat(tokenArgumentCaptor.getValue().getIdToken()).isEqualTo("mytoken");
     }
 
     @Test
-    void testOIDCPasswordGrantInvalidLogin() {
+    void oidcPasswordGrantInvalidLogin() {
         UaaLoginHint loginHint = mock(UaaLoginHint.class);
         when(loginHint.getOrigin()).thenReturn("oidcprovider");
         Authentication auth = mock(Authentication.class);
@@ -297,12 +306,12 @@ class PasswordGrantAuthenticationManagerTest {
         ArgumentCaptor<AbstractUaaEvent> eventArgumentCaptor = ArgumentCaptor.forClass(AbstractUaaEvent.class);
         verify(eventPublisher, times(1)).publishEvent(eventArgumentCaptor.capture());
 
-        assertEquals(1, eventArgumentCaptor.getAllValues().size());
-        assertTrue(eventArgumentCaptor.getValue() instanceof IdentityProviderAuthenticationFailureEvent);
+        assertThat(eventArgumentCaptor.getAllValues()).hasSize(1);
+        assertThat(eventArgumentCaptor.getValue()).isInstanceOf(IdentityProviderAuthenticationFailureEvent.class);
     }
 
     @Test
-    void testOIDCPasswordGrantProviderNotFound() {
+    void oidcPasswordGrantProviderNotFound() {
         UaaLoginHint loginHint = mock(UaaLoginHint.class);
         when(loginHint.getOrigin()).thenReturn("oidcprovider2");
         Authentication auth = mock(Authentication.class);
@@ -310,14 +319,14 @@ class PasswordGrantAuthenticationManagerTest {
 
         try {
             instance.authenticate(auth);
-            fail();
+            fail("");
         } catch (ProviderConfigurationException e) {
-            assertEquals("The origin provided in the login_hint does not match an active Identity Provider, that supports password grant.", e.getMessage());
+            assertThat(e.getMessage()).isEqualTo("The origin provided in the login_hint does not match an active Identity Provider, that supports password grant.");
         }
     }
 
     @Test
-    void testOIDCPasswordGrantProviderNotFoundInDB() {
+    void oidcPasswordGrantProviderNotFoundInDB() {
         UaaLoginHint loginHint = mock(UaaLoginHint.class);
         when(loginHint.getOrigin()).thenReturn("oidcprovider2");
         Authentication auth = mock(Authentication.class);
@@ -326,14 +335,14 @@ class PasswordGrantAuthenticationManagerTest {
 
         try {
             instance.authenticate(auth);
-            fail();
+            fail("");
         } catch (ProviderConfigurationException e) {
-            assertEquals("The origin provided in the login_hint does not match an active Identity Provider, that supports password grant.", e.getMessage());
+            assertThat(e.getMessage()).isEqualTo("The origin provided in the login_hint does not match an active Identity Provider, that supports password grant.");
         }
     }
 
     @Test
-    void testOIDCPasswordGrantProviderTypeNotOidc() {
+    void oidcPasswordGrantProviderTypeNotOidc() {
         IdentityProvider localIdp = mock(IdentityProvider.class);
         OIDCIdentityProviderDefinition idpConfig = mock(OIDCIdentityProviderDefinition.class);
         when(localIdp.getOriginKey()).thenReturn("oidcprovider");
@@ -350,14 +359,14 @@ class PasswordGrantAuthenticationManagerTest {
 
         try {
             instance.authenticate(auth);
-            fail();
+            fail("");
         } catch (ProviderConfigurationException e) {
-            assertEquals("The origin provided in the login_hint does not match an active Identity Provider, that supports password grant.", e.getMessage());
+            assertThat(e.getMessage()).isEqualTo("The origin provided in the login_hint does not match an active Identity Provider, that supports password grant.");
         }
     }
 
     @Test
-    void testOIDCPasswordGrantProviderDoesNotSupportPassword() {
+    void oidcPasswordGrantProviderDoesNotSupportPassword() {
         IdentityProvider localIdp = mock(IdentityProvider.class);
         OIDCIdentityProviderDefinition idpConfig = mock(OIDCIdentityProviderDefinition.class);
         when(localIdp.getOriginKey()).thenReturn("oidcprovider");
@@ -375,14 +384,14 @@ class PasswordGrantAuthenticationManagerTest {
 
         try {
             instance.authenticate(auth);
-            fail();
+            fail("");
         } catch (ProviderConfigurationException e) {
-            assertEquals("The origin provided in the login_hint does not match an active Identity Provider, that supports password grant.", e.getMessage());
+            assertThat(e.getMessage()).isEqualTo("The origin provided in the login_hint does not match an active Identity Provider, that supports password grant.");
         }
     }
 
     @Test
-    void testOIDCPasswordGrantProviderNoRelyingPartyCredentials() {
+    void oidcPasswordGrantProviderNoRelyingPartyCredentials() {
         IdentityProvider localIdp = mock(IdentityProvider.class);
         OIDCIdentityProviderDefinition idpConfig = mock(OIDCIdentityProviderDefinition.class);
         when(localIdp.getOriginKey()).thenReturn("oidcprovider");
@@ -400,14 +409,14 @@ class PasswordGrantAuthenticationManagerTest {
 
         try {
             instance.authenticate(auth);
-            fail();
+            fail("");
         } catch (ProviderConfigurationException e) {
-            assertEquals("External OpenID Connect provider configuration is missing relyingPartyId.", e.getMessage());
+            assertThat(e.getMessage()).isEqualTo("External OpenID Connect provider configuration is missing relyingPartyId.");
         }
     }
 
     @Test
-    void testOIDCPasswordGrantProviderJwtClientCredentials() throws ParseException, JOSEException {
+    void oidcPasswordGrantProviderJwtClientCredentials() throws ParseException, JOSEException {
         // Given
         mockKeyInfoService();
         /* mock idp config using jwt client authentication */
@@ -424,24 +433,24 @@ class PasswordGrantAuthenticationManagerTest {
         ArgumentCaptor<HttpEntity> httpEntityArgumentCaptor = ArgumentCaptor.forClass(HttpEntity.class);
 
         // Then
-        verify(rt, times(1)).exchange(eq("http://localhost:8080/uaa/oauth/token"), eq(HttpMethod.POST), httpEntityArgumentCaptor.capture(), eq(new ParameterizedTypeReference<Map<String, String>>(){
+        verify(rt, times(1)).exchange(eq("http://localhost:8080/uaa/oauth/token"), eq(HttpMethod.POST), httpEntityArgumentCaptor.capture(), eq(new ParameterizedTypeReference<Map<String, String>>() {
         }));
         HttpEntity httpEntity = httpEntityArgumentCaptor.getValue();
         LinkedMultiValueMap<String, Object> httpEntityBody = (LinkedMultiValueMap) httpEntity.getBody();
-        assertTrue(httpEntityBody.containsKey("client_assertion"));
-        assertTrue(httpEntityBody.containsKey("client_assertion_type"));
-        assertEquals(Collections.singletonList(JwtClientAuthentication.GRANT_TYPE), httpEntityBody.get("client_assertion_type"));
-        assertTrue(httpEntityBody.containsKey("scope"));
-        assertEquals(Collections.singletonList("openid email"), httpEntityBody.get("scope"));
+        assertThat(httpEntityBody).containsKey("client_assertion")
+                .containsKey("client_assertion_type")
+                .containsEntry("client_assertion_type", Collections.singletonList(JwtClientAuthentication.GRANT_TYPE))
+                .containsKey("scope")
+                .containsEntry("scope", Collections.singletonList("openid email"));
         /* verify client assertion according OIDC private_key_jwt */
         JWTClaimsSet jwtClaimsSet = JWTParser.parse((String) httpEntityBody.get("client_assertion").get(0)).getJWTClaimsSet();
-        assertEquals(Collections.singletonList("http://localhost:8080/uaa/oauth/token"), jwtClaimsSet.getAudience());
-        assertEquals("identity", jwtClaimsSet.getSubject());
-        assertEquals("identity", jwtClaimsSet.getIssuer());
+        assertThat(jwtClaimsSet.getAudience()).isEqualTo(Collections.singletonList("http://localhost:8080/uaa/oauth/token"));
+        assertThat(jwtClaimsSet.getSubject()).isEqualTo("identity");
+        assertThat(jwtClaimsSet.getIssuer()).isEqualTo("identity");
     }
 
     @Test
-    void testOIDCPasswordGrantNoUserCredentials() {
+    void oidcPasswordGrantNoUserCredentials() {
         UaaLoginHint loginHint = mock(UaaLoginHint.class);
         when(loginHint.getOrigin()).thenReturn("oidcprovider");
         Authentication auth = mock(Authentication.class);
@@ -449,14 +458,14 @@ class PasswordGrantAuthenticationManagerTest {
 
         try {
             instance.authenticate(auth);
-            fail();
+            fail("");
         } catch (BadCredentialsException e) {
-            assertEquals("Request is missing username or password.", e.getMessage());
+            assertThat(e.getMessage()).isEqualTo("Request is missing username or password.");
         }
     }
 
     @Test
-    void testOIDCPasswordGrantNoBody() {
+    void oidcPasswordGrantNoBody() {
         UaaLoginHint loginHint = mock(UaaLoginHint.class);
         when(loginHint.getOrigin()).thenReturn("oidcprovider");
         Authentication auth = mock(Authentication.class);
@@ -473,14 +482,14 @@ class PasswordGrantAuthenticationManagerTest {
 
         try {
             instance.authenticate(auth);
-            fail();
+            fail("");
         } catch (BadCredentialsException e) {
-            assertEquals("Could not obtain id_token from external OpenID Connect provider.", e.getMessage());
+            assertThat(e.getMessage()).isEqualTo("Could not obtain id_token from external OpenID Connect provider.");
         }
     }
 
     @Test
-    void testOIDCPasswordGrantNoIdToken() {
+    void oidcPasswordGrantNoIdToken() {
         UaaLoginHint loginHint = mock(UaaLoginHint.class);
         when(loginHint.getOrigin()).thenReturn("oidcprovider");
         Authentication auth = mock(Authentication.class);
@@ -498,14 +507,14 @@ class PasswordGrantAuthenticationManagerTest {
 
         try {
             instance.authenticate(auth);
-            fail();
+            fail("");
         } catch (BadCredentialsException e) {
-            assertEquals("Could not obtain id_token from external OpenID Connect provider.", e.getMessage());
+            assertThat(e.getMessage()).isEqualTo("Could not obtain id_token from external OpenID Connect provider.");
         }
     }
 
     @Test
-    void testOIDCPasswordGrantWithPrompts() {
+    void oidcPasswordGrantWithPrompts() {
         UaaLoginHint loginHint = mock(UaaLoginHint.class);
         when(loginHint.getOrigin()).thenReturn("oidcprovider");
         Authentication auth = mock(Authentication.class);
@@ -542,7 +551,7 @@ class PasswordGrantAuthenticationManagerTest {
         instance.authenticate(auth);
 
         ArgumentCaptor<HttpEntity> httpEntityArgumentCaptor = ArgumentCaptor.forClass(HttpEntity.class);
-        verify(rt, times(1)).exchange(eq("http://localhost:8080/uaa/oauth/token"), eq(HttpMethod.POST), httpEntityArgumentCaptor.capture(), eq(new ParameterizedTypeReference<Map<String, String>>(){
+        verify(rt, times(1)).exchange(eq("http://localhost:8080/uaa/oauth/token"), eq(HttpMethod.POST), httpEntityArgumentCaptor.capture(), eq(new ParameterizedTypeReference<Map<String, String>>() {
         }));
         ArgumentCaptor<ExternalOAuthCodeToken> tokenArgumentCaptor = ArgumentCaptor.forClass(ExternalOAuthCodeToken.class);
         verify(externalOAuthAuthenticationManager, times(1)).authenticate(tokenArgumentCaptor.capture());
@@ -551,33 +560,33 @@ class PasswordGrantAuthenticationManagerTest {
         verify(identityProviderProvisioning, times(0)).retrieveActive(any());
 
         HttpEntity httpEntity = httpEntityArgumentCaptor.getValue();
-        assertNotNull(httpEntity);
-        assertTrue(httpEntity.hasBody());
-        assertTrue(httpEntity.getBody() instanceof MultiValueMap);
+        assertThat(httpEntity).isNotNull();
+        assertThat(httpEntity.hasBody()).isTrue();
+        assertThat(httpEntity.getBody()).isInstanceOf(MultiValueMap.class);
         MultiValueMap<String, String> body = (MultiValueMap<String, String>) httpEntity.getBody();
-        assertEquals(4, body.size());
-        assertEquals(Collections.singletonList("password"), body.get("grant_type"));
-        assertEquals(Collections.singletonList("id_token"), body.get("response_type"));
-        assertEquals(Collections.singletonList("marissa"), body.get("username"));
-        assertEquals(Collections.singletonList("koala"), body.get("password"));
-        assertNull(body.get("passcode"));
-        assertNull(body.get("multivalue"));
-        assertNull(body.get("emptyvalue"));
-        assertNull(body.get("emptystring"));
-        assertNull(body.get("missingvalue"));
+        assertThat(body).hasSize(4)
+                .containsEntry("grant_type", Collections.singletonList("password"))
+                .containsEntry("response_type", Collections.singletonList("id_token"))
+                .containsEntry("username", Collections.singletonList("marissa"))
+                .containsEntry("password", Collections.singletonList("koala"))
+                .doesNotContainKey("passcode")
+                .doesNotContainKey("multivalue")
+                .doesNotContainKey("emptyvalue")
+                .doesNotContainKey("emptystring")
+                .doesNotContainKey("missingvalue");
 
         HttpHeaders headers = httpEntity.getHeaders();
-        assertEquals(Collections.singletonList(APPLICATION_JSON), headers.getAccept());
-        assertEquals(MediaType.APPLICATION_FORM_URLENCODED, headers.getContentType());
-        assertNotNull(headers.get("Authorization"));
-        assertEquals(1, headers.get("Authorization").size());
-        assertThat(headers.get("Authorization").get(0), startsWith("Basic "));
+        assertThat(headers.getAccept()).isEqualTo(Collections.singletonList(APPLICATION_JSON));
+        assertThat(headers.getContentType()).isEqualTo(MediaType.APPLICATION_FORM_URLENCODED);
+        assertThat(headers).containsKey("Authorization");
+        assertThat(headers.get("Authorization")).hasSize(1);
+        assertThat(headers.get("Authorization").get(0)).startsWith("Basic ");
 
-        assertEquals("mytoken", tokenArgumentCaptor.getValue().getIdToken());
+        assertThat(tokenArgumentCaptor.getValue().getIdToken()).isEqualTo("mytoken");
     }
 
     @Test
-    void testUaaPasswordGrant_allowedProvidersOnlyUaa() {
+    void uaaPasswordGrantAllowedProvidersOnlyUaa() {
         Authentication auth = mock(Authentication.class);
         when(zoneAwareAuthzAuthenticationManager.extractLoginHint(auth)).thenReturn(null);
         Map<String, Object> additionalInformation = new HashMap<>();
@@ -589,12 +598,12 @@ class PasswordGrantAuthenticationManagerTest {
         verify(zoneAwareAuthzAuthenticationManager, times(1)).authenticate(auth);
         ArgumentCaptor<UaaLoginHint> captor = ArgumentCaptor.forClass(UaaLoginHint.class);
         verify(zoneAwareAuthzAuthenticationManager, times(1)).setLoginHint(eq(auth), captor.capture());
-        assertNotNull(captor.getValue());
-        assertEquals("uaa", captor.getValue().getOrigin());
+        assertThat(captor.getValue()).isNotNull();
+        assertThat(captor.getValue().getOrigin()).isEqualTo("uaa");
     }
 
     @Test
-    void testUaaPasswordGrant_allowedProvidersOnlyLdap() {
+    void uaaPasswordGrantAllowedProvidersOnlyLdap() {
         Authentication auth = mock(Authentication.class);
         when(zoneAwareAuthzAuthenticationManager.extractLoginHint(auth)).thenReturn(null);
         Map<String, Object> additionalInformation = new HashMap<>();
@@ -606,12 +615,12 @@ class PasswordGrantAuthenticationManagerTest {
         verify(zoneAwareAuthzAuthenticationManager, times(1)).authenticate(auth);
         ArgumentCaptor<UaaLoginHint> captor = ArgumentCaptor.forClass(UaaLoginHint.class);
         verify(zoneAwareAuthzAuthenticationManager, times(1)).setLoginHint(eq(auth), captor.capture());
-        assertNotNull(captor.getValue());
-        assertEquals("ldap", captor.getValue().getOrigin());
+        assertThat(captor.getValue()).isNotNull();
+        assertThat(captor.getValue().getOrigin()).isEqualTo("ldap");
     }
 
     @Test
-    void testUaaPasswordGrant_allowedProvidersUaaAndLdap() {
+    void uaaPasswordGrantAllowedProvidersUaaAndLdap() {
         Authentication auth = mock(Authentication.class);
         when(zoneAwareAuthzAuthenticationManager.extractLoginHint(auth)).thenReturn(null);
         Map<String, Object> additionalInformation = new HashMap<>();
@@ -625,7 +634,7 @@ class PasswordGrantAuthenticationManagerTest {
     }
 
     @Test
-    void testUaaPasswordGrant_defaultProviderUaa() {
+    void uaaPasswordGrantDefaultProviderUaa() {
         Authentication auth = mock(Authentication.class);
         when(zoneAwareAuthzAuthenticationManager.extractLoginHint(auth)).thenReturn(null);
 
@@ -637,7 +646,7 @@ class PasswordGrantAuthenticationManagerTest {
 
     @ParameterizedTest
     @ValueSource(strings = {OriginKeys.UAA, OriginKeys.LDAP})
-    void testPasswordGrant_NoLoginHintWithDefaultUaaOrLdap(final String loginHintOrigin) {
+    void passwordGrantNoLoginHintWithDefaultUaaOrLdap(final String loginHintOrigin) {
         Authentication auth = mock(Authentication.class);
         when(zoneAwareAuthzAuthenticationManager.extractLoginHint(auth)).thenReturn(null);
         Map<String, Object> additionalInformation = new HashMap<>();
@@ -656,12 +665,12 @@ class PasswordGrantAuthenticationManagerTest {
         verify(zoneAwareAuthzAuthenticationManager, times(1)).authenticate(auth);
         ArgumentCaptor<UaaLoginHint> captor = ArgumentCaptor.forClass(UaaLoginHint.class);
         verify(zoneAwareAuthzAuthenticationManager, times(1)).setLoginHint(eq(auth), captor.capture());
-        assertNotNull(captor.getValue());
-        assertEquals(loginHintOrigin, captor.getValue().getOrigin());
+        assertThat(captor.getValue()).isNotNull();
+        assertThat(captor.getValue().getOrigin()).isEqualTo(loginHintOrigin);
     }
 
     @Test
-    void testOIDCPasswordGrant_NoLoginHintWithDefaultOIDC() {
+    void oidcPasswordGrantNoLoginHintWithDefaultOIDC() {
         IdentityZoneHolder.get().getConfig().setDefaultIdentityProvider("oidcprovider");
         Authentication auth = mock(Authentication.class);
         when(auth.getPrincipal()).thenReturn("marissa");
@@ -679,7 +688,7 @@ class PasswordGrantAuthenticationManagerTest {
         instance.authenticate(auth);
 
         ArgumentCaptor<HttpEntity> httpEntityArgumentCaptor = ArgumentCaptor.forClass(HttpEntity.class);
-        verify(rt, times(1)).exchange(eq("http://localhost:8080/uaa/oauth/token"), eq(HttpMethod.POST), httpEntityArgumentCaptor.capture(), eq(new ParameterizedTypeReference<Map<String, String>>(){
+        verify(rt, times(1)).exchange(eq("http://localhost:8080/uaa/oauth/token"), eq(HttpMethod.POST), httpEntityArgumentCaptor.capture(), eq(new ParameterizedTypeReference<Map<String, String>>() {
         }));
         ArgumentCaptor<ExternalOAuthCodeToken> tokenArgumentCaptor = ArgumentCaptor.forClass(ExternalOAuthCodeToken.class);
         verify(externalOAuthAuthenticationManager, times(1)).authenticate(tokenArgumentCaptor.capture());
@@ -688,28 +697,28 @@ class PasswordGrantAuthenticationManagerTest {
         verify(identityProviderProvisioning, times(0)).retrieveActive(any());
 
         HttpEntity httpEntity = httpEntityArgumentCaptor.getValue();
-        assertNotNull(httpEntity);
-        assertTrue(httpEntity.hasBody());
-        assertTrue(httpEntity.getBody() instanceof MultiValueMap);
+        assertThat(httpEntity).isNotNull();
+        assertThat(httpEntity.hasBody()).isTrue();
+        assertThat(httpEntity.getBody()).isInstanceOf(MultiValueMap.class);
         MultiValueMap<String, String> body = (MultiValueMap<String, String>) httpEntity.getBody();
-        assertEquals(4, body.size());
-        assertEquals(Collections.singletonList("password"), body.get("grant_type"));
-        assertEquals(Collections.singletonList("id_token"), body.get("response_type"));
-        assertEquals(Collections.singletonList("marissa"), body.get("username"));
-        assertEquals(Collections.singletonList("koala"), body.get("password"));
+        assertThat(body).hasSize(4)
+                .containsEntry("grant_type", Collections.singletonList("password"))
+                .containsEntry("response_type", Collections.singletonList("id_token"))
+                .containsEntry("username", Collections.singletonList("marissa"))
+                .containsEntry("password", Collections.singletonList("koala"));
 
         HttpHeaders headers = httpEntity.getHeaders();
-        assertEquals(Collections.singletonList(APPLICATION_JSON), headers.getAccept());
-        assertEquals(MediaType.APPLICATION_FORM_URLENCODED, headers.getContentType());
-        assertNotNull(headers.get("Authorization"));
-        assertEquals(1, headers.get("Authorization").size());
-        assertThat(headers.get("Authorization").get(0), startsWith("Basic "));
+        assertThat(headers.getAccept()).isEqualTo(Collections.singletonList(APPLICATION_JSON));
+        assertThat(headers.getContentType()).isEqualTo(MediaType.APPLICATION_FORM_URLENCODED);
+        assertThat(headers).containsKey("Authorization");
+        assertThat(headers.get("Authorization")).hasSize(1);
+        assertThat(headers.get("Authorization").get(0)).startsWith("Basic ");
 
-        assertEquals("mytoken", tokenArgumentCaptor.getValue().getIdToken());
+        assertThat(tokenArgumentCaptor.getValue().getIdToken()).isEqualTo("mytoken");
     }
 
     @Test
-    void testOIDCPasswordGrant_LoginHintOidcOverridesDefaultUaa() {
+    void oidcPasswordGrantLoginHintOidcOverridesDefaultUaa() {
         IdentityZoneHolder.get().getConfig().setDefaultIdentityProvider("uaa");
         UaaLoginHint loginHint = mock(UaaLoginHint.class);
         when(loginHint.getOrigin()).thenReturn("oidcprovider");
@@ -728,7 +737,7 @@ class PasswordGrantAuthenticationManagerTest {
 
         instance.authenticate(auth);
 
-        verify(rt, times(1)).exchange(eq("http://localhost:8080/uaa/oauth/token"), eq(HttpMethod.POST), any(HttpEntity.class), eq(new ParameterizedTypeReference<Map<String, String>>(){
+        verify(rt, times(1)).exchange(eq("http://localhost:8080/uaa/oauth/token"), eq(HttpMethod.POST), any(HttpEntity.class), eq(new ParameterizedTypeReference<Map<String, String>>() {
         }));
         verify(externalOAuthAuthenticationManager, times(1)).authenticate(any(ExternalOAuthCodeToken.class));
         verify(zoneAwareAuthzAuthenticationManager, times(0)).authenticate(any());
@@ -738,7 +747,7 @@ class PasswordGrantAuthenticationManagerTest {
 
     @ParameterizedTest
     @ValueSource(strings = {OriginKeys.UAA, OriginKeys.LDAP})
-    void testOIDCPasswordGrant_LoginHintUaaOrLdapOverridesDefaultOidc(final String loginHintOrigin) {
+    void oidcPasswordGrantLoginHintUaaOrLdapOverridesDefaultOidc(final String loginHintOrigin) {
         UaaLoginHint loginHint = mock(UaaLoginHint.class);
         when(loginHint.getOrigin()).thenReturn(loginHintOrigin);
         Authentication auth = mock(Authentication.class);
@@ -758,12 +767,12 @@ class PasswordGrantAuthenticationManagerTest {
         verify(zoneAwareAuthzAuthenticationManager, times(1)).authenticate(auth);
         ArgumentCaptor<UaaLoginHint> captor = ArgumentCaptor.forClass(UaaLoginHint.class);
         verify(zoneAwareAuthzAuthenticationManager, times(1)).setLoginHint(eq(auth), captor.capture());
-        assertNotNull(captor.getValue());
-        assertEquals(loginHintOrigin, captor.getValue().getOrigin());
+        assertThat(captor.getValue()).isNotNull();
+        assertThat(captor.getValue().getOrigin()).isEqualTo(loginHintOrigin);
     }
 
     @Test
-    void testOIDCPasswordGrant_NoLoginHintDefaultNotAllowedSingleIdpOIDC() {
+    void oidcPasswordGrantNoLoginHintDefaultNotAllowedSingleIdpOIDC() {
         IdentityZoneHolder.get().getConfig().setDefaultIdentityProvider("uaa");
         Authentication auth = mock(Authentication.class);
         when(auth.getPrincipal()).thenReturn("marissa");
@@ -781,7 +790,7 @@ class PasswordGrantAuthenticationManagerTest {
 
         instance.authenticate(auth);
 
-        verify(rt, times(1)).exchange(eq("http://localhost:8080/uaa/oauth/token"), eq(HttpMethod.POST), any(HttpEntity.class), eq(new ParameterizedTypeReference<Map<String, String>>(){
+        verify(rt, times(1)).exchange(eq("http://localhost:8080/uaa/oauth/token"), eq(HttpMethod.POST), any(HttpEntity.class), eq(new ParameterizedTypeReference<Map<String, String>>() {
         }));
         verify(externalOAuthAuthenticationManager, times(1)).authenticate(any(ExternalOAuthCodeToken.class));
         verify(zoneAwareAuthzAuthenticationManager, times(0)).authenticate(any());
@@ -790,7 +799,7 @@ class PasswordGrantAuthenticationManagerTest {
     }
 
     @Test
-    void testOIDCPasswordGrant_NoLoginHintDefaultNotAllowedSingleIdpDoesNotSupportPassword() {
+    void oidcPasswordGrantNoLoginHintDefaultNotAllowedSingleIdpDoesNotSupportPassword() {
         IdentityZoneHolder.get().getConfig().setDefaultIdentityProvider("uaa");
         Authentication auth = mock(Authentication.class);
         when(auth.getPrincipal()).thenReturn("marissa");
@@ -808,14 +817,14 @@ class PasswordGrantAuthenticationManagerTest {
 
         try {
             instance.authenticate(auth);
-            fail();
+            fail("");
         } catch (BadCredentialsException e) {
-            assertEquals("The client is not authorized for any identity provider that supports password grant.", e.getMessage());
+            assertThat(e.getMessage()).isEqualTo("The client is not authorized for any identity provider that supports password grant.");
         }
     }
 
     @Test
-    void testOIDCPasswordGrant_NoLoginHintDefaultNotAllowedSingleIdpUAA() {
+    void oidcPasswordGrantNoLoginHintDefaultNotAllowedSingleIdpUAA() {
         IdentityZoneHolder.get().getConfig().setDefaultIdentityProvider("oidcprovider");
         Authentication auth = mock(Authentication.class);
         when(zoneAwareAuthzAuthenticationManager.extractLoginHint(auth)).thenReturn(null);
@@ -827,12 +836,12 @@ class PasswordGrantAuthenticationManagerTest {
         verify(zoneAwareAuthzAuthenticationManager, times(1)).authenticate(auth);
         ArgumentCaptor<UaaLoginHint> captor = ArgumentCaptor.forClass(UaaLoginHint.class);
         verify(zoneAwareAuthzAuthenticationManager, times(1)).setLoginHint(eq(auth), captor.capture());
-        assertNotNull(captor.getValue());
-        assertEquals("uaa", captor.getValue().getOrigin());
+        assertThat(captor.getValue()).isNotNull();
+        assertThat(captor.getValue().getOrigin()).isEqualTo("uaa");
     }
 
     @Test
-    void testOIDCPasswordGrant_NoLoginHintDefaultNotAllowedChainedAuth() {
+    void oidcPasswordGrantNoLoginHintDefaultNotAllowedChainedAuth() {
         IdentityZoneHolder.get().getConfig().setDefaultIdentityProvider("oidcprovider");
         Authentication auth = mock(Authentication.class);
         when(zoneAwareAuthzAuthenticationManager.extractLoginHint(auth)).thenReturn(null);
@@ -848,7 +857,7 @@ class PasswordGrantAuthenticationManagerTest {
     }
 
     @Test
-    void testOIDCPasswordGrant_NoLoginHintDefaultNotAllowedMultipleIdpsWithUaa() {
+    void oidcPasswordGrantNoLoginHintDefaultNotAllowedMultipleIdpsWithUaa() {
         IdentityZoneHolder.get().getConfig().setDefaultIdentityProvider("oidcprovider2");
         Authentication auth = mock(Authentication.class);
         when(zoneAwareAuthzAuthenticationManager.extractLoginHint(auth)).thenReturn(null);
@@ -860,12 +869,12 @@ class PasswordGrantAuthenticationManagerTest {
         verify(zoneAwareAuthzAuthenticationManager, times(1)).authenticate(auth);
         ArgumentCaptor<UaaLoginHint> captor = ArgumentCaptor.forClass(UaaLoginHint.class);
         verify(zoneAwareAuthzAuthenticationManager, times(1)).setLoginHint(eq(auth), captor.capture());
-        assertNotNull(captor.getValue());
-        assertEquals("uaa", captor.getValue().getOrigin());
+        assertThat(captor.getValue()).isNotNull();
+        assertThat(captor.getValue().getOrigin()).isEqualTo("uaa");
     }
 
     @Test
-    void testOIDCPasswordGrant_NoLoginHintDefaultNotAllowedMultipleIdpsOnlyOIDC() {
+    void oidcPasswordGrantNoLoginHintDefaultNotAllowedMultipleIdpsOnlyOIDC() {
         IdentityZoneHolder.get().getConfig().setDefaultIdentityProvider("oidcprovider3");
         Authentication auth = mock(Authentication.class);
         when(zoneAwareAuthzAuthenticationManager.extractLoginHint(auth)).thenReturn(null);
@@ -883,14 +892,14 @@ class PasswordGrantAuthenticationManagerTest {
 
         try {
             instance.authenticate(auth);
-            fail();
+            fail("");
         } catch (BadCredentialsException e) {
-            assertEquals("The client is authorized for multiple identity providers that support password grant and could not determine which identity provider to use.", e.getMessage());
+            assertThat(e.getMessage()).isEqualTo("The client is authorized for multiple identity providers that support password grant and could not determine which identity provider to use.");
         }
     }
 
     @Test
-    void testPasswordGrant_NoLoginHintNoDefaultTriesChainedAuth() {
+    void passwordGrantNoLoginHintNoDefaultTriesChainedAuth() {
         Authentication auth = mock(Authentication.class);
         when(zoneAwareAuthzAuthenticationManager.extractLoginHint(auth)).thenReturn(null);
 
@@ -903,7 +912,7 @@ class PasswordGrantAuthenticationManagerTest {
     }
 
     @Test
-    void testOIDCPasswordGrant_LoginHintProviderNotAllowed() {
+    void oidcPasswordGrantLoginHintProviderNotAllowed() {
         UaaLoginHint loginHint = mock(UaaLoginHint.class);
         when(loginHint.getOrigin()).thenReturn("oidcprovider2");
         Authentication auth = mock(Authentication.class);
@@ -913,9 +922,9 @@ class PasswordGrantAuthenticationManagerTest {
 
         try {
             instance.authenticate(auth);
-            fail();
+            fail("");
         } catch (ProviderConfigurationException e) {
-            assertEquals("Client is not authorized for specified user's identity provider.", e.getMessage());
+            assertThat(e.getMessage()).isEqualTo("Client is not authorized for specified user's identity provider.");
         }
     }
 
@@ -926,7 +935,7 @@ class PasswordGrantAuthenticationManagerTest {
                 .setRelyingPartyId("client-id")
                 .setRelyingPartySecret("client-secret");
         idp.setConfig(config);
-        assertThrows(BadCredentialsException.class, () -> instance.oidcPasswordGrant(authentication, idp));
+        assertThatExceptionOfType(BadCredentialsException.class).isThrownBy(() -> instance.oidcPasswordGrant(authentication, idp));
     }
 
     @Test
@@ -936,7 +945,7 @@ class PasswordGrantAuthenticationManagerTest {
                 .setRelyingPartyId("client-id")
                 .setRelyingPartySecret("client-secret");
         idp.setConfig(config);
-        assertThrows(BadCredentialsException.class, () -> instance.oidcPasswordGrant(authentication, idp));
+        assertThatExceptionOfType(BadCredentialsException.class).isThrownBy(() -> instance.oidcPasswordGrant(authentication, idp));
     }
 
     @Test
@@ -959,7 +968,7 @@ class PasswordGrantAuthenticationManagerTest {
         final OIDCIdentityProviderDefinition spyConfig = spy(config);
         localIdp.setConfig(spyConfig);
 
-        assertNull(instance.oidcPasswordGrant(authentication, localIdp));
+        assertThat(instance.oidcPasswordGrant(authentication, localIdp)).isNull();
         verify(spyConfig, atLeast(2)).getAuthMethod();
     }
 
@@ -973,8 +982,9 @@ class PasswordGrantAuthenticationManagerTest {
                 .setRelyingPartyId("client-id");
         localIdp.setConfig(config);
 
-        Exception exception = assertThrows(ProviderConfigurationException.class, () -> instance.oidcPasswordGrant(authentication, localIdp));
-        assertEquals("External OpenID Connect provider configuration is missing relyingPartySecret, jwtClientAuthentication or authMethod.", exception.getMessage());
+        assertThatThrownBy(() -> instance.oidcPasswordGrant(authentication, localIdp))
+                .isInstanceOf(ProviderConfigurationException.class)
+                .hasMessage("External OpenID Connect provider configuration is missing relyingPartySecret, jwtClientAuthentication or authMethod.");
     }
 
     private void mockKeyInfoService() throws JOSEException {

@@ -1,57 +1,21 @@
 package org.cloudfoundry.identity.uaa.scim.endpoints;
 
-import static org.cloudfoundry.identity.uaa.codestore.ExpiringCodeType.REGISTRATION;
-import static org.cloudfoundry.identity.uaa.invitations.InvitationsEndpoint.USER_ID;
-import static org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils.CookieCsrfPostProcessor.cookieCsrf;
-import static org.cloudfoundry.identity.uaa.zone.IdentityZoneSwitchingFilter.HEADER;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.CoreMatchers.startsWith;
-import static org.hamcrest.Matchers.greaterThan;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
-import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.CLIENT_ID;
-import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.REDIRECT_URI;
-import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.authenticated;
-import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.unauthenticated;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.util.StringUtils.hasText;
-
-import java.nio.charset.Charset;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.collect.Lists;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
-import org.assertj.core.api.Assertions;
 import org.cloudfoundry.identity.uaa.DefaultTestContext;
 import org.cloudfoundry.identity.uaa.account.UserAccountStatus;
 import org.cloudfoundry.identity.uaa.approval.Approval;
 import org.cloudfoundry.identity.uaa.approval.ApprovalStore;
+import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
 import org.cloudfoundry.identity.uaa.codestore.ExpiringCode;
 import org.cloudfoundry.identity.uaa.codestore.ExpiringCodeStore;
 import org.cloudfoundry.identity.uaa.constants.OriginKeys;
 import org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils;
+import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
+import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetails;
 import org.cloudfoundry.identity.uaa.provider.IdentityProvider;
 import org.cloudfoundry.identity.uaa.provider.JdbcIdentityProviderProvisioning;
 import org.cloudfoundry.identity.uaa.provider.OIDCIdentityProviderDefinition;
@@ -82,9 +46,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
-import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetails;
-import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
@@ -92,8 +53,38 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.google.common.collect.Lists;
+import java.nio.charset.Charset;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.cloudfoundry.identity.uaa.codestore.ExpiringCodeType.REGISTRATION;
+import static org.cloudfoundry.identity.uaa.invitations.InvitationsEndpoint.USER_ID;
+import static org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils.CookieCsrfPostProcessor.cookieCsrf;
+import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.CLIENT_ID;
+import static org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils.REDIRECT_URI;
+import static org.cloudfoundry.identity.uaa.zone.IdentityZoneSwitchingFilter.HEADER;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.Matchers.is;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
+import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.authenticated;
+import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.unauthenticated;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.util.StringUtils.hasText;
 
 @ExtendWith(ZoneSeederExtension.class)
 @DefaultTestContext
@@ -142,18 +133,18 @@ class ScimUserEndpointsMockMvcTests {
     @Test
     void unauthorized_put_returns_401() throws Exception {
         mockMvc.perform(
-                put("/Users/some-user")
-        )
-        .andExpect(status().isUnauthorized());
+                        put("/Users/some-user")
+                )
+                .andExpect(status().isUnauthorized());
 
         mockMvc.perform(
-                put("/Users")
-        )
-        .andExpect(status().isUnauthorized());
+                        put("/Users")
+                )
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
-    void testCanCreateUserWithExclamationMark() throws Exception {
+    void canCreateUserWithExclamationMark() throws Exception {
         String email = "joe!!@" + generator.generate().toLowerCase() + ".com";
         ScimUser user = getScimUser();
         user.getEmails().clear();
@@ -163,7 +154,7 @@ class ScimUserEndpointsMockMvcTests {
     }
 
     @Test
-    void test_Create_User_Too_Long_Password() throws Exception {
+    void create_user_too_long_password() throws Exception {
         String email = "joe@" + generator.generate().toLowerCase() + ".com";
         ScimUser user = getScimUser();
         user.setUserName(email);
@@ -176,7 +167,7 @@ class ScimUserEndpointsMockMvcTests {
     }
 
     @Test
-    void test_Create_User_More_Than_One_Email() throws Exception {
+    void create_user_more_than_one_email() throws Exception {
         ScimUser scimUser = getScimUser();
         String secondEmail = "joe@" + generator.generate().toLowerCase() + ".com";
         scimUser.addEmail(secondEmail);
@@ -190,7 +181,7 @@ class ScimUserEndpointsMockMvcTests {
     }
 
     @Test
-    void testCreateUserWithScimCreateToken() throws Exception {
+    void createUserWithScimCreateToken() throws Exception {
         createUser(scimCreateToken);
     }
 
@@ -253,21 +244,22 @@ class ScimUserEndpointsMockMvcTests {
                 .andReturn();
 
         VerificationResponse verificationResponse = JsonUtils.readValue(result.getResponse().getContentAsString(), VerificationResponse.class);
-        assertThat(verificationResponse.getVerifyLink().toString(), startsWith("http://localhost/verify_user"));
+        assertThat(verificationResponse.getVerifyLink().toString()).startsWith("http://localhost/verify_user");
 
         String query = verificationResponse.getVerifyLink().getQuery();
 
         String code = getQueryStringParam(query, "code");
-        assertThat(code, is(notNullValue()));
+        assertThat(code).isNotNull();
 
         ExpiringCode expiringCode = codeStore.retrieveCode(code, IdentityZoneHolder.get().getId());
-        assertThat(expiringCode.getExpiresAt().getTime(), is(greaterThan(System.currentTimeMillis())));
-        assertThat(expiringCode.getIntent(), is(REGISTRATION.name()));
+        assertThat(expiringCode.getExpiresAt().getTime()).isGreaterThan(System.currentTimeMillis());
+        assertThat(expiringCode.getIntent()).isEqualTo(REGISTRATION.name());
         Map<String, String> data = JsonUtils.readValue(expiringCode.getData(), new TypeReference<Map<String, String>>() {
         });
-        assertThat(data.get(USER_ID), is(notNullValue()));
-        assertThat(data.get(CLIENT_ID), is(clientDetails.getClientId()));
-        assertThat(data.get(REDIRECT_URI), is(HTTP_REDIRECT_EXAMPLE_COM));
+        assertThat(data.get(USER_ID)).isNotNull();
+        assertThat(data)
+                .containsEntry(CLIENT_ID, clientDetails.getClientId())
+                .containsEntry(REDIRECT_URI, HTTP_REDIRECT_EXAMPLE_COM);
     }
 
     @Test
@@ -301,23 +293,24 @@ class ScimUserEndpointsMockMvcTests {
                 .andExpect(status().isOk())
                 .andReturn();
         VerificationResponse verificationResponse = JsonUtils.readValue(result.getResponse().getContentAsString(), VerificationResponse.class);
-        assertThat(verificationResponse.getVerifyLink().toString(), startsWith("http://" + subdomain + ".localhost/verify_user"));
+        assertThat(verificationResponse.getVerifyLink().toString()).startsWith("http://" + subdomain + ".localhost/verify_user");
 
         String query = verificationResponse.getVerifyLink().getQuery();
 
         String code = getQueryStringParam(query, "code");
-        assertThat(code, is(notNullValue()));
+        assertThat(code).isNotNull();
 
         IdentityZoneHolder.set(zoneResult.getIdentityZone());
         ExpiringCode expiringCode = codeStore.retrieveCode(code, IdentityZoneHolder.get().getId());
         IdentityZoneHolder.clear();
-        assertThat(expiringCode.getExpiresAt().getTime(), is(greaterThan(System.currentTimeMillis())));
-        assertThat(expiringCode.getIntent(), is(REGISTRATION.name()));
+        assertThat(expiringCode.getExpiresAt().getTime()).isGreaterThan(System.currentTimeMillis());
+        assertThat(expiringCode.getIntent()).isEqualTo(REGISTRATION.name());
         Map<String, String> data = JsonUtils.readValue(expiringCode.getData(), new TypeReference<Map<String, String>>() {
         });
-        assertThat(data.get(USER_ID), is(notNullValue()));
-        assertThat(data.get(CLIENT_ID), is(zonedClientDetails.getClientId()));
-        assertThat(data.get(REDIRECT_URI), is(HTTP_REDIRECT_EXAMPLE_COM));
+        assertThat(data.get(USER_ID)).isNotNull();
+        assertThat(data)
+                .containsEntry(CLIENT_ID, zonedClientDetails.getClientId())
+                .containsEntry(REDIRECT_URI, HTTP_REDIRECT_EXAMPLE_COM);
     }
 
     @Test
@@ -341,23 +334,24 @@ class ScimUserEndpointsMockMvcTests {
                 .andExpect(status().isOk())
                 .andReturn();
         VerificationResponse verificationResponse = JsonUtils.readValue(result.getResponse().getContentAsString(), VerificationResponse.class);
-        assertThat(verificationResponse.getVerifyLink().toString(), startsWith("http://" + subdomain + ".localhost/verify_user"));
+        assertThat(verificationResponse.getVerifyLink().toString()).startsWith("http://" + subdomain + ".localhost/verify_user");
 
         String query = verificationResponse.getVerifyLink().getQuery();
 
         String code = getQueryStringParam(query, "code");
-        assertThat(code, is(notNullValue()));
+        assertThat(code).isNotNull();
 
         IdentityZoneHolder.set(zoneResult.getIdentityZone());
         ExpiringCode expiringCode = codeStore.retrieveCode(code, IdentityZoneHolder.get().getId());
         IdentityZoneHolder.clear();
-        assertThat(expiringCode.getExpiresAt().getTime(), is(greaterThan(System.currentTimeMillis())));
-        assertThat(expiringCode.getIntent(), is(REGISTRATION.name()));
+        assertThat(expiringCode.getExpiresAt().getTime()).isGreaterThan(System.currentTimeMillis());
+        assertThat(expiringCode.getIntent()).isEqualTo(REGISTRATION.name());
         Map<String, String> data = JsonUtils.readValue(expiringCode.getData(), new TypeReference<Map<String, String>>() {
         });
-        assertThat(data.get(USER_ID), is(notNullValue()));
-        assertThat(data.get(CLIENT_ID), is("admin"));
-        assertThat(data.get(REDIRECT_URI), is(HTTP_REDIRECT_EXAMPLE_COM));
+        assertThat(data.get(USER_ID)).isNotNull();
+        assertThat(data)
+                .containsEntry(CLIENT_ID, "admin")
+                .containsEntry(REDIRECT_URI, HTTP_REDIRECT_EXAMPLE_COM);
     }
 
     @Test
@@ -367,9 +361,9 @@ class ScimUserEndpointsMockMvcTests {
         user.setPrimaryEmail("test@test.org");
 
         mockMvc.perform(post("/Users")
-                .header("Authorization", "Bearer " + scimReadWriteToken)
-                .contentType(APPLICATION_JSON)
-                .content(JsonUtils.writeValueAsString(user)))
+                        .header("Authorization", "Bearer " + scimReadWriteToken)
+                        .contentType(APPLICATION_JSON)
+                        .content(JsonUtils.writeValueAsString(user)))
                 .andExpect(status().isBadRequest())
                 .andExpect(content()
                         .string(JsonObjectMatcherUtils.matchesJsonObject(
@@ -385,9 +379,9 @@ class ScimUserEndpointsMockMvcTests {
         user.setPassword("password");
 
         mockMvc.perform(post("/Users")
-                .header("Authorization", "Bearer " + scimReadWriteToken)
-                .contentType(APPLICATION_JSON)
-                .content(JsonUtils.writeValueAsString(user)))
+                        .header("Authorization", "Bearer " + scimReadWriteToken)
+                        .contentType(APPLICATION_JSON)
+                        .content(JsonUtils.writeValueAsString(user)))
                 .andExpect(status().isBadRequest())
                 .andExpect(content()
                         .string(JsonObjectMatcherUtils.matchesJsonObject(
@@ -403,10 +397,10 @@ class ScimUserEndpointsMockMvcTests {
         user.setEmails(null);
 
         mockMvc.perform(put("/Users/" + user.getId())
-                .header("Authorization", "Bearer " + scimReadWriteToken)
-                .header("If-Match", "\"" + user.getVersion() + "\"")
-                .contentType(APPLICATION_JSON)
-                .content(JsonUtils.writeValueAsString(user)))
+                        .header("Authorization", "Bearer " + scimReadWriteToken)
+                        .header("If-Match", "\"" + user.getVersion() + "\"")
+                        .contentType(APPLICATION_JSON)
+                        .content(JsonUtils.writeValueAsString(user)))
                 .andExpect(status().isBadRequest())
                 .andExpect(content()
                         .string(JsonObjectMatcherUtils.matchesJsonObject(
@@ -448,7 +442,7 @@ class ScimUserEndpointsMockMvcTests {
     }
 
     @Test
-    void testPatchUserShouldRejectChangingOrigin() throws Exception {
+    void patchUserShouldRejectChangingOrigin() throws Exception {
         final ScimUser scimUser = setUpScimUser();
         scimUser.setOrigin("some-new-origin");
         patchUser(scimUser, scimReadWriteToken, scimUser.getVersion())
@@ -534,9 +528,9 @@ class ScimUserEndpointsMockMvcTests {
                 .andExpect(status().isOk())
                 .andReturn();
         SearchResults searchResults = JsonUtils.readValue(mvcResult.getResponse().getContentAsString(), SearchResults.class);
-        assertThat(searchResults.getResources().size(), is(usersMaxCount));
-        assertThat(searchResults.getItemsPerPage(), is(usersMaxCount));
-        assertThat(searchResults.getTotalResults(), is(usersMaxCountWithOffset));
+        assertThat(searchResults.getResources()).hasSize(usersMaxCount);
+        assertThat(searchResults.getItemsPerPage()).isEqualTo(usersMaxCount);
+        assertThat(searchResults.getTotalResults()).isEqualTo(usersMaxCountWithOffset);
     }
 
     @Test
@@ -545,12 +539,12 @@ class ScimUserEndpointsMockMvcTests {
     }
 
     @Test
-    void testVerifyUserWithScimCreateToken() throws Exception {
+    void verifyUserWithScimCreateToken() throws Exception {
         verifyUser(scimCreateToken);
     }
 
     @Test
-    void testCreateUserInZoneUsingAdminClient() throws Exception {
+    void createUserInZoneUsingAdminClient() throws Exception {
         String subdomain = generator.generate();
         MockMvcUtils.createOtherIdentityZone(subdomain, mockMvc, webApplicationContext, IdentityZoneHolder.getCurrentZoneId());
 
@@ -560,7 +554,7 @@ class ScimUserEndpointsMockMvcTests {
     }
 
     @Test
-    void testCreateUserInZoneUsingZoneAdminUser() throws Exception {
+    void createUserInZoneUsingZoneAdminUser() throws Exception {
         String subdomain = generator.generate();
         MockMvcUtils.IdentityZoneCreationResult result = MockMvcUtils.createOtherIdentityZoneAndReturnResult(subdomain, mockMvc, webApplicationContext, null, IdentityZoneHolder.getCurrentZoneId());
         String zoneAdminToken = result.getZoneAdminToken();
@@ -568,7 +562,7 @@ class ScimUserEndpointsMockMvcTests {
     }
 
     @Test
-    void testUserSelfAccess_Get_and_Post() throws Exception {
+    void userSelfAccessGetAndPost() throws Exception {
         ScimUser user = getScimUser();
         user.setPassword("secret");
 
@@ -584,7 +578,7 @@ class ScimUserEndpointsMockMvcTests {
     }
 
     @Test
-    void testCreateUserInOtherZoneIsUnauthorized() throws Exception {
+    void createUserInOtherZoneIsUnauthorized() throws Exception {
         String subdomain = generator.generate();
         MockMvcUtils.createOtherIdentityZone(subdomain, mockMvc, webApplicationContext, IdentityZoneHolder.getCurrentZoneId());
 
@@ -606,7 +600,7 @@ class ScimUserEndpointsMockMvcTests {
     }
 
     @Test
-    void testUnlockAccount() throws Exception {
+    void unlockAccount() throws Exception {
         ScimUser userToLockout = createUser(uaaAdminToken);
         attemptUnsuccessfulLogin(5, userToLockout.getUserName(), "");
 
@@ -622,7 +616,7 @@ class ScimUserEndpointsMockMvcTests {
     }
 
     @Test
-    void testAccountStatusEmptyPatchDoesNotUnlock() throws Exception {
+    void accountStatusEmptyPatchDoesNotUnlock() throws Exception {
         ScimUser userToLockout = createUser(uaaAdminToken);
         attemptUnsuccessfulLogin(5, userToLockout.getUserName(), "");
 
@@ -636,7 +630,7 @@ class ScimUserEndpointsMockMvcTests {
     }
 
     @Test
-    void testUpdateStatusCannotLock() throws Exception {
+    void updateStatusCannotLock() throws Exception {
         ScimUser user = createUser(uaaAdminToken);
 
         UserAccountStatus alteredAccountStatus = new UserAccountStatus();
@@ -649,7 +643,7 @@ class ScimUserEndpointsMockMvcTests {
     }
 
     @Test
-    void testUnlockAccountWhenNotLocked() throws Exception {
+    void unlockAccountWhenNotLocked() throws Exception {
         ScimUser userToLockout = createUser(uaaAdminToken);
 
         UserAccountStatus alteredAccountStatus = new UserAccountStatus();
@@ -664,7 +658,7 @@ class ScimUserEndpointsMockMvcTests {
     }
 
     @Test
-    void testForcePasswordExpireAccountInvalid() throws Exception {
+    void forcePasswordExpireAccountInvalid() throws Exception {
         ScimUser user = createUser(uaaAdminToken);
         UserAccountStatus alteredAccountStatus = new UserAccountStatus();
         alteredAccountStatus.setPasswordChangeRequired(false);
@@ -672,11 +666,11 @@ class ScimUserEndpointsMockMvcTests {
         updateAccountStatus(user, alteredAccountStatus)
                 .andExpect(status().isBadRequest());
 
-        assertFalse(usersRepository.checkPasswordChangeIndividuallyRequired(user.getId(), IdentityZoneHolder.get().getId()));
+        assertThat(usersRepository.checkPasswordChangeIndividuallyRequired(user.getId(), IdentityZoneHolder.get().getId())).isFalse();
     }
 
     @Test
-    void testForcePasswordExpireAccountExternalUser() throws Exception {
+    void forcePasswordExpireAccountExternalUser() throws Exception {
         ScimUser userToCreate = getScimUser();
         userToCreate.setOrigin("NOT_UAA");
         ScimUser user = createUser(userToCreate, uaaAdminToken, null);
@@ -686,14 +680,14 @@ class ScimUserEndpointsMockMvcTests {
         updateAccountStatus(user, alteredAccountStatus)
                 .andExpect(status().isBadRequest());
 
-        assertFalse(usersRepository.checkPasswordChangeIndividuallyRequired(user.getId(), IdentityZoneHolder.get().getId()));
+        assertThat(usersRepository.checkPasswordChangeIndividuallyRequired(user.getId(), IdentityZoneHolder.get().getId())).isFalse();
     }
 
     @Test
-    void testForcePasswordChange() throws Exception {
+    void forcePasswordChange() throws Exception {
         ScimUser user = createUser(uaaAdminToken);
 
-        assertFalse(usersRepository.checkPasswordChangeIndividuallyRequired(user.getId(), IdentityZoneHolder.get().getId()));
+        assertThat(usersRepository.checkPasswordChangeIndividuallyRequired(user.getId(), IdentityZoneHolder.get().getId())).isFalse();
 
         UserAccountStatus alteredAccountStatus = new UserAccountStatus();
         alteredAccountStatus.setPasswordChangeRequired(true);
@@ -703,11 +697,11 @@ class ScimUserEndpointsMockMvcTests {
                 .andExpect(content().contentType(APPLICATION_JSON_UTF8))
                 .andExpect(content().string(JsonUtils.writeValueAsString(alteredAccountStatus)));
 
-        assertTrue(usersRepository.checkPasswordChangeIndividuallyRequired(user.getId(), IdentityZoneHolder.get().getId()));
+        assertThat(usersRepository.checkPasswordChangeIndividuallyRequired(user.getId(), IdentityZoneHolder.get().getId())).isTrue();
     }
 
     @Test
-    void testTryMultipleStatusUpdatesWithInvalidLock() throws Exception {
+    void tryMultipleStatusUpdatesWithInvalidLock() throws Exception {
         ScimUser user = createUser(uaaAdminToken);
 
         UserAccountStatus alteredAccountStatus = new UserAccountStatus();
@@ -717,14 +711,14 @@ class ScimUserEndpointsMockMvcTests {
         updateAccountStatus(user, alteredAccountStatus)
                 .andExpect(status().isBadRequest());
 
-        assertFalse(usersRepository.checkPasswordChangeIndividuallyRequired(user.getId(), IdentityZoneHolder.get().getId()));
+        assertThat(usersRepository.checkPasswordChangeIndividuallyRequired(user.getId(), IdentityZoneHolder.get().getId())).isFalse();
 
         attemptLogin(user)
                 .andExpect(redirectedUrl("/"));
     }
 
     @Test
-    void testTryMultipleStatusUpdatesWithInvalidRemovalOfPasswordChange() throws Exception {
+    void tryMultipleStatusUpdatesWithInvalidRemovalOfPasswordChange() throws Exception {
         ScimUser user = createUser(uaaAdminToken);
         attemptUnsuccessfulLogin(5, user.getUserName(), "");
 
@@ -735,7 +729,7 @@ class ScimUserEndpointsMockMvcTests {
         updateAccountStatus(user, alteredAccountStatus)
                 .andExpect(status().isBadRequest());
 
-        assertFalse(usersRepository.checkPasswordChangeIndividuallyRequired(user.getId(), IdentityZoneHolder.get().getId()));
+        assertThat(usersRepository.checkPasswordChangeIndividuallyRequired(user.getId(), IdentityZoneHolder.get().getId())).isFalse();
 
         attemptLogin(user)
                 .andExpect(redirectedUrl("/login?error=account_locked"));
@@ -747,7 +741,7 @@ class ScimUserEndpointsMockMvcTests {
     }
 
     @Test
-    void testGetUserWithInvalidAttributes() throws Exception {
+    void getUserWithInvalidAttributes() throws Exception {
 
         String nonexistentAttribute = "displayBlaBla";
 
@@ -765,12 +759,12 @@ class ScimUserEndpointsMockMvcTests {
 
         List<Map> attList = (List) JsonUtils.readValue(body, Map.class).get("resources");
         for (Map<String, Object> attMap : attList) {
-            assertNull(attMap.get(nonexistentAttribute));
+            assertThat(attMap.get(nonexistentAttribute)).isNull();
         }
     }
 
     @Test
-    void testGetUserWithScimCreateToken() throws Exception {
+    void getUserWithScimCreateToken() throws Exception {
         getUser(scimCreateToken, HttpStatus.FORBIDDEN.value());
     }
 
@@ -867,12 +861,12 @@ class ScimUserEndpointsMockMvcTests {
                 adminUser.setUserName(newAdminUsername);
 
                 mockMvc.perform(requestBuilder
-                        .headers(zoneSeeder.getZoneSubdomainRequestHeader())
-                        .header("Authorization", "Bearer " + accessToken)
-                        .header("If-Match", "\"" + adminUser.getVersion() + "\"")
-                        .accept(APPLICATION_JSON)
-                        .contentType(APPLICATION_JSON)
-                        .content(JsonUtils.writeValueAsBytes(adminUser)))
+                                .headers(zoneSeeder.getZoneSubdomainRequestHeader())
+                                .header("Authorization", "Bearer " + accessToken)
+                                .header("If-Match", "\"" + adminUser.getVersion() + "\"")
+                                .accept(APPLICATION_JSON)
+                                .contentType(APPLICATION_JSON)
+                                .content(JsonUtils.writeValueAsBytes(adminUser)))
                         .andDo(print())
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.userName").value(newAdminUsername));
@@ -991,12 +985,12 @@ class ScimUserEndpointsMockMvcTests {
                 @Test
                 void put_updateNothing_shouldFail() throws Exception {
                     mockMvc.perform(put("/Users/" + regularUser.getId())
-                            .headers(zoneSeeder.getZoneIdRequestHeader())
-                            .header("Authorization", "Bearer " + uaaAdminToken)
-                            .header("If-Match", "\"" + regularUser.getVersion() + "\"")
-                            .accept(APPLICATION_JSON)
-                            .contentType(APPLICATION_JSON)
-                            .content(JsonUtils.writeValueAsBytes(regularUser)))
+                                    .headers(zoneSeeder.getZoneIdRequestHeader())
+                                    .header("Authorization", "Bearer " + uaaAdminToken)
+                                    .header("If-Match", "\"" + regularUser.getVersion() + "\"")
+                                    .accept(APPLICATION_JSON)
+                                    .contentType(APPLICATION_JSON)
+                                    .content(JsonUtils.writeValueAsBytes(regularUser)))
                             .andDo(print())
                             .andExpect(status().is(403))
                             .andExpect(content().string(JsonObjectMatcherUtils.matchesJsonObject(
@@ -1055,20 +1049,20 @@ class ScimUserEndpointsMockMvcTests {
     }
 
     @Test
-    void testUpdateUser_No_Username_Returns_400() throws Exception {
+    void updateUserNoUsernameReturns400() throws Exception {
         updateUser(scimReadWriteToken, HttpStatus.BAD_REQUEST.value());
     }
 
     @Test
-    void testUpdateUser_ChangingOriginReturns400() throws Exception {
+    void updateUserChangingOriginReturns400() throws Exception {
         final ScimUser scimUser = setUpScimUser(IdentityZone.getUaa());
         scimUser.setOrigin(UUID.randomUUID().toString());
         final MvcResult result = updateUserAndReturnResult(scimReadWriteToken, scimUser);
         final MockHttpServletResponse response = result.getResponse();
-        Assertions.assertThat(response).isNotNull();
-        Assertions.assertThat(response.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
         final Map<String, Object> responseBody = JsonUtils.readValueAsMap(response.getContentAsString());
-        Assertions.assertThat(responseBody)
+        assertThat(responseBody)
                 .isNotNull()
                 .containsEntry("error_description", "Cannot change user's origin in update operation.")
                 .containsEntry("error", "invalid_scim_resource")
@@ -1076,27 +1070,27 @@ class ScimUserEndpointsMockMvcTests {
     }
 
     @Test
-    void testUpdateUserWithScimCreateToken() throws Exception {
+    void updateUserWithScimCreateToken() throws Exception {
         updateUser(scimCreateToken, HttpStatus.FORBIDDEN.value());
     }
 
     @Test
-    void testUpdateUserWithUaaAdminToken() throws Exception {
+    void updateUserWithUaaAdminToken() throws Exception {
         updateUser(uaaAdminToken, HttpStatus.OK.value());
     }
 
     @Test
-    void testUpdateUserInOtherZoneWithUaaAdminToken() throws Exception {
+    void updateUserInOtherZoneWithUaaAdminToken() throws Exception {
         IdentityZone identityZone = getIdentityZone();
         ScimUser user = setUpScimUser(identityZone);
         user.setName(new ScimUser.Name("changed", "name"));
 
         mockMvc.perform(put("/Users/" + user.getId())
-                .header("Authorization", "Bearer " + uaaAdminToken)
-                .header(HEADER, identityZone.getId())
-                .header("If-Match", "\"" + user.getVersion() + "\"")
-                .contentType(APPLICATION_JSON)
-                .content(JsonUtils.writeValueAsBytes(user)))
+                        .header("Authorization", "Bearer " + uaaAdminToken)
+                        .header(HEADER, identityZone.getId())
+                        .header("If-Match", "\"" + user.getVersion() + "\"")
+                        .contentType(APPLICATION_JSON)
+                        .content(JsonUtils.writeValueAsBytes(user)))
                 .andExpect(status().isOk())
                 .andExpect(header().string("ETag", "\"1\""))
                 .andExpect(jsonPath("$.userName").value(user.getUserName()))
@@ -1117,26 +1111,26 @@ class ScimUserEndpointsMockMvcTests {
         approval.setScope("openid");
         approval.setStatus(Approval.ApprovalStatus.APPROVED);
         store.addApproval(approval, IdentityZoneHolder.get().getId());
-        assertEquals(1, (long) template.queryForObject("select count(*) from authz_approvals where user_id=?", Integer.class, user.getId()));
+        assertThat((long) template.queryForObject("select count(*) from authz_approvals where user_id=?", Integer.class, user.getId())).isOne();
         mockMvc.perform((delete("/Users/" + user.getId()))
-                .header("Authorization", "Bearer " + uaaAdminToken)
-                .contentType(APPLICATION_JSON)
-                .content(JsonUtils.writeValueAsBytes(user)))
+                        .header("Authorization", "Bearer " + uaaAdminToken)
+                        .contentType(APPLICATION_JSON)
+                        .content(JsonUtils.writeValueAsBytes(user)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userName").value(user.getUserName()))
                 .andExpect(jsonPath("$.emails[0].value").value(user.getPrimaryEmail()))
                 .andExpect(jsonPath("$.name.givenName").value(user.getGivenName()))
                 .andExpect(jsonPath("$.name.familyName").value(user.getFamilyName()));
-        assertEquals(0, (long) template.queryForObject("select count(*) from authz_approvals where user_id=?", Integer.class, user.getId()));
+        assertThat((long) template.queryForObject("select count(*) from authz_approvals where user_id=?", Integer.class, user.getId())).isZero();
     }
 
     @Test
-    void testDeleteUserWithUaaAdminToken() throws Exception {
+    void deleteUserWithUaaAdminToken() throws Exception {
         ScimUser user = setUpScimUser();
         mockMvc.perform((delete("/Users/" + user.getId()))
-                .header("Authorization", "Bearer " + uaaAdminToken)
-                .contentType(APPLICATION_JSON)
-                .content(JsonUtils.writeValueAsBytes(user)))
+                        .header("Authorization", "Bearer " + uaaAdminToken)
+                        .contentType(APPLICATION_JSON)
+                        .content(JsonUtils.writeValueAsBytes(user)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userName").value(user.getUserName()))
                 .andExpect(jsonPath("$.emails[0].value").value(user.getPrimaryEmail()))
@@ -1145,15 +1139,15 @@ class ScimUserEndpointsMockMvcTests {
     }
 
     @Test
-    void testDeleteUserInOtherZoneWithUaaAdminToken() throws Exception {
+    void deleteUserInOtherZoneWithUaaAdminToken() throws Exception {
         IdentityZone identityZone = getIdentityZone();
         ScimUser user = setUpScimUser(identityZone);
 
         mockMvc.perform((delete("/Users/" + user.getId()))
-                .header("Authorization", "Bearer " + uaaAdminToken)
-                .header(HEADER, identityZone.getId())
-                .contentType(APPLICATION_JSON)
-                .content(JsonUtils.writeValueAsBytes(user)))
+                        .header("Authorization", "Bearer " + uaaAdminToken)
+                        .header(HEADER, identityZone.getId())
+                        .contentType(APPLICATION_JSON)
+                        .content(JsonUtils.writeValueAsBytes(user)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userName").value(user.getUserName()))
                 .andExpect(jsonPath("$.emails[0].value").value(user.getPrimaryEmail()))
@@ -1178,7 +1172,7 @@ class ScimUserEndpointsMockMvcTests {
     }
 
     @Test
-    void testCreateUserWithEmailDomainNotAllowedForOriginUaa() throws Exception {
+    void createUserWithEmailDomainNotAllowedForOriginUaa() throws Exception {
         ScimUser user = new ScimUser(null, "abc@example.org", "First", "Last");
         user.addEmail("abc@example.org");
         user.setPassword(new RandomValueStringGenerator(2).generate());
@@ -1434,11 +1428,11 @@ class ScimUserEndpointsMockMvcTests {
 
     private void performAuthentication(ScimUser user, boolean success) throws Exception {
         mockMvc.perform(
-                post("/login.do")
-                        .accept("text/html")
-                        .with(cookieCsrf())
-                        .param("username", user.getUserName())
-                        .param("password", USER_PASSWORD))
+                        post("/login.do")
+                                .accept("text/html")
+                                .with(cookieCsrf())
+                                .param("username", user.getUserName())
+                                .param("password", USER_PASSWORD))
                 .andDo(print())
                 .andExpect(success ? authenticated() : unauthenticated());
     }

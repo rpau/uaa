@@ -43,9 +43,9 @@ public class DefaultIntegrationTestConfig {
     }
 
     @Bean
-    public IntegrationTestRule integrationTestRule(
+    public IntegrationTestExtension integrationTestExtension(
             final @Value("${integration.test.base_url}") String baseUrl) {
-        return new IntegrationTestRule(baseUrl);
+        return new IntegrationTestExtension(baseUrl);
     }
 
     @Bean
@@ -101,7 +101,7 @@ public class DefaultIntegrationTestConfig {
 
     @Bean
     public TestClient testClient(RestTemplate restTemplate,
-            final @Value("${integration.test.base_url}") String baseUrl) {
+                                 final @Value("${integration.test.base_url}") String baseUrl) {
         return new TestClient(restTemplate, baseUrl);
     }
 

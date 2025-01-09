@@ -9,12 +9,7 @@ import org.cloudfoundry.identity.uaa.oauth.common.OAuth2AccessToken;
 import org.cloudfoundry.identity.uaa.oauth.common.exceptions.InvalidClientException;
 import org.cloudfoundry.identity.uaa.oauth.token.AccessTokenRequest;
 import org.cloudfoundry.identity.uaa.oauth.token.DefaultAccessTokenRequest;
-import org.hamcrest.Description;
-import org.hamcrest.Matcher;
-import org.hamcrest.TypeSafeMatcher;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -30,15 +25,16 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-public class AuthorizationCodeAccessTokenProviderWithConversionTests {
+class AuthorizationCodeAccessTokenProviderWithConversionTests {
 
     private static class StubClientHttpRequest implements ClientHttpRequest {
 
@@ -50,7 +46,7 @@ public class AuthorizationCodeAccessTokenProviderWithConversionTests {
 
         private final String responseBody;
 
-        {
+        static {
             DEFAULT_RESPONSE_HEADERS.setContentType(MediaType.APPLICATION_JSON);
         }
 
@@ -72,7 +68,7 @@ public class AuthorizationCodeAccessTokenProviderWithConversionTests {
             this.responseBody = responseBody;
         }
 
-        public OutputStream getBody() throws IOException {
+        public OutputStream getBody() {
             return new ByteArrayOutputStream();
         }
 
@@ -83,12 +79,12 @@ public class AuthorizationCodeAccessTokenProviderWithConversionTests {
         public URI getURI() {
             try {
                 return new URI("https://www.foo.com/");
-            }
-            catch (URISyntaxException e) {
+            } catch (URISyntaxException e) {
                 throw new IllegalStateException(e);
             }
         }
 
+        @Override
         public HttpMethod getMethod() {
             return HttpMethod.POST;
         }
@@ -104,30 +100,28 @@ public class AuthorizationCodeAccessTokenProviderWithConversionTests {
                     return responseHeaders;
                 }
 
-                public InputStream getBody() throws IOException {
-                    return new ByteArrayInputStream(responseBody.getBytes("UTF-8"));
+                public InputStream getBody() {
+                    return new ByteArrayInputStream(responseBody.getBytes(StandardCharsets.UTF_8));
                 }
 
-                public String getStatusText() throws IOException {
+                public String getStatusText() {
                     return responseStatus.getReasonPhrase();
                 }
 
-                public HttpStatus getStatusCode() throws IOException {
+                public HttpStatus getStatusCode() {
                     return responseStatus;
                 }
 
                 public void close() {
+                    // do nothing
                 }
 
-                public int getRawStatusCode() throws IOException {
+                public int getRawStatusCode() {
                     return responseStatus.value();
                 }
             };
         }
     }
-
-    @Rule
-    public ExpectedException expected = ExpectedException.none();
 
     private ClientHttpRequestFactory requestFactory;
 
@@ -140,7 +134,7 @@ public class AuthorizationCodeAccessTokenProviderWithConversionTests {
     }
 
     @Test
-    public void testGetAccessTokenFromJson() throws Exception {
+    void getAccessTokenFromJson() throws Exception {
         final OAuth2AccessToken token = new DefaultOAuth2AccessToken("FOO");
         requestFactory = new ClientHttpRequestFactory() {
             public ClientHttpRequest createRequest(URI uri, HttpMethod httpMethod) throws IOException {
@@ -152,11 +146,11 @@ public class AuthorizationCodeAccessTokenProviderWithConversionTests {
         resource.setAccessTokenUri("http://localhost/oauth/token");
         request.setPreservedState(new Object());
         setUpRestTemplate();
-        assertEquals(token, provider.obtainAccessToken(resource, request));
+        assertThat(provider.obtainAccessToken(resource, request)).isEqualTo(token);
     }
 
     @Test
-    public void testGetErrorFromJson() throws Exception {
+    void getErrorFromJson() {
         final InvalidClientException exception = new InvalidClientException("FOO");
         requestFactory = new ClientHttpRequestFactory() {
             public ClientHttpRequest createRequest(URI uri, HttpMethod httpMethod) throws IOException {
@@ -168,19 +162,19 @@ public class AuthorizationCodeAccessTokenProviderWithConversionTests {
         request.setAuthorizationCode("foo");
         request.setPreservedState(new Object());
         resource.setAccessTokenUri("http://localhost/oauth/token");
-        expected.expect(OAuth2AccessDeniedException.class);
-        expected.expect(hasCause(instanceOf(InvalidClientException.class)));
         setUpRestTemplate();
-        provider.obtainAccessToken(resource, request);
+        assertThatThrownBy(() -> provider.obtainAccessToken(resource, request))
+                .isInstanceOf(OAuth2AccessDeniedException.class)
+                .hasCauseInstanceOf(InvalidClientException.class);
     }
 
     @Test
-    public void testGetAccessTokenFromForm() throws Exception {
+    void getAccessTokenFromForm() throws Exception {
         final OAuth2AccessToken token = new DefaultOAuth2AccessToken("FOO");
         final HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
         requestFactory = new ClientHttpRequestFactory() {
-            public ClientHttpRequest createRequest(URI uri, HttpMethod httpMethod) throws IOException {
+            public ClientHttpRequest createRequest(URI uri, HttpMethod httpMethod) {
                 return new StubClientHttpRequest(responseHeaders, "access_token=FOO");
             }
         };
@@ -189,41 +183,22 @@ public class AuthorizationCodeAccessTokenProviderWithConversionTests {
         request.setPreservedState(new Object());
         resource.setAccessTokenUri("http://localhost/oauth/token");
         setUpRestTemplate();
-        assertEquals(token, provider.obtainAccessToken(resource, request));
+        assertThat(provider.obtainAccessToken(resource, request)).isEqualTo(token);
     }
 
     @Test
-    public void testGetErrorFromForm() throws Exception {
+    void getErrorFromForm() {
         final HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        requestFactory = new ClientHttpRequestFactory() {
-            public ClientHttpRequest createRequest(URI uri, HttpMethod httpMethod) throws IOException {
-                return new StubClientHttpRequest(HttpStatus.BAD_REQUEST, responseHeaders,
-                        "error=invalid_client&error_description=FOO");
-            }
-        };
+        requestFactory = (uri, httpMethod) -> new StubClientHttpRequest(HttpStatus.BAD_REQUEST, responseHeaders,
+                "error=invalid_client&error_description=FOO");
         AccessTokenRequest request = new DefaultAccessTokenRequest();
         request.setAuthorizationCode("foo");
         request.setPreservedState(new Object());
         resource.setAccessTokenUri("http://localhost/oauth/token");
-        expected.expect(OAuth2AccessDeniedException.class);
-        expected.expect(hasCause(instanceOf(InvalidClientException.class)));
         setUpRestTemplate();
-        provider.obtainAccessToken(resource, request);
+        assertThatThrownBy(() -> provider.obtainAccessToken(resource, request))
+                .isInstanceOf(OAuth2AccessDeniedException.class)
+                .hasCauseInstanceOf(InvalidClientException.class);
     }
-
-    private Matcher<Throwable> hasCause(final Matcher<?> matcher) {
-        return new TypeSafeMatcher<>() {
-            public void describeTo(Description description) {
-                description.appendText("exception matching ");
-                description.appendDescriptionOf(matcher);
-            }
-
-            @Override
-            public boolean matchesSafely(Throwable item) {
-                return matcher.matches(item.getCause());
-            }
-        };
-    }
-
 }

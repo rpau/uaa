@@ -14,22 +14,22 @@
 
 package org.cloudfoundry.identity.uaa.security;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import javax.net.ssl.X509TrustManager;
 
+import javax.net.ssl.X509TrustManager;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.X509Certificate;
 
+import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 
-public class X509ExpiryCheckingTrustManagerTest {
+class X509ExpiryCheckingTrustManagerTest {
 
     @Test
-    public void checkServerTrusted_throwsExceptionWhenCertIsExpired() throws Exception {
+    void checkServerTrusted_throwsExceptionWhenCertIsExpired() throws Exception {
         X509ExpiryCheckingTrustManager manager = new X509ExpiryCheckingTrustManager();
         X509TrustManager mockedDelegate = Mockito.mock(X509TrustManager.class);
         manager.setDelegate(mockedDelegate);
@@ -40,7 +40,7 @@ public class X509ExpiryCheckingTrustManagerTest {
         doThrow(new CertificateExpiredException()).when(certificate).checkValidity();
         try {
             manager.checkServerTrusted(x509Certificates, "string");
-            Assert.fail();
+            fail("");
         } catch (CertificateExpiredException e) {
             verify(mockedDelegate).checkServerTrusted(x509Certificates, "string");
             verify(certificate).checkValidity();
@@ -48,7 +48,7 @@ public class X509ExpiryCheckingTrustManagerTest {
     }
 
     @Test
-    public void checkClientTrusted_callsDelegate() throws Exception {
+    void checkClientTrusted_callsDelegate() throws Exception {
         X509ExpiryCheckingTrustManager manager = new X509ExpiryCheckingTrustManager();
         X509TrustManager mockedDelegate = Mockito.mock(X509TrustManager.class);
         manager.setDelegate(mockedDelegate);
@@ -62,7 +62,7 @@ public class X509ExpiryCheckingTrustManagerTest {
     }
 
     @Test
-    public void checkAcceptedIssuers_callsDelegate() {
+    void checkAcceptedIssuers_callsDelegate() {
         X509ExpiryCheckingTrustManager manager = new X509ExpiryCheckingTrustManager();
         X509TrustManager mockedDelegate = Mockito.mock(X509TrustManager.class);
         manager.setDelegate(mockedDelegate);

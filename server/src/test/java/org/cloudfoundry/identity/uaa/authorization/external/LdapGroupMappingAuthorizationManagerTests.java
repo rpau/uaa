@@ -32,9 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.collection.IsArrayContainingInAnyOrder.arrayContainingInAnyOrder;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @WithDatabaseContext
 class LdapGroupMappingAuthorizationManagerTests {
@@ -66,7 +64,7 @@ class LdapGroupMappingAuthorizationManagerTests {
         gDB = new JdbcScimGroupProvisioning(namedJdbcTemplate, pagingListFactory, dbUtils);
         eDB = new JdbcScimGroupExternalMembershipManager(jdbcTemplate, dbUtils);
         ((JdbcScimGroupExternalMembershipManager) eDB).setScimGroupProvisioning(gDB);
-        assertEquals(0, gDB.retrieveAll(IdentityZoneHolder.get().getId()).size());
+        assertThat(gDB.retrieveAll(IdentityZoneHolder.get().getId())).isEmpty();
 
         gDB.create(new ScimGroup(null, "acme", IdentityZoneHolder.get().getId()), IdentityZoneHolder.get().getId());
         gDB.create(new ScimGroup(null, "acme.dev", IdentityZoneHolder.get().getId()), IdentityZoneHolder.get().getId());
@@ -94,14 +92,14 @@ class LdapGroupMappingAuthorizationManagerTests {
     void allLdapGroups() {
         Set<? extends GrantedAuthority> result = manager.findScopesFromAuthorities(ldapGroups);
         String[] list = getAuthorities(Arrays.asList(sa1, sa2));
-        assertThat(list, arrayContainingInAnyOrder(getAuthorities(result)));
+        assertThat(list).containsExactlyInAnyOrder(getAuthorities(result));
     }
 
     @Test
     void allNonLdapGroups() {
         Set<? extends GrantedAuthority> result = manager.findScopesFromAuthorities(nonLdapGroups);
         String[] list = getAuthorities(Arrays.asList(sa1, sa2, sa3));
-        assertThat(list, arrayContainingInAnyOrder(getAuthorities(result)));
+        assertThat(list).containsExactlyInAnyOrder(getAuthorities(result));
     }
 
     @Test
@@ -112,7 +110,7 @@ class LdapGroupMappingAuthorizationManagerTests {
         mixed.add(la1);
         Set<? extends GrantedAuthority> result = manager.findScopesFromAuthorities(nonLdapGroups);
         String[] list = getAuthorities(Arrays.asList(sa1, sa2, sa3));
-        assertThat(list, arrayContainingInAnyOrder(getAuthorities(result)));
+        assertThat(list).containsExactlyInAnyOrder(getAuthorities(result));
     }
 
     private static String[] getAuthorities(Collection<? extends GrantedAuthority> authorities) {

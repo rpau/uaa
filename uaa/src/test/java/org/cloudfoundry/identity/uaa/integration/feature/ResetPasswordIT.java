@@ -19,17 +19,15 @@ import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
 import org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils;
 import org.cloudfoundry.identity.uaa.login.test.UnlessProfileActive;
 import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.web.client.RestTemplate;
 
 import java.security.SecureRandom;
@@ -39,14 +37,13 @@ import java.util.Iterator;
 import static org.apache.commons.lang3.StringUtils.contains;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = DefaultIntegrationTestConfig.class)
+@SpringJUnitConfig(classes = DefaultIntegrationTestConfig.class)
 @UnlessProfileActive(values = "saml")
-public class ResetPasswordIT {
+class ResetPasswordIT {
 
     @Autowired
-    @Rule
-    public IntegrationTestRule integrationTestRule;
+    @RegisterExtension
+    private IntegrationTestExtension integrationTestExtension;
 
     @Autowired
     WebDriver webDriver;
@@ -69,9 +66,9 @@ public class ResetPasswordIT {
     private String scimClientId;
     private String authCodeClientId;
 
-    @Before
-    @After
-    public void logoutAndClearCookies() {
+    @BeforeEach
+    @AfterEach
+    void logoutAndClearCookies() {
         try {
             webDriver.get(baseUrl + "/logout.do");
         } catch (org.openqa.selenium.TimeoutException x) {
@@ -81,8 +78,8 @@ public class ResetPasswordIT {
         webDriver.manage().deleteAllCookies();
     }
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         SecureRandom secureRandom = new SecureRandom();
 
         scimClientId = "scim" + secureRandom.nextInt();
@@ -100,19 +97,19 @@ public class ResetPasswordIT {
         testClient.createUser(scimAccessToken, username, email, "secr3T", true);
     }
 
-    @After
-    public void tearDown() {
+    @AfterEach
+    void tearDown() {
         webDriver.get(baseUrl + "/logout.do");
     }
 
     @Test
-    public void resettingAPasswordWithUsername() {
+    void resettingAPasswordWithUsername() {
         beginPasswordReset(username);
         finishPasswordReset(username, email);
     }
 
     @Test
-    public void resettingAPasswordWithPrimaryEmail() {
+    void resettingAPasswordWithPrimaryEmail() {
         int receivedEmailSize = simpleSmtpServer.getReceivedEmailSize();
 
         beginPasswordReset(email);
@@ -121,7 +118,7 @@ public class ResetPasswordIT {
     }
 
     @Test
-    public void resetPassword_with_clientRedirect() {
+    void resetPassword_with_clientRedirect() {
         webDriver.get(baseUrl + "/forgot_password?client_id=" + scimClientId + "&redirect_uri=http://example.redirect.com");
         assertThat(webDriver.findElement(By.tagName("h1")).getText()).isEqualTo("Reset Password");
 
@@ -154,7 +151,7 @@ public class ResetPasswordIT {
     }
 
     @Test
-    public void testNotAutoLoginAfterResetPassword() {
+    void notAutoLoginAfterResetPassword() {
         webDriver.get(baseUrl + "/oauth/authorize?client_id=" + authCodeClientId + "&redirect_uri=http://example.redirect.com&grant_type=authorization_code&response_type=code");
         webDriver.findElement(By.linkText("Reset password")).click();
         assertThat(webDriver.findElement(By.tagName("h1")).getText()).isEqualTo("Reset Password");
@@ -194,7 +191,7 @@ public class ResetPasswordIT {
     }
 
     @Test
-    public void resettingAPasswordForANonExistentUser() {
+    void resettingAPasswordForANonExistentUser() {
         int receivedEmailSize = simpleSmtpServer.getReceivedEmailSize();
 
         beginPasswordReset("nonexistent_user");
@@ -203,7 +200,7 @@ public class ResetPasswordIT {
     }
 
     @Test
-    public void resettingAPasswordWithInvalidPassword() {
+    void resettingAPasswordWithInvalidPassword() {
         // Go to Forgot Password page
         beginPasswordReset(username);
         String link = getPasswordResetLink(email);
@@ -217,7 +214,7 @@ public class ResetPasswordIT {
     }
 
     @Test
-    public void codesCanOnlyBeUsedOnce() {
+    void codesCanOnlyBeUsedOnce() {
         // Go to Forgot Password page
         beginPasswordReset(username);
         String link = getPasswordResetLink(email);
@@ -230,7 +227,7 @@ public class ResetPasswordIT {
     }
 
     @Test
-    public void resetPassword_displaysErrorMessage_WhenPasswordIsInvalid() {
+    void resetPassword_displaysErrorMessage_WhenPasswordIsInvalid() {
         String newPassword = new RandomValueStringGenerator(260).generate();
         beginPasswordReset(username);
 
@@ -244,7 +241,7 @@ public class ResetPasswordIT {
     }
 
     @Test
-    public void resetPassword_displaysErrorMessage_NewPasswordSameAsOld() {
+    void resetPassword_displaysErrorMessage_NewPasswordSameAsOld() {
         beginPasswordReset(username);
         String link = getPasswordResetLink(email);
         webDriver.get(link);

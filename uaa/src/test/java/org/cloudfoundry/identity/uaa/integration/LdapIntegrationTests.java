@@ -14,7 +14,7 @@
 package org.cloudfoundry.identity.uaa.integration;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import org.cloudfoundry.identity.uaa.ServerRunning;
+import org.cloudfoundry.identity.uaa.ServerRunningExtension;
 import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
 import org.cloudfoundry.identity.uaa.constants.OriginKeys;
 import org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils;
@@ -28,10 +28,10 @@ import org.cloudfoundry.identity.uaa.provider.LdapIdentityProviderDefinition;
 import org.cloudfoundry.identity.uaa.scim.ScimUser;
 import org.cloudfoundry.identity.uaa.test.UaaTestAccounts;
 import org.cloudfoundry.identity.uaa.util.JsonUtils;
-import org.junit.Rule;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Collections;
@@ -43,8 +43,8 @@ import static org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtil
 import static org.cloudfoundry.identity.uaa.provider.ExternalIdentityProviderDefinition.USER_ATTRIBUTE_PREFIX;
 
 class LdapIntegrationTests {
-    @Rule
-    public ServerRunning serverRunning = ServerRunning.isRunning();
+    @RegisterExtension
+    private static final ServerRunningExtension serverRunning = ServerRunningExtension.connect();
 
     @BeforeEach
     void setup() {
@@ -61,7 +61,7 @@ class LdapIntegrationTests {
     }
 
     @Test
-    void test_LDAP_Custom_User_Attributes_In_ID_Token() {
+    void ldap_custom_user_attributes_in_id_token() {
         assertThat(doesSupportZoneDNS()).as("Expected testzone1.localhost and testzone2.localhost to resolve to 127.0.0.1").isTrue();
 
         final String costCenter = "costCenter";
@@ -149,11 +149,11 @@ class LdapIntegrationTests {
         clientDetails.setClientSecret("secret");
 
         String idToken = (String) IntegrationTestUtils.getPasswordToken(zoneUrl,
-                clientDetails.getClientId(),
-                clientDetails.getClientSecret(),
-                "marissa9",
-                "ldap9",
-                "openid user_attributes roles")
+                        clientDetails.getClientId(),
+                        clientDetails.getClientSecret(),
+                        "marissa9",
+                        "ldap9",
+                        "openid user_attributes roles")
                 .get("id_token");
 
         assertThat(idToken).isNotNull();
@@ -174,11 +174,11 @@ class LdapIntegrationTests {
         //no user_attribute scope provided
         idToken =
                 (String) IntegrationTestUtils.getPasswordToken(zoneUrl,
-                        clientDetails.getClientId(),
-                        clientDetails.getClientSecret(),
-                        "marissa9",
-                        "ldap9",
-                        "openid")
+                                clientDetails.getClientId(),
+                                clientDetails.getClientSecret(),
+                                "marissa9",
+                                "ldap9",
+                                "openid")
                         .get("id_token");
 
         assertThat(idToken).isNotNull();
@@ -192,11 +192,11 @@ class LdapIntegrationTests {
         String username = "琳贺";
         idToken =
                 (String) IntegrationTestUtils.getPasswordToken(zoneUrl,
-                        clientDetails.getClientId(),
-                        clientDetails.getClientSecret(),
-                        username,
-                        "koala",
-                        "openid")
+                                clientDetails.getClientId(),
+                                clientDetails.getClientSecret(),
+                                username,
+                                "koala",
+                                "openid")
                         .get("id_token");
 
         assertThat(idToken).isNotNull();

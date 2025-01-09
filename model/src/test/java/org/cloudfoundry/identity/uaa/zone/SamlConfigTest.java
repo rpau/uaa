@@ -89,12 +89,12 @@ class SamlConfigTest {
     SamlConfig config;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         config = new SamlConfig();
     }
 
     @Test
-    void testIsRequestSigned() {
+    void isRequestSigned() {
         assertThat(config.isRequestSigned()).isTrue();
     }
 
@@ -181,12 +181,12 @@ class SamlConfigTest {
     }
 
     @Test
-    void testIsWantAssertionSigned() {
+    void isWantAssertionSigned() {
         assertThat(config.isWantAssertionSigned()).isTrue();
     }
 
     @Test
-    void testSetKeyAndCert() {
+    void setKeyAndCert() {
         // Default values are null
         assertThat(config).returns(null, SamlConfig::getPrivateKey)
                 .returns(null, SamlConfig::getPrivateKeyPassword)

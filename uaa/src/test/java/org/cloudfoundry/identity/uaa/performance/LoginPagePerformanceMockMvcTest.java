@@ -1,22 +1,12 @@
 package org.cloudfoundry.identity.uaa.performance;
 
-import static org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils.CookieCsrfPostProcessor.cookieCsrf;
-import static org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils.createOtherIdentityZoneAndReturnResult;
-import static org.junit.Assert.assertFalse;
-import static org.springframework.http.MediaType.TEXT_HTML;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import java.io.File;
-import java.net.URL;
-import java.util.Collections;
-
 import org.cloudfoundry.identity.uaa.DefaultTestContext;
 import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
 import org.cloudfoundry.identity.uaa.codestore.JdbcExpiringCodeStore;
 import org.cloudfoundry.identity.uaa.constants.OriginKeys;
 import org.cloudfoundry.identity.uaa.impl.config.IdentityZoneConfigurationBootstrap;
 import org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils;
+import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
 import org.cloudfoundry.identity.uaa.provider.AbstractExternalOAuthIdentityProviderDefinition;
 import org.cloudfoundry.identity.uaa.provider.IdentityProvider;
 import org.cloudfoundry.identity.uaa.provider.JdbcIdentityProviderProvisioning;
@@ -35,7 +25,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -43,9 +32,20 @@ import org.springframework.util.StopWatch;
 import org.springframework.util.StringUtils;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.io.File;
+import java.net.URL;
+import java.util.Collections;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils.CookieCsrfPostProcessor.cookieCsrf;
+import static org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils.createOtherIdentityZoneAndReturnResult;
+import static org.springframework.http.MediaType.TEXT_HTML;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 @DefaultTestContext
 @DirtiesContext
-public class LoginPagePerformanceMockMvcTest {
+class LoginPagePerformanceMockMvcTest {
 
     private WebApplicationContext webApplicationContext;
 
@@ -72,7 +72,7 @@ public class LoginPagePerformanceMockMvcTest {
 
         originalLimitedModeStatusFile = MockMvcUtils.getLimitedModeStatusFile(webApplicationContext);
         MockMvcUtils.resetLimitedModeStatusFile(webApplicationContext, null);
-        assertFalse(limitedModeUaaFilter.isEnabled());
+        assertThat(limitedModeUaaFilter.isEnabled()).isFalse();
     }
 
     @AfterEach
@@ -121,9 +121,9 @@ public class LoginPagePerformanceMockMvcTest {
         stopWatch.start();
         for (int i = 0; i < 1000; i++) {
             MvcResult mvcResult = mockMvc.perform(get("/login")
-                    .with(cookieCsrf())
-                    .header("Accept", TEXT_HTML)
-                    .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost")))
+                            .with(cookieCsrf())
+                            .header("Accept", TEXT_HTML)
+                            .with(new SetServerNameRequestPostProcessor(zone.getSubdomain() + ".localhost")))
                     .andExpect(status().isOk())
                     .andReturn();
             MockHttpServletResponse response = mvcResult.getResponse();
@@ -134,7 +134,6 @@ public class LoginPagePerformanceMockMvcTest {
 
         System.out.println(totalTimeMillis + "ms");
     }
-
 
     private static String createOIDCProvider(JdbcIdentityProviderProvisioning jdbcIdentityProviderProvisioning, AlphanumericRandomValueStringGenerator generator, IdentityZone zone, String responseType, String domain) throws Exception {
         String originKey = generator.generate();

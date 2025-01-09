@@ -19,7 +19,6 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-
 import java.util.List;
 
 import static java.util.Collections.singletonList;
@@ -64,9 +63,10 @@ class ScimUserServiceTest {
     /**
      * Test cases for both alias entities being enabled and disabled.
      */
+    @Nested
     private abstract class Base {
         @Test
-        final void testUpdate_ShouldThrow_WhenAliasPropertiesAreInvalid() {
+        final void updateShouldThrowWhenAliasPropertiesAreInvalid() {
             // mock existing user
             final ScimUser existingUser = mock(ScimUser.class);
             when(scimUserProvisioning.retrieve(userId, idzId)).thenReturn(existingUser);
@@ -101,7 +101,7 @@ class ScimUserServiceTest {
         }
 
         @Test
-        void testUpdate_ShouldAlsoUpdateAlias_WhenAliasPropertiesAreValid() {
+        void updateShouldAlsoUpdateAliasWhenAliasPropertiesAreValid() {
             // mock existing user
             final ScimUser existingUser = buildExemplaryUser(userId, idzId, origin);
             when(scimUserProvisioning.retrieve(userId, idzId)).thenReturn(existingUser);
@@ -142,7 +142,7 @@ class ScimUserServiceTest {
         }
 
         @Test
-        void testUpdate_ShouldUpdateOnlyOriginalUser_WhenAliasEnabledAndPropertiesAreValid() {
+        void updateShouldUpdateOnlyOriginalUserWhenAliasEnabledAndPropertiesAreValid() {
             // mock existing user
             final ScimUser existingUser = buildExemplaryUser(userId, idzId, origin);
             when(scimUserProvisioning.retrieve(userId, idzId)).thenReturn(existingUser);

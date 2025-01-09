@@ -28,8 +28,7 @@ import org.springframework.security.saml2.Saml2Exception;
 import org.springframework.security.web.WebAttributes;
 import org.springframework.security.web.firewall.RequestRejectedException;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
@@ -45,8 +44,8 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -56,10 +55,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.xpath;
 
-@ExtendWith(SpringExtension.class)
 @ExtendWith(PollutionPreventionExtension.class)
 @WebAppConfiguration
-@ContextConfiguration(classes = HomeControllerViewTests.ContextConfiguration.class)
+@SpringJUnitConfig(classes = HomeControllerViewTests.ContextConfiguration.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class HomeControllerViewTests extends TestClassNullifier {
 
@@ -206,7 +204,7 @@ class HomeControllerViewTests extends TestClassNullifier {
 
     @Test
     void handleRequestRejected() {
-        assertEquals("external_auth_error", homeController.handleRequestRejected(mock(Model.class), new RequestRejectedException(""), ""));
+        assertThat(homeController.handleRequestRejected(mock(Model.class), new RequestRejectedException(""), "")).isEqualTo("external_auth_error");
     }
 
     @Test

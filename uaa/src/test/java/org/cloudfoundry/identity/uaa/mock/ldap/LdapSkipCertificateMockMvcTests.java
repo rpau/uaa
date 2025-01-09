@@ -3,6 +3,7 @@ package org.cloudfoundry.identity.uaa.mock.ldap;
 import org.cloudfoundry.identity.uaa.DefaultTestContext;
 import org.cloudfoundry.identity.uaa.constants.OriginKeys;
 import org.cloudfoundry.identity.uaa.mock.util.MockMvcUtils;
+import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
 import org.cloudfoundry.identity.uaa.provider.LdapIdentityProviderDefinition;
 import org.cloudfoundry.identity.uaa.test.InMemoryLdapServer;
 import org.cloudfoundry.identity.uaa.util.SetServerNameRequestPostProcessor;
@@ -13,7 +14,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.util.FileSystemUtils;
 import org.springframework.web.context.WebApplicationContext;
@@ -96,24 +96,24 @@ class LdapSkipCertificateMockMvcTests {
     }
 
     @Test
-    void testIgnoreServerCertificate() throws Exception {
+    void ignoreServerCertificate() throws Exception {
         mockMvc.perform(post("/login.do").accept(TEXT_HTML_VALUE)
-                .with(cookieCsrf())
-                .with(new SetServerNameRequestPostProcessor(trustedCertZone.getIdentityZone().getSubdomain() + ".localhost"))
-                .param("username", "marissa2")
-                .param("password", LDAP))
+                        .with(cookieCsrf())
+                        .with(new SetServerNameRequestPostProcessor(trustedCertZone.getIdentityZone().getSubdomain() + ".localhost"))
+                        .param("username", "marissa2")
+                        .param("password", LDAP))
                 .andExpect(status().isFound())
                 .andExpect(redirectedUrl("/"))
                 .andExpect(authenticated());
     }
 
     @Test
-    void testIgnoreExpiredServerCertificate() throws Exception {
+    void ignoreExpiredServerCertificate() throws Exception {
         mockMvc.perform(post("/login.do").accept(TEXT_HTML_VALUE)
-                .with(cookieCsrf())
-                .with(new SetServerNameRequestPostProcessor(trustedButExpiredCertZone.getIdentityZone().getSubdomain() + ".localhost"))
-                .param("username", "marissa2")
-                .param("password", LDAP))
+                        .with(cookieCsrf())
+                        .with(new SetServerNameRequestPostProcessor(trustedButExpiredCertZone.getIdentityZone().getSubdomain() + ".localhost"))
+                        .param("username", "marissa2")
+                        .param("password", LDAP))
                 .andExpect(status().isFound())
                 .andExpect(redirectedUrl("/"))
                 .andExpect(authenticated());

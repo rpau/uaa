@@ -2,121 +2,117 @@ package org.cloudfoundry.identity.uaa.oauth.provider;
 
 import org.cloudfoundry.identity.uaa.oauth.common.util.OAuth2Utils;
 import org.cloudfoundry.identity.uaa.oauth.provider.implicit.ImplicitTokenRequest;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-public class OAuth2RequestTests {
+class OAuth2RequestTests {
 
     private OAuth2Request oAuth2Request;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() {
 
         oAuth2Request = new OAuth2Request(Map.of("client_id", "id"), "id", Collections.emptyList(), true, Set.of("client"),
                 Set.of(), null, null, Map.of("extra", "param"));
     }
 
     @Test
-    public void getRedirectUri() {
-        assertNull(oAuth2Request.getRedirectUri());
+    void getRedirectUri() {
+        assertThat(oAuth2Request.getRedirectUri()).isNull();
     }
 
     @Test
-    public void getResponseTypes() {
-        assertEquals(Set.of(), oAuth2Request.getResponseTypes());
+    void getResponseTypes() {
+        assertThat(oAuth2Request.getResponseTypes()).isEqualTo(Set.of());
     }
 
     @Test
-    public void getAuthorities() {
-        assertEquals(Set.of(), oAuth2Request.getAuthorities());
+    void getAuthorities() {
+        assertThat(oAuth2Request.getAuthorities()).isEqualTo(Set.of());
     }
 
     @Test
-    public void isApproved() {
-        assertTrue(oAuth2Request.isApproved());
+    void isApproved() {
+        assertThat(oAuth2Request.isApproved()).isTrue();
     }
 
     @Test
-    public void getResourceIds() {
-        assertEquals(Set.of(), oAuth2Request.getResourceIds());
+    void getResourceIds() {
+        assertThat(oAuth2Request.getResourceIds()).isEqualTo(Set.of());
     }
 
     @Test
-    public void getExtensions() {
-        assertEquals(Map.of("extra", "param"), oAuth2Request.getExtensions());
+    void getExtensions() {
+        assertThat(oAuth2Request.getExtensions()).isEqualTo(Map.of("extra", "param"));
     }
 
     @Test
-    public void createOAuth2Request() {
+    void createOAuth2Request() {
         OAuth2Request copyOf = new OAuth2Request(oAuth2Request);
-        assertEquals(oAuth2Request, copyOf);
+        assertThat(copyOf).isEqualTo(oAuth2Request);
         OAuth2Request fromClient = new OAuth2Request("id");
-        assertNotEquals(oAuth2Request, fromClient);
-        assertNotEquals(oAuth2Request, new OAuth2Request());
+        assertThat(fromClient).isNotEqualTo(oAuth2Request);
+        assertThat(new OAuth2Request()).isNotEqualTo(oAuth2Request);
         OAuth2Request paramCopy = oAuth2Request.createOAuth2Request(Map.of("extra", "param"));
-        assertNotEquals(oAuth2Request, paramCopy);
+        assertThat(paramCopy).isNotEqualTo(oAuth2Request);
     }
 
     @Test
-    public void narrowScope() {
+    void narrowScope() {
         OAuth2Request narrow = oAuth2Request.narrowScope(Set.of("scope1", "scope2"));
-        assertEquals(Set.of("scope1", "scope2"), narrow.getScope());
+        assertThat(narrow.getScope()).isEqualTo(Set.of("scope1", "scope2"));
     }
 
     @Test
-    public void refresh() {
+    void refresh() {
         OAuth2Request request = oAuth2Request.refresh(new ImplicitTokenRequest(mock(TokenRequest.class), mock(OAuth2Request.class)));
-        assertEquals(Set.of("client"), request.getScope());
-        assertEquals(oAuth2Request, request);
-        assertNotNull(request.getRefreshTokenRequest());
+        assertThat(request.getScope()).isEqualTo(Set.of("client"));
+        assertThat(request).isEqualTo(oAuth2Request);
+        assertThat(request.getRefreshTokenRequest()).isNotNull();
     }
 
     @Test
-    public void isRefresh() {
+    void isRefresh() {
         OAuth2Request request = oAuth2Request.refresh(new ImplicitTokenRequest(mock(TokenRequest.class), mock(OAuth2Request.class)));
-        assertTrue(request.isRefresh());
+        assertThat(request.isRefresh()).isTrue();
     }
 
     @Test
-    public void getRefreshTokenRequest() {
-        assertNull(oAuth2Request.getRefreshTokenRequest());
-        assertNotNull(oAuth2Request.refresh(new ImplicitTokenRequest(mock(TokenRequest.class), mock(OAuth2Request.class))).getRefreshTokenRequest());
+    void getRefreshTokenRequest() {
+        assertThat(oAuth2Request.getRefreshTokenRequest()).isNull();
+        assertThat(oAuth2Request.refresh(new ImplicitTokenRequest(mock(TokenRequest.class), mock(OAuth2Request.class))).getRefreshTokenRequest()).isNotNull();
     }
 
     @Test
-    public void getGrantType() {
-        assertNull(oAuth2Request.getGrantType());
+    void getGrantType() {
+        assertThat(oAuth2Request.getGrantType()).isNull();
         oAuth2Request.setRequestParameters(Map.of(OAuth2Utils.GRANT_TYPE, "implicit"));
-        assertEquals("implicit", oAuth2Request.getGrantType());
+        assertThat(oAuth2Request.getGrantType()).isEqualTo("implicit");
         oAuth2Request.setRequestParameters(Map.of(OAuth2Utils.RESPONSE_TYPE, "token"));
-        assertEquals("implicit", oAuth2Request.getGrantType());
+        assertThat(oAuth2Request.getGrantType()).isEqualTo("implicit");
     }
 
     @Test
-    public void getRequestParameters() {
+    void getRequestParameters() {
         oAuth2Request.setRequestParameters(Map.of(OAuth2Utils.RESPONSE_TYPE, "token"));
-        assertEquals("token", oAuth2Request.getRequestParameters().get("response_type"));
+        assertThat(oAuth2Request.getRequestParameters()).containsEntry("response_type", "token");
     }
 
     @Test
-    public void testEquals() {
+    void equals() {
         OAuth2Request copyOf = new OAuth2Request(oAuth2Request);
-        assertEquals(oAuth2Request, copyOf);
-        assertEquals(oAuth2Request.hashCode(), copyOf.hashCode());
+        assertThat(copyOf).isEqualTo(oAuth2Request)
+                .hasSameHashCodeAs(oAuth2Request);
     }
 }

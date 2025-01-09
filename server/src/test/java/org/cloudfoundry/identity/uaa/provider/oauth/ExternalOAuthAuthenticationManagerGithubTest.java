@@ -22,11 +22,9 @@ import java.time.Duration;
 import java.util.Map;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.cloudfoundry.identity.uaa.util.UaaMapUtils.entry;
 import static org.cloudfoundry.identity.uaa.util.UaaMapUtils.map;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpHeaders.ACCEPT;
@@ -140,11 +138,12 @@ class ExternalOAuthAuthenticationManagerGithubTest {
 
         // Then
         mockGithubServer.verify();
-        assertThat(authenticationData.getUsername(), is(equalTo("octocat@github.example.com")));
+        assertThat(authenticationData.getUsername()).isEqualTo("octocat@github.example.com");
 
         Map<String, Object> claims = authenticationData.getClaims();
-        assertThat(claims.get("login"), is(equalTo("octocat")));
-        assertThat(claims.get("name"), is(equalTo("monalisa octocat")));
-        assertThat(claims.get("email"), is(equalTo("octocat@github.example.com")));
+        assertThat(claims)
+                .containsEntry("login", "octocat")
+                .containsEntry("name", "monalisa octocat")
+                .containsEntry("email", "octocat@github.example.com");
     }
 }

@@ -7,12 +7,11 @@ import org.hamcrest.Matcher;
 
 import java.util.Map;
 
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class OAuth2RefreshTokenMatchers extends AbstractOAuth2AccessTokenMatchers<OAuth2RefreshToken> {
 
     private final String key;
-
 
     public OAuth2RefreshTokenMatchers(String key, Matcher<?> value) {
         super(value);
@@ -104,8 +103,8 @@ public class OAuth2RefreshTokenMatchers extends AbstractOAuth2AccessTokenMatcher
             @Override
             protected boolean matchesSafely(OAuth2RefreshToken token) {
                 Map<String, Object> claims = getClaims(token);
-                assertTrue(((Integer) claims.get(ClaimConstants.IAT)) > 0);
-                assertTrue(((Integer) claims.get(ClaimConstants.EXPIRY_IN_SECONDS)) > 0);
+                assertThat(((Integer) claims.get(ClaimConstants.IAT))).isPositive();
+                assertThat(((Integer) claims.get(ClaimConstants.EXPIRY_IN_SECONDS))).isPositive();
                 return validFor.matches(((Integer) claims.get(ClaimConstants.EXPIRY_IN_SECONDS)) - ((Integer) claims.get(ClaimConstants.IAT)));
             }
 

@@ -9,35 +9,28 @@ import org.cloudfoundry.identity.uaa.oauth.common.DefaultOAuth2RefreshToken;
 import org.cloudfoundry.identity.uaa.oauth.common.OAuth2AccessToken;
 import org.cloudfoundry.identity.uaa.oauth.token.AccessTokenRequest;
 import org.cloudfoundry.identity.uaa.oauth.token.DefaultAccessTokenRequest;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import java.util.Collections;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-public class ResourceOwnerPasswordAccessTokenProviderTests {
-
-    @Rule
-    public ExpectedException expected = ExpectedException.none();
+class ResourceOwnerPasswordAccessTokenProviderTests {
 
     private final MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
 
     private final ResourceOwnerPasswordAccessTokenProvider provider = new ResourceOwnerPasswordAccessTokenProvider() {
         @Override
         protected OAuth2AccessToken retrieveToken(AccessTokenRequest request, OAuth2ProtectedResourceDetails resource,
-                MultiValueMap<String, String> form, HttpHeaders headers) {
+                                                  MultiValueMap<String, String> form, HttpHeaders headers) {
             params.putAll(form);
             if (!form.containsKey("username") || form.getFirst("username") == null) {
                 throw new IllegalArgumentException();
@@ -53,47 +46,47 @@ public class ResourceOwnerPasswordAccessTokenProviderTests {
     private final ResourceOwnerPasswordResourceDetails resource = new ResourceOwnerPasswordResourceDetails();
 
     @Test
-    public void supportsResource() {
-        assertTrue(provider.supportsResource(new ResourceOwnerPasswordResourceDetails()));
+    void supportsResource() {
+        assertThat(provider.supportsResource(new ResourceOwnerPasswordResourceDetails())).isTrue();
     }
 
     @Test
-    public void supportsRefresh() {
-        assertFalse(provider.supportsRefresh(new AuthorizationCodeResourceDetails()));
+    void supportsRefresh() {
+        assertThat(provider.supportsRefresh(new AuthorizationCodeResourceDetails())).isFalse();
     }
 
     @Test
-    public void refreshAccessToken() {
-        expected.expect(IllegalArgumentException.class);
-        assertNull(provider.refreshAccessToken(new AuthorizationCodeResourceDetails(), new DefaultOAuth2RefreshToken(""), new DefaultAccessTokenRequest(
-                Collections.emptyMap())));
+    void refreshAccessToken() {
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() ->
+                assertThat(provider.refreshAccessToken(new AuthorizationCodeResourceDetails(), new DefaultOAuth2RefreshToken(""), new DefaultAccessTokenRequest(
+                        Collections.emptyMap()))).isNull());
     }
 
     @Test
-    public void testGetAccessToken() throws Exception {
+    void getAccessToken() throws Exception {
         AccessTokenRequest request = new DefaultAccessTokenRequest();
         resource.setAccessTokenUri("http://localhost/oauth/token");
         resource.setUsername("foo");
         resource.setPassword("bar");
-        assertEquals("FOO", provider.obtainAccessToken(resource, request).getValue());
+        assertThat(provider.obtainAccessToken(resource, request).getValue()).isEqualTo("FOO");
     }
 
     @Test
-    public void testGetAccessTokenWithDynamicCredentials() throws Exception {
+    void getAccessTokenWithDynamicCredentials() throws Exception {
         AccessTokenRequest request = new DefaultAccessTokenRequest();
         request.set("username", "foo");
         request.set("password", "bar");
         resource.setAccessTokenUri("http://localhost/oauth/token");
-        assertEquals("FOO", provider.obtainAccessToken(resource, request).getValue());
+        assertThat(provider.obtainAccessToken(resource, request).getValue()).isEqualTo("FOO");
     }
 
     @Test
-    public void testCurrentUriNotUsed() throws Exception {
+    void currentUriNotUsed() throws Exception {
         AccessTokenRequest request = new DefaultAccessTokenRequest();
         request.set("username", "foo");
         request.setCurrentUri("urn:foo:bar");
         resource.setAccessTokenUri("http://localhost/oauth/token");
-        assertEquals("FOO", provider.obtainAccessToken(resource, request).getValue());
+        assertThat(provider.obtainAccessToken(resource, request).getValue()).isEqualTo("FOO");
     }
 
 }

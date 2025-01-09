@@ -1,8 +1,6 @@
 package org.cloudfoundry.identity.uaa.util;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-
-import org.assertj.core.api.Assertions;
 import org.cloudfoundry.identity.uaa.metrics.UrlGroup;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -11,12 +9,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 class JsonUtilsTest {
     private static final String JSON_TEST_OBJECT_STRING = "{\"pattern\":\"/pattern\",\"group\":\"group\",\"limit\":1000,\"category\":\"category\"}";
@@ -24,97 +18,97 @@ class JsonUtilsTest {
     @Test
     void writeValueAsString() {
         String testObjectString = JsonUtils.writeValueAsString(getTestObject());
-        assertNotNull(testObjectString);
-        assertEquals(JSON_TEST_OBJECT_STRING, testObjectString);
+        assertThat(testObjectString).isEqualTo(JSON_TEST_OBJECT_STRING);
     }
 
     @Test
     void writeValueAsBytes() {
         byte[] testObject = JsonUtils.writeValueAsBytes(getTestObject());
-        assertNotNull(testObject);
-        assertEquals(JSON_TEST_OBJECT_STRING, new String(testObject));
+        assertThat(testObject).isNotNull();
+        assertThat(new String(testObject)).isEqualTo(JSON_TEST_OBJECT_STRING);
     }
 
     @Test
     void testreadValueStringClass() {
-        assertNotNull(JsonUtils.readValue(JSON_TEST_OBJECT_STRING, UrlGroup.class));
-        assertNull(JsonUtils.readValue((String) null, UrlGroup.class));
+        assertThat(JsonUtils.readValue(JSON_TEST_OBJECT_STRING, UrlGroup.class)).isNotNull();
+        assertThat(JsonUtils.readValue((String) null, UrlGroup.class)).isNull();
     }
 
     @Test
-    void testReadValueByteClass() {
-        assertNotNull(JsonUtils.readValue(JSON_TEST_OBJECT_STRING.getBytes(), UrlGroup.class));
-        assertNull(JsonUtils.readValue((byte[]) null, UrlGroup.class));
+    void readValueByteClass() {
+        assertThat(JsonUtils.readValue(JSON_TEST_OBJECT_STRING.getBytes(), UrlGroup.class)).isNotNull();
+        assertThat(JsonUtils.readValue((byte[]) null, UrlGroup.class)).isNull();
     }
 
     @Test
-    void testReadValueAsMap() {
+    void readValueAsMap() {
         final String jsonInput = "{\"prop1\":\"abc\",\"prop2\":{\"prop2a\":\"def\",\"prop2b\":\"ghi\"},\"prop3\":[\"jkl\",\"mno\"]}";
         final Map<String, Object> map = JsonUtils.readValueAsMap(jsonInput);
-        Assertions.assertThat(map).isNotNull();
-        Assertions.assertThat(map.get("prop1")).isNotNull().isEqualTo("abc");
-        Assertions.assertThat(map.get("prop2")).isNotNull().isInstanceOf(Map.class);
-        Assertions.assertThat(((Map<String, Object>) map.get("prop2")).get("prop2a")).isNotNull().isEqualTo("def");
-        Assertions.assertThat(((Map<String, Object>) map.get("prop2")).get("prop2b")).isNotNull().isEqualTo("ghi");
-        Assertions.assertThat(map.get("prop3")).isNotNull().isInstanceOf(List.class);
-        Assertions.assertThat((List<String>) map.get("prop3")).containsExactly("jkl", "mno");
+        assertThat(map).containsEntry("prop1", "abc")
+                .containsKey("prop3");
+        assertThat(((Map<String, Object>) map.get("prop2")))
+                .isInstanceOf(Map.class)
+                .containsEntry("prop2a", "def")
+                .containsEntry("prop2b", "ghi");
+        assertThat((List<String>) map.get("prop3"))
+                .isInstanceOf(List.class)
+                .containsExactly("jkl", "mno");
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"{", "}", "{\"prop1\":\"abc\","})
-    void testReadValueAsMap_Invalid(final String input) {
-        Assertions.assertThatExceptionOfType(JsonUtils.JsonUtilException.class)
+    void readValueAsMapInvalid(final String input) {
+        assertThatExceptionOfType(JsonUtils.JsonUtilException.class)
                 .isThrownBy(() -> JsonUtils.readValueAsMap(input));
     }
 
     @Test
-    void testReadValueBytes() {
-        assertNotNull(JsonUtils.readValue(JSON_TEST_OBJECT_STRING.getBytes(), new TypeReference<Map<String, Object>>() {
-        }));
-        assertNull(JsonUtils.readValue((byte[]) null, new TypeReference<Map<String, Object>>() {
-        }));
+    void readValueBytes() {
+        assertThat(JsonUtils.readValue(JSON_TEST_OBJECT_STRING.getBytes(), new TypeReference<Map<String, Object>>() {
+        })).isNotNull();
+        assertThat(JsonUtils.readValue((byte[]) null, new TypeReference<Map<String, Object>>() {
+        })).isNull();
     }
 
     @Test
-    void testReadValueString() {
-        assertNotNull(JsonUtils.readValue(JSON_TEST_OBJECT_STRING, new TypeReference<Map<String, Object>>() {
-        }));
-        assertNull(JsonUtils.readValue((String) null, new TypeReference<Map<String, Object>>() {
-        }));
+    void readValueString() {
+        assertThat(JsonUtils.readValue(JSON_TEST_OBJECT_STRING, new TypeReference<Map<String, Object>>() {
+        })).isNotNull();
+        assertThat(JsonUtils.readValue((String) null, new TypeReference<Map<String, Object>>() {
+        })).isNull();
     }
 
     @Test
-    void testConvertValue() {
-        assertNull(JsonUtils.convertValue(null, UrlGroup.class));
+    void convertValue() {
+        assertThat(JsonUtils.convertValue(null, UrlGroup.class)).isNull();
     }
 
-
     @Test
-    void testSerializeExcludingProperties() {
+    void serializeExcludingProperties() {
         Map<String, String> groupProperties = JsonUtils.readValue(JSON_TEST_OBJECT_STRING, new TypeReference<>() {
         });
         String resultString = JsonUtils.serializeExcludingProperties(groupProperties, "group", "pattern", "any.limit", "category");
-        assertEquals("{\"limit\":\"1000\"}", resultString);
+        assertThat(resultString).isEqualTo("{\"limit\":\"1000\"}");
     }
 
     @Test
-    void testSerializeExcludingPropertiesInnerCallFails() {
+    void serializeExcludingPropertiesInnerCallFails() {
         Map<String, String> groupProperties = JsonUtils.readValue(JSON_TEST_OBJECT_STRING, new TypeReference<>() {
         });
-        assertThrows(JsonUtils.JsonUtilException.class, () ->
+        assertThatExceptionOfType(JsonUtils.JsonUtilException.class).isThrownBy(() ->
                 JsonUtils.serializeExcludingProperties(groupProperties, "limit.unknown"));
     }
 
     @Test
-    void testHasLength() {
-        assertTrue(JsonUtils.hasLength("X"));
-        assertFalse(JsonUtils.hasLength(""));
+    void hasLength() {
+        assertThat(JsonUtils.hasLength("X")).isTrue();
+        assertThat(JsonUtils.hasLength("")).isFalse();
     }
 
     @Test
-    void testHasText() {
-        assertTrue(JsonUtils.hasText("X"));
-        assertFalse(JsonUtils.hasText(" "));
+    void hasText() {
+        assertThat(JsonUtils.hasText("X")).isTrue();
+        assertThat(JsonUtils.hasText(" ")).isFalse();
     }
 
     private Object getTestObject() {

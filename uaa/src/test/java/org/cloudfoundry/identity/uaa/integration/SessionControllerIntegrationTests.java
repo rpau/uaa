@@ -6,18 +6,15 @@ import org.cloudfoundry.identity.uaa.oauth.client.test.TestAccounts;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
-@ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = DefaultIntegrationTestConfig.class)
+@SpringJUnitConfig(classes = DefaultIntegrationTestConfig.class)
 class SessionControllerIntegrationTests {
     @Autowired
     TestClient testClient;
@@ -30,7 +27,7 @@ class SessionControllerIntegrationTests {
 
     @BeforeEach
     @AfterEach
-    public void logout_and_clear_cookies() {
+    void logout_and_clear_cookies() {
         try {
             webDriver.get(baseUrl + "/logout.do");
         } catch (org.openqa.selenium.TimeoutException x) {
@@ -47,7 +44,7 @@ class SessionControllerIntegrationTests {
 
         Object r = ((JavascriptExecutor) webDriver).executeScript(
                 "return typeof(handleMessage);");
-        assertEquals("function", r.toString());
+        assertThat(r).hasToString("function");
     }
 
     @Test
@@ -57,10 +54,10 @@ class SessionControllerIntegrationTests {
 
         Object clientId = ((JavascriptExecutor) webDriver).executeScript(
                 "return clientId;");
-        assertEquals("admin", clientId.toString());
+        assertThat(clientId).hasToString("admin");
 
         Object origin = ((JavascriptExecutor) webDriver).executeScript(
                 "return messageOrigin;");
-        assertEquals("http://localhost:8080", origin.toString());
+        assertThat(origin).hasToString("http://localhost:8080");
     }
 }

@@ -1,6 +1,5 @@
 package org.cloudfoundry.identity.uaa.util;
 
-import org.assertj.core.api.Assertions;
 import org.cloudfoundry.identity.uaa.test.ModelTestUtils;
 import org.cloudfoundry.identity.uaa.zone.IdentityZone;
 import org.junit.jupiter.api.BeforeEach;
@@ -266,7 +265,6 @@ class UaaStringUtilsTest {
                 Collections.singletonList("saml.group.1")
         )).contains("saml.group.1");
 
-
         assertThat(UaaStringUtils.retainAllMatches(
                 Arrays.asList("saml.group.1",
                         "saml.group.2",
@@ -281,7 +279,6 @@ class UaaStringUtilsTest {
                         "saml.group1.3.1"),
                 Collections.singletonList("saml.group*.*")
         )).contains("saml.group.1", "saml.group.2", "saml.group1.3", "saml.group1.3.1");
-
 
         assertThat(UaaStringUtils.retainAllMatches(
                 Arrays.asList("saml-group-1",
@@ -341,7 +338,7 @@ class UaaStringUtilsTest {
     }
 
     @Test
-    void testGetAuthoritiesFromStrings() {
+    void getAuthoritiesFromStrings() {
         List<? extends GrantedAuthority> authorities = UaaStringUtils.getAuthoritiesFromStrings(null);
         assertThat(authorities).isEqualTo(Collections.emptyList());
         assertThat(UaaStringUtils.getStringsFromAuthorities(null)).isEmpty();
@@ -370,19 +367,19 @@ class UaaStringUtilsTest {
     @ParameterizedTest
     @NullAndEmptySource
     void isNullOrEmpty_ShouldReturnTrue(final String input) {
-        Assertions.assertThat(UaaStringUtils.isNullOrEmpty(input)).isTrue();
+        assertThat(UaaStringUtils.isNullOrEmpty(input)).isTrue();
     }
 
     @ParameterizedTest
     @NullAndEmptySource
     void isNotEmpty_ShouldReturnFalse(final String input) {
-        Assertions.assertThat(UaaStringUtils.isNotEmpty(input)).isFalse();
+        assertThat(UaaStringUtils.isNotEmpty(input)).isFalse();
     }
 
     @ParameterizedTest
     @ValueSource(strings = {" ", "  ", "\t", "\n", "abc"})
     void isNullOrEmpty_ShouldReturnFalse(final String input) {
-        Assertions.assertThat(UaaStringUtils.isNullOrEmpty(input)).isFalse();
+        assertThat(UaaStringUtils.isNullOrEmpty(input)).isFalse();
     }
 
     @Test

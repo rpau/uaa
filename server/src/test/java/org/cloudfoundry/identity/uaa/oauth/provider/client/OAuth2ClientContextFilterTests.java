@@ -2,7 +2,7 @@ package org.cloudfoundry.identity.uaa.oauth.provider.client;
 
 import org.cloudfoundry.identity.uaa.oauth.client.resource.UserRedirectRequiredException;
 import org.cloudfoundry.identity.uaa.oauth.provider.error.DefaultThrowableAnalyzer;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -15,7 +15,8 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -24,10 +25,10 @@ import static org.mockito.Mockito.mock;
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-public class OAuth2ClientContextFilterTests {
+class OAuth2ClientContextFilterTests {
 
     @Test
-    public void testdoFilter() throws Exception {
+    void testdoFilter() throws Exception {
         OAuth2ClientContextFilter filter = new OAuth2ClientContextFilter();
         RedirectStrategy redirectStrategy = mock(RedirectStrategy.class);
         filter.setRedirectStrategy(redirectStrategy);
@@ -36,8 +37,8 @@ public class OAuth2ClientContextFilterTests {
         filter.doFilter(request, response, mock(FilterChain.class));
     }
 
-    @Test(expected = IOException.class)
-    public void testdoFilterIOException() throws Exception {
+    @Test
+    void testdoFilterIOException() throws Exception {
         OAuth2ClientContextFilter filter = new OAuth2ClientContextFilter();
         RedirectStrategy redirectStrategy = mock(RedirectStrategy.class);
         filter.setRedirectStrategy(redirectStrategy);
@@ -47,11 +48,12 @@ public class OAuth2ClientContextFilterTests {
         doThrow(new IOException("")).when(filterChain).doFilter(any(), any());
         filter.setThrowableAnalyzer(new DefaultThrowableAnalyzer());
         filter.afterPropertiesSet();
-        filter.doFilter(request, response, filterChain);
+        assertThatExceptionOfType(IOException.class).isThrownBy(() ->
+                filter.doFilter(request, response, filterChain));
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testdoFilterException() throws Exception {
+    @Test
+    void testdoFilterException() throws Exception {
         OAuth2ClientContextFilter filter = new OAuth2ClientContextFilter();
         RedirectStrategy redirectStrategy = mock(RedirectStrategy.class);
         filter.setRedirectStrategy(redirectStrategy);
@@ -61,11 +63,12 @@ public class OAuth2ClientContextFilterTests {
         doThrow(new IllegalArgumentException("")).when(filterChain).doFilter(any(), any());
         filter.setThrowableAnalyzer(new DefaultThrowableAnalyzer());
         filter.afterPropertiesSet();
-        filter.doFilter(request, response, filterChain);
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() ->
+                filter.doFilter(request, response, filterChain));
     }
 
-    @Test(expected = ServletException.class)
-    public void testdoFilterServletException() throws Exception {
+    @Test
+    void testdoFilterServletException() throws Exception {
         OAuth2ClientContextFilter filter = new OAuth2ClientContextFilter();
         RedirectStrategy redirectStrategy = mock(RedirectStrategy.class);
         filter.setRedirectStrategy(redirectStrategy);
@@ -75,11 +78,12 @@ public class OAuth2ClientContextFilterTests {
         doThrow(new ServletException("")).when(filterChain).doFilter(any(), any());
         filter.setThrowableAnalyzer(new DefaultThrowableAnalyzer());
         filter.afterPropertiesSet();
-        filter.doFilter(request, response, filterChain);
+        assertThatExceptionOfType(ServletException.class).isThrownBy(() ->
+                filter.doFilter(request, response, filterChain));
     }
 
     @Test
-    public void testdoFilterUserRedirectRequiredException() throws Exception {
+    void testdoFilterUserRedirectRequiredException() throws Exception {
         OAuth2ClientContextFilter filter = new OAuth2ClientContextFilter();
         RedirectStrategy redirectStrategy = mock(RedirectStrategy.class);
         filter.setRedirectStrategy(redirectStrategy);
@@ -102,7 +106,7 @@ public class OAuth2ClientContextFilterTests {
     }
 
     @Test
-    public void testVanillaRedirectUri() throws Exception {
+    void vanillaRedirectUri() throws Exception {
         String redirect = "https://example.com/authorize";
         Map<String, String> params = new LinkedHashMap<>();
         params.put("foo", "bar");
@@ -111,7 +115,7 @@ public class OAuth2ClientContextFilterTests {
     }
 
     @Test
-    public void testTwoScopesRedirectUri() throws Exception {
+    void twoScopesRedirectUri() throws Exception {
         String redirect = "https://example.com/authorize";
         Map<String, String> params = new LinkedHashMap<>();
         params.put("foo", "bar");
@@ -120,7 +124,7 @@ public class OAuth2ClientContextFilterTests {
     }
 
     @Test
-    public void testRedirectUriWithUrlInParams() throws Exception {
+    void redirectUriWithUrlInParams() throws Exception {
         String redirect = "https://example.com/authorize";
         Map<String, String> params = Collections.singletonMap("redirect",
                 "https://foo/bar");
@@ -128,7 +132,7 @@ public class OAuth2ClientContextFilterTests {
     }
 
     @Test
-    public void testRedirectUriWithQuery() throws Exception {
+    void redirectUriWithQuery() throws Exception {
         String redirect = "https://example.com/authorize?foo=bar";
         Map<String, String> params = Collections.singletonMap("spam",
                 "bucket");
@@ -136,7 +140,7 @@ public class OAuth2ClientContextFilterTests {
     }
 
     public void testRedirectUri(String redirect, Map<String, String> params,
-            String result) throws Exception {
+                                String result) throws Exception {
         OAuth2ClientContextFilter filter = new OAuth2ClientContextFilter();
         RedirectStrategy redirectStrategy = mock(RedirectStrategy.class);
         filter.setRedirectStrategy(redirectStrategy);
@@ -150,69 +154,64 @@ public class OAuth2ClientContextFilterTests {
     }
 
     @Test
-    public void testVanillaCurrentUri() throws Exception {
+    void vanillaCurrentUri() {
         OAuth2ClientContextFilter filter = new OAuth2ClientContextFilter();
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setQueryString("foo=bar");
-        assertEquals("http://localhost?foo=bar",
-                filter.calculateCurrentUri(request));
+        assertThat(filter.calculateCurrentUri(request)).isEqualTo("http://localhost?foo=bar");
     }
 
     @Test
-    public void testCurrentUriWithLegalSpaces() throws Exception {
+    void currentUriWithLegalSpaces() {
         OAuth2ClientContextFilter filter = new OAuth2ClientContextFilter();
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setQueryString("foo=bar%20spam");
-        assertEquals("http://localhost?foo=bar%20spam",
-                filter.calculateCurrentUri(request));
+        assertThat(filter.calculateCurrentUri(request)).isEqualTo("http://localhost?foo=bar%20spam");
     }
 
     @Test
-    public void testCurrentUriWithNoQuery() throws Exception {
+    void currentUriWithNoQuery() {
         OAuth2ClientContextFilter filter = new OAuth2ClientContextFilter();
         MockHttpServletRequest request = new MockHttpServletRequest();
-        assertEquals("http://localhost", filter.calculateCurrentUri(request));
+        assertThat(filter.calculateCurrentUri(request)).isEqualTo("http://localhost");
     }
 
     @Test
-    public void testCurrentUriWithIllegalSpaces() throws Exception {
+    void currentUriWithIllegalSpaces() {
         OAuth2ClientContextFilter filter = new OAuth2ClientContextFilter();
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setQueryString("foo=bar+spam");
-        assertEquals("http://localhost?foo=bar+spam",
-                filter.calculateCurrentUri(request));
+        assertThat(filter.calculateCurrentUri(request)).isEqualTo("http://localhost?foo=bar+spam");
     }
 
     @Test
-    public void testCurrentUriRemovingCode() throws Exception {
+    void currentUriRemovingCode() {
         OAuth2ClientContextFilter filter = new OAuth2ClientContextFilter();
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setQueryString("code=XXXX&foo=bar");
-        assertEquals("http://localhost?foo=bar",
-                filter.calculateCurrentUri(request));
+        assertThat(filter.calculateCurrentUri(request)).isEqualTo("http://localhost?foo=bar");
     }
 
     @Test
-    public void testCurrentUriRemovingCodeInSecond() throws Exception {
+    void currentUriRemovingCodeInSecond() {
         OAuth2ClientContextFilter filter = new OAuth2ClientContextFilter();
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setQueryString("foo=bar&code=XXXX");
-        assertEquals("http://localhost?foo=bar",
-                filter.calculateCurrentUri(request));
+        assertThat(filter.calculateCurrentUri(request)).isEqualTo("http://localhost?foo=bar");
     }
 
     @Test
-    public void testCurrentUriWithInvalidQueryString() throws Exception {
+    void currentUriWithInvalidQueryString() {
         OAuth2ClientContextFilter filter = new OAuth2ClientContextFilter();
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setQueryString("foo=bar&code=XXXX&parm=%xx");
         try {
-            assertEquals(null, filter.calculateCurrentUri(request));
+            assertThat(filter.calculateCurrentUri(request)).isNull();
         } catch (IllegalStateException ex) {
             // OAuth2ClientContextFilter.calculateCurrentUri() internally uses
             // ServletUriComponentsBuilder.fromRequest(), which behaves differently in Spring Framework 5
             // and throws an IllegalStateException for a malformed URI.
-            // Previous to Spring Framework 5, 'null' would be returned by OAuth2ClientContextFilter.calculateCurrentUri()
+            // Previously to Spring Framework 5, 'null' would be returned by OAuth2ClientContextFilter.calculateCurrentUri()
             // instead of the thrown IllegalStateException.
         }
     }

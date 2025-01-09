@@ -1,36 +1,36 @@
 package org.cloudfoundry.identity.uaa.oauth.provider.code;
 
 import org.cloudfoundry.identity.uaa.oauth.provider.OAuth2Authentication;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
-public class InMemoryAuthorizationCodeServicesTest {
+class InMemoryAuthorizationCodeServicesTest {
 
     private InMemoryAuthorizationCodeServices inMemoryAuthorizationCodeServices;
     private OAuth2Authentication oAuth2Authentication;
 
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         inMemoryAuthorizationCodeServices = new InMemoryAuthorizationCodeServices();
         oAuth2Authentication = mock(OAuth2Authentication.class);
     }
 
     @Test
-    public void store() {
+    void store() {
         inMemoryAuthorizationCodeServices.store("code", oAuth2Authentication);
-        assertEquals(oAuth2Authentication, inMemoryAuthorizationCodeServices.authorizationCodeStore.get("code"));
+        assertThat(inMemoryAuthorizationCodeServices.authorizationCodeStore).containsEntry("code", oAuth2Authentication);
     }
 
     @Test
-    public void remove() {
-        assertEquals(0, inMemoryAuthorizationCodeServices.authorizationCodeStore.size());
+    void remove() {
+        assertThat(inMemoryAuthorizationCodeServices.authorizationCodeStore).isEmpty();
         inMemoryAuthorizationCodeServices.store("code", oAuth2Authentication);
-        assertEquals(1, inMemoryAuthorizationCodeServices.authorizationCodeStore.size());
+        assertThat(inMemoryAuthorizationCodeServices.authorizationCodeStore).hasSize(1);
         inMemoryAuthorizationCodeServices.remove("code");
-        assertEquals(0, inMemoryAuthorizationCodeServices.authorizationCodeStore.size());
+        assertThat(inMemoryAuthorizationCodeServices.authorizationCodeStore).isEmpty();
     }
 }

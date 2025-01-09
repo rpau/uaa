@@ -11,13 +11,12 @@ import java.sql.ResultSet;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @WithDatabaseContext
 class ExpiringCodeTableTest {
 
-    private static List<TestColumn> testColumns = Arrays.asList(
+    private static final List<TestColumn> testColumns = Arrays.asList(
             new TestColumn("code", "varchar/nvarchar", 255),
             new TestColumn("expiresat", "bigint/int8", -1),
             new TestColumn("data", "longtext/mediumtext/nvarchar", -1),
@@ -52,14 +51,14 @@ class ExpiringCodeTableTest {
                 int actualColumnSize = rs.getInt("COLUMN_SIZE");
                 if (tableName.equalsIgnoreCase(rstableName)) {
                     String actualColumnType = rs.getString("TYPE_NAME");
-                    assertTrue("Testing column:" + rscolumnName, testColumn(rscolumnName, actualColumnType, actualColumnSize));
+                    assertThat(testColumn(rscolumnName, actualColumnType, actualColumnSize)).as("Testing column:" + rscolumnName).isTrue();
                     foundTable = true;
                     foundColumn++;
                 }
             }
             rs.close();
-            assertTrue("Table " + tableName + " not found!", foundTable);
-            assertEquals("Table " + tableName + " is missing columns!", testColumns.size(), foundColumn);
+            assertThat(foundTable).as("Table " + tableName + " not found!").isTrue();
+            assertThat(foundColumn).as("Table " + tableName + " is missing columns!").isEqualTo(testColumns.size());
         }
     }
 

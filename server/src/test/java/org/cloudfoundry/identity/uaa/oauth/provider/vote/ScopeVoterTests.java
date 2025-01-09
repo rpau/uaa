@@ -3,7 +3,7 @@ package org.cloudfoundry.identity.uaa.oauth.provider.vote;
 import org.cloudfoundry.identity.uaa.oauth.provider.OAuth2Authentication;
 import org.cloudfoundry.identity.uaa.oauth.provider.OAuth2Request;
 import org.cloudfoundry.identity.uaa.oauth.provider.RequestTokenFactory;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.security.access.AccessDecisionVoter;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.ConfigAttribute;
@@ -12,84 +12,71 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 
 import java.util.Collections;
+import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-public class ScopeVoterTests {
+class ScopeVoterTests {
 
     private final ScopeVoter voter = new ScopeVoter();
 
     @Test
-    public void testAbstainIfNotOAuth2() throws Exception {
+    void abstainIfNotOAuth2() {
         Authentication clientAuthentication = new UsernamePasswordAuthenticationToken("foo", "bar");
-        assertEquals(
-                AccessDecisionVoter.ACCESS_ABSTAIN,
-                voter.vote(clientAuthentication, null,
-                        Collections.<ConfigAttribute>singleton(new SecurityConfig("SCOPE_READ"))));
+        assertThat(voter.vote(clientAuthentication, null,
+                Collections.singleton(new SecurityConfig("SCOPE_READ")))).isEqualTo(AccessDecisionVoter.ACCESS_ABSTAIN);
     }
 
     @Test
-    public void testDenyIfOAuth2AndExplictlyDenied() throws Exception {
-
+    void denyIfOAuth2AndExplictlyDenied() {
         OAuth2Request clientAuthentication = RequestTokenFactory.createOAuth2Request("foo", false, Collections.singleton("read"));
         Authentication userAuthentication = null;
         OAuth2Authentication oAuth2Authentication = new OAuth2Authentication(clientAuthentication, userAuthentication);
-        assertEquals(
-                AccessDecisionVoter.ACCESS_DENIED,
-                voter.vote(oAuth2Authentication, null,
-                        Collections.<ConfigAttribute>singleton(new SecurityConfig("DENY_OAUTH"))));
+        assertThat(voter.vote(oAuth2Authentication, null,
+                Collections.singleton(new SecurityConfig("DENY_OAUTH")))).isEqualTo(AccessDecisionVoter.ACCESS_DENIED);
     }
 
     @Test
-    public void testAccessGrantedIfScopesPresent() throws Exception {
+    void accessGrantedIfScopesPresent() {
         OAuth2Request clientAuthentication = RequestTokenFactory.createOAuth2Request("foo", false, Collections.singleton("read"));
         Authentication userAuthentication = null;
         OAuth2Authentication oAuth2Authentication = new OAuth2Authentication(clientAuthentication, userAuthentication);
-        assertEquals(
-                AccessDecisionVoter.ACCESS_GRANTED,
-                voter.vote(oAuth2Authentication, null,
-                        Collections.<ConfigAttribute>singleton(new SecurityConfig("SCOPE_READ"))));
+        assertThat(voter.vote(oAuth2Authentication, null,
+                Collections.singleton(new SecurityConfig("SCOPE_READ")))).isEqualTo(AccessDecisionVoter.ACCESS_GRANTED);
     }
 
     @Test
-    public void testAccessGrantedIfScopesPresentWithPrefix() throws Exception {
+    void accessGrantedIfScopesPresentWithPrefix() {
         voter.setScopePrefix("scope=");
         OAuth2Request clientAuthentication = RequestTokenFactory.createOAuth2Request("foo", false, Collections.singleton("read"));
         Authentication userAuthentication = null;
         OAuth2Authentication oAuth2Authentication = new OAuth2Authentication(clientAuthentication, userAuthentication);
-        assertEquals(
-                AccessDecisionVoter.ACCESS_GRANTED,
-                voter.vote(oAuth2Authentication, null,
-                        Collections.<ConfigAttribute>singleton(new SecurityConfig("scope=read"))));
+        assertThat(voter.vote(oAuth2Authentication, null,
+                Collections.singleton(new SecurityConfig("scope=read")))).isEqualTo(AccessDecisionVoter.ACCESS_GRANTED);
     }
 
     @Test
-    public void testAccessDeniedIfWrongScopesPresent() throws Exception {
+    void accessDeniedIfWrongScopesPresent() {
         OAuth2Request clientAuthentication = RequestTokenFactory.createOAuth2Request("foo", false, Collections.singleton("read"));
         Authentication userAuthentication = null;
         OAuth2Authentication oAuth2Authentication = new OAuth2Authentication(clientAuthentication, userAuthentication);
         voter.setThrowException(false);
-        assertEquals(
-                AccessDecisionVoter.ACCESS_DENIED,
-                voter.vote(oAuth2Authentication, null,
-                        Collections.<ConfigAttribute>singleton(new SecurityConfig("SCOPE_WRITE"))));
+        assertThat(voter.vote(oAuth2Authentication, null,
+                Collections.singleton(new SecurityConfig("SCOPE_WRITE")))).isEqualTo(AccessDecisionVoter.ACCESS_DENIED);
     }
 
-    @Test(expected = AccessDeniedException.class)
-    public void testExceptionThrownIfWrongScopesPresent() throws Exception {
+    @Test
+    void exceptionThrownIfWrongScopesPresent() {
         OAuth2Request clientAuthentication = RequestTokenFactory.createOAuth2Request("foo", false, Collections.singleton("read"));
-        Authentication userAuthentication = null;
-        OAuth2Authentication oAuth2Authentication = new OAuth2Authentication(clientAuthentication, userAuthentication);
+        OAuth2Authentication oAuth2Authentication = new OAuth2Authentication(clientAuthentication, null);
         voter.setDenyAccess("DENY_OAUTH");
-        assertTrue(voter.supports(ScopeVoter.class));
-        assertEquals(
-                AccessDecisionVoter.ACCESS_DENIED,
-                voter.vote(oAuth2Authentication, null,
-                        Collections.<ConfigAttribute>singleton(new SecurityConfig("SCOPE_WRITE"))));
+        assertThat(voter.supports(ScopeVoter.class)).isTrue();
+        Set<ConfigAttribute> scopeWrite = Collections.singleton(new SecurityConfig("SCOPE_WRITE"));
+        assertThatExceptionOfType(AccessDeniedException.class).isThrownBy(() -> voter.vote(oAuth2Authentication, null, scopeWrite));
     }
 }

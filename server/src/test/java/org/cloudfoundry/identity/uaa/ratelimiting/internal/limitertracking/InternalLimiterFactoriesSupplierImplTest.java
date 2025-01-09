@@ -1,9 +1,5 @@
 package org.cloudfoundry.identity.uaa.ratelimiting.internal.limitertracking;
 
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-
 import org.cloudfoundry.identity.uaa.ratelimiting.AbstractExceptionTestSupport;
 import org.cloudfoundry.identity.uaa.ratelimiting.core.CompoundKey;
 import org.cloudfoundry.identity.uaa.ratelimiting.core.config.LimiterMapping;
@@ -13,8 +9,12 @@ import org.cloudfoundry.identity.uaa.ratelimiting.internal.common.InternalLimite
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 @SuppressWarnings("SameParameterValue")
 class InternalLimiterFactoriesSupplierImplTest extends AbstractExceptionTestSupport {
@@ -30,7 +30,7 @@ class InternalLimiterFactoriesSupplierImplTest extends AbstractExceptionTestSupp
                 LimiterMapping.builder().name("Others").global("150r/5s").pathSelector("other").build(),
                 LimiterMapping.builder().name("All").global("100r/3s").pathSelector("All").build());
 
-        InternalLimiterFactoriesSupplierImpl fs = new InternalLimiterFactoriesSupplierImpl( null, null, limiterMappings );
+        InternalLimiterFactoriesSupplierImpl fs = new InternalLimiterFactoriesSupplierImpl(null, null, limiterMappings);
         checkFactoryCollections(fs, 8,
                 "   Equals:",
                 "      /F-35 -> N2:RemoteAddressID @ 4r/2s",
@@ -57,7 +57,7 @@ class InternalLimiterFactoriesSupplierImplTest extends AbstractExceptionTestSupp
         LimiterMapping all = LimiterMapping.builder().name("All").global("100r/3s").pathSelector("all").build();
         List<LimiterMapping> limiterMappings = List.of(n1, n2, all);
 
-        InternalLimiterFactoriesSupplierImpl fs = new InternalLimiterFactoriesSupplierImpl( null, null, limiterMappings );
+        InternalLimiterFactoriesSupplierImpl fs = new InternalLimiterFactoriesSupplierImpl(null, null, limiterMappings);
         checkFactoryCollections(fs, 8,
                 "   Equals:",
                 "      /F-22 -> N1:Global @ 2r/s",
@@ -96,7 +96,7 @@ class InternalLimiterFactoriesSupplierImplTest extends AbstractExceptionTestSupp
         private RequestsPerWindowSecs requestsPerWindow;
 
         static Expected from(LimiterMapping limiterMapping) {
-            return new Expected( limiterMapping );
+            return new Expected(limiterMapping);
         }
 
         Expected withGlobal() {
@@ -133,10 +133,10 @@ class InternalLimiterFactoriesSupplierImplTest extends AbstractExceptionTestSupp
             }
             CompoundKey key = keys.next();
             InternalLimiterFactoryImpl factory = (InternalLimiterFactoryImpl) map.get(key);
-            assertEquals(expected.compoundKey(), key, "key mismatch on expected[" + i + "]");
-            assertEquals(expected.requestsPerWindow, factory.getRequestsPerWindow(), "RequestsPerWindow mismatch on expected[" + i + "]");
-            assertEquals(expected.limiterMapping.name(), factory.getName(), "name mismatch on expected[" + i + "]");
-            assertEquals(expected.windowType, factory.getWindowType(), "windowType mismatch on expected[" + i + "]");
+            assertThat(key).as("key mismatch on expected[" + i + "]").isEqualTo(expected.compoundKey());
+            assertThat(factory.getRequestsPerWindow()).as("RequestsPerWindow mismatch on expected[" + i + "]").isEqualTo(expected.requestsPerWindow);
+            assertThat(factory.getName()).as("name mismatch on expected[" + i + "]").isEqualTo(expected.limiterMapping.name());
+            assertThat(factory.getWindowType()).as("windowType mismatch on expected[" + i + "]").isEqualTo(expected.windowType);
         }
         if (keys.hasNext()) {
             fail("expected " + orderedExpectedData.length + " factories, but got " + map.size() + ": " + map);
@@ -145,12 +145,12 @@ class InternalLimiterFactoriesSupplierImplTest extends AbstractExceptionTestSupp
 
     private void checkFactoryCollections(InternalLimiterFactoriesSupplierImpl fs, int expectedFactoryCount, String... lines) {
         String lfsString = fs.toString();
-        assertEquals(expectedFactoryCount, fs.pathsCount(), lfsString);
+        assertThat(fs.pathsCount()).as(lfsString).isEqualTo(expectedFactoryCount);
 
         StringBuilder sb = new StringBuilder().append("InternalLimiterFactoriesSupplier:");
         for (String line : lines) {
             sb.append('\n').append(line);
         }
-        assertEquals(sb.toString(), lfsString);
+        assertThat(lfsString).isEqualTo(sb.toString());
     }
 }

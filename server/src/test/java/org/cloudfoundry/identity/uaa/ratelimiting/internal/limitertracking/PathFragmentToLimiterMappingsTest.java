@@ -9,11 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiPredicate;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class PathFragmentToLimiterMappingsTest {
 
@@ -24,11 +20,11 @@ class PathFragmentToLimiterMappingsTest {
     void noLimiterMappings() {
         mapper = new PathFragmentToLimiterMappings(String::contains);
 
-        assertTrue(mapper.isEmpty());
-        assertEquals(0, mapper.count());
-        assertEquals(List.of(), streamToPathFragments());
+        assertThat(mapper.isEmpty()).isTrue();
+        assertThat(mapper.count()).isZero();
+        assertThat(streamToPathFragments()).isEqualTo(List.of());
 
-        assertNull(mapper.get("significantOther/Wilma/of/Fred"));
+        assertThat(mapper.get("significantOther/Wilma/of/Fred")).isNull();
     }
 
     @Test
@@ -39,11 +35,11 @@ class PathFragmentToLimiterMappingsTest {
 
         mapper = new PathFragmentToLimiterMappings(String::contains, fred, pebbles, wilma);
 
-        assertFalse(mapper.isEmpty());
-        assertEquals(3, mapper.count());
-        assertEquals(List.of(pebbles, wilma, fred), streamToPathFragments());
+        assertThat(mapper.isEmpty()).isFalse();
+        assertThat(mapper.count()).isEqualTo(3);
+        assertThat(streamToPathFragments()).isEqualTo(List.of(pebbles, wilma, fred));
 
-        assertEquals(wilma.getLimiterMapping(), mapper.get("significantOther/Wilma/of/Fred"));
+        assertThat(mapper.get("significantOther/Wilma/of/Fred")).isEqualTo(wilma.getLimiterMapping());
     }
 
     @Test
@@ -56,10 +52,10 @@ class PathFragmentToLimiterMappingsTest {
         }
         mapper = new PathFragmentToLimiterMappings(selector, pftps);
 
-        assertEquals(2, check(false, "X"));
-        assertEquals(50, check(false, makePath('X', 25)));
-        assertEquals(100, check(false, makePath('X', 50)));
-        assertEquals(2, check(true, makePath('B', 25)));
+        assertThat(check(false, "X")).isEqualTo(2);
+        assertThat(check(false, makePath('X', 25))).isEqualTo(50);
+        assertThat(check(false, makePath('X', 50))).isEqualTo(100);
+        assertThat(check(true, makePath('B', 25))).isEqualTo(2);
     }
 
     private int check(boolean expectedFound, String servletPath) {
@@ -69,9 +65,9 @@ class PathFragmentToLimiterMappingsTest {
         int calls = selector.calls;
         System.out.println(Duration.between(start, Instant.now()).toNanos() + "ns: " + calls + " -> " + servletPath);
         if (expectedFound) {
-            assertNotNull(found);
+            assertThat(found).isNotNull();
         } else {
-            assertNull(found);
+            assertThat(found).isNull();
         }
         return calls;
     }

@@ -15,24 +15,21 @@ package org.cloudfoundry.identity.uaa.integration.feature;
 
 import com.dumbster.smtp.SimpleSmtpServer;
 import com.dumbster.smtp.SmtpMessage;
-import org.assertj.core.api.Assertions;
 import org.cloudfoundry.identity.uaa.constants.OriginKeys;
 import org.cloudfoundry.identity.uaa.integration.util.IntegrationTestUtils;
 import org.cloudfoundry.identity.uaa.oauth.client.test.TestAccounts;
 import org.cloudfoundry.identity.uaa.oauth.common.util.RandomValueStringGenerator;
 import org.cloudfoundry.identity.uaa.provider.IdentityProvider;
 import org.cloudfoundry.identity.uaa.provider.OIDCIdentityProviderDefinition;
-import org.junit.Rule;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import java.net.URL;
 import java.security.SecureRandom;
@@ -41,8 +38,7 @@ import java.util.Iterator;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = DefaultIntegrationTestConfig.class)
+@SpringJUnitConfig(classes = DefaultIntegrationTestConfig.class)
 class CreateAccountIT {
 
     public static final String SECRET = "s3Cret";
@@ -51,8 +47,8 @@ class CreateAccountIT {
     TestAccounts testAccounts;
 
     @Autowired
-    @Rule
-    public IntegrationTestRule integrationTestRule;
+    @RegisterExtension
+    private IntegrationTestExtension integrationTestExtension;
 
     @Autowired
     WebDriver webDriver;
@@ -118,7 +114,7 @@ class CreateAccountIT {
         String userEmail = "user" + new SecureRandom().nextInt() + "@example.com";
         webDriver.get(baseUrl + "/create_account?client_id=app");
 
-        Assertions.assertThat(webDriver.findElement(By.tagName("h1")).getText()).isEqualTo("Create your account");
+        assertThat(webDriver.findElement(By.tagName("h1")).getText()).isEqualTo("Create your account");
 
         int receivedEmailSize = simpleSmtpServer.getReceivedEmailSize();
 
@@ -134,7 +130,7 @@ class CreateAccountIT {
         assertThat(message.getHeaderValue("To")).isEqualTo(userEmail);
         assertThat(message.getBody()).contains("Activate your account");
 
-        Assertions.assertThat(webDriver.findElement(By.cssSelector(".instructions-sent")).getText()).isEqualTo("Please check email for an activation link.");
+        assertThat(webDriver.findElement(By.cssSelector(".instructions-sent")).getText()).isEqualTo("Please check email for an activation link.");
 
         String link = testClient.extractLink(message.getBody());
         assertThat(link).isNotEmpty();

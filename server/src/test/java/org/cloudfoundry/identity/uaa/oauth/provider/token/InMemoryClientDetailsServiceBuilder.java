@@ -1,6 +1,5 @@
 package org.cloudfoundry.identity.uaa.oauth.provider.token;
 
-
 import org.cloudfoundry.identity.uaa.client.InMemoryClientDetailsService;
 import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
 import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetails;

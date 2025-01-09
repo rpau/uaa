@@ -2,33 +2,33 @@ package org.cloudfoundry.identity.uaa.oauth.client.token.grant;
 
 import org.cloudfoundry.identity.uaa.oauth.client.resource.AuthorizationCodeResourceDetails;
 import org.cloudfoundry.identity.uaa.oauth.token.DefaultAccessTokenRequest;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Moved test class of from spring-security-oauth2 into UAA
  * Scope: Test class
  */
-public class AuthorizationCodeResourceDetailsTests {
+class AuthorizationCodeResourceDetailsTests {
 
     private final AuthorizationCodeResourceDetails details = new AuthorizationCodeResourceDetails();
 
     @Test
-    public void testGetDefaultRedirectUri() {
+    void getDefaultRedirectUri() {
         details.setPreEstablishedRedirectUri("https://anywhere.com");
         DefaultAccessTokenRequest request = new DefaultAccessTokenRequest();
         request.setCurrentUri("https://nowhere.com");
-        assertEquals("https://nowhere.com", details.getRedirectUri(request));
+        assertThat(details.getRedirectUri(request)).isEqualTo("https://nowhere.com");
     }
 
     @Test
-    public void testGetOverrideRedirectUri() {
+    void getOverrideRedirectUri() {
         details.setPreEstablishedRedirectUri("https://anywhere.com");
         details.setUseCurrentUri(false);
         DefaultAccessTokenRequest request = new DefaultAccessTokenRequest();
         request.setCurrentUri("https://nowhere.com");
-        assertEquals("https://anywhere.com", details.getRedirectUri(request));
+        assertThat(details.getRedirectUri(request)).isEqualTo("https://anywhere.com");
     }
 
 }
