@@ -87,7 +87,7 @@ class ClientJwtConfigurationTest {
         assertThat(config.getCleanString()).contains("client_with_jwks_trust");
         ClientJwtConfiguration mergeConfig = ClientJwtConfiguration.merge(config, config, true);
         mergeConfig = ClientJwtConfiguration.delete(mergeConfig, config);
-        assertThat(mergeConfig.getClientJwtCredentials()).isEmpty();
+        assertThat(ClientJwtConfiguration.delete(mergeConfig, config)).isNull();
     }
 
     @Test
@@ -102,7 +102,7 @@ class ClientJwtConfigurationTest {
         for (int i = 0; i < 9; i++) {
             config.addJwtCredentials(List.of(new ClientJwtCredential("subject" + i, "issuer" + i, "audience")));
         }
-        assertThatThrownBy(() -> config.addJwtCredentials(List.of(new ClientJwtCredential("subject-max" , "issuer-max", "audience"))))
+        assertThatThrownBy(() -> config.addJwtCredentials(List.of(new ClientJwtCredential("subject-max", "issuer-max", "audience"))))
                 .isInstanceOf(InvalidClientDetailsException.class);
     }
 

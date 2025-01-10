@@ -4,41 +4,39 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class ClientJwtCredentialTest {
 
     @Test
     void parse() {
-        assertDoesNotThrow(() -> ClientJwtCredential.parse("[{\"iss\":\"http://localhost:8080/uaa\",\"sub\":\"client_with_jwks_trust\"}]"));
+        assertThatNoException().isThrownBy(() -> ClientJwtCredential.parse("[{\"iss\":\"http://localhost:8080/uaa\",\"sub\":\"client_with_jwks_trust\"}]"));
         List<ClientJwtCredential> federationList = ClientJwtCredential.parse("[{\"iss\":\"http://localhost:8080/uaa\",\"sub\":\"client_with_jwks_trust\"},{\"iss\":\"http://localhost:8080/uaa\"}]");
         assertThat(federationList).hasSize(2);
     }
 
     @Test
-    void testConstructor() {
+    void constructor() {
         ClientJwtCredential jwtCredential = new ClientJwtCredential("subject", "issuer", "audience");
-        assertEquals("subject", jwtCredential.getSubject());
-        assertEquals("issuer", jwtCredential.getIssuer());
-        assertEquals("audience", jwtCredential.getAudience());
-        assertTrue(jwtCredential.isValid());
+        assertThat(jwtCredential)
+                .returns("subject", ClientJwtCredential::getSubject)
+                .returns("issuer", ClientJwtCredential::getIssuer)
+                .returns("audience", ClientJwtCredential::getAudience)
+                .returns(true, ClientJwtCredential::isValid);
         jwtCredential = new ClientJwtCredential();
-        assertFalse(jwtCredential.isValid());
+        assertThat(jwtCredential.isValid()).isFalse();
     }
 
     @Test
     void testDeserializer() {
-        assertFalse(ClientJwtCredential.parse("[{\"iss\":\"issuer\"}]").iterator().next().isValid());
+        assertThat(ClientJwtCredential.parse("[{\"iss\":\"issuer\"}]").iterator().next().isValid()).isFalse();
     }
 
     @Test
-    void testDeserializerException() {
-        assertThrows(IllegalArgumentException.class, () -> ClientJwtCredential.parse("[\"iss\":\"issuer\"]"));
+    void deserializerException() {
+        assertThatThrownBy(() -> ClientJwtCredential.parse("[\"iss\":\"issuer\"]"))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 }

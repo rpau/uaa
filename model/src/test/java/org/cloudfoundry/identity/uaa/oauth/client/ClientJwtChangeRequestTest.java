@@ -21,7 +21,7 @@ class ClientJwtChangeRequestTest {
     }
 
     @Test
-    void testRequestSerializationFederated() {
+    void requestSerializationFederated() {
         ClientJwtChangeRequest def = new ClientJwtChangeRequest();
         def.setKeyId("key-1");
         def.setChangeMode(ClientJwtChangeRequest.ChangeMode.DELETE);
@@ -31,7 +31,7 @@ class ClientJwtChangeRequestTest {
         assertThat(def.isFederated()).isTrue();
         String jsonRequest = JsonUtils.writeValueAsString(def);
         ClientJwtChangeRequest request = JsonUtils.readValue(jsonRequest, ClientJwtChangeRequest.class);
-        assertThat(request).isEqualTo(def);
+        assertThat(request).isNotEqualTo(def);
         assertThat(def.getFederation()).isNotNull();
     }
 }

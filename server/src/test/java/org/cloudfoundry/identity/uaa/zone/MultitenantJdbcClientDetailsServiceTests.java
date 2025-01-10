@@ -9,7 +9,6 @@ import org.cloudfoundry.identity.uaa.constants.OriginKeys;
 import org.cloudfoundry.identity.uaa.oauth.UaaOauth2Authentication;
 import org.cloudfoundry.identity.uaa.oauth.client.ClientConstants;
 import org.cloudfoundry.identity.uaa.oauth.client.ClientJwtCredential;
-import org.cloudfoundry.identity.uaa.provider.ClientAlreadyExistsException;
 import org.cloudfoundry.identity.uaa.oauth.provider.AuthorizationRequest;
 import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetails;
 import org.cloudfoundry.identity.uaa.oauth.provider.OAuth2Authentication;
@@ -544,14 +543,12 @@ class MultitenantJdbcClientDetailsServiceTests {
         service.addClientJwtConfig(clientDetails.getClientId(), "http://localhost:8080/uaa/token_keys", currentZoneId, true);
 
         Map<String, Object> map = jdbcTemplate.queryForMap(SELECT_SQL, clientId);
-        assertThat(map).containsKey("client_jwt_config");
-        assertThat((String) map.get("client_jwt_config")).isEqualTo("{\"jwks_uri\":\"http://localhost:8080/uaa/token_keys\"}");
+        assertThat(map).containsKey("CLIENT_JWT_CONFIG")
+                .containsEntry("CLIENT_JWT_CONFIG", "{\"jwks_uri\":\"http://localhost:8080/uaa/token_keys\"}");
         service.deleteClientJwtConfig(clientId, "http://localhost:8080/uaa/token_keys", currentZoneId);
 
         map = jdbcTemplate.queryForMap(SELECT_SQL, clientId);
-        assertThat(map)
-                .doesNotContainKey("client_jwt_config")
-                .doesNotContainValue("client_jwt_config");
+        assertThat(map).containsEntry("CLIENT_JWT_CONFIG", null);
     }
 
     @Test

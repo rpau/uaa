@@ -53,9 +53,8 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.fail;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.cloudfoundry.identity.uaa.oauth.client.SecretChangeRequest.ChangeMode.ADD;
 import static org.cloudfoundry.identity.uaa.oauth.client.SecretChangeRequest.ChangeMode.DELETE;
 import static org.cloudfoundry.identity.uaa.oauth.token.TokenConstants.GRANT_TYPE_AUTHORIZATION_CODE;
@@ -116,12 +115,12 @@ class ClientAdminEndpointsTests {
     @BeforeEach
     void setUp() {
         testZone.setId("testzone");
-        mockSecurityContextAccessor = Mockito.mock(SecurityContextAccessor.class);
+        mockSecurityContextAccessor = mock(SecurityContextAccessor.class);
 
-        clientDetailsService = Mockito.mock(NoOpClientDetailsResourceManager.class);
+        clientDetailsService = mock(NoOpClientDetailsResourceManager.class);
         when(clientDetailsService.create(any(ClientDetails.class), anyString())).thenCallRealMethod();
-        clientRegistrationService = Mockito.mock(MultitenantClientServices.class, withSettings().extraInterfaces(SystemDeletable.class));
-        mockAuthenticationManager = Mockito.mock(AuthenticationManager.class);
+        clientRegistrationService = mock(MultitenantClientServices.class, withSettings().extraInterfaces(SystemDeletable.class));
+        mockAuthenticationManager = mock(AuthenticationManager.class);
         ApprovalStore approvalStore = mock(ApprovalStore.class);
         clientDetailsValidator = new ClientAdminEndpointsValidator(mockSecurityContextAccessor);
         clientDetailsValidator.setClientDetailsService(clientDetailsService);
@@ -330,12 +329,9 @@ class ClientAdminEndpointsTests {
         for (String scope :
                 badScopes) {
             input.setScope(Collections.singletonList(scope));
-            try {
-                endpoints.createRestrictedClientDetails(input);
-                fail("no error thrown for restricted scope " + scope);
-            } catch (InvalidClientDetailsException e) {
-                assertThat(e.getMessage()).contains("is a restricted scope.");
-            }
+            assertThatThrownBy(() -> endpoints.createRestrictedClientDetails(input))
+                    .isInstanceOf(InvalidClientDetailsException.class)
+                    .hasMessageContaining("is a restricted scope.");
         }
     }
 
