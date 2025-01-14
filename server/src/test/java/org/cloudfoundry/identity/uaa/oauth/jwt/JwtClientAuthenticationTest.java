@@ -87,7 +87,7 @@ class JwtClientAuthenticationTest {
         // When
         String clientAssertion = jwtClientAuthentication.getClientAssertion(config);
         // Then
-        validateClientAssertionOidcComplaint(clientAssertion);
+        validateClientAssertionOidcCompliant(clientAssertion);
     }
 
     @Test
@@ -101,7 +101,7 @@ class JwtClientAuthenticationTest {
         assertThat(params).containsKey("client_assertion")
                 .containsKey("client_assertion_type");
         String clientAssertion = params.get("client_assertion").get(0);
-        validateClientAssertionOidcComplaint(clientAssertion);
+        validateClientAssertionOidcCompliant(clientAssertion);
         JWSHeader header = getJwtHeader(clientAssertion);
         assertThat(header.getKeyID()).isEqualTo(KEY_ID);
     }
@@ -126,11 +126,11 @@ class JwtClientAuthenticationTest {
         // When
         String clientAssertion = jwtClientAuthentication.getClientAssertion(config);
         // Then
-        validateClientAssertionOidcComplaint(clientAssertion);
+        validateClientAssertionOidcCompliant(clientAssertion);
     }
 
     @Test
-    void getClientAssertionRfc7523Complaint() throws ParseException {
+    void getClientAssertionRfc7523Compliant() throws ParseException {
         // Given
         Map<Object, Object> customClaims = new HashMap<>();
         customClaims.put("iss", "anotherIssuer");
@@ -139,7 +139,7 @@ class JwtClientAuthenticationTest {
         // When
         String clientAssertion = jwtClientAuthentication.getClientAssertion(config);
         // Then
-        validateClientAssertionRfc7523Complaint(clientAssertion, "anotherIssuer", "ReceiverEndpoint");
+        validateClientAssertionRfc7523Compliant(clientAssertion, "anotherIssuer", "ReceiverEndpoint");
     }
 
     @Test
@@ -153,7 +153,7 @@ class JwtClientAuthenticationTest {
                 .containsKey("client_assertion_type")
                 .containsEntry("client_assertion_type", Collections.singletonList(JwtClientAuthentication.GRANT_TYPE));
         assertThat(params.get("client_assertion").get(0)).isNotNull();
-        validateClientAssertionOidcComplaint(params.get("client_assertion").get(0));
+        validateClientAssertionOidcCompliant(params.get("client_assertion").get(0));
     }
 
     @Test
@@ -199,7 +199,7 @@ class JwtClientAuthenticationTest {
         assertThat(params).containsKey("client_assertion")
                 .containsKey("client_assertion_type");
         String clientAssertion = params.get("client_assertion").get(0);
-        validateClientAssertionOidcComplaint(clientAssertion);
+        validateClientAssertionOidcCompliant(clientAssertion);
         JWSHeader header = getJwtHeader(clientAssertion);
         assertThat(header.getKeyID()).isEqualTo("key-id-321");
         assertThat(header.getJWKURL()).isNull();
@@ -220,7 +220,7 @@ class JwtClientAuthenticationTest {
         assertThat(params).containsKey("client_assertion")
                 .containsKey("client_assertion_type");
         String clientAssertion = params.get("client_assertion").get(0);
-        validateClientAssertionOidcComplaint(clientAssertion);
+        validateClientAssertionOidcCompliant(clientAssertion);
         JWSHeader header = getJwtHeader(clientAssertion);
         assertThat(header.getKeyID()).isEqualTo("key-id-321");
         assertThat(header.getJWKURL()).isNull();
@@ -278,7 +278,7 @@ class JwtClientAuthenticationTest {
         assertThat(params).containsKey("client_assertion")
                 .containsKey("client_assertion_type");
         String clientAssertion = params.get("client_assertion").get(0);
-        validateClientAssertionOidcComplaint(clientAssertion);
+        validateClientAssertionOidcCompliant(clientAssertion);
         JWSHeader header = getJwtHeader(clientAssertion);
         assertThat(header.getKeyID()).isEqualTo("myKey");
         assertThat(header.getJWKURL()).hasToString("http://localhost:8080/uaa/token_key");
@@ -305,7 +305,7 @@ class JwtClientAuthenticationTest {
         assertThat(params).containsKey("client_assertion")
                 .containsKey("client_assertion_type");
         String clientAssertion = params.get("client_assertion").get(0);
-        validateClientAssertionOidcComplaint(clientAssertion);
+        validateClientAssertionOidcCompliant(clientAssertion);
         JWSHeader header = getJwtHeader(clientAssertion);
         assertThat(header.getKeyID()).isEqualTo("key-id-321");
         assertThat(header.getJWKURL()).isNull();
@@ -367,7 +367,7 @@ class JwtClientAuthenticationTest {
         assertThat(params).containsKey("client_assertion")
                 .containsKey("client_assertion_type");
         final String clientAssertion = params.get("client_assertion").get(0);
-        validateClientAssertionOidcComplaint(clientAssertion);
+        validateClientAssertionOidcCompliant(clientAssertion);
         final JWSHeader header = getJwtHeader(clientAssertion);
         assertThat(header.getKeyID()).isEqualTo("key-id-321");
         assertThat(header.getJWKURL()).isNull();
@@ -474,9 +474,9 @@ class JwtClientAuthenticationTest {
     }
 
     @Test
-    void getClientIdOfInvalidClientAssertionOidcAssertion() {
+    void getClientIdOfInvalidClientAssertionOidcCompliance() {
         // Then
-        //assertThatExceptionOfType(BadCredentialsException.class).isThrownBy(() -> JwtClientAuthentication.getClientIdOidcAssertion(INVALID_CLIENT_JWT));
+        assertThat(JwtClientAuthentication.getClientIdOidcAssertion(INVALID_CLIENT_JWT)).isNull();
         assertThatExceptionOfType(BadCredentialsException.class).isThrownBy(() -> JwtClientAuthentication.getClientIdOidcAssertion("eyXXX"));
     }
 
@@ -625,14 +625,14 @@ class JwtClientAuthenticationTest {
         return (JWSHeader) jwt.getHeader();
     }
 
-    private static void validateClientAssertionOidcComplaint(String clientAssertion) throws ParseException {
+    private static void validateClientAssertionOidcCompliant(String clientAssertion) throws ParseException {
         JWTClaimsSet jwtClaimsSet = JWTParser.parse(clientAssertion).getJWTClaimsSet();
         assertThat(jwtClaimsSet.getAudience()).isEqualTo(Collections.singletonList("http://localhost:8080/uaa/oauth/token"));
         assertThat(jwtClaimsSet.getSubject()).isEqualTo("identity");
         assertThat(jwtClaimsSet.getIssuer()).isEqualTo("identity");
     }
 
-    private static void validateClientAssertionRfc7523Complaint(String clientAssertion, String iss, String aud) throws ParseException {
+    private static void validateClientAssertionRfc7523Compliant(String clientAssertion, String iss, String aud) throws ParseException {
         JWTClaimsSet jwtClaimsSet = JWTParser.parse(clientAssertion).getJWTClaimsSet();
         assertThat(jwtClaimsSet.getAudience()).isEqualTo(Collections.singletonList(aud));
         assertThat(jwtClaimsSet.getIssuer()).isEqualTo(iss);

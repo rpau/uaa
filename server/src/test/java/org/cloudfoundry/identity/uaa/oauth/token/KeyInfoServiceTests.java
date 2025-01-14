@@ -104,6 +104,7 @@ class KeyInfoServiceTests {
         });
         jwkSet = new JWKSet(jwkList);
         assertThat(jwkSet).isNotNull();
+        assertThat(jwkSet.size()).isEqualTo(1);
     }
 
     @Test

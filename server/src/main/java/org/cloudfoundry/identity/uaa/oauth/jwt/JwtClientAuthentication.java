@@ -151,8 +151,8 @@ public class JwtClientAuthentication {
             try {
                 String clientAssertion = UaaStringUtils.getSafeParameterValue(requestParameters.get(CLIENT_ASSERTION));
                 JWT clientJWT = parseClientAssertion(clientAssertion);
-                JWTClaimsSet clientClaims = parseClientJWT(clientJWT);
-                // Check if OIDC complaint client_assertion: client_id (from request) == sub (client_assertion) == iss (client_assertion)
+                JWTClaimsSet clientClaims = getJWTClaimsSet(clientJWT);
+                // Check if OIDC compliant client_assertion: client_id (from request) == sub (client_assertion) == iss (client_assertion)
                 if (clientId.equals(getClientIdOidcAssertion(clientClaims))) {
                     // Validate token according to private_key_jwt with OIDC
                     return clientId.equals(validateClientJWToken(clientJWT, oidcMetadataFetcher == null ? new JWKSet() :
@@ -192,7 +192,7 @@ public class JwtClientAuthentication {
         return JWTParser.parse(clientAssertion);
     }
 
-    private static JWTClaimsSet parseClientJWT(JWT clientJWT) throws ParseException {
+    private static JWTClaimsSet getJWTClaimsSet(JWT clientJWT) throws ParseException {
         return clientJWT != null ? clientJWT.getJWTClaimsSet() : null;
     }
 
@@ -208,7 +208,7 @@ public class JwtClientAuthentication {
 
     public static String getClientIdOidcAssertion(String clientAssertion) {
         try {
-            return getClientIdOidcAssertion(parseClientJWT(parseClientAssertion(clientAssertion)));
+            return getClientIdOidcAssertion(getJWTClaimsSet(parseClientAssertion(clientAssertion)));
         } catch (ParseException e) {
             throw new BadCredentialsException("Bad client_assertion", e);
         }
@@ -233,22 +233,22 @@ public class JwtClientAuthentication {
         return new JWKSet(jwkList);
     }
 
-    private JWKSet getTrustedJwksSet(JWTClaimsSet clientClaims) throws OidcMetadataFetchingException, ParseException, MalformedURLException {
+    private JWKSet getTrustedJwksSet(String issuer) throws OidcMetadataFetchingException, ParseException, MalformedURLException {
         OIDCIdentityProviderDefinition def = null;
         try {
-            IdentityProvider<?> idp = externalOAuthAuthenticationManager.retrieveRegisteredIdentityProviderByIssuer(clientClaims.getIssuer());
+            IdentityProvider<?> idp = externalOAuthAuthenticationManager.retrieveRegisteredIdentityProviderByIssuer(issuer);
             if (idp.getConfig() instanceof OIDCIdentityProviderDefinition oidcDefinition) {
                 def = oidcDefinition;
             }
         } catch (DataRetrievalFailureException dataRetrievalFailureException) {
-            // ignore, but retrieve trust by OIDC complaint issuer
+            // ignore, but retrieve trust by OIDC compliant issuer
         }
         if (def == null) {
             def = new OIDCIdentityProviderDefinition();
-            def.setIssuer(clientClaims.getIssuer());
+            def.setIssuer(issuer);
             def.setSkipSslValidation(false);
-            // Allow only OIDC complaint issuer and create from it the so-called discovery URL, e.g. https://openid.net/specs/openid-connect-discovery-1_0.html
-            def.setDiscoveryUrl(UriComponentsBuilder.fromHttpUrl(clientClaims.getIssuer()).scheme("https").path("/.well-known/openid-configuration").build().toUri().toURL());
+            // Allow only OIDC compliant issuer and create from it the so-called discovery URL, e.g. https://openid.net/specs/openid-connect-discovery-1_0.html
+            def.setDiscoveryUrl(UriComponentsBuilder.fromHttpUrl(issuer).scheme("https").path("/.well-known/openid-configuration").build().toUri().toURL());
             oidcMetadataFetcher.fetchMetadataAndUpdateDefinition(def);
         }
         // fetch Json Web Key Set now from trusted OIDCIdentityProviderDefinition or online
@@ -259,7 +259,7 @@ public class JwtClientAuthentication {
         if (externalOAuthAuthenticationManager.idTokenWasIssuedByTheUaa(clientClaims.getIssuer())) {
             return getUaaJWKSet();
         } else {
-            return getTrustedJwksSet(clientClaims);
+            return getTrustedJwksSet(clientClaims.getIssuer());
         }
     }
 
