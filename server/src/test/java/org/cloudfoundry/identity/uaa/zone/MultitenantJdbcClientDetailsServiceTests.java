@@ -535,57 +535,6 @@ class MultitenantJdbcClientDetailsServiceTests {
     }
 
     @Test
-    void deleteClientJwt() {
-        String clientId = "client_id_test_delete";
-        UaaClientDetails clientDetails = new UaaClientDetails();
-        clientDetails.setClientId(clientId);
-        service.addClientDetails(clientDetails);
-        service.addClientJwtConfig(clientDetails.getClientId(), "http://localhost:8080/uaa/token_keys", currentZoneId, true);
-
-        Map<String, Object> map = jdbcTemplate.queryForMap(SELECT_SQL, clientId);
-        assertThat(map).containsKey("CLIENT_JWT_CONFIG")
-                .containsEntry("CLIENT_JWT_CONFIG", "{\"jwks_uri\":\"http://localhost:8080/uaa/token_keys\"}");
-        service.deleteClientJwtConfig(clientId, "http://localhost:8080/uaa/token_keys", currentZoneId);
-
-        map = jdbcTemplate.queryForMap(SELECT_SQL, clientId);
-        assertNull(map.get("client_jwt_config"));
-        assertFalse(map.containsValue("client_jwt_config"));
-    }
-
-    @Test
-    void updateFederatedClientJwt() {
-        UaaClientDetails clientDetails = new UaaClientDetails();
-        clientDetails.setClientId("newClientIdWithNoDetails");
-        service.addClientDetails(clientDetails);
-        service.addClientJwtCredential(clientDetails.getClientId(), new ClientJwtCredential("subject", "issuer", null), currentZoneId, true);
-
-        Map<String, Object> map = jdbcTemplate.queryForMap(SELECT_SQL,
-                "newClientIdWithNoDetails");
-
-        assertEquals("newClientIdWithNoDetails", map.get("client_id"));
-        assertTrue(map.containsKey("client_jwt_config"));
-        assertEquals("{\"jwt_creds\":[{\"sub\":\"subject\",\"iss\":\"issuer\"}]}", (String) map.get("client_jwt_config"));
-    }
-
-    @Test
-    void deleteFederatedClientJwt() {
-        String clientId = "client_id_test_delete";
-        ClientJwtCredential jwtCredential = new ClientJwtCredential("subject", "issuer", "audience");
-        UaaClientDetails clientDetails = new UaaClientDetails();
-        clientDetails.setClientId(clientId);
-        service.addClientDetails(clientDetails);
-        service.addClientJwtCredential(clientDetails.getClientId(), jwtCredential, currentZoneId, true);
-
-        Map<String, Object> map = jdbcTemplate.queryForMap(SELECT_SQL, clientId);
-        assertTrue(map.containsKey("client_jwt_config"));
-        assertEquals("{\"jwt_creds\":[{\"sub\":\"subject\",\"iss\":\"issuer\",\"aud\":\"audience\"}]}", (String) map.get("client_jwt_config"));
-        service.deleteClientJwtCredential(clientId, jwtCredential, currentZoneId);
-
-        map = jdbcTemplate.queryForMap(SELECT_SQL, clientId);
-        assertThat(map).containsEntry("CLIENT_JWT_CONFIG", null);
-    }
-
-    @Test
     void updateFederatedClientJwt() {
         UaaClientDetails clientDetails = new UaaClientDetails();
         clientDetails.setClientId("newClientIdWithNoDetails");

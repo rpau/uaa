@@ -463,9 +463,7 @@ class ClientAdminEndpointDocs extends AdminClientCreator {
                 )
                 );
 
-
         //DELETE
-
         ResultActions deleteResultActions = mockMvc.perform(post("/oauth/clients/tx/delete")
                 .contentType(APPLICATION_JSON)
                 .content("[{\"client_id\":\"" + createdClientDetails1.getClientId() + "\"},{\"client_id\":\"" + createdClientDetails3.getClientId() + "\"}]")

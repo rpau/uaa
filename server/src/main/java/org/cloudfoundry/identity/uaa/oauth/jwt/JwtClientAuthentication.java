@@ -152,18 +152,20 @@ public class JwtClientAuthentication {
                 String clientAssertion = UaaStringUtils.getSafeParameterValue(requestParameters.get(CLIENT_ASSERTION));
                 JWT clientJWT = parseClientAssertion(clientAssertion);
                 JWTClaimsSet clientClaims = parseClientJWT(clientJWT);
-                if (!clientId.equals(getClientId(clientClaims))) {
-                    // check if we found trust for private_key_jwt with RFC 7523
+                // Check if OIDC complaint client_assertion: client_id (from request) == sub (client_assertion) == iss (client_assertion)
+                if (clientId.equals(getClientIdOidcAssertion(clientClaims))) {
+                    // Validate token according to private_key_jwt with OIDC
+                    return clientId.equals(validateClientJWToken(clientJWT, oidcMetadataFetcher == null ? new JWKSet() :
+                                    JWKSet.parse(oidcMetadataFetcher.fetchWebKeySet(clientJwtConfiguration).getKeySetMap()),
+                            clientId, clientId, keyInfoService.getTokenEndpointUrl()).getSubject());
+                } else {
+                    // Check if we found trust for private_key_jwt with RFC 7523. We allow client_id (from request) != sub (client_assertion)
                     ClientJwtCredential jwtFederation = getClientJwtFederation(clientJwtConfiguration, clientClaims);
                     if (jwtFederation != null) {
                         return validateFederatedClientWT(clientJWT, clientClaims, jwtFederation);
                     }
                     throw new BadCredentialsException("Wrong client_assertion");
                 }
-                // validate token according to private_key_jwt with OIDC
-                return clientId.equals(validateClientJWToken(clientJWT, oidcMetadataFetcher == null ? new JWKSet() :
-                                JWKSet.parse(oidcMetadataFetcher.fetchWebKeySet(clientJwtConfiguration).getKeySetMap()),
-                        clientId, clientId, keyInfoService.getTokenEndpointUrl()).getSubject());
             } catch (ParseException | URISyntaxException | InvalidTokenException | OidcMetadataFetchingException e) {
                 throw new BadCredentialsException("Bad client_assertion", e);
             }
@@ -176,7 +178,7 @@ public class JwtClientAuthentication {
         if (clientJwtConfiguration.getClientJwtCredentials() == null) {
             return null;
         }
-        return clientJwtConfiguration.getClientJwtCredentials().stream().filter(e -> e.isValid() &&
+        return clientJwtConfiguration.getClientJwtCredentials().stream().filter(e ->
                 e.getSubject().equals(clientClaims.getSubject()) &&
                 e.getIssuer().equals(clientClaims.getIssuer()) &&
                 isAudienceSupported(e.getAudience(), clientClaims.getAudience())).findFirst().orElse(null);
@@ -194,7 +196,7 @@ public class JwtClientAuthentication {
         return clientJWT != null ? clientJWT.getJWTClaimsSet() : null;
     }
 
-    private static String getClientId(JWTClaimsSet clientToken) {
+    private static String getClientIdOidcAssertion(JWTClaimsSet clientToken) {
         if (clientToken != null && clientToken.getSubject() != null && clientToken.getIssuer() != null &&
                 clientToken.getSubject().equals(clientToken.getIssuer()) && clientToken.getAudience() != null && clientToken.getJWTID() != null &&
                 clientToken.getExpirationTime() != null) {
@@ -204,9 +206,9 @@ public class JwtClientAuthentication {
         return null;
     }
 
-    public static String getClientId(String clientAssertion) {
+    public static String getClientIdOidcAssertion(String clientAssertion) {
         try {
-            return getClientId(parseClientJWT(parseClientAssertion(clientAssertion)));
+            return getClientIdOidcAssertion(parseClientJWT(parseClientAssertion(clientAssertion)));
         } catch (ParseException e) {
             throw new BadCredentialsException("Bad client_assertion", e);
         }
@@ -215,8 +217,8 @@ public class JwtClientAuthentication {
     private boolean validateFederatedClientWT(JWT jwtAssertion, JWTClaimsSet clientClaims, ClientJwtCredential jwtFederation) throws OidcMetadataFetchingException, ParseException {
         try {
             JWKSet jwkSet = retrieveJwkSet(clientClaims);
-            String expectedAud = jwtFederation.getAudience() != null ? jwtFederation.getAudience() : keyInfoService.getTokenEndpointUrl();
-            return validateClientJWToken(jwtAssertion, jwkSet, clientClaims.getSubject(), clientClaims.getIssuer(), expectedAud) != null;
+            String expectedAud = Optional.ofNullable(jwtFederation.getAudience()).orElse(keyInfoService.getTokenEndpointUrl());
+            return validateClientJWToken(jwtAssertion, jwkSet, jwtFederation.getSubject(), jwtFederation.getIssuer(), expectedAud) != null;
         } catch (MalformedURLException | IllegalArgumentException | URISyntaxException e) {
             return false;
         }
@@ -262,11 +264,11 @@ public class JwtClientAuthentication {
     }
 
     private JWTClaimsSet validateClientJWToken(JWT jwtAssertion, JWKSet jwkSet, String expectedSub, String expectIss, String expectedAud) {
-        if (ObjectUtils.isEmpty(jwkSet) || jwkSet.isEmpty()) {
+        if (Optional.ofNullable(jwkSet).orElse(new JWKSet()).isEmpty()) {
             throw new BadCredentialsException("Bad empty jwk_set");
         }
         Algorithm algorithm = jwtAssertion.getHeader().getAlgorithm();
-        if (algorithm == null || NOT_SUPPORTED_ALGORITHMS.contains(algorithm) || !(algorithm instanceof JWSAlgorithm)) {
+        if (!(algorithm instanceof JWSAlgorithm) || NOT_SUPPORTED_ALGORITHMS.contains(algorithm)) {
             throw new BadCredentialsException("Bad client_assertion algorithm");
         }
         JWKSource<SecurityContext> keySource = new ImmutableJWKSet<>(jwkSet);

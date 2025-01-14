@@ -1269,17 +1269,17 @@ Users can be queried, created and updated via the `/Users` endpoint.
 
 ## Get
 
-<%= render('ScimUserEndpointDocs/test_Get_User/curl-request.md') %>
-<%= render('ScimUserEndpointDocs/test_Get_User/http-request.md') %>
-<%= render('ScimUserEndpointDocs/test_Get_User/http-response.md') %>
+<%= render('ScimUserEndpointDocs/get_user/curl-request.md') %>
+<%= render('ScimUserEndpointDocs/get_user/http-request.md') %>
+<%= render('ScimUserEndpointDocs/get_user/http-response.md') %>
 
 _Request Headers_
 
-<%= render('ScimUserEndpointDocs/test_Get_User/request-headers.md') %>
+<%= render('ScimUserEndpointDocs/get_user/request-headers.md') %>
 
 _Response Fields_
 
-<%= render('ScimUserEndpointDocs/test_Get_User/response-fields.md') %>
+<%= render('ScimUserEndpointDocs/get_user/response-fields.md') %>
 
 _Error Codes_
 
@@ -1306,21 +1306,21 @@ Listing users supports <a href="http://www.simplecloud.info/specs/draft-scim-api
 By default, users are returned with their group memberships and approvals, a rather expensive operation.
 To avoid this, perform the search by including the `attributes` parameter to reduce the results.
 
-<%= render('ScimUserEndpointDocs/test_Find_Users/curl-request.md') %>
-<%= render('ScimUserEndpointDocs/test_Find_Users/http-request.md') %>
-<%= render('ScimUserEndpointDocs/test_Find_Users/http-response.md') %>
+<%= render('ScimUserEndpointDocs/find_users/curl-request.md') %>
+<%= render('ScimUserEndpointDocs/find_users/http-request.md') %>
+<%= render('ScimUserEndpointDocs/find_users/http-response.md') %>
 
 _Request Headers_
 
-<%= render('ScimUserEndpointDocs/test_Find_Users/request-headers.md') %>
+<%= render('ScimUserEndpointDocs/find_users/request-headers.md') %>
 
 _Request Parameters_
 
-<%= render('ScimUserEndpointDocs/test_Find_Users/request-parameters.md') %>
+<%= render('ScimUserEndpointDocs/find_users/request-parameters.md') %>
 
 _Response Fields_
 
-<%= render('ScimUserEndpointDocs/test_Find_Users/response-fields.md') %>
+<%= render('ScimUserEndpointDocs/find_users/response-fields.md') %>
 
 _Error Codes_
 
@@ -1347,39 +1347,39 @@ When users are searched we can return only selected amount of data using filteri
 The attribute `groups` will cause the UAA to query the group memberships and include them in the result making the operation more expensive.
 The attribute `approvals` will cause the UAA to query the user approvals and include them in the result making the operation more expensive.
 
-<%= render('ScimUserEndpointDocs/test_Find_With_Attributes_Users/curl-request.md') %>
-<%= render('ScimUserEndpointDocs/test_Find_With_Attributes_Users/http-request.md') %>
-<%= render('ScimUserEndpointDocs/test_Find_With_Attributes_Users/http-response.md') %>
+<%= render('ScimUserEndpointDocs/find_with_attributes_users/curl-request.md') %>
+<%= render('ScimUserEndpointDocs/find_with_attributes_users/http-request.md') %>
+<%= render('ScimUserEndpointDocs/find_with_attributes_users/http-response.md') %>
 
 _Request Headers_
 
-<%= render('ScimUserEndpointDocs/test_Find_With_Attributes_Users/request-headers.md') %>
+<%= render('ScimUserEndpointDocs/find_with_attributes_users/request-headers.md') %>
 
 _Request Parameters_
 
-<%= render('ScimUserEndpointDocs/test_Find_With_Attributes_Users/request-parameters.md') %>
+<%= render('ScimUserEndpointDocs/find_with_attributes_users/request-parameters.md') %>
 
 _Response Fields_
 
-<%= render('ScimUserEndpointDocs/test_Find_With_Attributes_Users/response-fields.md') %>
+<%= render('ScimUserEndpointDocs/find_with_attributes_users/response-fields.md') %>
 
 ## Create
 
-<%= render('ScimUserEndpointDocs/test_Create_User/curl-request.md') %>
-<%= render('ScimUserEndpointDocs/test_Create_User/http-request.md') %>
-<%= render('ScimUserEndpointDocs/test_Create_User/http-response.md') %>
+<%= render('ScimUserEndpointDocs/create_user/curl-request.md') %>
+<%= render('ScimUserEndpointDocs/create_user/http-request.md') %>
+<%= render('ScimUserEndpointDocs/create_user/http-response.md') %>
 
 _Request Headers_
 
-<%= render('ScimUserEndpointDocs/test_Create_User/request-headers.md') %>
+<%= render('ScimUserEndpointDocs/create_user/request-headers.md') %>
 
 _Request Fields_
 
-<%= render('ScimUserEndpointDocs/test_Create_User/request-fields.md') %>
+<%= render('ScimUserEndpointDocs/create_user/request-fields.md') %>
 
 _Response Fields_
 
-<%= render('ScimUserEndpointDocs/test_Create_User/response-fields.md') %>
+<%= render('ScimUserEndpointDocs/create_user/response-fields.md') %>
 
 _Error Codes_
 
@@ -1407,21 +1407,21 @@ uaac user add testuser --given_name About --family_name Schmidt --emails testuse
   Users can only be updated when internal user management is enabled.
 </aside>
 
-<%= render('ScimUserEndpointDocs/test_Update_User/curl-request.md') %>
-<%= render('ScimUserEndpointDocs/test_Update_User/http-request.md') %>
-<%= render('ScimUserEndpointDocs/test_Update_User/http-response.md') %>
+<%= render('ScimUserEndpointDocs/update_user/curl-request.md') %>
+<%= render('ScimUserEndpointDocs/update_user/http-request.md') %>
+<%= render('ScimUserEndpointDocs/update_user/http-response.md') %>
 
 _Request Headers_
 
-<%= render('ScimUserEndpointDocs/test_Update_User/request-headers.md') %>
+<%= render('ScimUserEndpointDocs/update_user/request-headers.md') %>
 
 _Request Fields_
 
-<%= render('ScimUserEndpointDocs/test_Update_User/request-fields.md') %>
+<%= render('ScimUserEndpointDocs/update_user/request-fields.md') %>
 
 _Response Fields_
 
-<%= render('ScimUserEndpointDocs/test_Update_User/response-fields.md') %>
+<%= render('ScimUserEndpointDocs/update_user/response-fields.md') %>
 
 _Error Codes_
 
@@ -1449,21 +1449,21 @@ uaac user update testuser --given_name About --family_name Schmidt --emails test
   Users can only be patched when internal user management is enabled.
 </aside>
 
-<%= render('ScimUserEndpointDocs/test_Patch_User/curl-request.md') %>
-<%= render('ScimUserEndpointDocs/test_Patch_User/http-request.md') %>
-<%= render('ScimUserEndpointDocs/test_Patch_User/http-response.md') %>
+<%= render('ScimUserEndpointDocs/patch_user/curl-request.md') %>
+<%= render('ScimUserEndpointDocs/patch_user/http-request.md') %>
+<%= render('ScimUserEndpointDocs/patch_user/http-response.md') %>
 
 _Request Headers_
 
-<%= render('ScimUserEndpointDocs/test_Patch_User/request-headers.md') %>
+<%= render('ScimUserEndpointDocs/patch_user/request-headers.md') %>
 
 _Request Fields_
 
-<%= render('ScimUserEndpointDocs/test_Patch_User/request-fields.md') %>
+<%= render('ScimUserEndpointDocs/patch_user/request-fields.md') %>
 
 _Response Fields_
 
-<%= render('ScimUserEndpointDocs/test_Patch_User/response-fields.md') %>
+<%= render('ScimUserEndpointDocs/patch_user/response-fields.md') %>
 
 _Error Codes_
 
@@ -1486,17 +1486,17 @@ uaac user update testuser --given_name About --family_name Schmidt --emails test
 
 ## Delete
 
-<%= render('ScimUserEndpointDocs/test_Delete_User/curl-request.md') %>
-<%= render('ScimUserEndpointDocs/test_Delete_User/http-request.md') %>
-<%= render('ScimUserEndpointDocs/test_Delete_User/http-response.md') %>
+<%= render('ScimUserEndpointDocs/delete_user/curl-request.md') %>
+<%= render('ScimUserEndpointDocs/delete_user/http-request.md') %>
+<%= render('ScimUserEndpointDocs/delete_user/http-response.md') %>
 
 _Request Headers_
 
-<%= render('ScimUserEndpointDocs/test_Delete_User/request-headers.md') %>
+<%= render('ScimUserEndpointDocs/delete_user/request-headers.md') %>
 
 _Response Fields_
 
-<%= render('ScimUserEndpointDocs/test_Delete_User/response-fields.md') %>
+<%= render('ScimUserEndpointDocs/delete_user/response-fields.md') %>
 
 _Error Codes_
 
@@ -1521,17 +1521,17 @@ uaac user delete testuser
 
 An OAuth2 protected resource and an OpenID Connect endpoint. Given an appropriate access_token, returns information about a user. Defined fields include various standard user profile fields. The response may include other user information such as group membership.
 
-<%= render('UserInfoEndpointDocs/test_Get_UserInfo/curl-request.md') %>
-<%= render('UserInfoEndpointDocs/test_Get_UserInfo/http-request.md') %>
-<%= render('UserInfoEndpointDocs/test_Get_UserInfo/http-response.md') %>
+<%= render('UserInfoEndpointDocs/get_user_info/curl-request.md') %>
+<%= render('UserInfoEndpointDocs/get_user_info/http-request.md') %>
+<%= render('UserInfoEndpointDocs/get_user_info/http-response.md') %>
 
 _Request Headers_
 
-<%= render('UserInfoEndpointDocs/test_Get_UserInfo/request-headers.md') %>
+<%= render('UserInfoEndpointDocs/get_user_info/request-headers.md') %>
 
 _Response Fields_
 
-<%= render('UserInfoEndpointDocs/test_Get_UserInfo/response-fields.md') %>
+<%= render('UserInfoEndpointDocs/get_user_info/response-fields.md') %>
 
 _Error Codes_
 
@@ -1554,21 +1554,21 @@ uaac curl -X GET /userinfo -k
 
 ## Change user password
 
-<%= render('ScimUserEndpointDocs/test_Change_Password/curl-request.md') %>
-<%= render('ScimUserEndpointDocs/test_Change_Password/http-request.md') %>
-<%= render('ScimUserEndpointDocs/test_Change_Password/http-response.md') %>
+<%= render('ScimUserEndpointDocs/change_password/curl-request.md') %>
+<%= render('ScimUserEndpointDocs/change_password/http-request.md') %>
+<%= render('ScimUserEndpointDocs/change_password/http-response.md') %>
 
 _Request Headers_
 
-<%= render('ScimUserEndpointDocs/test_Change_Password/request-headers.md') %>
+<%= render('ScimUserEndpointDocs/change_password/request-headers.md') %>
 
 _Request Fields_
 
-<%= render('ScimUserEndpointDocs/test_Change_Password/request-fields.md') %>
+<%= render('ScimUserEndpointDocs/change_password/request-fields.md') %>
 
 _Response Fields_
 
-<%= render('ScimUserEndpointDocs/test_Change_Password/response-fields.md') %>
+<%= render('ScimUserEndpointDocs/change_password/response-fields.md') %>
 
 _Error Codes_
 
@@ -1595,25 +1595,25 @@ uaac password change -o secret -p newsecret
   Added in UAA 3.7.0
 </aside>
 
-<%= render('ScimUserEndpointDocs/test_status_unlock_user/curl-request.md') %>
-<%= render('ScimUserEndpointDocs/test_status_unlock_user/http-request.md') %>
-<%= render('ScimUserEndpointDocs/test_status_unlock_user/http-response.md') %>
+<%= render('ScimUserEndpointDocs/status_unlock_user/curl-request.md') %>
+<%= render('ScimUserEndpointDocs/status_unlock_user/http-request.md') %>
+<%= render('ScimUserEndpointDocs/status_unlock_user/http-response.md') %>
 
 _Path Parameters_
 
-<%= render('ScimUserEndpointDocs/test_status_unlock_user/path-parameters.md') %>
+<%= render('ScimUserEndpointDocs/status_unlock_user/path-parameters.md') %>
 
 _Request Headers_
 
-<%= render('ScimUserEndpointDocs/test_status_unlock_user/request-headers.md') %>
+<%= render('ScimUserEndpointDocs/status_unlock_user/request-headers.md') %>
 
 _Request Fields_
 
-<%= render('ScimUserEndpointDocs/test_status_unlock_user/request-fields.md') %>
+<%= render('ScimUserEndpointDocs/status_unlock_user/request-fields.md') %>
 
 _Response Fields_
 
-<%= render('ScimUserEndpointDocs/test_status_unlock_user/response-fields.md') %>
+<%= render('ScimUserEndpointDocs/status_unlock_user/response-fields.md') %>
 
 _Error Codes_
 
@@ -1630,25 +1630,25 @@ _Error Codes_
   Added in UAA 3.9.0
 </aside>
 
-<%= render('ScimUserEndpointDocs/test_status_password_expire_user/curl-request.md') %>
-<%= render('ScimUserEndpointDocs/test_status_password_expire_user/http-request.md') %>
-<%= render('ScimUserEndpointDocs/test_status_password_expire_user/http-response.md') %>
+<%= render('ScimUserEndpointDocs/status_password_expire_user/curl-request.md') %>
+<%= render('ScimUserEndpointDocs/status_password_expire_user/http-request.md') %>
+<%= render('ScimUserEndpointDocs/status_password_expire_user/http-response.md') %>
 
 _Path Parameters_
 
-<%= render('ScimUserEndpointDocs/test_status_password_expire_user/path-parameters.md') %>
+<%= render('ScimUserEndpointDocs/status_password_expire_user/path-parameters.md') %>
 
 _Request Headers_
 
-<%= render('ScimUserEndpointDocs/test_status_password_expire_user/request-headers.md') %>
+<%= render('ScimUserEndpointDocs/status_password_expire_user/request-headers.md') %>
 
 _Request Fields_
 
-<%= render('ScimUserEndpointDocs/test_status_password_expire_user/request-fields.md') %>
+<%= render('ScimUserEndpointDocs/status_password_expire_user/request-fields.md') %>
 
 _Response Fields_
 
-<%= render('ScimUserEndpointDocs/test_status_password_expire_user/response-fields.md') %>
+<%= render('ScimUserEndpointDocs/status_password_expire_user/response-fields.md') %>
 
 _Error Codes_
 
@@ -2226,7 +2226,7 @@ UAA supports both standards for private_key_jwt, the OAuth2 and OpenID Connect s
 
 The client can send a client_assertion for authentication instead of client_secret or Authorization header.
 The signature of the JWT from client_assertion is validated and assures the client authentication. The structure of the JWT
-sent with parameter client_assertion differentiates between the OAuth2 and OpenID Connect standard and ith this, both standards
+sent with parameter client_assertion differentiates between the OAuth2 and OpenID Connect standard and with this, both standards
 can be supported in parallel.
 
 The OpenID Connect standard is supported either with the jwks_uri or the internal jwks public keys. The JWT here has only a reference to

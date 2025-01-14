@@ -306,20 +306,6 @@ class ClientAdminBootstrapTests {
     }
 
     @Test
-    void simpleAddClientWithClientJwtCredendial() throws Exception {
-        Map<String, Object> map = new HashMap<>();
-        map.put("id", "foo-jwks");
-        map.put("secret", "bar");
-        map.put("scope", "openid");
-        map.put("authorized-grant-types", GRANT_TYPE_AUTHORIZATION_CODE);
-        map.put("authorities", "uaa.none");
-        map.put("redirect-uri", "http://localhost/callback");
-        map.put("jwt_creds", "[{\"iss\":\"http://localhost:8080/uaa/oauth/token\",\"sub\":\"foo-jwt\"}]");
-        UaaClientDetails clientDetails = (UaaClientDetails) doSimpleTest(map, clientAdminBootstrap, multitenantJdbcClientDetailsService, clients);
-        assertNotNull(clientDetails.getClientJwtConfig());
-    }
-
-    @Test
     void clientMetadata_getsBootstrapped() {
         Map<String, Object> map = new HashMap<>();
         map.put("id", "foo");

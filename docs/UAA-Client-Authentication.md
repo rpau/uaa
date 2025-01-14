@@ -42,7 +42,7 @@ This should allow a continuous trust between a UAA to UAA communication, e.g. us
 
 The new parameter for federated Credentials in UAA clients is (Work in progress parameter):
 
-* fed_creds
+* jwt_creds
 
 ### tls_client_auth (Planned Feature)
 Not yet defined a release date.

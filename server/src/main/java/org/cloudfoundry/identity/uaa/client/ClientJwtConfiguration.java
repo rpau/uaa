@@ -57,7 +57,7 @@ public class ClientJwtConfiguration implements Cloneable {
         }
     }
 
-    public ClientJwtConfiguration(final List<ClientJwtCredential> clientJwtCredentials) {
+    public ClientJwtConfiguration(List<ClientJwtCredential> clientJwtCredentials) {
         this.setClientJwtCredentials(clientJwtCredentials);
     }
 
@@ -96,13 +96,8 @@ public class ClientJwtConfiguration implements Cloneable {
     }
 
     private static void validateClientJwtCredentials(List<ClientJwtCredential> additionalCredentials, HashMap<String, ClientJwtCredential> clientJwtCredentialHashMap) {
-        additionalCredentials.forEach(jwtEntry -> {
-            if (jwtEntry.isValid()) {
-                clientJwtCredentialHashMap.putIfAbsent(jwtEntry.getSubject() + jwtEntry.getIssuer(), jwtEntry);
-            } else {
-                throw new InvalidClientDetailsException("Invalid federated jwt credentials");
-            }
-        });
+        additionalCredentials.forEach(jwtEntry ->
+                clientJwtCredentialHashMap.putIfAbsent(jwtEntry.getSubject() + jwtEntry.getIssuer(), jwtEntry));
         if (clientJwtCredentialHashMap.isEmpty() || clientJwtCredentialHashMap.size() > MAX_KEY_SIZE) {
             throw new InvalidClientDetailsException("Invalid private_key_jwt: federated jwt credentials exceeds the maximum of keys. max: + " + MAX_KEY_SIZE);
         }

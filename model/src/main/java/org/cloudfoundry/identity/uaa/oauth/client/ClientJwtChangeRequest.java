@@ -94,7 +94,7 @@ public class ClientJwtChangeRequest {
         return this.issuer;
     }
 
-    public void setIssuer(final String issuer) {
+    public void setIssuer(String issuer) {
         this.issuer = issuer;
     }
 
@@ -102,7 +102,7 @@ public class ClientJwtChangeRequest {
         return this.subject;
     }
 
-    public void setSubject(final String subject) {
+    public void setSubject(String subject) {
         this.subject = subject;
     }
 
@@ -110,7 +110,7 @@ public class ClientJwtChangeRequest {
         return this.audience;
     }
 
-    public void setAudience(final String audience) {
+    public void setAudience(String audience) {
         this.audience = audience;
     }
 
@@ -130,6 +130,6 @@ public class ClientJwtChangeRequest {
 
     @JsonIgnore
     public ClientJwtCredential getFederation() {
-        return ClientJwtCredential.builder().issuer(issuer).subject(subject).audience(audience).build();
+        return new ClientJwtCredential(subject, issuer, audience);
     }
 }

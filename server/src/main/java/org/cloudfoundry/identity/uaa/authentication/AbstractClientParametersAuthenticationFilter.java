@@ -80,7 +80,7 @@ public abstract class AbstractClientParametersAuthenticationFilter implements Fi
 
         try {
             if (clientId == null) {
-                clientId = Optional.ofNullable(loginInfo.get(CLIENT_ASSERTION)).map(JwtClientAuthentication::getClientId).orElse(null);
+                clientId = Optional.ofNullable(loginInfo.get(CLIENT_ASSERTION)).map(JwtClientAuthentication::getClientIdOidcAssertion).orElse(null);
             }
             wrapClientCredentialLogin(req, res, loginInfo, clientId);
         } catch (AuthenticationException ex) {
