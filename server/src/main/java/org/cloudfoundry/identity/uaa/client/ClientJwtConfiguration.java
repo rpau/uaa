@@ -149,7 +149,7 @@ public class ClientJwtConfiguration implements Cloneable {
             } else if (this.jwkSet != null) {
                 configurationChanges = !JWKSet.parse(this.jwkSet.getKeySetMap()).isEmpty();
             }
-            if (configurationChanges == false) {
+            if (!configurationChanges) {
                 configurationChanges = !CollectionUtils.isEmpty(this.clientJwtCredentials);
             }
         } catch (IllegalStateException | JsonUtils.JsonUtilException | ParseException e) {
