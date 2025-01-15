@@ -139,7 +139,7 @@ class ClientAdminBootstrapTests {
     }
 
     @Test
-    void simpleAddClient() throws Exception {
+    void simpleAddClient() {
         simpleAddClient("foo", clientAdminBootstrap, multitenantJdbcClientDetailsService, clients);
     }
 
@@ -175,7 +175,7 @@ class ClientAdminBootstrapTests {
         }
 
         @Test
-        void deleteFromYamlExistingClient() throws Exception {
+        void deleteFromYamlExistingClient() {
             createClientInDb(clientIdToDelete, multitenantJdbcClientDetailsService);
             simpleAddClient(clientIdToDelete, clientAdminBootstrap, multitenantJdbcClientDetailsService, clients);
             verifyNoInteractions(mockApplicationEventPublisher);
@@ -225,7 +225,7 @@ class ClientAdminBootstrapTests {
     }
 
     @Test
-    void redirectUrlNotRequired() throws Exception {
+    void redirectUrlNotRequired() {
         Map<String, Object> map = new HashMap<>();
         map.put("id", "foo");
         map.put("secret", "bar");
@@ -238,7 +238,7 @@ class ClientAdminBootstrapTests {
     }
 
     @Test
-    void simpleAddClientWithSignupSuccessRedirectUrl() throws Exception {
+    void simpleAddClientWithSignupSuccessRedirectUrl() {
         Map<String, Object> map = new HashMap<>();
         map.put("id", "foo");
         map.put("secret", "bar");
@@ -251,7 +251,7 @@ class ClientAdminBootstrapTests {
     }
 
     @Test
-    void simpleAddClientWithJwksUri() throws Exception {
+    void simpleAddClientWithJwksUri() {
         Map<String, Object> map = new HashMap<>();
         map.put("id", "foo-jwks-uri");
         map.put("secret", "bar");
@@ -265,7 +265,7 @@ class ClientAdminBootstrapTests {
     }
 
     @Test
-    void simpleAddClientWithJwkSet() throws Exception {
+    void simpleAddClientWithJwkSet() {
         Map<String, Object> map = new HashMap<>();
         map.put("id", "foo-jwks");
         map.put("secret", "bar");
@@ -279,7 +279,7 @@ class ClientAdminBootstrapTests {
     }
 
     @Test
-    void simpleInvalidClientWithJwkSet() throws Exception {
+    void simpleInvalidClientWithJwkSet() {
         Map<String, Object> map = new HashMap<>();
         map.put("id", "foo-jwks");
         map.put("secret", "bar");
@@ -289,6 +289,20 @@ class ClientAdminBootstrapTests {
         map.put("redirect-uri", "http://localhost/callback");
         map.put("jwks", "invalid");
         assertThatExceptionOfType(InvalidClientDetailsException.class).isThrownBy(() -> doSimpleTest(map, clientAdminBootstrap, multitenantJdbcClientDetailsService, clients));
+    }
+
+    @Test
+    void simpleAddClientWithClientJwtCredendial() {
+        Map<String, Object> map = new HashMap<>();
+        map.put("id", "foo-jwks");
+        map.put("secret", "bar");
+        map.put("scope", "openid");
+        map.put("authorized-grant-types", GRANT_TYPE_AUTHORIZATION_CODE);
+        map.put("authorities", "uaa.none");
+        map.put("redirect-uri", "http://localhost/callback");
+        map.put("jwt_creds", "[{\"iss\":\"http://localhost:8080/uaa/oauth/token\",\"sub\":\"foo-jwt\"}]");
+        UaaClientDetails clientDetails = (UaaClientDetails) doSimpleTest(map, clientAdminBootstrap, multitenantJdbcClientDetailsService, clients);
+        assertThat(clientDetails.getClientJwtConfig()).isNotNull();
     }
 
     @Test
@@ -312,7 +326,7 @@ class ClientAdminBootstrapTests {
     }
 
     @Test
-    void additionalInformation() throws Exception {
+    void additionalInformation() {
         List<String> idps = Arrays.asList("idp1", "idp1");
         Map<String, Object> map = new HashMap<>();
         map.put("id", "foo");
@@ -329,7 +343,7 @@ class ClientAdminBootstrapTests {
     }
 
     @Test
-    void simpleAddClientWithChangeEmailRedirectUrl() throws Exception {
+    void simpleAddClientWithChangeEmailRedirectUrl() {
         Map<String, Object> map = new HashMap<>();
         map.put("id", "foo");
         map.put("secret", "bar");
@@ -589,7 +603,7 @@ class ClientAdminBootstrapTests {
     }
 
     @Test
-    void changePasswordDuringBootstrap() throws Exception {
+    void changePasswordDuringBootstrap() {
         Map<String, Object> map = createClientMap("foo");
         ClientDetails created = doSimpleTest(map, clientAdminBootstrap, multitenantJdbcClientDetailsService, clients);
         assertSet((String) map.get("redirect-uri"), null, created.getRegisteredRedirectUri(), String.class);
@@ -604,7 +618,7 @@ class ClientAdminBootstrapTests {
     }
 
     @Test
-    void passwordHashDidNotChangeDuringBootstrap() throws Exception {
+    void passwordHashDidNotChangeDuringBootstrap() {
         Map<String, Object> map = createClientMap("foo");
         ClientDetails created = doSimpleTest(map, clientAdminBootstrap, multitenantJdbcClientDetailsService, clients);
         assertSet((String) map.get("redirect-uri"), null, created.getRegisteredRedirectUri(), String.class);
@@ -662,7 +676,7 @@ class ClientAdminBootstrapTests {
 
         for (String key : Arrays.asList("resource-ids", "scope", "authorized-grant-types", "authorities",
                 "redirect-uri", "secret", "id", "override", "access-token-validity",
-                "refresh-token-validity", "jwks", "jwks_uri")) {
+                "refresh-token-validity", "jwks", "jwks_uri", "jwt_creds")) {
             info.remove(key);
         }
         for (Map.Entry<String, Object> entry : info.entrySet()) {
@@ -695,7 +709,7 @@ class ClientAdminBootstrapTests {
             final String clientId,
             final ClientAdminBootstrap bootstrap,
             final MultitenantJdbcClientDetailsService clientRegistrationService,
-            final Map<String, Map<String, Object>> clients) throws Exception {
+            final Map<String, Map<String, Object>> clients) {
         Map<String, Object> map = createClientMap(clientId);
         ClientDetails created = doSimpleTest(map, bootstrap, clientRegistrationService, clients);
         assertSet((String) map.get("redirect-uri"), null, created.getRegisteredRedirectUri(), String.class);

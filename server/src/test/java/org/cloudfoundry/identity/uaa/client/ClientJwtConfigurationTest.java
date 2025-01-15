@@ -1,5 +1,6 @@
 package org.cloudfoundry.identity.uaa.client;
 
+import org.cloudfoundry.identity.uaa.oauth.client.ClientJwtCredential;
 import org.cloudfoundry.identity.uaa.oauth.jwk.JsonWebKey;
 import org.cloudfoundry.identity.uaa.oauth.jwk.JsonWebKeySet;
 import org.cloudfoundry.identity.uaa.util.JsonUtils;
@@ -11,6 +12,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -60,9 +62,50 @@ class ClientJwtConfigurationTest {
     }
 
     @Test
-    void getCleanConfig() {
-        assertThat(ClientJwtConfiguration.parse("https://any.domain.net/openid/jwks-uri").getCleanString()).isNotNull();
-        assertThat(ClientJwtConfiguration.parse(jsonWebKey).getCleanString()).isNotNull();
+    void hasConfiguration() {
+        assertThat(ClientJwtConfiguration.parse("https://any.domain.net/openid/jwks-uri").hasConfiguration()).isTrue();
+        assertThat(ClientJwtConfiguration.parse(null).hasConfiguration()).isFalse();
+        assertThat(new ClientJwtConfiguration().hasConfiguration()).isFalse();
+        assertThat(ClientJwtConfiguration.parse(jsonJwkSet).hasConfiguration()).isTrue();
+        assertThat(ClientJwtConfiguration.parse(jsonWebKey).hasConfiguration()).isTrue();
+    }
+
+    @Test
+    void jwtCredentials() {
+        ClientJwtConfiguration config = new ClientJwtConfiguration(ClientJwtCredential.parse("[{\"iss\":\"http://localhost:8080/uaa\",\"sub\":\"client_with_jwks_trust\"}]"));
+        assertThat(config.getClientJwtCredentials()).hasSize(1);
+        assertThat(config.hasConfiguration()).isTrue();
+        ClientJwtConfiguration mergeConfig = ClientJwtConfiguration.merge(ClientJwtConfiguration.parse("https://any.domain.net/openid/jwks-uri"), config, false);
+        assertThat(mergeConfig.getClientJwtCredentials()).isNotNull();
+        assertThat(mergeConfig.getJwksUri()).isNotNull();
+        assertThat(mergeConfig.getJwkSet()).isNull();
+    }
+
+    @Test
+    void addAndDeleteJwtCredentials() {
+        ClientJwtConfiguration config = new ClientJwtConfiguration(ClientJwtCredential.parse("[{\"iss\":\"http://localhost:8080/uaa\",\"sub\":\"client_with_jwks_trust\"}]"));
+        assertThat(config.getClientJwtCredentials()).hasSize(1);
+        config.addJwtCredentials(ClientJwtCredential.parse("[{\"iss\":\"http://localhost:8080/uaa\",\"sub\":\"client_with_jwks_trust\"}]"));
+        assertThat(config.getClientJwtCredentials()).hasSize(1);
+        assertThat(config.hasConfiguration()).isTrue();
+        ClientJwtConfiguration mergeConfig = ClientJwtConfiguration.merge(config, config, true);
+        mergeConfig = ClientJwtConfiguration.delete(mergeConfig, config);
+        assertThat(ClientJwtConfiguration.delete(mergeConfig, config)).isNull();
+    }
+
+    @Test
+    void invalidJwtCredentials() {
+        assertThatThrownBy(() -> new ClientJwtConfiguration(null))
+                .isInstanceOf(InvalidClientDetailsException.class);
+        ClientJwtConfiguration config = new ClientJwtConfiguration(ClientJwtCredential.parse("[{\"iss\":\"http://localhost:8080/uaa\",\"sub\":\"client_with_jwks_trust\"}]"));
+        assertThatThrownBy(() -> config.addJwtCredentials(List.of(new ClientJwtCredential("subject", null, null))))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        for (int i = 0; i < 9; i++) {
+            config.addJwtCredentials(List.of(new ClientJwtCredential("subject" + i, "issuer" + i, "audience")));
+        }
+        assertThatThrownBy(() -> config.addJwtCredentials(List.of(new ClientJwtCredential("subject-max", "issuer-max", "audience"))))
+                .isInstanceOf(InvalidClientDetailsException.class);
     }
 
     @Test
@@ -72,9 +115,9 @@ class ClientJwtConfigurationTest {
         when(mockedKey.getKeys()).thenReturn(keyList);
         ClientJwtConfiguration privateKey = new ClientJwtConfiguration(null, mockedKey);
         when(mockedKey.getKeySetMap()).thenThrow(new IllegalStateException("error"));
-        assertThatExceptionOfType(InvalidClientDetailsException.class).isThrownBy(privateKey::getCleanString);
+        assertThatExceptionOfType(InvalidClientDetailsException.class).isThrownBy(privateKey::hasConfiguration);
         ClientJwtConfiguration privateKey2 = new ClientJwtConfiguration("hello", null);
-        assertThat(privateKey2.getCleanString()).isNull();
+        assertThat(privateKey2.hasConfiguration()).isFalse();
     }
 
     @Test

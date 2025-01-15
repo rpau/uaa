@@ -20,4 +20,18 @@ class ClientJwtChangeRequestTest {
         assertThat(request).isNotEqualTo(def);
     }
 
+    @Test
+    void requestSerializationFederated() {
+        ClientJwtChangeRequest def = new ClientJwtChangeRequest();
+        def.setKeyId("key-1");
+        def.setChangeMode(ClientJwtChangeRequest.ChangeMode.DELETE);
+        def.setIssuer("http://localhost:8080/uaa/oauth/token");
+        def.setSubject("admin-client");
+        def.setAudience("http://localhost:8080/uaa/oauth/token");
+        assertThat(def.isFederated()).isTrue();
+        String jsonRequest = JsonUtils.writeValueAsString(def);
+        ClientJwtChangeRequest request = JsonUtils.readValue(jsonRequest, ClientJwtChangeRequest.class);
+        assertThat(request).isNotEqualTo(def);
+        assertThat(def.getFederation()).isNotNull();
+    }
 }

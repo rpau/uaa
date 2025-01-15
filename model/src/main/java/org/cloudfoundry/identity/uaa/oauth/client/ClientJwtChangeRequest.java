@@ -1,11 +1,13 @@
 package org.cloudfoundry.identity.uaa.oauth.client;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import static org.cloudfoundry.identity.uaa.oauth.client.ClientJwtChangeRequest.ChangeMode.ADD;
 import static org.cloudfoundry.identity.uaa.oauth.client.ClientJwtChangeRequest.ChangeMode.DELETE;
+import static org.cloudfoundry.identity.uaa.oauth.client.ClientJwtChangeRequest.ChangeMode.UPDATE;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -13,6 +15,9 @@ public class ClientJwtChangeRequest {
 
     public static final String JWKS_URI = "jwks_uri";
     public static final String JWKS = "jwks";
+    public static final String ISS = "iss";
+    public static final String SUB = "sub";
+    public static final String AUD = "aud";
 
     public enum ChangeMode {
         UPDATE,
@@ -27,6 +32,13 @@ public class ClientJwtChangeRequest {
     private String jsonWebKeySet;
     @JsonProperty("client_id")
     private String clientId;
+    @JsonProperty(ISS)
+    private String issuer;
+    @JsonProperty(SUB)
+    private String subject;
+    @JsonProperty(AUD)
+    private String audience;
+
     private ChangeMode changeMode = ADD;
 
     public ClientJwtChangeRequest() {
@@ -78,11 +90,46 @@ public class ClientJwtChangeRequest {
         this.keyId = keyId;
     }
 
+    public String getIssuer() {
+        return this.issuer;
+    }
+
+    public void setIssuer(String issuer) {
+        this.issuer = issuer;
+    }
+
+    public String getSubject() {
+        return this.subject;
+    }
+
+    public void setSubject(String subject) {
+        this.subject = subject;
+    }
+
+    public String getAudience() {
+        return this.audience;
+    }
+
+    public void setAudience(String audience) {
+        this.audience = audience;
+    }
+
     public String getChangeValue() {
         // Depending on change mode, allow different values
         if (changeMode == DELETE && keyId != null) {
             return keyId;
         }
         return jsonWebKeyUri != null ? jsonWebKeyUri : jsonWebKeySet;
+    }
+
+    @JsonIgnore
+    public boolean isFederated() {
+        return ((changeMode == ADD || changeMode == UPDATE) && issuer != null && subject != null) ||
+                (changeMode == DELETE && (issuer != null || subject != null));
+    }
+
+    @JsonIgnore
+    public ClientJwtCredential getFederation() {
+        return new ClientJwtCredential(subject, issuer, audience);
     }
 }

@@ -1,5 +1,7 @@
 package org.cloudfoundry.identity.uaa.oauth.token;
 
+import com.nimbusds.jose.jwk.JWK;
+import com.nimbusds.jose.jwk.JWKSet;
 import org.cloudfoundry.identity.uaa.extensions.PollutionPreventionExtension;
 import org.cloudfoundry.identity.uaa.impl.config.LegacyTokenKey;
 import org.cloudfoundry.identity.uaa.oauth.KeyInfo;
@@ -16,7 +18,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.net.URISyntaxException;
+import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -88,6 +93,18 @@ class KeyInfoServiceTests {
         KeyInfo key = keyInfoService.getKey(keyId);
         assertThat(key.getSigner()).isNotNull();
         assertThat(key.getVerifier()).isNotNull();
+        JWKSet jwkSet;
+        List<JWK> jwkList = new ArrayList<>();
+        keyInfoService.getKeys().values().forEach(keyInfo -> {
+            try {
+                jwkList.add(JWK.parse(keyInfo.getJwkMap()));
+            } catch (ParseException e) {
+                // ignore
+            }
+        });
+        jwkSet = new JWKSet(jwkList);
+        assertThat(jwkSet).isNotNull();
+        assertThat(jwkSet.size()).isEqualTo(1);
     }
 
     @Test

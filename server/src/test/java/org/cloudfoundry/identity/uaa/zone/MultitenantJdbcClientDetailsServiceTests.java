@@ -8,6 +8,7 @@ import org.cloudfoundry.identity.uaa.client.UaaClientDetails;
 import org.cloudfoundry.identity.uaa.constants.OriginKeys;
 import org.cloudfoundry.identity.uaa.oauth.UaaOauth2Authentication;
 import org.cloudfoundry.identity.uaa.oauth.client.ClientConstants;
+import org.cloudfoundry.identity.uaa.oauth.client.ClientJwtCredential;
 import org.cloudfoundry.identity.uaa.oauth.provider.AuthorizationRequest;
 import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetails;
 import org.cloudfoundry.identity.uaa.oauth.provider.OAuth2Authentication;
@@ -534,17 +535,33 @@ class MultitenantJdbcClientDetailsServiceTests {
     }
 
     @Test
-    void deleteClientJwt() {
+    void updateFederatedClientJwt() {
+        UaaClientDetails clientDetails = new UaaClientDetails();
+        clientDetails.setClientId("newClientIdWithNoDetails");
+        service.addClientDetails(clientDetails);
+        service.addClientJwtCredential(clientDetails.getClientId(), new ClientJwtCredential("subject", "issuer", null), currentZoneId, true);
+
+        Map<String, Object> map = jdbcTemplate.queryForMap(SELECT_SQL,
+                "newClientIdWithNoDetails");
+
+        assertThat(map).containsEntry("client_id", "newClientIdWithNoDetails")
+                .containsKey("client_jwt_config")
+                .containsEntry("client_jwt_config", "{\"jwt_creds\":[{\"sub\":\"subject\",\"iss\":\"issuer\"}]}");
+    }
+
+    @Test
+    void deleteFederatedClientJwt() {
         String clientId = "client_id_test_delete";
+        ClientJwtCredential jwtCredential = new ClientJwtCredential("subject", "issuer", "audience");
         UaaClientDetails clientDetails = new UaaClientDetails();
         clientDetails.setClientId(clientId);
         service.addClientDetails(clientDetails);
-        service.addClientJwtConfig(clientDetails.getClientId(), "http://localhost:8080/uaa/token_keys", currentZoneId, true);
+        service.addClientJwtCredential(clientDetails.getClientId(), jwtCredential, currentZoneId, true);
 
         Map<String, Object> map = jdbcTemplate.queryForMap(SELECT_SQL, clientId);
-        assertThat(map).containsKey("client_jwt_config");
-        assertThat((String) map.get("client_jwt_config")).isEqualTo("{\"jwks_uri\":\"http://localhost:8080/uaa/token_keys\"}");
-        service.deleteClientJwtConfig(clientId, "http://localhost:8080/uaa/token_keys", currentZoneId);
+        assertThat(map).containsKey("client_jwt_config")
+                .containsEntry("client_jwt_config", "{\"jwt_creds\":[{\"sub\":\"subject\",\"iss\":\"issuer\",\"aud\":\"audience\"}]}");
+        service.deleteClientJwtCredential(clientId, jwtCredential, currentZoneId);
 
         map = jdbcTemplate.queryForMap(SELECT_SQL, clientId);
         assertThat(map).containsEntry("client_jwt_config", null)
