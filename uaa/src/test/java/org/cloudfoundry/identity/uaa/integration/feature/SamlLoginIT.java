@@ -212,6 +212,8 @@ public class SamlLoginIT {
         ResponseEntity<String> response = request.getForEntity("%s/saml/metadata".formatted(baseUrl), String.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         String metadataXml = response.getBody();
+        // CR carriage return must not be in output
+        assertThat(metadataXml).doesNotContain("&#13;", "\r\n");
         XmlAssert xmlAssert = XmlAssert.assertThat(metadataXml).withNamespaceContext(xmlNamespaces());
 
         // The SAML SP metadata should match the following UAA configs:
@@ -228,6 +230,8 @@ public class SamlLoginIT {
         xmlAssert.valueByXPath("/md:EntityDescriptor/ds:Signature/ds:SignedInfo/ds:SignatureMethod/@Algorithm").isEqualTo(ALGO_ID_SIGNATURE_RSA_SHA256);
         xmlAssert.valueByXPath("/md:EntityDescriptor/ds:Signature/ds:SignedInfo/ds:Reference/ds:DigestMethod/@Algorithm").isEqualTo(ALGO_ID_DIGEST_SHA256);
         xmlAssert.nodesByXPath("/md:EntityDescriptor/ds:Signature/ds:SignatureValue").exist();
+        // CR carriage return is not visible in XML Assert anymore, but stay we check even here
+        xmlAssert.nodesByXPath("/md:EntityDescriptor/ds:Signature/ds:SignatureValue").asString().doesNotContain("&#13;", "\r\n");
         xmlAssert.nodesByXPath("/md:EntityDescriptor/ds:Signature/ds:SignedInfo/ds:Reference/ds:DigestValue").exist();
         // login.saml.nameID
         xmlAssert.nodesByXPath("/md:EntityDescriptor/md:SPSSODescriptor/md:NameIDFormat")
@@ -263,6 +267,8 @@ public class SamlLoginIT {
         ResponseEntity<String> response = request.getForEntity("%s/saml/metadata".formatted(zoneUrl), String.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         String metadataXml = response.getBody();
+        // CR carriage return must not be in output
+        assertThat(metadataXml).doesNotContain("&#13;", "\r\n");
         XmlAssert xmlAssert = XmlAssert.assertThat(metadataXml).withNamespaceContext(xmlNamespaces());
 
         // The SAML SP metadata should match the following UAA configs:
@@ -279,6 +285,8 @@ public class SamlLoginIT {
                 .contains("testzone1.localhost")
                 .contains("/saml/SSO/alias/testzone1.cloudfoundry-saml-login");
         xmlAssert.nodesByXPath("//md:EntityDescriptor/ds:Signature/ds:SignatureValue").exist();
+        // CR carriage return is not visible in XML Assert anymore, but stay we check even here
+        xmlAssert.nodesByXPath("/md:EntityDescriptor/ds:Signature/ds:SignatureValue").asString().doesNotContain("&#13;", "\r\n");
         xmlAssert.nodesByXPath("//md:EntityDescriptor/ds:Signature/ds:SignedInfo/ds:Reference/ds:DigestValue").exist();
 
         assertThat(response.getHeaders().getContentDisposition().getFilename()).isEqualTo("saml-testzone1-sp.xml");

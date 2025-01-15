@@ -26,6 +26,7 @@ public class IdentityZoneConfig {
             log.info("New securerandom.strongAlgorithms: {}", newStrongAlgorithm);
             Security.setProperty("securerandom.strongAlgorithms", newStrongAlgorithm);
         }
+        System.setProperty("org.apache.xml.security.ignoreLineBreaks", "true");
         BouncyCastleFipsProvider provider = new BouncyCastleFipsProvider();
         Security.addProvider(provider);
         return provider;
