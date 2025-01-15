@@ -14,6 +14,7 @@ import org.cloudfoundry.identity.uaa.oauth.jwk.JsonWebKeySet;
 import org.cloudfoundry.identity.uaa.oauth.provider.ClientDetails;
 import org.cloudfoundry.identity.uaa.util.JsonUtils;
 import org.cloudfoundry.identity.uaa.util.UaaUrlUtils;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
@@ -140,20 +141,21 @@ public class ClientJwtConfiguration implements Cloneable {
     }
 
     @JsonIgnore
-    public String getCleanString() {
+    public boolean hasConfiguration() {
+        boolean configurationChanges = false;
         try {
             if (UaaUrlUtils.isUrl(this.jwksUri)) {
-                return this.jwksUri;
-            } else if (this.jwkSet != null && !ObjectUtils.isEmpty(this.jwkSet.getKeySetMap())) {
-                return JWKSet.parse(this.jwkSet.getKeySetMap()).toString(true);
+                configurationChanges = true;
+            } else if (this.jwkSet != null) {
+                configurationChanges = !JWKSet.parse(this.jwkSet.getKeySetMap()).isEmpty();
             }
-            if (clientJwtCredentials != null && !ObjectUtils.isEmpty(this.clientJwtCredentials)) {
-                return JsonUtils.writeValueAsString(this.clientJwtCredentials);
+            if (configurationChanges == false) {
+                configurationChanges = !CollectionUtils.isEmpty(this.clientJwtCredentials);
             }
         } catch (IllegalStateException | JsonUtils.JsonUtilException | ParseException e) {
             throw new InvalidClientDetailsException("Client jwt configuration configuration fails ", e);
         }
-        return null;
+        return configurationChanges;
     }
 
     @JsonIgnore
@@ -177,6 +179,9 @@ public class ClientJwtConfiguration implements Cloneable {
         String cleanJwtString;
         try {
             HashMap<String, Object> jsonMap = JsonUtils.readValue(privateKeyJwt, HashMap.class);
+            if (CollectionUtils.isEmpty(jsonMap)) {
+                return new ClientJwtConfiguration();
+            }
             if (jsonMap.containsKey("keys")) {
                 cleanJwtString = JWKSet.parse(jsonMap).toString(true);
             } else {

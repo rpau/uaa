@@ -259,7 +259,7 @@ public class ClientAdminBootstrap implements
     }
 
     private static void writeJwtClientConfiguration(ClientJwtConfiguration keyConfig, UaaClientDetails client) {
-        if (keyConfig != null && keyConfig.getCleanString() != null) {
+        if (keyConfig != null && keyConfig.hasConfiguration()) {
             keyConfig.writeValue(client);
         } else {
             throw new InvalidClientDetailsException("Client jwt configuration invalid syntax. ClientID: " + client.getClientId());

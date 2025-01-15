@@ -62,16 +62,19 @@ class ClientJwtConfigurationTest {
     }
 
     @Test
-    void getCleanConfig() {
-        assertThat(ClientJwtConfiguration.parse("https://any.domain.net/openid/jwks-uri").getCleanString()).isNotNull();
-        assertThat(ClientJwtConfiguration.parse(jsonWebKey).getCleanString()).isNotNull();
+    void hasConfiguration() {
+        assertThat(ClientJwtConfiguration.parse("https://any.domain.net/openid/jwks-uri").hasConfiguration()).isTrue();
+        assertThat(ClientJwtConfiguration.parse(null).hasConfiguration()).isFalse();
+        assertThat(new ClientJwtConfiguration().hasConfiguration()).isFalse();
+        assertThat(ClientJwtConfiguration.parse(jsonJwkSet).hasConfiguration()).isTrue();
+        assertThat(ClientJwtConfiguration.parse(jsonWebKey).hasConfiguration()).isTrue();
     }
 
     @Test
     void jwtCredentials() {
         ClientJwtConfiguration config = new ClientJwtConfiguration(ClientJwtCredential.parse("[{\"iss\":\"http://localhost:8080/uaa\",\"sub\":\"client_with_jwks_trust\"}]"));
         assertThat(config.getClientJwtCredentials()).hasSize(1);
-        assertThat(config.getCleanString()).contains("client_with_jwks_trust");
+        assertThat(config.hasConfiguration()).isTrue();
         ClientJwtConfiguration mergeConfig = ClientJwtConfiguration.merge(ClientJwtConfiguration.parse("https://any.domain.net/openid/jwks-uri"), config, false);
         assertThat(mergeConfig.getClientJwtCredentials()).isNotNull();
         assertThat(mergeConfig.getJwksUri()).isNotNull();
@@ -84,7 +87,7 @@ class ClientJwtConfigurationTest {
         assertThat(config.getClientJwtCredentials()).hasSize(1);
         config.addJwtCredentials(ClientJwtCredential.parse("[{\"iss\":\"http://localhost:8080/uaa\",\"sub\":\"client_with_jwks_trust\"}]"));
         assertThat(config.getClientJwtCredentials()).hasSize(1);
-        assertThat(config.getCleanString()).contains("client_with_jwks_trust");
+        assertThat(config.hasConfiguration()).isTrue();
         ClientJwtConfiguration mergeConfig = ClientJwtConfiguration.merge(config, config, true);
         mergeConfig = ClientJwtConfiguration.delete(mergeConfig, config);
         assertThat(ClientJwtConfiguration.delete(mergeConfig, config)).isNull();
@@ -112,9 +115,9 @@ class ClientJwtConfigurationTest {
         when(mockedKey.getKeys()).thenReturn(keyList);
         ClientJwtConfiguration privateKey = new ClientJwtConfiguration(null, mockedKey);
         when(mockedKey.getKeySetMap()).thenThrow(new IllegalStateException("error"));
-        assertThatExceptionOfType(InvalidClientDetailsException.class).isThrownBy(privateKey::getCleanString);
+        assertThatExceptionOfType(InvalidClientDetailsException.class).isThrownBy(privateKey::hasConfiguration);
         ClientJwtConfiguration privateKey2 = new ClientJwtConfiguration("hello", null);
-        assertThat(privateKey2.getCleanString()).isNull();
+        assertThat(privateKey2.hasConfiguration()).isFalse();
     }
 
     @Test
