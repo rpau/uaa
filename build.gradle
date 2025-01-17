@@ -18,7 +18,6 @@ buildscript {
         classpath(libraries.cargoGradlePlugin)
         classpath(libraries.springDependencyMangementGradlePlugin)
         classpath(libraries.springBootGradlePlugin)
-        classpath(libraries.testRetryPlugin)
         classpath(libraries.gradleJcocoPlugin)
         classpath(libraries.sonarqubePlugin)
     }
@@ -33,7 +32,6 @@ apply(plugin: "war")
 
 allprojects {
     apply(plugin: "io.spring.dependency-management")
-    apply(plugin: "org.gradle.test-retry")
     apply(plugin: "org.barfuin.gradle.jacocolog")
     apply(plugin: "org.sonarqube")
 
@@ -109,19 +107,6 @@ subprojects {
         failFast = false
         useJUnitPlatform()
         jvmArgs += ["-Xmx1024m", "-XX:+StartAttachListener", "-XX:+HeapDumpOnOutOfMemoryError", "-XX:HeapDumpPath=/var/log/uaa-tests.hprof"]
-
-        retry {
-            def failOnPassedAfterRetrySystemProperty = Boolean.parseBoolean(
-                    System.getProperty("failOnPassedAfterRetry", "false"));
-            if (!failOnPassedAfterRetrySystemProperty) {
-                logger.warn("retry: Flaky tests will not make the test run fail because failOnPassedAfterRetry is false.")
-            }
-
-            // Configure the retry extension
-            failOnPassedAfterRetry = failOnPassedAfterRetrySystemProperty
-            maxFailures = Integer.parseInt(System.getProperty("maxFailures", "3"))
-            maxRetries = Integer.parseInt(System.getProperty("maxRetries", "1"))
-        }
 
         testLogging {
             events("failed")
